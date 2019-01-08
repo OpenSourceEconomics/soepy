@@ -1,4 +1,114 @@
 Computational Model
 ===================
 
-This part of the documentation specifies the functional forms, types of shocks and exogenous processes we bring together with the developed economic model to perform simulation and estimation. We discusses the functional form of the utility function, the laws of motion for the agents' budget constraints, the chosen formulation of the wage and the experience accumulation processes, as well as many more in greater detail.
+This part of the documentation specifies the functional forms, types of shocks and exogenous processes we bring together with the developed economic model to perform simulation and estimation. We discuss the functional form of the utility function, the laws of motion for the agents' budget constraints, the chosen formulation of the wage and the experience accumulation processes, etc. in greater detail.
+
+Outline of model components
+----------------------------
+
+In this framework women are modelled between the age when they start working after having completed education and 60 years of age. They retire at the age of 60 and live for additional 10 years using their accumulated savings}. No re-entry in education is possible in the model. Having completed education, in each period (year) of their life, women make consumption and labor supply choices. They choose between nonemployment (N), part-time (P), or full-time employment (F)}. Female workers face labor-market frictions.
+
+In the first period of observation, each woman draws a random preference for work, consisting of a utility cost of part-time work (:math:`\theta_P`) and a utility-cost of full-time work (:math:`\theta_F`). The utility cost parameters,  :math:`\theta_F` and :math:`\theta_P`, can take on two (or more) values each, i.e., there are two types: high - type I, and low - type II. The values of the type II coefficients are normalised to zero. Both parameter values, :math:`\theta_F` and :math:`\theta_P` for type I, as well as the frequency of type I individuals in the data are estimated alongside the other free parameters of the model.
+
+The tax and welfare system is year specific reflecting actual real world changes. It defines disposable income for each employment option. Households are credit constrained, i.e., they cannot borrow. Finally, the following elements enter the computational model as exogenous processes: childbirth, marriage, divorce and the male wage process.
+
+Structural equations
+---------------------
+
+Instantaneous utility
+^^^^^^^^^^^^^^^^^^^^^^
+
+The individuals' flow utility is given by:
+
+.. math::
+
+    u(c_t, l_t; \theta, Z_t) = \frac{(c_t/n_t)^\mu}{\mu}exp\{U(l_t, \theta, Z_t)\}
+
+    U(l_t, \theta, Z_t) =
+    \begin{cases}
+    0, & \text{if `l_t = O`,}
+    \\[4pt]
+    \theta_l + Z'_t\alpha(l_t), & \text{if `l_t = P` or `F`},
+    \end{cases}
+
+where :math:`\alpha(l_t) = \alpha_F + \alpha_P \cdot \bf{1}` :math:`(l_t = P)`.
+
+The CRRA utility depends on consumption per adult equivalent, female labor supply :math:`l`, characteristics :math:`Z`, and {\diw preference for work :math:`\theta`}. :math:`Z` can contain information on marital status, presence of children, their interaction, dummies for children in different age groups, an indicator wether or not the partner is working, etc. :math:`U(.)` of not working is normalised to zero; :math:`\beta` is set to 0.98;
+
+There are several implications of the choice of this particular form of the utility function. Given the above form, instantaneous utility is non-separable in consumption and leisure. Total (lifetime) utility is the sum of CRRA functions, i.e., it is additively separable intertemporaneously. :math:`\mu` is the curvature parameter that governs risk-aversion and the elasticity of intertemporal substitution. The choice of :math:`\mu<0` means that the utility :math:`u(.)` is always negative (bounded by zero from above, i.e., for :math:`c\rightarrow \infty`), and the higher the argument :math:`U` in the exponential, the lower the overall utility. A positive utility, :math:`U(.)`,  for :math:`l = P/F` implies that working reduces the utility of consumption and that consumption and labor supply are complements.
+
+
+Budget constraint
+^^^^^^^^^^^^^^^^^
+
+In a more involved case, the value function is maximised subject to the following budget constraint:
+
+.. math::
+
+    \begin{cases}
+    a_{t+1} = (1+r)a_t + h_t w_t + m_t \tilde{h_t} \tilde{w_t} - T(l_t, X_t) - Q(t^k, h_t, \tilde{h_t}, m_t) - c_t,
+    \\[4pt]
+    a_{t+1} = \underline{a_s},
+    \end{cases}
+
+with initial and terminal conditions :math:`a_0 = 0` and :math:`a_{\tilde{t}+1} \geq 0`.
+
+Notation is to be read as follows:
+
+* :math:`r` - risk free interest rate
+* :math:`(w, \tilde{w})` - hourly rates of wife and husband
+* :math:`(h, \tilde{h})` - working hours of wife and husband
+* :math:`\underline{a_s}` - borrowing limit, which is either zero, or equal to the amount of student loan borrowed (negative number)
+* :math:`T` - tax and welfare transfer system, nonconcave, nonsmooth, and often discontinuous
+* :math:`Q` - childcare costs
+
+In the current simplified version of the model, the budget constrained is given by :math:`c_t =  h_t w_t + m_t \tilde{h_t} \tilde{w_t} - T(l_t, X_t) - Q(t^k, h_t, \tilde{h_t}, m_t)`.
+
+
+Female wage equation
+^^^^^^^^^^^^^^^^^^^^
+
+The baseline specification of the female wage process is summarized in the following equations:
+
+.. math::
+
+    ln \hspace{2pt} w_t^m & = \gamma_{s,0}  + \gamma_{s,1} ln(e_t + 1) + \xi_t,\\
+    ln \hspace{2pt} w_t & = ln \hspace{2pt} w_t^m - \xi_t,\\
+    e_t & = e_{t-1}(1-\delta_s) + g_s(l_{t-1}),\\
+
+where
+
+* :math:`ln \hspace{2pt} w_t^m` - observed hourly wage rate
+* :math:`\xi_t` - i.i.d. normal measurement error
+* :math:`e_t` - experience measured in years
+* :math:`\delta_s` - per period depreciation rate
+* :math:`g_s` - per period rate of experience accumulation: :math:`g_s(F) = 1`
+
+
+To be implemented
+-----------------
+
+The goal of this project is to develop s computational model similar to the one used in Blundell et. al. (2017). Features of the model that are still missing in the current implementation include:
+
+* budget constraint:
+
+  * male wages
+  * tax function which varies by year
+  * childcare costs
+  * savings
+* female wage equation:
+
+  * individual AR (1) peoductivity process
+  * beliefs
+* exogenous processes
+
+  * male wage equation
+  * prpbability of child arriving
+  * probability of partner arriving
+  * probability of partner leaving
+
+Furthermore, we plan to include model features that go beyond the application in Blundell et. al. (2017):
+
+* beliefs in the female wage equation
+* labor market frictions
+
