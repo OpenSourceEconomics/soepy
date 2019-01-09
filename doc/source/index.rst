@@ -10,6 +10,6 @@ Welcome to soepy's documentation!
    :maxdepth: 1
    :caption: Contents:
 
-   computational_model
    economic_model
    mathematical_model
+   computational_model
