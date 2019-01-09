@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'soepy'
-copyright = '2019, Boryana Ilieva Philipp Eisenhauer'
-author = 'Boryana Ilieva Philipp Eisenhauer'
+copyright = '2019, soepy-dev team'
+author = 'soepy-dev team'
 
 # The short X.Y version
-version = ''
+version = '1.0'
 # The full version, including alpha/beta/rc tags
-release = '1.0.0'
+release = '1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -72,10 +72,10 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = None
+pygments_style = 'sphinx'
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -83,7 +83,7 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -138,7 +138,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'soepy.tex', 'soepy Documentation',
-     'Boryana Ilieva Philipp Eisenhauer', 'manual'),
+     'Development Team', 'manual'),
 ]
 
 

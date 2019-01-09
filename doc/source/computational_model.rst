@@ -6,7 +6,7 @@ This part of the documentation specifies the functional forms, types of shocks a
 Outline of model components
 ----------------------------
 
-In this framework women are modelled between the age when they start working after having completed education and 60 years of age. They retire at the age of 60 and live for additional 10 years using their accumulated savings}. No re-entry in education is possible in the model. Having completed education, in each period (year) of their life, women make consumption and labor supply choices. They choose between nonemployment (N), part-time (P), or full-time employment (F)}. Female workers face labor-market frictions.
+In this framework women are modelled between the age when they start working after having completed education and 60 years of age. They retire at the age of 60 and live for additional 10 years using their accumulated savings}. No re-entry in education is possible in the model. Having completed education, in each period (year) of their life, women make consumption and labor supply choices. They choose between nonemployment (N), part-time (P), or full-time employment (F). Female workers face labor-market frictions.
 
 In the first period of observation, each woman draws a random preference for work, consisting of a utility cost of part-time work (:math:`\theta_P`) and a utility-cost of full-time work (:math:`\theta_F`). The utility cost parameters,  :math:`\theta_F` and :math:`\theta_P`, can take on two (or more) values each, i.e., there are two types: high - type I, and low - type II. The values of the type II coefficients are normalised to zero. Both parameter values, :math:`\theta_F` and :math:`\theta_P` for type I, as well as the frequency of type I individuals in the data are estimated alongside the other free parameters of the model.
 
@@ -26,9 +26,9 @@ The individuals' flow utility is given by:
 
     U(l_t, \theta, Z_t) =
     \begin{cases}
-    0, & \text{if `l_t = O`,}
+    0, & \text{if $l_t = O$,}
     \\[4pt]
-    \theta_l + Z'_t\alpha(l_t), & \text{if `l_t = P` or `F`},
+    \theta_l + Z'_t\alpha(l_t), & \text{if $l_t = P$ or $F$},
     \end{cases}
 
 where :math:`\alpha(l_t) = \alpha_F + \alpha_P \cdot \bf{1}` :math:`(l_t = P)`.
@@ -88,7 +88,7 @@ where
 To be implemented
 -----------------
 
-The goal of this project is to develop s computational model similar to the one used in Blundell et. al. (2017). Features of the model that are still missing in the current implementation include:
+The goal of this project is to develop a computational model similar to the one used in Blundell et. al. (2017). Features of the model that are still missing in the current implementation include:
 
 * budget constraint:
 
@@ -98,7 +98,7 @@ The goal of this project is to develop s computational model similar to the one 
   * savings
 * female wage equation:
 
-  * individual AR (1) peoductivity process
+  * individual AR1 peoductivity process
   * beliefs
 * exogenous processes
 
