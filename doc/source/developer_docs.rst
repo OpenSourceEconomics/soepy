@@ -1,0 +1,84 @@
+Developer Notes
+===============
+
+In this part, we provide detailed explanation on how certain elements of the computational model are implemented in the current version of the code. There can be multiple ways of casting a given computation model in code. Here we specify programming choices made when implementing certain aspects of the model and provide logic and specification.
+
+pyth_create_state_space
+-----------------------
+
+Functionality
+"""""""""""""
+The function creates state space related objects given state space components.
+
+Inputs
+""""""
+The inputs of the function come from the model specification. They consist of necessary information on the initial conditions and on the dimension of the state space components. In the soepy toy model, the initial condition are the completed years of education. The function requires the range of years of education completed from the (simulated) sample as input. It further requires the number of periods in the model and the number of discrete choices individuals face each period.
+
+Outputs
+"""""""
+The tate space related outputs of the function are collected in the array "args". "args" contains:
+* states_all: an array of tuples of state space components that constitute an admissible state space point each and taken together represent the entirity of admissible states across all periods in the model
+* states_number_period: a one dimensional array (i.e., a vector) that collects the number of admissible state space points for each period
+* mapping_state_index: an array which maps each state recorded in states all to a unique integer identifier
+* max_states_period: a scalar value corresponding to the maximum of the number of states per period over all periods
+
+Code content
+""""""""""""
+
+In the following the way the function is programmed to work is described in more detail.
+
+First, we create array containers for the states_all and mapping_state_index arrays. In the loop executed further below as a part of this function, we want to populate these arrays with the state space components. The components of our toy model state space are:
+
+* the time variable: period
+* the initial conditions: education
+* the history of choices: choice_lagged
+* the accumulated experience in part-time employment: exp_p
+* the accumulated experience in full-time employment: exp_f
+
+Initially, the containers are filled with missing values. The important part in initializing the containers is to specify the correct dimensions.
+
+Let us briefly discuss the dimension of the mapping_state_index array. Each dimension component corresponds to one state space component we would like to keep record of. In the funtion loop, a unique tuple of state space component values is assigned a unique integer identifier k. The dimensions correspond to:
+
+* dimension 1 num_periods to the period number
+* dimension 2 educ_range to the years of education
+* dimension 3 num_choices to the choice of the individual
+* dimension 4 num_periods to years of experience in part-time
+* dimension 5 num_periods to years of experience in full-time
+
+Let us briefly discuss the dimention of the states_all array:
+
+* the 1st dimension is determined by the number of periods in our model
+* the 2nd dimension is related to the maximum number of state space points ever feasible / possibly reachable in one of the periods. 
+* the 3rd dimension is equal to the number of remaining state space components (except period number) that we want to record: educ_years + educ_min, choice_lagged, exp_p, exp_f
+
+We note that we set the size of dimension to equal to the highest possible number of state space points ever reachable in a period. This number is calculated as the maximum number of combinantions of the state space componenents given no restrictions.
+
+Now we can loop through all admissible state space points and fill up the constructed arrays with necessary information.
+
+In the following, we note how education is introduced as an initial condition in the loop:
+
+If we want to record only admissible state space points, we have to account for the fact that individuals in the model start making labor supply choices only after they have completed education. As a reminder, we note that we model individuals from age 16 (legally binding mininum level of education) until age 60 (typical retirement entry age for women), i.e., for 45 periods, where the 1st period corresponds to age 16, the second period to age 17, etc. The current specification of starting values is equivalent to the observation / simulated reality that individuals in the sample have completed something between 10 and 14 years of edcuation. In our loop we want to take into account the fact that, in the first period at age 16, only individuals who have completed 10 years of education (assuming education for everyone starts at the age of 6) will be making a labor market choice between full-time (F), part-time (P), and non-employment (N). The remaining individuals are still in education, such that a state space point where years of education equal e.g. 11 and a labor market choice of e.g. part-time is observed is not admissible and should therefore not be recorded. This is ensured by the if clause "educ_years > period".
+
+When starting the model in the way described above, we need to account for an additional state space point which corresponds to individuals who have just entered the model. Let us consider the very first period, period 0 in the loop, as an example. In this period, only individuals with 10 years of education enter the model and make their first labor supply choice. In order to later be able to compute the instataneous utility for this individuals, we need to record their state space components. As there is no lagged choice available to record, we force set the lagged choice component to zero. In particular, for states for which the condition (period == educ_years) is true, i.e., for individuals who have just entered the model, we record a state: (educ_years + educ_min, 0, 0, 0).
+
+Finally, we briefly repeat what has been recorded in one of the main function output objects, the states_all array:
+
+* educ_years + educ_min: in this example, values from 10 to 14
+* choice_lagged: 0, 1, 2 corresponding to N, P, and F
+* exp_p: part-time experience that can range from 0 to 9
+* exp_f: full-time experience that can range from 0 to 9
+ 
+Note: There is a difference to respy here. In respy, the loop in experience is one iteration longer, goes to num_periods + 1 instead of to num_periods.
+
+
+
+
+
+
+
+
+
+
+
+
+

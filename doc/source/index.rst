@@ -13,3 +13,4 @@ Welcome to soepy's documentation!
    economic_model
    mathematical_model
    computational_model
+   developer_docs

@@ -3,10 +3,112 @@ Computational Model
 
 This part of the documentation specifies the functional forms, types of shocks and exogenous processes we bring together with the developed economic model to perform simulation and estimation. We discuss the functional form of the utility function, the laws of motion for the agents' budget constraints, the chosen formulation of the wage and the experience accumulation processes, etc. in greater detail.
 
+Toy model
+*********
+
+This section lays out the computational model corresponding to the current version of the code.
+
+
+Structural equations
+---------------------
+
+In the toy model, the individual's utility is given by:
+
+.. math::
+
+	u(c_t, l_t; \theta) = \frac{c_t^\mu}{\mu}exp
+	\begin{cases}
+	0, & \text{if $l_t = O$,}
+	\\[4pt]
+	\theta_P, & \text{if $l_t = P$},
+	\\[4pt]
+	\theta_F, & \text{if $l_t = F$},
+	\end{cases}
+
+In assuming this form of utility, the toy model abstracts away from some components we would like to include in the enhanced model. First, the above utility function does not include any covariates and corresponding coefficients in :math:`U(.)` apart from the choice specific constant :math:`\theta_l`. Second, it abstracts from weighting consumption by an equivalence scale.
+
+The budget constraint in the toy model is given by :math:`c_t = h_t w_t`.
+
+The wage equation is given by:
+
+.. math::
+
+	\begin{split}ln \hspace{2pt} w_t^m & = \gamma_{s,0}  + \gamma_{s,1} ln(e_t + 1) + \xi_t,\\
+	ln \hspace{2pt} w_t & = ln \hspace{2pt} w_t^m - \xi_t,\\
+	e_t & = (e_P*g_{sP} + e_F)(1-\delta_s),\\\end{split}
+
+
+where :math:`e_P` and :math:`e_F` measure the total years in part-time and full-time experience accumulated up to period :math:`t`.
+
+
+Transformatons
+--------------
+
+To make the calculation of the flow utilities and value functions more explicit we substitute the above equation in one another. As a result we arrive at a single term that represents math:`u(c_t, l_t, \theta)`.
+
+First we substitute the experience term in the first line of the wage equation,
+
+.. math::
+	
+	ln \hspace{2pt} w_t^m = \gamma_{s,0}  + \gamma_{s,1} ln[(e_P*g_{sP} + e_F)(1-\delta_s) + 1] + \xi_t,
+
+and take the exponent of both sides of the equation:
+
+.. math::
+	
+	w_t^m = exp \hspace{2pt} {\gamma_{s,0}} * \gamma_{s,1}[(e_P*g_{sP} + e_F)(1-\delta_s) + 1] * exp \hspace{2pt} {\xi_t},
+
+We then substitute the wage in the budget constraint:
+
+.. math::
+	
+	c_t = h_t * \{exp \hspace{2pt} {\gamma_{s,0}} * \gamma_{s,1}[(e_P*g_{sP} + e_F)(1-\delta_s) + 1] * exp \hspace{2pt} {\xi_t}\},
+
+And we arrive at the final expression by substituting consumption in the utility function:
+
+.. math::
+	
+	\begin{split}
+	u(c_t, l_t; \theta) & = \frac{h_t^\mu * \{exp \hspace{2pt} {\gamma_{s,0}} * \gamma_{s,1}[(e_P*g_{sP} + e_F)(1-\delta_s) + 1] * exp \hspace{2pt} {\xi_t}\}^\mu}{\mu} \hspace{2pt} *\\
+	& * \hspace{2pt} exp
+	\begin{cases}
+	0, & \text{if $l_t = O$,}
+	\\[4pt]
+	\theta_P, & \text{if $l_t = P$},
+	\\[4pt]
+	\theta_F, & \text{if $l_t = F$},
+	\end{cases}\end{split}\\
+
+
+Finally, the distribution of the error term is assumed to be:
+
+.. math::
+
+	\begin{eqnarray*}
+	\begin{pmatrix}
+	\xi_N\\
+	\xi_P\\
+	\xi_F
+	\end{pmatrix} & \sim & N\left[\left(\begin{array}{c}
+	0\\
+	0\\
+	0
+	\end{array}\right),\left(\begin{array}{ccc}
+	1 & 0 & 0\\
+	0 & 2 & 0\\
+	0 & 0 & 2.5
+	\end{array}\right)\right]\\
+	\end{eqnarray*}
+
+Enhanced model
+**************
+
+The goal of development efforts is directed to gradually extending the toy model towards the enhanced model presented below.
+
 Outline of model components
 ----------------------------
 
-In this framework women are modelled between the age when they start working after having completed education and 60 years of age. They retire at the age of 60 and live for additional 10 years using their accumulated savings}. No re-entry in education is possible in the model. Having completed education, in each period (year) of their life, women make consumption and labor supply choices. They choose between nonemployment (N), part-time (P), or full-time employment (F). Female workers face labor-market frictions.
+In this framework women are modelled between the age when they start working after having completed education and 60 years of age. They retire at the age of 60 and live for additional 10 years using their accumulated savings. No re-entry in education is possible in the model. Having completed education, in each period (year) of their life, women make consumption and labor supply choices. They choose between nonemployment (N), part-time (P), or full-time employment (F). Female workers face labor-market frictions.
 
 In the first period of observation, each woman draws a random preference for work, consisting of a utility cost of part-time work (:math:`\theta_P`) and a utility-cost of full-time work (:math:`\theta_F`). The utility cost parameters,  :math:`\theta_F` and :math:`\theta_P`, can take on two (or more) values each, i.e., there are two types: high - type I, and low - type II. The values of the type II coefficients are normalised to zero. Both parameter values, :math:`\theta_F` and :math:`\theta_P` for type I, as well as the frequency of type I individuals in the data are estimated alongside the other free parameters of the model.
 
