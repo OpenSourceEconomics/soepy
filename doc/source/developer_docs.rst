@@ -74,6 +74,46 @@ Note: There is a difference to respy here. In respy, the loop in experience is o
 
 
 
+pyth_backward_induction
+-----------------------
+
+Functionality
+"""""""""""""
+Solves the dynamic discrete choice model in a backward induction procedure, in which the error terms are integrated out in a Monte Carlo simulation procedure.
+
+Inputs
+""""""
+In a final version of soepy, the pyth_create_state_space function is called before the backwardinduction procedure. The backward induction procedure needs the outputs of the pyth_create_state_space function as inputs. It further relies on multiple inouts from the model specification: num_periods, num_choices, educ_max, educ_min, educ_range, mu, delta,o ptim_paras, num_draws_emax, seed_emax, shocks_cov.
+
+Outputs
+"""""""
+The array periods_emax containing the highest value function among the choice specific value functions for the three labor market choices at each admissible state space point in each period of the model. The array is of dimension number periods by maximum number of admissible choices over all periods.
+
+
+Code content
+""""""""""""
+The individuals in our model solve their optimization problem by making a labor supply choice in every period. They choose the option that is associated with the highest value function. The value function for each of the 3 alternatives is the sum of the current period flow utility of choosing alternative j and a continuation value.
+
+The flow utility includes the current period wage shock, which the individual becomes aware of in the begining of the period and includes in her calculations. To obtain an estimate of the continuation value the individual has to integrate out the distribution of the future shocks. In the model implementstion, we perform numerical integration via a Monte Carlo simulation.
+
+In the function, we generate draws from the error term distribution defined by the error term distribution paramters in the model specification, (in the current model spesification - shocks_cov). For each peiod we draw as many disturbances as num_draws_emax.
+
+In the current formulation, we assume that the wage process is subject to additive measurement error. The disturbances for the part-time and the full-time wage are normally distributed with mean zero. The spesification assumes no serial and also no contemporaneous correlation across the two error terms.
+
+Before we begin the backward iteration procedure, we initialize the container for the final result. It is the array periods_emax with dimensions number of periods by maximum number of admissible states (max_states_period).
+
+The backward induction loop calls several functions defined separately:
+
+* construct_covariates: determines the education level given the state space component years of education
+* construct_emax: integrates out the error term by averaging the value function values over the drawn realization of the error term. In this, the value function is computed using furter nested functions.
+* calculate_utilities: calculates the flow utility using the systematic wage (wage without error), the period wage (systematic wage and error), the consumption utility (first part of the utility function), and total utility (consumption utility and U(.)).
+* calculate_continuation_values: recursively obtains a continuation value given period and state. The function selects the relevant element of the periods_emax array given period number and state space components. This is possible since the whole loop is executed backwards.
+
+Note concerning calculate_consumption_utilities:
+
+In the toy model, consumption in any period is zero if the individual chooses non-employment. This is the case because consumption is simply the product of the period wage and the hours worked, and the hours worked in the case of non-employment are equal to zero. The calculation of the 1st part of the utility function related to consumption involves taking period consumption to the negative pover mu. In the programm, this would yield -inf. To avoid this complication, here the consumption utility of non-employment is normalized to zero.
+
+
 
 
 
