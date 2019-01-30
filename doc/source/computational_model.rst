@@ -44,7 +44,7 @@ where :math:`e_P` and :math:`e_F` measure the total years in part-time and full-
 Transformatons
 --------------
 
-To make the calculation of the flow utilities and value functions more explicit we substitute the above equation in one another. As a result we arrive at a single term that represents math:`u(c_t, l_t, \theta)`.
+To make the calculation of the flow utilities and value functions more explicit we substitute the above equation in one another. As a result we arrive at a single term that represents :math:`u(c_t, l_t, \theta)`.
 
 First we substitute the experience term in the first line of the wage equation,
 
@@ -80,25 +80,8 @@ And we arrive at the final expression by substituting consumption in the utility
 	\end{cases}\end{split}\\
 
 
-Finally, the distribution of the error term is assumed to be:
+Finally, the distribution of the error term is assumed to be multinomial normal with zero means and covariances. Standard diviations are set to 1, 2, and 2.5 for non-employment, the part-time, and the full-time wage respectively.
 
-.. math::
-
-	\begin{eqnarray*}
-	\begin{pmatrix}
-	\xi_N\\
-	\xi_P\\
-	\xi_F
-	\end{pmatrix} & \sim & N\left[\left(\begin{array}{c}
-	0\\
-	0\\
-	0
-	\end{array}\right),\left(\begin{array}{ccc}
-	1 & 0 & 0\\
-	0 & 2 & 0\\
-	0 & 0 & 2.5
-	\end{array}\right)\right]\\
-	\end{eqnarray*}
 
 Enhanced model
 **************
