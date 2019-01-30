@@ -83,7 +83,7 @@ Solves the dynamic discrete choice model in a backward induction procedure, in w
 
 Inputs
 """"""
-In a final version of soepy, the pyth_create_state_space function is called before the backwardinduction procedure. The backward induction procedure needs the outputs of the pyth_create_state_space function as inputs. It further relies on multiple inouts from the model specification: num_periods, num_choices, educ_max, educ_min, educ_range, mu, delta,o ptim_paras, num_draws_emax, seed_emax, shocks_cov.
+In a final version of soepy, the pyth_create_state_space function is called before the backwardinduction procedure. The backward induction procedure needs the outputs of the pyth_create_state_space function as inputs. It further relies on multiple inputs from the model specification: num_periods, num_choices, educ_max, educ_min, educ_range, mu, delta,o ptim_paras, num_draws_emax, seed_emax, shocks_cov.
 
 Outputs
 """""""
@@ -94,15 +94,15 @@ Code content
 """"""""""""
 The individuals in our model solve their optimization problem by making a labor supply choice in every period. They choose the option that is associated with the highest value function. The value function for each of the 3 alternatives is the sum of the current period flow utility of choosing alternative j and a continuation value.
 
-The flow utility includes the current period wage shock, which the individual becomes aware of in the begining of the period and includes in her calculations. To obtain an estimate of the continuation value the individual has to integrate out the distribution of the future shocks. In the model implementstion, we perform numerical integration via a Monte Carlo simulation.
+The flow utility includes the current period wage shock, which the individual becomes aware of in the begining of the period and includes in her calculations. To obtain an estimate of the continuation value the individual has to integrate out the distribution of the future shocks. In the model implementation, we perform numerical integration via a Monte Carlo simulation.
 
-In the function, we generate draws from the error term distribution defined by the error term distribution paramters in the model specification, (in the current model spesification - shocks_cov). For each peiod we draw as many disturbances as num_draws_emax.
+In the function, we generate draws from the error term distribution defined by the error term distribution paramters in the model specification, (in the current model spesification - shocks_cov). For each peiod we draw as many disturbances as num_draws_emax. These draws let us numerically integrate out the error term in a Monte Carlo simulation procedure. This is necessary for computing the continuation values and, ultimately, the value functions and the model's solution. Integating out the error term, represents the process in which individuals in the model form expectations about the future. Assuming rational expectations and a known error term distribution up to its parameters, individuals take the possible realization of the error terms into account by computing the expected continuation values over the distribution of the errors. For every period, we simmulate num_draws_emax draws from the error term distribution.
 
-In the current formulation, we assume that the wage process is subject to additive measurement error. The disturbances for the part-time and the full-time wage are normally distributed with mean zero. The spesification assumes no serial and also no contemporaneous correlation across the two error terms.
+In the current formulation, we assume that the wage process is subject to additive measurement error. The disturbances for non-employment, the part-time, and the full-time wage are normally distributed with mean zero. The spesification assumes no serial and also no contemporaneous correlation across the error terms.
 
 Before we begin the backward iteration procedure, we initialize the container for the final result. It is the array periods_emax with dimensions number of periods by maximum number of admissible states (max_states_period).
 
-The backward induction loop calls several functions defined separately:
+The backward induction loop calls several functions defined separately. As the name suggest, we loop backwards:
 
 * construct_covariates: determines the education level given the state space component years of education
 * construct_emax: integrates out the error term by averaging the value function values over the drawn realization of the error term. In this, the value function is computed using furter nested functions.
@@ -114,11 +114,27 @@ Note concerning calculate_consumption_utilities:
 In the toy model, consumption in any period is zero if the individual chooses non-employment. This is the case because consumption is simply the product of the period wage and the hours worked, and the hours worked in the case of non-employment are equal to zero. The calculation of the 1st part of the utility function related to consumption involves taking period consumption to the negative pover mu. In the programm, this would yield -inf. To avoid this complication, here the consumption utility of non-employment is normalized to zero.
 
 
+pyth_simulate
+------------
 
+Functionality
+"""""""""""""
+Simulate a data set given model spesification.
 
+Inputs
+""""""
+In a final version of soepy, the functions pyth_create_state_space and pyth_backward_induction are called before the backward_induction procedure. The simulation procedure requires the outputs of the former functions as inputs. It further relies on multiple inputs from the model specification. Most are the same as the ones required by the backward induction procedure: num_periods, num_choices, educ_max, educ_min, educ_range, mu, delta,o ptim_paras, num_draws_emax, seed_emax, shocks_cov. In addition, num_agents_sim and seed_sim are also required.
 
+Outputs
+"""""""
+A pandas data frame with infromation about agents experiences in each period such as the choice, wage, flow utility, etc.
 
+First, we need to genrate draws of the error term distribution. We note that this set of draws is different to the one used in the backward induction procedure. In the simulation, we need another set of draws to represent our simulated reality. In our model, at the beginning of every new period, individuals are hit by a productivity shock. They are aware of the realization of the shock when making their labor supply choice for the period. For every period, we simmulate num_agents_sim draws of the error term distribution.
 
+Next, we need to simulate a sample of initial conditions. In this example, we need to assing a value for the years of education to every agent whose life-cycle we want to simulate.
 
+Finally, we loop forward through all agents and all periods to generate agent's experiences in the model and record these in a data frame. 
+
+We note that the sumulation procedure uses a slightly modified verion of the construct covariates function than the backward iteration procedure. During backward iteration, the education level is determined for all possible years of education depending on which state space point has currently been reached by the loop. During simulation, the education level needs to be determined according the simulated initial condition for the individual currently reached by the loop. We further note that the simulation procedure does need all subfunctions related to the calculation of the instantaneous utility, but it does not need the construction of the expected maximum (construct_emax) as a subfunction. The model's solution has already been computed in the backward iteration procedure. During simulation, we can access the relevant continuation value recorded in the periods_emax array given the current period number and state space components determined by the agent's experiences so far.  
 
 
