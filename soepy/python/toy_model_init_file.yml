@@ -17,38 +17,38 @@ SOLUTION:
     num_draws_emax: 500
 PARAMETERS:
     optim_paras:
+    - -0.1
+    - -0.3
     - 5.406
     - 5.574
     - 6.949
     - 0.152
     - 0.229
     - 0.306
-    - 0.150
-    - 0.096
-    - 0.116
     - 0.081
     - 0.057
     - 0.073
-    - -0.1
-    - -0.3
+    - 0.150
+    - 0.096
+    - 0.116
     - 1.00
     - 1.20
     - 1.50
     order:
+    - theta_p
+    - theta_f
     - gamma_0s1
     - gamma_0s2
     - gamma_0s3
     - gamma_1s1
     - gamma_1s2
     - gamma_1s3
+    - delta_s1 
+    - delta_s2
+    - delta_s3
     - g_s1
     - g_s2
     - g_s3
-    - delta_s1 
-    - delta_s2
-    - delta_s3 
-    - theta_p
-    - theta_f
     - sigma_0
     - sigma_1
     - sigma_2
