@@ -5,15 +5,16 @@ GENERAL:
 CONSTANTS:
     delta: 0.98
     mu: -0.56
+    benefits: 92.52
 INITIAL_CONDITIONS:
     educ_max: 14
     educ_min: 10
 SIMULATION:
-    seed: 102
+    seed_sim: 102
     agents: 10
 SOLUTION:
-    seed: 635
-    agents: 500
+    seed_emax: 635
+    num_draws_emax: 500
 PARAMETERS:
     optim_paras:
     - 5.406
