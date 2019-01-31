@@ -11,7 +11,7 @@ INITIAL_CONDITIONS:
     educ_min: 10
 SIMULATION:
     seed_sim: 102
-    agents: 10
+    num_agents_sim: 10
 SOLUTION:
     seed_emax: 635
     num_draws_emax: 500
