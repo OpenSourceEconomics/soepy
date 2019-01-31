@@ -80,7 +80,7 @@ And we arrive at the final expression by substituting consumption in the utility
 	\end{cases}\end{split}\\
 
 
-Finally, the distribution of the error term is assumed to be multinomial normal with zero means and covariances. Standard diviations are set to 1, 2, and 2.5 for non-employment, the part-time, and the full-time wage respectively.
+Finally, the distribution of the error term is assumed to be multinomial normal with zero means and covariances.
 
 
 Enhanced model
