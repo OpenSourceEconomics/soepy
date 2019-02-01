@@ -1,14 +1,14 @@
 import numpy as np
 
-from .soepy.shared.shared_constants import MISSING_FLOAT
+from .soepy.python.shared.shared_constants import MISSING_FLOAT
 
-from soepy.shared.shared_auxiliary import draw_disturbances
-from .soepy.shared.shared_auxiliary import calculate_wage_systematic
-from .soepy.shared.shared_auxiliary import calculate_period_wages
-from .soepy.shared.shared_auxiliary import calculate_consumption_utilities
-from .soepy.shared.shared_auxiliary import calculate_total_utilities
-from .soepy.shared.shared_auxiliary import calculate_utilities
-from .soepy.shared.shared_auxiliary import calculate_continuation_values
+from soepy.python.shared.shared_auxiliary import draw_disturbances
+from .soepy.python.shared.shared_auxiliary import calculate_wage_systematic
+from .soepy.python.shared.shared_auxiliary import calculate_period_wages
+from .soepy.python.shared.shared_auxiliary import calculate_consumption_utilities
+from .soepy.python.shared.shared_auxiliary import calculate_total_utilities
+from .soepy.python.shared.shared_auxiliary import calculate_utilities
+from .soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
 def pyth_simulate(attr_dict, state_space_args, periods_emax):

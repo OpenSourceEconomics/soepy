@@ -1,5 +1,5 @@
-from soepy.solve.solve_auxiliary import pyth_create_state_space
-from soepy.solve.solve_auxiliary import pyth_backward_induction
+from soepy.python.solve.solve_auxiliary import pyth_create_state_space
+from soepy.python.solve.solve_auxiliary import pyth_backward_induction
 
 def pyth_solve(attr_dict):
 	"""Solve the model by backward induction."""
