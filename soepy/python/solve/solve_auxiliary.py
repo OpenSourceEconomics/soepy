@@ -1,6 +1,6 @@
 import numpy as np
 
-from soepy.python.shared_constants import MISSING_INT, MISSING_FLOAT
+from soepy.python.shared.shared_constants import MISSING_INT, MISSING_FLOAT
 from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.shared.shared_auxiliary import calculate_wage_systematic
 from soepy.python.shared.shared_auxiliary import calculate_period_wages

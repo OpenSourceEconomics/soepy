@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from soepy.python.pre_processing.model_processing import read_init_file
 from soepy.python.pre_processing.model_processing import init_dict_to_attr_dict
