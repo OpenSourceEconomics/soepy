@@ -28,6 +28,7 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
     delta = attr_dict['CONSTANTS']['delta']
 
     educ_years = list(range(educ_min, educ_max + 1))
+    np.random.seed(123)
     educ_years = np.random.choice(educ_years, num_agents_sim)
 
     # Create draws for simulated sample
