@@ -11,7 +11,9 @@ from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
 def pyth_create_state_space(attr_dict):
-    """Create grid for state space."""
+    """Create state space related objects
+    given state space components in model specification.
+    """
 
     # Unpack parameter from the model specification
     num_choices = attr_dict['GENERAL']['num_choices']
@@ -20,17 +22,17 @@ def pyth_create_state_space(attr_dict):
     educ_min = attr_dict['INITIAL_CONDITIONS']['educ_min']
     educ_range = attr_dict['DERIVED_ATTR']['educ_range']
 
-    # Array for mapping the state space points to indices
+    # Array for mapping the state space points (states) to indices
     shape = (num_periods, educ_range, num_choices, num_periods, num_periods)
     mapping_state_index = np.tile(MISSING_INT, shape)
 
     # Maximum number of state space points per period. There can be no more states in a period than this number. 
     num_states_period_upper_bound = np.prod(mapping_state_index.shape)
 
-    # Array to collect all state space points (states) that can be reached each period
+    # Array to collect all state space points that can be reached each period
     states_all = np.tile(MISSING_INT, (num_periods, num_states_period_upper_bound, 4))
 
-    # Array for the maximum number state space points / states per period
+    # Array for the maximum number state space points per period
     states_number_period = np.tile(MISSING_INT, num_periods)
 
 
@@ -54,7 +56,7 @@ def pyth_create_state_space(attr_dict):
                 # Loop over all admaissible years of experience accumulated in full-time
                 for exp_p in range(num_periods):
 
-                    # The accumulation of experience cannot exceed time lapsed
+                    # The accumulation of experience cannot exceed time elapsed
                     # since individual entered the model
                     if (exp_f + exp_p > period - educ_years):
                         continue
@@ -155,12 +157,14 @@ def pyth_create_state_space(attr_dict):
     # Collect arguments
     args = (states_all, states_number_period, mapping_state_index, max_states_period)
     
-    # Record function output
+    # Return function output
     return args
 
 
 def pyth_backward_induction(attr_dict, state_space_args):
-    """Solves the model in a backward induction procedure."""
+    """Obtain the value function maximum values
+    for all admissible states and periods in a backward induction procedure.
+    """
     
     # Unpack objects from agrs
     states_all, states_number_period, mapping_states_index, max_states_period = state_space_args[0], state_space_args[1], state_space_args[2], state_space_args[3]
@@ -209,7 +213,7 @@ def pyth_backward_induction(attr_dict, state_space_args):
             # Record function output
             periods_emax[period, k] = emax
         
-    # Return output
+    # Return function output
     return periods_emax
 
 
@@ -217,9 +221,8 @@ def construct_covariates(attr_dict, states_all, period, k):
     """Constructs additional covariates given state space components."""
     
     # Determine education level given number of years of education
-    # Would it be more efficient to do this somewhere else?
     
-    # Unpack attributes from the model specification:
+    # Unpack attributes from the model specification
     educ_min = attr_dict['INITIAL_CONDITIONS']['educ_min']
     
     # Unpack state space components
@@ -253,14 +256,14 @@ def construct_emax (attr_dict,
                     optim_paras,
                     periods_emax,
 ):
-    """Obtain the maximum of the value fucntion over the available choices 
-    via a Monte Carlo simulation integration procedure.
+    """Integrate out the error terms in a Monte Carlo simulation procedure
+    to obtain value function maximum values for each period and state.
     """
     
-    # Unpack attributes from the model specification:
+    # Unpack attributes from the model specification
     delta = attr_dict['CONSTANTS']['delta']
     
-    # Initialize container for sum of maximum value functions
+    # Initialize container for sum of value function maximum values
     # over all error term draws for the period and state
     emax = 0.0
     
@@ -284,7 +287,10 @@ def construct_emax (attr_dict,
         # Calculate choice specific value functions
         value_functions = flow_utilities + delta*continuation_values
         
-        # Obtain highest value function
+        # Obtain highest value function value among the available choices
+        # If above draws were the true shocks, maximum is the the current period value function value
+        # It is the sum the flow utility and next periods value function given an optimal decision in the future
+        # and an optimal choice in the current period.
         maximum = max(value_functions)
         
         # Add to sum over all draws
@@ -297,7 +303,7 @@ def construct_emax (attr_dict,
     
     # Thus, we have integrated out the error term
     
-    # Output
+    # Return function output
     return emax
 
 

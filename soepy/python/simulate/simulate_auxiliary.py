@@ -33,7 +33,7 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
     # Create draws for simulated sample
     draws_sim = draw_disturbances((num_periods, num_agents_sim), shocks_cov, seed_sim)
 
-    # Start count over all simulations/row (number of agents times number of periods)
+    # Start count over all simulations/rows (number of agents times number of periods)
     count = 0
 
     # Initialize container for the final output

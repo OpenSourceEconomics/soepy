@@ -20,8 +20,27 @@ def draw_disturbances (num_draws, shocks_cov, seed):
     return draws
 
 
+def calculate_utilities(attr_dict, educ_level, exp_p, exp_f, optim_paras, draws):
+    """Calculate period/flow utilities for all choices given state, period, and shocks."""
+    
+    # Calculate wage net of period productivity shock
+    wage_systematic = calculate_wage_systematic(educ_level, exp_p, exp_f, optim_paras)
+    
+    # Calculate period wages for the three choices includings chocks' realizations
+    period_wages = calculate_period_wages(attr_dict, wage_systematic, draws)
+    
+    # Calculate 1st part of the period utilities related to consumption
+    consumption_utilities = calculate_consumption_utilities(attr_dict, period_wages)
+    
+    # Calculate total period utilities by multiplying U(.) component
+    utilities = calculate_total_utilities(attr_dict, consumption_utilities, optim_paras)
+    
+    # Return function output
+    return utilities, consumption_utilities, period_wages, wage_systematic
+
+
 def calculate_wage_systematic(educ_level, exp_p, exp_f, optim_paras):
-    """Calculate systematic wages, i.e. net of shock, for specified state."""
+    """Calculate systematic wages, i.e., wages net of shock, for specified state."""
     
     # Initialize container
     wage_systematic = np.nan
@@ -42,7 +61,7 @@ def calculate_wage_systematic(educ_level, exp_p, exp_f, optim_paras):
 
 
 def calculate_period_wages(attr_dict, wage_systematic, draws):
-    """Calculate wages for each choice including choice specific productivty shock."""
+    """Calculate period wages for each choice including choice and period specific productivty shock."""
     
     # Unpack attributes from the model specification:
     num_choices = attr_dict['GENERAL']['num_choices']
@@ -61,7 +80,7 @@ def calculate_period_wages(attr_dict, wage_systematic, draws):
 
 
 def calculate_consumption_utilities(attr_dict, period_wages):
-    """Calculate the first part of the period utilities related to consumption"""
+    """Calculate the first part of the period utilities related to consumption."""
     
     # Unpack attributes from the model specification:
     num_choices = attr_dict['GENERAL']['num_choices']
@@ -85,7 +104,7 @@ def calculate_consumption_utilities(attr_dict, period_wages):
 
 
 def calculate_total_utilities(attr_dict, consumption_utilities, optim_paras):
-    """Calculate total flow utility for all choices."""
+    """Calculate total period utilities for each of the choices."""
     
     # Unpack attributes from the model specification:
     num_choices = attr_dict['GENERAL']['num_choices']
@@ -99,31 +118,12 @@ def calculate_total_utilities(attr_dict, consumption_utilities, optim_paras):
     # Calculate utilities for the avaibale joices N, P, F
     total_utilities = consumption_utilities * U_
     
-    # Return function_output
+    # Return function output
     return total_utilities
 
 
-def calculate_utilities(attr_dict, educ_level, exp_p, exp_f, optim_paras, draws):
-    """Calculate flow utilities for all choices given state, period, and shocks."""
-    
-    # Calculate wage net of period productivity shock
-    wage_systematic = calculate_wage_systematic(educ_level, exp_p, exp_f, optim_paras)
-    
-    # Calculate period wages for the three choices includings chocks' realizations
-    period_wages = calculate_period_wages(attr_dict, wage_systematic, draws)
-    
-    # Calculate 1st part of the period flow utility related to consumption
-    consumption_utilities = calculate_consumption_utilities(attr_dict, period_wages)
-    
-    # Calculate total utility by multiplying U(.) component
-    utilities = calculate_total_utilities(attr_dict, consumption_utilities, optim_paras)
-    
-    # Return function output
-    return utilities, consumption_utilities, period_wages, wage_systematic
-
-
 def calculate_continuation_values (attr_dict, mapping_states_index, periods_emax, period, educ_years_idx, exp_p, exp_f):
-    """Obtain continuation values for all choices."""
+    """Obtain continuation values for each of the choices."""
     
     # Unpack attributes from the model specification:
     num_choices = attr_dict['GENERAL']['num_choices']
@@ -151,5 +151,5 @@ def calculate_continuation_values (attr_dict, mapping_states_index, periods_emax
     else:
         continuation_values = np.tile(0.0, num_choices)
         
-    # Record function output
+    # Return function output
     return continuation_values

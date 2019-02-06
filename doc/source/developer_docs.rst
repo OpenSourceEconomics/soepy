@@ -79,20 +79,20 @@ pyth_backward_induction
 
 Functionality
 """""""""""""
-Solves the dynamic discrete choice model in a backward induction procedure, in which the error terms are integrated out in a Monte Carlo simulation procedure.
+Solves the dynamic discrete choice model in a backward induction procedure, in which the error terms are integrated out in a Monte Carlo simulation procedure. Obtaining a solution means making such a choice at each state space point as to obtain the highest of the choice specific value funftions. The current period value function is then the sum of current periods flow utility of the optimal choice and next period's flow utility given an optimal choice in the future.
 
 Inputs
 """"""
-In a final version of soepy, the pyth_create_state_space function is called before the backwardinduction procedure. The backward induction procedure needs the outputs of the pyth_create_state_space function as inputs. It further relies on multiple inputs from the model specification: num_periods, num_choices, educ_max, educ_min, educ_range, mu, delta,o ptim_paras, num_draws_emax, seed_emax, shocks_cov.
+In a final version of soepy, the pyth_create_state_space function is called before the backward induction procedure. The backward induction procedure needs the outputs of the pyth_create_state_space function as inputs. It further relies on multiple inputs from the model specification: num_periods, num_choices, educ_max, educ_min, educ_range, mu, delta,o ptim_paras, num_draws_emax, seed_emax, shocks_cov.
 
 Outputs
 """""""
-The array periods_emax containing the highest value function among the choice specific value functions for the three labor market choices at each admissible state space point in each period of the model. The array is of dimension number periods by maximum number of admissible choices over all periods.
+The array periods_emax contains the highest value function value among the choice specific value function values for the three labor market choices at each admissible state space point in each period of the model. The array is of dimension number periods by maximum number of admissible choices over all periods.
 
 
 Code content
 """"""""""""
-The individuals in our model solve their optimization problem by making a labor supply choice in every period. They choose the option that is associated with the highest value function. The value function for each of the 3 alternatives is the sum of the current period flow utility of choosing alternative j and a continuation value.
+The individuals in our model solve their optimization problem by making a labor supply choice in every period. They choose the option that is associated with the highest value function. The value function for each of the 3 alternatives is the sum of the current period flow utility of choosing alternative j and a continuation value. The continuation value is, in turn, next period's value function given an optimal choice in the future. 
 
 The flow utility includes the current period wage shock, which the individual becomes aware of in the begining of the period and includes in her calculations. To obtain an estimate of the continuation value the individual has to integrate out the distribution of the future shocks. In the model implementation, we perform numerical integration via a Monte Carlo simulation.
 
