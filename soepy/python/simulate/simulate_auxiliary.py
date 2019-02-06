@@ -63,9 +63,6 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
             # Look up the indicator for the current state
             k = mapping_states_index[period, educ_years_i - educ_min, choice_lagged, exp_p, exp_f]
 
-            # Record agent identifier and current period number in the dataset
-            dataset[count, :2] = i, period
-
             # Calculate choice specific value functions
             # for individual, period and state space point
 
