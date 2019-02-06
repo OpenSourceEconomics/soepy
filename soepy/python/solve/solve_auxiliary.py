@@ -24,10 +24,10 @@ def pyth_create_state_space(attr_dict):
 
     # Array for mapping the state space points (states) to indices
     shape = (num_periods, educ_range, num_choices, num_periods, num_periods)
-    mapping_state_index = np.tile(MISSING_INT, shape)
+    mapping_states_index = np.tile(MISSING_INT, shape)
 
     # Maximum number of state space points per period. There can be no more states in a period than this number. 
-    num_states_period_upper_bound = np.prod(mapping_state_index.shape)
+    num_states_period_upper_bound = np.prod(mapping_states_index.shape)
 
     # Array to collect all state space points that can be reached each period
     states_all = np.tile(MISSING_INT, (num_periods, num_states_period_upper_bound, 4))
@@ -68,7 +68,7 @@ def pyth_create_state_space(attr_dict):
 
                         # Assign an additional the integer count k
                         # for entry state
-                        mapping_state_index[
+                        mapping_states_index[
                             period,
                             educ_years,
                             0,
@@ -115,7 +115,7 @@ def pyth_create_state_space(attr_dict):
 
                             # Check for duplicate states
                             if (
-                                mapping_state_index[
+                                mapping_states_index[
                                     period,
                                     educ_years,
                                     choice_lagged,
@@ -128,7 +128,7 @@ def pyth_create_state_space(attr_dict):
 
                             # Assign the integer count k as an indicator for the
                             # currently reached admissible state space point
-                            mapping_state_index[
+                            mapping_states_index[
                                 period,
                                 educ_years,
                                 choice_lagged,
@@ -155,10 +155,10 @@ def pyth_create_state_space(attr_dict):
     max_states_period = max(states_number_period)
 
     # Collect arguments
-    args = (states_all, states_number_period, mapping_state_index, max_states_period)
+    state_space_args = (states_all, states_number_period, mapping_states_index, max_states_period)
     
     # Return function output
-    return args
+    return state_space_args
 
 
 def pyth_backward_induction(attr_dict, state_space_args):
