@@ -137,4 +137,9 @@ Finally, we loop forward through all agents and all periods to generate agent's 
 
 We note that the sumulation procedure uses a slightly modified verion of the construct covariates function than the backward iteration procedure. During backward iteration, the education level is determined for all possible years of education depending on which state space point has currently been reached by the loop. During simulation, the education level needs to be determined according the simulated initial condition for the individual currently reached by the loop. We further note that the simulation procedure does need all subfunctions related to the calculation of the instantaneous utility, but it does not need the construction of the expected maximum (construct_emax) as a subfunction. The model's solution has already been computed in the backward iteration procedure. During simulation, we can access the relevant continuation value recorded in the periods_emax array given the current period number and state space components determined by the agent's experiences so far.  
 
+Possibles To Do's to consider:
+* rearrange init file as to possibly avoid selecting parameters using big numbers
+* consider wether it is more efficient to generate education level information at some other stage of the core (currently in loop over state space components as part of the construct covariates function)
+* add mean as function input to error term generation
+* move hours definition from calculate_consumption_utilties in shared_auxiliary to the initialization file.
 
