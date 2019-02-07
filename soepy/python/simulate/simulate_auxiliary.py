@@ -58,6 +58,20 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
         # Loop over all remaining
         for period in range(num_periods):
 
+            # Record agent identifier, period number, and years of education
+            dataset[count, :2] = i, period,
+            dataset[count, 2:3] = educ_years_i
+
+            # Make sure that experiences are recorded only after
+            # the individual has completed education and entered the model
+            if period < educ_years_idx:
+
+                # Update count
+                count += 1
+
+                # Skip recording experiences and leave NaN in dataset
+                continue
+
             # Extract state space components
             choice_lagged, exp_p, exp_f = current_state[1], current_state[2], current_state[3]
 
@@ -95,10 +109,7 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
             max_idx = np.argmax(value_functions)
 
 
-            # Record output
-            # Record agent identifier, period number, and choice
-            dataset[count, :2] = i, period, 
-            dataset[count, 2:3] = educ_years_i
+            # Record period experiences
             dataset[count, 3:4] = max_idx
             dataset[count, 4:5] = wage_systematic
             dataset[count, 5:8] = period_wages[:]

@@ -38,7 +38,8 @@ def simulate(init_file_name):
     DATA_FORMATS_SIM = dict()
     for key_ in DATA_LABLES_SIM:
         DATA_FORMATS_SIM[key_] = np.int
-        if key_ in ["Systematic Wage",
+        if key_ in ["Choice",
+                    "Systematic Wage",
                     "Period Wage N",
                     "Period Wage P",
                     "Period Wage F",
