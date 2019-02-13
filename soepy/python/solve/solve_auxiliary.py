@@ -2,10 +2,6 @@ import numpy as np
 
 from soepy.python.shared.shared_constants import MISSING_INT, MISSING_FLOAT
 from soepy.python.shared.shared_auxiliary import draw_disturbances
-from soepy.python.shared.shared_auxiliary import calculate_wage_systematic
-from soepy.python.shared.shared_auxiliary import calculate_period_wages
-from soepy.python.shared.shared_auxiliary import calculate_consumption_utilities
-from soepy.python.shared.shared_auxiliary import calculate_total_utilities
 from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 

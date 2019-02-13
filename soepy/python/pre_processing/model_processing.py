@@ -4,7 +4,7 @@ import numpy as np
 
 def read_init_file(init_file_name):
     """Reads in the model specification from yaml file."""
-
+    # TODO: Write a unit test where we compare the specifications obtained by the init file import process with "true" values
     # Import yaml initialization file as dictionary init_dict
     with open(init_file_name) as y:
         init_dict = yaml.load(y)

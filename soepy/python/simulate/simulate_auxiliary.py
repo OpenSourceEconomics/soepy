@@ -3,17 +3,13 @@ import numpy as np
 from soepy.python.shared.shared_constants import MISSING_FLOAT
 
 from soepy.python.shared.shared_auxiliary import draw_disturbances
-from soepy.python.shared.shared_auxiliary import calculate_wage_systematic
-from soepy.python.shared.shared_auxiliary import calculate_period_wages
-from soepy.python.shared.shared_auxiliary import calculate_consumption_utilities
-from soepy.python.shared.shared_auxiliary import calculate_total_utilities
 from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
 def pyth_simulate(attr_dict, state_space_args, periods_emax):
     """Simulate agent experiences."""
-    
+
     # Unpack objects from agrs
     states_all, states_number_period, mapping_states_index, max_states_period = state_space_args[0], state_space_args[1], state_space_args[2], state_space_args[3]
     
@@ -28,7 +24,7 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
     delta = attr_dict['CONSTANTS']['delta']
 
     educ_years = list(range(educ_min, educ_max + 1))
-    np.random.seed(123)
+    np.random.seed(seed_sim)
     educ_years = np.random.choice(educ_years, num_agents_sim)
 
     # Create draws for simulated sample
@@ -132,7 +128,6 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
 
 def extract_individual_covariates (educ_years, educ_min, i):
     """Constructs additional covariates given agent indicator."""
-    
     # Determine education level given number of years of education
     # Would it be more efficient to do this somewhere else?
 
@@ -157,7 +152,6 @@ def extract_individual_covariates (educ_years, educ_min, i):
 
 def replace_missing_values (arguments):
     """Replace MISSING_FLOAT with NAN."""
-    
     # Antibugging
     assert isinstance(arguments, tuple) or isinstance(arguments, np.ndarray)
 

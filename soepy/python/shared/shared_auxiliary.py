@@ -1,8 +1,8 @@
 import numpy as np
 import math
+import sys
 
 from soepy.python.shared.shared_constants import MISSING_FLOAT
-
 def draw_disturbances (num_draws, shocks_cov, seed):
     """Creates desired number of draws of a multivariate standard normal distribution."""
     
@@ -87,16 +87,22 @@ def calculate_consumption_utilities(attr_dict, period_wages):
     benefits = attr_dict['CONSTANTS']['benefits']
     mu = attr_dict['CONSTANTS']['mu']
     
-    # Initialize container
-    consumption_utilities = np.tile(np.nan, num_choices)
-    
     # Define hours array, possibly move to another file
     hours = np.array([0, 18, 38])
     
     # Calculate choice specific wages including productivity shock
     consumption_utilities = hours * period_wages
     consumption_utilities[0]  = benefits**mu/mu
+
     consumption_utilities[1]  = consumption_utilities[1]**mu/mu
+
+    if np.isnan(consumption_utilities[1]):
+        print(period_wages)
+        print(hours)
+        print(hours * period_wages)
+        print(consumption_utilities)
+        sys.exit("Error message")
+
     consumption_utilities[2]  = consumption_utilities[2]**mu/mu
     
     # Return function output

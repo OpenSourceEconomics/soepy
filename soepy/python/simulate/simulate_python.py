@@ -12,7 +12,7 @@ from soepy.python.simulate.simulate_auxiliary import replace_missing_values
 
 def simulate(init_file_name):
     """Create a data frame of individuals' simulated experiences."""
-
+    # TODO: We should include a simple integration test as soon as we have integrated the random init file process
     # Read in model specification from yaml file
     attr_dict = read_init_file(init_file_name)
     
