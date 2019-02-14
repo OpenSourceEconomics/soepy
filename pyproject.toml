@@ -1,0 +1,15 @@
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.gitignore
+  | \.in
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | docs
+  | boupy-egg-info
+
+)/
