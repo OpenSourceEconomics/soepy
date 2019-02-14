@@ -13,7 +13,7 @@ from soepy.python.test.auxiliary import cleanup
 
 
 def test1():
-    """This test ensures that the columns of the output dataframe correspond to the """
+    """This test ensures that the columns of the output dataframe correspond to the bla bla"""
     for _ in range(100):
         constr = {"EDUC_MAX": 10, "AGENTS": 1, "PERIODS": 1}
         init_dict = random_init(constr)
