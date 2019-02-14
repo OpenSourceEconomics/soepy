@@ -12,17 +12,17 @@ def pyth_create_state_space(attr_dict):
     """
 
     # Unpack parameter from the model specification
-    num_choices = attr_dict['GENERAL']['num_choices']
-    num_periods = attr_dict['GENERAL']['num_periods']
-    educ_max = attr_dict['INITIAL_CONDITIONS']['educ_max']
-    educ_min = attr_dict['INITIAL_CONDITIONS']['educ_min']
-    educ_range = attr_dict['DERIVED_ATTR']['educ_range']
+    num_choices = attr_dict["GENERAL"]["num_choices"]
+    num_periods = attr_dict["GENERAL"]["num_periods"]
+    educ_max = attr_dict["INITIAL_CONDITIONS"]["educ_max"]
+    educ_min = attr_dict["INITIAL_CONDITIONS"]["educ_min"]
+    educ_range = attr_dict["DERIVED_ATTR"]["educ_range"]
 
     # Array for mapping the state space points (states) to indices
     shape = (num_periods, educ_range, num_choices, num_periods, num_periods)
     mapping_states_index = np.tile(MISSING_INT, shape)
 
-    # Maximum number of state space points per period. There can be no more states in a period than this number. 
+    # Maximum number of state space points per period. There can be no more states in a period than this number.
     num_states_period_upper_bound = np.prod(mapping_states_index.shape)
 
     # Array to collect all state space points that can be reached each period
@@ -30,7 +30,6 @@ def pyth_create_state_space(attr_dict):
 
     # Array for the maximum number state space points per period
     states_number_period = np.tile(MISSING_INT, num_periods)
-
 
     # Loop over all periods / all ages
     for period in range(num_periods):
@@ -54,32 +53,21 @@ def pyth_create_state_space(attr_dict):
 
                     # The accumulation of experience cannot exceed time elapsed
                     # since individual entered the model
-                    if (exp_f + exp_p > period - educ_years):
+                    if exp_f + exp_p > period - educ_years:
                         continue
 
                     # Add an additional entry state [educ_years + educ_min, 0, 0, 0]
                     # for individuals who have just completed education
                     # and still have no experience in any occupation.
-                    if (period == educ_years):
+                    if period == educ_years:
 
                         # Assign an additional the integer count k
                         # for entry state
-                        mapping_states_index[
-                            period,
-                            educ_years,
-                            0,
-                            0,
-                            0,
-                        ] = k
+                        mapping_states_index[period, educ_years, 0, 0, 0] = k
 
                         # Record the values of the state space components
                         # for the currentry reached entry state
-                        states_all[period, k, :] = [
-                            educ_years + educ_min,
-                            0,
-                            0,
-                            0,
-                        ]
+                        states_all[period, k, :] = [educ_years + educ_min, 0, 0, 0]
 
                         # Update count once more
                         k += 1
@@ -112,11 +100,7 @@ def pyth_create_state_space(attr_dict):
                             # Check for duplicate states
                             if (
                                 mapping_states_index[
-                                    period,
-                                    educ_years,
-                                    choice_lagged,
-                                    exp_p,
-                                    exp_f,
+                                    period, educ_years, choice_lagged, exp_p, exp_f
                                 ]
                                 != MISSING_INT
                             ):
@@ -125,11 +109,7 @@ def pyth_create_state_space(attr_dict):
                             # Assign the integer count k as an indicator for the
                             # currently reached admissible state space point
                             mapping_states_index[
-                                period,
-                                educ_years,
-                                choice_lagged,
-                                exp_p,
-                                exp_f,
+                                period, educ_years, choice_lagged, exp_p, exp_f
                             ] = k
 
                             # Record the values of the state space components
@@ -144,15 +124,20 @@ def pyth_create_state_space(attr_dict):
                             # Update count
                             k += 1
 
-        # Record number of admissible state space points for the period currently reached in the loop 
+        # Record number of admissible state space points for the period currently reached in the loop
         states_number_period[period] = k
 
     # Auxiliary objects
     max_states_period = max(states_number_period)
 
     # Collect arguments
-    state_space_args = (states_all, states_number_period, mapping_states_index, max_states_period)
-    
+    state_space_args = (
+        states_all,
+        states_number_period,
+        mapping_states_index,
+        max_states_period,
+    )
+
     # Return function output
     return state_space_args
 
@@ -161,16 +146,21 @@ def pyth_backward_induction(attr_dict, state_space_args):
     """Obtain the value function maximum values
     for all admissible states and periods in a backward induction procedure.
     """
-    
+
     # Unpack objects from agrs
-    states_all, states_number_period, mapping_states_index, max_states_period = state_space_args[0], state_space_args[1], state_space_args[2], state_space_args[3]
-    
+    states_all, states_number_period, mapping_states_index, max_states_period = (
+        state_space_args[0],
+        state_space_args[1],
+        state_space_args[2],
+        state_space_args[3],
+    )
+
     # Unpack parameter from the model specification
-    num_periods = attr_dict['GENERAL']['num_periods']
-    num_draws_emax = attr_dict['SOLUTION']['num_draws_emax']
-    seed_emax = attr_dict['SOLUTION']['seed_emax']
-    shocks_cov = attr_dict['DERIVED_ATTR']['shocks_cov']
-    optim_paras = attr_dict['PARAMETERS']['optim_paras']
+    num_periods = attr_dict["GENERAL"]["num_periods"]
+    num_draws_emax = attr_dict["SOLUTION"]["num_draws_emax"]
+    seed_emax = attr_dict["SOLUTION"]["seed_emax"]
+    shocks_cov = attr_dict["DERIVED_ATTR"]["shocks_cov"]
+    optim_paras = attr_dict["PARAMETERS"]["optim_paras"]
 
     # Initialize container for the final result,
     # maximal value function per perdiod and state:
@@ -189,10 +179,12 @@ def pyth_backward_induction(attr_dict, state_space_args):
         for k in range(states_number_period[period]):
 
             # Construct additional education information
-            educ_level, educ_years_idx = construct_covariates(attr_dict, states_all, period, k)  
+            educ_level, educ_years_idx = construct_covariates(
+                attr_dict, states_all, period, k
+            )
 
             # Integrate out the error term
-            emax = construct_emax (
+            emax = construct_emax(
                 attr_dict,
                 period,
                 k,
@@ -208,98 +200,107 @@ def pyth_backward_induction(attr_dict, state_space_args):
 
             # Record function output
             periods_emax[period, k] = emax
-        
+
     # Return function output
     return periods_emax
 
 
 def construct_covariates(attr_dict, states_all, period, k):
     """Constructs additional covariates given state space components."""
-    
+
     # Determine education level given number of years of education
-    
+
     # Unpack attributes from the model specification
-    educ_min = attr_dict['INITIAL_CONDITIONS']['educ_min']
-    
+    educ_min = attr_dict["INITIAL_CONDITIONS"]["educ_min"]
+
     # Unpack state space components
     educ_years = states_all[period, k, 0]
 
     # Extract education information
-    if (educ_years <= 10):
-        educ_level = [1,0,0]
+    if educ_years <= 10:
+        educ_level = [1, 0, 0]
 
     elif (educ_years > 10) and (educ_years <= 12):
-        educ_level = [0,1,0]
+        educ_level = [0, 1, 0]
 
     else:
-        educ_level = [0,0,1]
+        educ_level = [0, 0, 1]
 
     educ_years_idx = educ_years - educ_min
-    
+
     # Return function output
     return educ_level, educ_years_idx
 
 
-def construct_emax (attr_dict,
-                    period,
-                    k,
-                    educ_level,
-                    educ_years_idx,
-                    num_draws_emax,
-                    draws_emax_period,
-                    states_all,
-                    mapping_states_index,
-                    optim_paras,
-                    periods_emax,
+def construct_emax(
+    attr_dict,
+    period,
+    k,
+    educ_level,
+    educ_years_idx,
+    num_draws_emax,
+    draws_emax_period,
+    states_all,
+    mapping_states_index,
+    optim_paras,
+    periods_emax,
 ):
     """Integrate out the error terms in a Monte Carlo simulation procedure
     to obtain value function maximum values for each period and state.
     """
-    
+
     # Unpack attributes from the model specification
-    delta = attr_dict['CONSTANTS']['delta']
-    
+    delta = attr_dict["CONSTANTS"]["delta"]
+
     # Initialize container for sum of value function maximum values
     # over all error term draws for the period and state
     emax = 0.0
-    
+
     # Loop over all error term draws
     # for the period and state currently rached by the parent loop
     for i in range(num_draws_emax):
-        
+
         # Extract the error term draws corresponding to
         # period number, state, and loop iteration number, i
         corresponding_draws = draws_emax_period[i, :]
-        
-        # Extract relevant state space components 
+
+        # Extract relevant state space components
         educ_years, _, exp_p, exp_f = states_all[period, k, :]
-        
+
         # Calculate flow utility at current period, state, and draw
-        flow_utilities = calculate_utilities(attr_dict, educ_level, exp_p, exp_f, optim_paras, corresponding_draws)[0]
-        
+        flow_utilities = calculate_utilities(
+            attr_dict, educ_level, exp_p, exp_f, optim_paras, corresponding_draws
+        )[0]
+
         # Obtain continuation values for all choices
-        continuation_values = calculate_continuation_values(attr_dict, mapping_states_index, periods_emax, period, educ_years_idx, exp_p, exp_f)
-        
+        continuation_values = calculate_continuation_values(
+            attr_dict,
+            mapping_states_index,
+            periods_emax,
+            period,
+            educ_years_idx,
+            exp_p,
+            exp_f,
+        )
+
         # Calculate choice specific value functions
-        value_functions = flow_utilities + delta*continuation_values
-        
+        value_functions = flow_utilities + delta * continuation_values
+
         # Obtain highest value function value among the available choices
         # If above draws were the true shocks, maximum is the the current period value function value
         # It is the sum the flow utility and next periods value function given an optimal decision in the future
         # and an optimal choice in the current period.
         maximum = max(value_functions)
-        
+
         # Add to sum over all draws
         emax += maximum
-        
+
         # End loop
-    
+
     # Average over the number of draws
     emax = emax / num_draws_emax
-    
+
     # Thus, we have integrated out the error term
-    
+
     # Return function output
     return emax
-
-

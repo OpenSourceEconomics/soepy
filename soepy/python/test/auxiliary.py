@@ -1,6 +1,6 @@
-
 import glob
 import os
+
 
 def cleanup(options=None):
     """The function deletes package related output files."""
@@ -21,4 +21,3 @@ def cleanup(options=None):
                 pass
             else:
                 os.remove(f)
-

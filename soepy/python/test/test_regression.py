@@ -5,7 +5,7 @@ import numpy as np
 from soepy.python.simulate.simulate_python import simulate
 from soepy.python.soepy_config import TEST_RESOURCES_DIR
 from soepy.python.test.random_init import print_dict
-
+from soepy.python.test.auxiliary import cleanup
 
 
 def test1():
@@ -24,12 +24,11 @@ def test1():
 
         print_dict(init_dict)
 
-        df = simulate('test.soepy.yml')
+        df = simulate("test.soepy.yml")
 
         stat_new = np.sum(df.sum())
 
         np.testing.assert_array_equal(stat_new, stat)
 
 
-
-
+cleanup()
