@@ -1,5 +1,4 @@
-import yaml
-import numpy as np
+import oyaml as yaml
 
 
 def read_init_file(init_file_name):

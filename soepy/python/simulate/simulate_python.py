@@ -2,18 +2,13 @@ import numpy as np
 import pandas as pd
 
 from soepy.python.pre_processing.model_processing import read_init_file
-from soepy.python.pre_processing.model_processing import init_dict_to_attr_dict
-
-from soepy.python.solve.solve_python import pyth_solve
-
-from soepy.python.simulate.simulate_auxiliary import pyth_simulate
-from soepy.python.simulate.simulate_auxiliary import extract_individual_covariates
 from soepy.python.simulate.simulate_auxiliary import replace_missing_values
+from soepy.python.simulate.simulate_auxiliary import pyth_simulate
+from soepy.python.solve.solve_python import pyth_solve
 
 
 def simulate(init_file_name):
     """Create a data frame of individuals' simulated experiences."""
-    # TODO: We should include a simple integration test as soon as we have integrated the random init file process
     # Read in model specification from yaml file
     attr_dict = read_init_file(init_file_name)
 

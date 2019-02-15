@@ -67,7 +67,9 @@ def calculate_wage_systematic(educ_level, exp_p, exp_f, optim_paras):
 
 
 def calculate_period_wages(attr_dict, wage_systematic, draws):
-    """Calculate period wages for each choice including choice and period specific productivty shock."""
+    """Calculate period wages for each choice including choice
+    and period specific productivty shock.
+    """
 
     # Unpack attributes from the model specification:
     num_choices = attr_dict["GENERAL"]["num_choices"]
@@ -91,7 +93,6 @@ def calculate_consumption_utilities(attr_dict, period_wages):
     """Calculate the first part of the period utilities related to consumption."""
 
     # Unpack attributes from the model specification:
-    num_choices = attr_dict["GENERAL"]["num_choices"]
     benefits = attr_dict["CONSTANTS"]["benefits"]
     mu = attr_dict["CONSTANTS"]["mu"]
 

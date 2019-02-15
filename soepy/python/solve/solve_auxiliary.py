@@ -14,7 +14,6 @@ def pyth_create_state_space(attr_dict):
     # Unpack parameter from the model specification
     num_choices = attr_dict["GENERAL"]["num_choices"]
     num_periods = attr_dict["GENERAL"]["num_periods"]
-    educ_max = attr_dict["INITIAL_CONDITIONS"]["educ_max"]
     educ_min = attr_dict["INITIAL_CONDITIONS"]["educ_min"]
     educ_range = attr_dict["DERIVED_ATTR"]["educ_range"]
 
@@ -22,7 +21,8 @@ def pyth_create_state_space(attr_dict):
     shape = (num_periods, educ_range, num_choices, num_periods, num_periods)
     mapping_states_index = np.tile(MISSING_INT, shape)
 
-    # Maximum number of state space points per period. There can be no more states in a period than this number.
+    # Maximum number of state space points per period. There
+    # can be no more states in a period than this number.
     num_states_period_upper_bound = np.prod(mapping_states_index.shape)
 
     # Array to collect all state space points that can be reached each period
@@ -124,7 +124,8 @@ def pyth_create_state_space(attr_dict):
                             # Update count
                             k += 1
 
-        # Record number of admissible state space points for the period currently reached in the loop
+        # Record number of admissible state space points for the period currently
+        # reached in the loop
         states_number_period[period] = k
 
     # Auxiliary objects
@@ -287,8 +288,9 @@ def construct_emax(
         value_functions = flow_utilities + delta * continuation_values
 
         # Obtain highest value function value among the available choices
-        # If above draws were the true shocks, maximum is the the current period value function value
-        # It is the sum the flow utility and next periods value function given an optimal decision in the future
+        # If above draws were the true shocks, maximum is the the current
+        # period value function value. It is the sum the flow utility and
+        # next periods value function given an optimal decision in the future
         # and an optimal choice in the current period.
         maximum = max(value_functions)
 
