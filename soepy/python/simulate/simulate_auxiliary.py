@@ -84,9 +84,9 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
             )
 
             # Look up the indicator for the current state
-            k = mapping_states_index[
-                period, educ_years_i - educ_min, choice_lagged, exp_p, exp_f
-            ]
+            # k = mapping_states_index[
+            #    period, educ_years_i - educ_min, choice_lagged, exp_p, exp_f
+            # ]
 
             # Calculate choice specific value functions
             # for individual, period and state space point
@@ -96,7 +96,7 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
             corresponding_draws = draws_sim[period, i, :]
 
             # Calculate correspongind flow utilities
-            flow_utilities, consumption_utilities, period_wages, wage_systematic = calculate_utilities(
+            flow_utility, cons_utilities, period_wages, wage_sys = calculate_utilities(
                 attr_dict, educ_level, exp_p, exp_f, optim_paras, corresponding_draws
             )
 
@@ -112,17 +112,17 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
             )
 
             # Calculate total values for all choices
-            value_functions = flow_utilities + delta * continuation_values
+            value_functions = flow_utility + delta * continuation_values
 
             # Determine choice as option with highest choice specific value function
             max_idx = np.argmax(value_functions)
 
             # Record period experiences
             dataset[count, 3:4] = max_idx
-            dataset[count, 4:5] = wage_systematic
+            dataset[count, 4:5] = wage_sys
             dataset[count, 5:8] = period_wages[:]
-            dataset[count, 8:11] = consumption_utilities[:]
-            dataset[count, 11:14] = flow_utilities[:]
+            dataset[count, 8:11] = cons_utilities[:]
+            dataset[count, 11:14] = flow_utility[:]
 
             # Update state space component experience
             current_state[max_idx + 1] += 1

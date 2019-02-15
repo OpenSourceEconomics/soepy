@@ -1,3 +1,4 @@
+"""This module contains auxiliary functions for our testing processes."""
 import glob
 import os
 

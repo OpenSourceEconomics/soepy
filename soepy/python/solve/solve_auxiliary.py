@@ -287,11 +287,10 @@ def construct_emax(
         # Calculate choice specific value functions
         value_functions = flow_utilities + delta * continuation_values
 
-        # Obtain highest value function value among the available choices
-        # If above draws were the true shocks, maximum is the the current
-        # period value function value. It is the sum the flow utility and
-        # next periods value function given an optimal decision in the future
-        # and an optimal choice in the current period.
+        # Obtain highest value function value among the available choices. If above
+        # draws were the true shocks, maximum is the the current period value function
+        # value. It is the sum the flow utility and next periods value function given an
+        # optimal decision in the future and an optimal choice in the current period.
         maximum = max(value_functions)
 
         # Add to sum over all draws

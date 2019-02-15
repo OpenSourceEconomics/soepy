@@ -14,7 +14,7 @@ from soepy.test.auxiliary import cleanup
 
 def test1():
     """This test ensures that the columns of the output dataframe correspond to the
-    bla bla.
+    to the .
     """
     for _ in range(100):
         constr = {"EDUC_MAX": 10, "AGENTS": 1, "PERIODS": 1}
@@ -77,8 +77,8 @@ def test1():
 
 
 def test2():
-    """This test ensures that the dataframe contain only nan values for
-    individuals that.
+    """This test ensures that the dataframe contain only nan values if individuals are
+     still a in education.
     """
     random_init()
     df = simulate("test.soepy.yml")
@@ -101,7 +101,11 @@ def test2():
 
 
 def test3():
-    """This test ensures that the init file printing process work as intended."""
+    """This test ensures that the init file printing process work as intended. For this
+     purpose we generate random init file specifications import the resulting files,
+     write the specifications to another init file, import it again and comparing both
+      initialization dicts
+      """
     order = [
         "GENERAL",
         "CONSTANTS",
