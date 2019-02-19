@@ -80,7 +80,8 @@ def test2():
     """This test ensures that the dataframe contain only nan values if individuals are
      still a in education.
     """
-    random_init()
+    constr = {"AGENTS": 200}
+    random_init(constr)
     df = simulate("test.soepy.yml")
 
     for year in [11, 12, 13, 14]:
@@ -125,6 +126,22 @@ def test3():
             for subkey in init_dict[key].keys():
                 if not init_dict[key][subkey] == init_dict2[key][subkey]:
                     raise AssertionError()
+
+
+def test4():
+    """This test ensures that the shape of the simulated dataframe corresponds to the
+    to the random specifications of our initialization file.
+    """
+    for _ in range(5):
+        constr = dict()
+        constr["AGENTS"] = np.random.randint(10, 100)
+        constr["PERIODS"] = np.random.randint(1, 5)
+        constr["EDUC_MAX"] = np.random.randint(10, 10 + constr["PERIODS"])
+
+        random_init(constr)
+        df = simulate("test.soepy.yml")
+
+        np.testing.assert_array_equal(df.shape[0], constr["AGENTS"] * constr["PERIODS"])
 
 
 cleanup()

@@ -13,5 +13,10 @@ script:
 after_success:
     - codecov
 notifications:
-  slack: oseconomics:Ft0TAdn9N8R38vMieCPxHV0a
+  slack:
+      rooms:
+        - oseconomics:Ft0TAdn9N8R38vMieCPxHV0a
+      on_success: change
+      on_failure: always
+
 
