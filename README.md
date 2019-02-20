@@ -7,5 +7,6 @@
 
 [![Build Status](https://travis-ci.org/OpenSourceEconomics/soepy.svg?branch=master)](https://travis-ci.org/OpenSourceEconomics/soepy) 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a5740a4444f945418feec63bb79bd51b)](https://www.codacy.com/app/SeBecker/soepy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=OpenSourceEconomics/soepy&amp;utm_campaign=Badge_Grade)
+[![codecov](https://codecov.io/gh/OpenSourceEconomics/soepy/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenSourceEconomics/soepy)
 [![Documentation Status](https://readthedocs.org/projects/soepy/badge/?version=latest)](https://soepy.readthedocs.io/en/latest/?badge=latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/OpenSourceEconomics/soepy/blob/master/LICENSE)
