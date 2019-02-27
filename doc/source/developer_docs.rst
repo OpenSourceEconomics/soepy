@@ -115,7 +115,7 @@ In the toy model, consumption in any period is zero if the individual chooses no
 
 
 pyth_simulate
-------------
+-------------
 
 Functionality
 """""""""""""
