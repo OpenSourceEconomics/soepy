@@ -1,0 +1,8 @@
+[
+  "soepy/test/test_quality.py::test1",
+  "soepy/test/test_regression.py::test1",
+  "soepy/test/test_unit.py::test1",
+  "soepy/test/test_unit.py::test2",
+  "soepy/test/test_unit.py::test3",
+  "soepy/test/test_unit.py::test4"
+]

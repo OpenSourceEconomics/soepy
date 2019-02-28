@@ -14,7 +14,7 @@ def test1():
     battery.
     """
 
-    fname = TEST_RESOURCES_DIR + "/regression_vault.soepy.json"
+    fname = TEST_RESOURCES_DIR / "regression_vault.soepy.json"
     tests = json.load(open(fname))
     random_choice = np.random.choice(range(len(tests)), 3)
     tests = [tests[i] for i in random_choice]
