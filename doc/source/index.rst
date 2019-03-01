@@ -13,4 +13,5 @@ Welcome to soepy's documentation!
    economic_model
    mathematical_model
    computational_model
+   data_frame_sim_test_analysis.ipynb
    developer_docs
