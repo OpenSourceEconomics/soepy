@@ -235,7 +235,7 @@ def construct_covariates(states_all, states_number_period, max_states_period, at
                 covariates[period, k, 0:3] = [0, 0, 1]
 
             covariates[period, k, 3] = educ_years - educ_min
-    
+            
     #Return final output
     return covariates
 
