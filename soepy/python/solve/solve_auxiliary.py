@@ -169,6 +169,9 @@ def pyth_backward_induction(attr_dict, state_space_args):
 
     draws_emax = draw_disturbances((num_periods, num_draws_emax), shocks_cov, seed_emax)
 
+    # Construct covariates
+    covariates = construct_covariates(states_all, states_number_period,  max_states_period, attr_dict)
+
     # Loop over all periods
     for period in range(num_periods - 1, -1, -1):
 
@@ -180,9 +183,7 @@ def pyth_backward_induction(attr_dict, state_space_args):
         for k in range(states_number_period[period]):
 
             # Construct additional education information
-            educ_level, educ_years_idx = construct_covariates(
-                attr_dict, states_all, period, k
-            )
+            educ_level, educ_years_idx = covariates[0,0,0:3], covariates[0,0,3]
 
             # Integrate out the error term
             emax = construct_emax(
@@ -206,31 +207,37 @@ def pyth_backward_induction(attr_dict, state_space_args):
     return periods_emax
 
 
-def construct_covariates(attr_dict, states_all, period, k):
+def construct_covariates(states_all, states_number_period, max_states_period, attr_dict):
     """Constructs additional covariates given state space components."""
 
-    # Determine education level given number of years of education
-
-    # Unpack attributes from the model specification
+    # Unpack attributes from the model specification:
+    num_periods = attr_dict['GENERAL']['num_periods']
     educ_min = attr_dict["INITIAL_CONDITIONS"]["educ_min"]
 
-    # Unpack state space components
-    educ_years = states_all[period, k, 0]
+    # Initialize covariates array
+    covariates = np.tile(MISSING_INT, (num_periods, max_states_period, 4))
 
-    # Extract education information
-    if educ_years <= 10:
-        educ_level = [1, 0, 0]
+    # Fill in education information
+    for period in range(num_periods):
 
-    elif (educ_years > 10) and (educ_years <= 12):
-        educ_level = [0, 1, 0]
+        for k in range(states_number_period[period]):
 
-    else:
-        educ_level = [0, 0, 1]
+            educ_years = states_all[period, k, 0]
 
-    educ_years_idx = educ_years - educ_min
+            # Extract education information
+            if educ_years <= 10:
+                covariates[period, k, 0:3] = [1, 0, 0]
 
-    # Return function output
-    return educ_level, educ_years_idx
+            elif (educ_years > 10) and (educ_years <= 12):
+                covariates[period, k, 0:3] = [0, 1, 0]
+
+            else:
+                covariates[period, k, 0:3] = [0, 0, 1]
+
+            covariates[period, k, 3] = educ_years - educ_min
+    
+    #Return final output
+    return covariates
 
 
 def construct_emax(
