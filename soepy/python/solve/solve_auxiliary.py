@@ -183,7 +183,7 @@ def pyth_backward_induction(attr_dict, state_space_args):
         for k in range(states_number_period[period]):
 
             # Construct additional education information
-            educ_level, educ_years_idx = covariates[0,0,0:3], covariates[0,0,3]
+            educ_level, educ_years_idx = covariates[period, k, 0:3], covariates[period, k, 3]
 
             # Integrate out the error term
             emax = construct_emax(
