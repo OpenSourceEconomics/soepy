@@ -170,7 +170,9 @@ def pyth_backward_induction(attr_dict, state_space_args):
     draws_emax = draw_disturbances((num_periods, num_draws_emax), shocks_cov, seed_emax)
 
     # Construct covariates
-    covariates = construct_covariates(states_all, states_number_period,  max_states_period, attr_dict)
+    covariates = construct_covariates(
+        states_all, states_number_period, max_states_period, attr_dict
+    )
 
     # Loop over all periods
     for period in range(num_periods - 1, -1, -1):
@@ -183,7 +185,10 @@ def pyth_backward_induction(attr_dict, state_space_args):
         for k in range(states_number_period[period]):
 
             # Construct additional education information
-            educ_level, educ_years_idx = covariates[period, k, 0:3], covariates[period, k, 3]
+            educ_level, educ_years_idx = (
+                covariates[period, k, 0:3],
+                covariates[period, k, 3],
+            )
 
             # Integrate out the error term
             emax = construct_emax(
@@ -207,11 +212,13 @@ def pyth_backward_induction(attr_dict, state_space_args):
     return periods_emax
 
 
-def construct_covariates(states_all, states_number_period, max_states_period, attr_dict):
+def construct_covariates(
+    states_all, states_number_period, max_states_period, attr_dict
+):
     """Constructs additional covariates given state space components."""
 
     # Unpack attributes from the model specification:
-    num_periods = attr_dict['GENERAL']['num_periods']
+    num_periods = attr_dict["GENERAL"]["num_periods"]
     educ_min = attr_dict["INITIAL_CONDITIONS"]["educ_min"]
 
     # Initialize covariates array
@@ -235,8 +242,8 @@ def construct_covariates(states_all, states_number_period, max_states_period, at
                 covariates[period, k, 0:3] = [0, 0, 1]
 
             covariates[period, k, 3] = educ_years - educ_min
-            
-    #Return final output
+
+    # Return final output
     return covariates
 
 
