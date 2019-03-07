@@ -238,8 +238,11 @@ def construct_covariates(
             elif (educ_years > 10) and (educ_years <= 12):
                 covariates[period, k, 0:3] = [0, 1, 0]
 
-            else:
+            elif educ_years > 12:
                 covariates[period, k, 0:3] = [0, 0, 1]
+
+            else:
+                raise ValueError("Invalid number of years of education")
 
             covariates[period, k, 3] = educ_years - educ_min
 
