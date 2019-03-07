@@ -1,3 +1,4 @@
+import collections as cl
 import oyaml as yaml
 
 
@@ -29,3 +30,12 @@ def init_dict_to_attr_dict(init_dict):
 
     # Return function output
     return init_dict
+
+def create_namedtuple(attr_dict):
+    """Transfers model specification from a dictionary
+    to a named tuple class object."""
+
+    model_params = cl.namedtuple('model_parameters','')
+    model_params.seed_sim = attr_dict['SIMULATION']['seed_sim']
+    
+    return model_params

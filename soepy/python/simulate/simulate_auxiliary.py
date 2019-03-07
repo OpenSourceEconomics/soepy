@@ -7,7 +7,7 @@ from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
-def pyth_simulate(attr_dict, state_space_args, periods_emax):
+def pyth_simulate(model_params, attr_dict, state_space_args, periods_emax):
     """Simulate agent experiences."""
 
     # Unpack objects from agrs
@@ -23,17 +23,17 @@ def pyth_simulate(attr_dict, state_space_args, periods_emax):
     educ_max = attr_dict["INITIAL_CONDITIONS"]["educ_max"]
     num_periods = attr_dict["GENERAL"]["num_periods"]
     num_agents_sim = attr_dict["SIMULATION"]["num_agents_sim"]
-    seed_sim = attr_dict["SIMULATION"]["seed_sim"]
+    #seed_sim = attr_dict["SIMULATION"]["seed_sim"]
     shocks_cov = attr_dict["DERIVED_ATTR"]["shocks_cov"]
     optim_paras = attr_dict["PARAMETERS"]["optim_paras"]
     delta = attr_dict["CONSTANTS"]["delta"]
 
     educ_years = list(range(educ_min, educ_max + 1))
-    np.random.seed(seed_sim)
+    np.random.seed(model_params.seed_sim)
     educ_years = np.random.choice(educ_years, num_agents_sim)
 
     # Create draws for simulated sample
-    draws_sim = draw_disturbances((num_periods, num_agents_sim), shocks_cov, seed_sim)
+    draws_sim = draw_disturbances((num_periods, num_agents_sim), shocks_cov, model_params.seed_sim)
 
     # Start count over all simulations/rows (number of agents times number of periods)
     count = 0
