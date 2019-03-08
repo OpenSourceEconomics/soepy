@@ -56,7 +56,7 @@ def create_namedtuple(init_dict):
     model_params.num_agents_sim = init_dict["SIMULATION"]["num_agents_sim"]
 
     model_params.seed_emax = init_dict["SOLUTION"]["seed_emax"]
-    model_params.num_agents_sim = init_dict["SOLUTION"]["num_draws_emax"]
+    model_params.num_draws_emax = init_dict["SOLUTION"]["num_draws_emax"]
 
     model_params.optim_paras = init_dict["PARAMETERS"]["optim_paras"]
 
