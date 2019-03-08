@@ -60,4 +60,7 @@ def create_namedtuple(init_dict):
 
     model_params.optim_paras = init_dict["PARAMETERS"]["optim_paras"]
 
+    model_params.educ_range = init_dict["DERIVED_ATTR"]["educ_range"]
+    model_params.shocks_cov = init_dict["DERIVED_ATTR"]["shocks_cov"]
+
     return model_params
