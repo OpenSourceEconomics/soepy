@@ -73,11 +73,8 @@ def calculate_period_wages(model_params, wage_systematic, draws):
     and period specific productivty shock.
     """
 
-    # Unpack attributes from the model specification:
-    num_choices = model_params["GENERAL"]["num_choices"]
-
     # Initialize container
-    period_wages = np.tile(np.nan, num_choices)
+    period_wages = np.tile(np.nan, model_params.num_choices)
 
     # Take the exponential of the disturbances
     exp_draws = np.exp(draws)
@@ -94,18 +91,18 @@ def calculate_period_wages(model_params, wage_systematic, draws):
 def calculate_consumption_utilities(model_params, period_wages):
     """Calculate the first part of the period utilities related to consumption."""
 
-    # Unpack attributes from the model specification:
-    benefits = model_params["CONSTANTS"]["benefits"]
-    mu = model_params["CONSTANTS"]["mu"]
-
     # Define hours array, possibly move to another file
     hours = np.array([0, 18, 38])
 
     # Calculate choice specific wages including productivity shock
     consumption_utilities = hours * period_wages
-    consumption_utilities[0] = benefits ** mu / mu
+    consumption_utilities[0] = (
+        model_params.benefits ** model_params.mu / model_params.mu
+    )
 
-    consumption_utilities[1] = consumption_utilities[1] ** mu / mu
+    consumption_utilities[1] = (
+        consumption_utilities[1] ** model_params.mu / model_params.mu
+    )
 
     if np.isnan(consumption_utilities[1]):
         print(period_wages)
@@ -114,7 +111,9 @@ def calculate_consumption_utilities(model_params, period_wages):
         print(consumption_utilities)
         sys.exit("Error message")
 
-    consumption_utilities[2] = consumption_utilities[2] ** mu / mu
+    consumption_utilities[2] = (
+        consumption_utilities[2] ** model_params.mu / model_params.mu
+    )
 
     # Return function output
     return consumption_utilities
@@ -123,11 +122,8 @@ def calculate_consumption_utilities(model_params, period_wages):
 def calculate_total_utilities(model_params, consumption_utilities, optim_paras):
     """Calculate total period utilities for each of the choices."""
 
-    # Unpack attributes from the model specification:
-    num_choices = model_params["GENERAL"]["num_choices"]
-
     # Initialize container for utilities at state space point and period
-    total_utilities = np.tile(np.nan, num_choices)
+    total_utilities = np.tile(np.nan, model_params.num_choices)
 
     # Calculate U(.) for the three available choices
     U_ = np.array(
@@ -152,14 +148,10 @@ def calculate_continuation_values(
 ):
     """Obtain continuation values for each of the choices."""
 
-    # Unpack attributes from the model specification:
-    num_choices = model_params["GENERAL"]["num_choices"]
-    num_periods = model_params["GENERAL"]["num_periods"]
-
     # Initialize container for continuation values
-    continuation_values = np.tile(MISSING_FLOAT, num_choices)
+    continuation_values = np.tile(MISSING_FLOAT, model_params.num_choices)
 
-    if period != (num_periods - 1):
+    if period != (model_params.num_periods - 1):
 
         # Choice: Non-employment
         # Create index for extracting the continuation value
