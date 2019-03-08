@@ -7,7 +7,7 @@ from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
-def pyth_simulate(model_params, model_params, state_space_args, periods_emax):
+def pyth_simulate(model_params, state_space_args, periods_emax):
     """Simulate agent experiences."""
 
     # Unpack objects from agrs
