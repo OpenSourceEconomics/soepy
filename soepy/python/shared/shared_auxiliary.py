@@ -26,20 +26,22 @@ def draw_disturbances(num_draws, shocks_cov, seed):
     return draws
 
 
-def calculate_utilities(attr_dict, educ_level, exp_p, exp_f, optim_paras, draws):
+def calculate_utilities(model_params, educ_level, exp_p, exp_f, optim_paras, draws):
     """Calculate period/flow utilities for all choices given state, period, and shocks."""
 
     # Calculate wage net of period productivity shock
     wage_systematic = calculate_wage_systematic(educ_level, exp_p, exp_f, optim_paras)
 
     # Calculate period wages for the three choices includings chocks' realizations
-    period_wages = calculate_period_wages(attr_dict, wage_systematic, draws)
+    period_wages = calculate_period_wages(model_params, wage_systematic, draws)
 
     # Calculate 1st part of the period utilities related to consumption
-    consumption_utilities = calculate_consumption_utilities(attr_dict, period_wages)
+    consumption_utilities = calculate_consumption_utilities(model_params, period_wages)
 
     # Calculate total period utilities by multiplying U(.) component
-    utilities = calculate_total_utilities(attr_dict, consumption_utilities, optim_paras)
+    utilities = calculate_total_utilities(
+        model_params, consumption_utilities, optim_paras
+    )
 
     # Return function output
     return utilities, consumption_utilities, period_wages, wage_systematic
@@ -66,13 +68,13 @@ def calculate_wage_systematic(educ_level, exp_p, exp_f, optim_paras):
     return wage_systematic  # This is a scalar, equal for all choices
 
 
-def calculate_period_wages(attr_dict, wage_systematic, draws):
+def calculate_period_wages(model_params, wage_systematic, draws):
     """Calculate period wages for each choice including choice
     and period specific productivty shock.
     """
 
     # Unpack attributes from the model specification:
-    num_choices = attr_dict["GENERAL"]["num_choices"]
+    num_choices = model_params["GENERAL"]["num_choices"]
 
     # Initialize container
     period_wages = np.tile(np.nan, num_choices)
@@ -89,12 +91,12 @@ def calculate_period_wages(attr_dict, wage_systematic, draws):
     )  # This is a vector, difference between choices comes from disturbance term.
 
 
-def calculate_consumption_utilities(attr_dict, period_wages):
+def calculate_consumption_utilities(model_params, period_wages):
     """Calculate the first part of the period utilities related to consumption."""
 
     # Unpack attributes from the model specification:
-    benefits = attr_dict["CONSTANTS"]["benefits"]
-    mu = attr_dict["CONSTANTS"]["mu"]
+    benefits = model_params["CONSTANTS"]["benefits"]
+    mu = model_params["CONSTANTS"]["mu"]
 
     # Define hours array, possibly move to another file
     hours = np.array([0, 18, 38])
@@ -118,11 +120,11 @@ def calculate_consumption_utilities(attr_dict, period_wages):
     return consumption_utilities
 
 
-def calculate_total_utilities(attr_dict, consumption_utilities, optim_paras):
+def calculate_total_utilities(model_params, consumption_utilities, optim_paras):
     """Calculate total period utilities for each of the choices."""
 
     # Unpack attributes from the model specification:
-    num_choices = attr_dict["GENERAL"]["num_choices"]
+    num_choices = model_params["GENERAL"]["num_choices"]
 
     # Initialize container for utilities at state space point and period
     total_utilities = np.tile(np.nan, num_choices)
@@ -140,13 +142,19 @@ def calculate_total_utilities(attr_dict, consumption_utilities, optim_paras):
 
 
 def calculate_continuation_values(
-    attr_dict, mapping_states_index, periods_emax, period, educ_years_idx, exp_p, exp_f
+    model_params,
+    mapping_states_index,
+    periods_emax,
+    period,
+    educ_years_idx,
+    exp_p,
+    exp_f,
 ):
     """Obtain continuation values for each of the choices."""
 
     # Unpack attributes from the model specification:
-    num_choices = attr_dict["GENERAL"]["num_choices"]
-    num_periods = attr_dict["GENERAL"]["num_periods"]
+    num_choices = model_params["GENERAL"]["num_choices"]
+    num_periods = model_params["GENERAL"]["num_periods"]
 
     # Initialize container for continuation values
     continuation_values = np.tile(MISSING_FLOAT, num_choices)

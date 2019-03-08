@@ -7,7 +7,7 @@ from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
-def pyth_simulate(model_params, attr_dict, state_space_args, periods_emax):
+def pyth_simulate(model_params, model_params, state_space_args, periods_emax):
     """Simulate agent experiences."""
 
     # Unpack objects from agrs
@@ -19,21 +19,23 @@ def pyth_simulate(model_params, attr_dict, state_space_args, periods_emax):
     )
 
     # Unpack parameter from the model specification
-    educ_min = attr_dict["INITIAL_CONDITIONS"]["educ_min"]
-    educ_max = attr_dict["INITIAL_CONDITIONS"]["educ_max"]
-    num_periods = attr_dict["GENERAL"]["num_periods"]
-    num_agents_sim = attr_dict["SIMULATION"]["num_agents_sim"]
-    #seed_sim = attr_dict["SIMULATION"]["seed_sim"]
-    shocks_cov = attr_dict["DERIVED_ATTR"]["shocks_cov"]
-    optim_paras = attr_dict["PARAMETERS"]["optim_paras"]
-    delta = attr_dict["CONSTANTS"]["delta"]
+    educ_min = model_params["INITIAL_CONDITIONS"]["educ_min"]
+    educ_max = model_params["INITIAL_CONDITIONS"]["educ_max"]
+    num_periods = model_params["GENERAL"]["num_periods"]
+    num_agents_sim = model_params["SIMULATION"]["num_agents_sim"]
+    # seed_sim = model_params["SIMULATION"]["seed_sim"]
+    shocks_cov = model_params["DERIVED_ATTR"]["shocks_cov"]
+    optim_paras = model_params["PARAMETERS"]["optim_paras"]
+    delta = model_params["CONSTANTS"]["delta"]
 
     educ_years = list(range(educ_min, educ_max + 1))
     np.random.seed(model_params.seed_sim)
     educ_years = np.random.choice(educ_years, num_agents_sim)
 
     # Create draws for simulated sample
-    draws_sim = draw_disturbances((num_periods, num_agents_sim), shocks_cov, model_params.seed_sim)
+    draws_sim = draw_disturbances(
+        (num_periods, num_agents_sim), shocks_cov, model_params.seed_sim
+    )
 
     # Start count over all simulations/rows (number of agents times number of periods)
     count = 0
@@ -97,12 +99,12 @@ def pyth_simulate(model_params, attr_dict, state_space_args, periods_emax):
 
             # Calculate correspongind flow utilities
             flow_utility, cons_utilities, period_wages, wage_sys = calculate_utilities(
-                attr_dict, educ_level, exp_p, exp_f, optim_paras, corresponding_draws
+                model_params, educ_level, exp_p, exp_f, optim_paras, corresponding_draws
             )
 
             # Obtain continuation values for all choices
             continuation_values = calculate_continuation_values(
-                attr_dict,
+                model_params,
                 mapping_states_index,
                 periods_emax,
                 period,

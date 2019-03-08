@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 
 from soepy.python.pre_processing.model_processing import read_init_file
-from soepy.python.pre_processing.model_processing import create_namedtuple
 from soepy.python.simulate.simulate_auxiliary import replace_missing_values
 from soepy.python.simulate.simulate_auxiliary import pyth_simulate
 from soepy.python.solve.solve_python import pyth_solve
@@ -10,18 +9,15 @@ from soepy.python.solve.solve_python import pyth_solve
 
 def simulate(init_file_name):
     """Create a data frame of individuals' simulated experiences."""
-    
-    # Read in model specification from yaml file
-    attr_dict = read_init_file(init_file_name)
 
-    # Showcase namedyuple implementation with minimalistc example
-    model_params = create_namedtuple(attr_dict)
+    # Read in model specification from yaml file
+    model_params = read_init_file(init_file_name)
 
     # Obtain model solution
-    state_space_args, periods_emax = pyth_solve(attr_dict)
+    state_space_args, periods_emax = pyth_solve(model_params)
 
     # Simulate agents experiences according to parameters in the model specification
-    dataset = pyth_simulate(model_params, attr_dict, state_space_args, periods_emax)
+    dataset = pyth_simulate(model_params, state_space_args, periods_emax)
 
     # Create fixed objects needed to record simulated dataset to Pandas Dataframe
     # Define column lables

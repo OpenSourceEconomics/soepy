@@ -6,16 +6,16 @@ from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
-def pyth_create_state_space(attr_dict):
+def pyth_create_state_space(model_params):
     """Create state space related objects
     given state space components in model specification.
     """
 
     # Unpack parameter from the model specification
-    num_choices = attr_dict["GENERAL"]["num_choices"]
-    num_periods = attr_dict["GENERAL"]["num_periods"]
-    educ_min = attr_dict["INITIAL_CONDITIONS"]["educ_min"]
-    educ_range = attr_dict["DERIVED_ATTR"]["educ_range"]
+    num_choices = model_params["GENERAL"]["num_choices"]
+    num_periods = model_params["GENERAL"]["num_periods"]
+    educ_min = model_params["INITIAL_CONDITIONS"]["educ_min"]
+    educ_range = model_params["DERIVED_ATTR"]["educ_range"]
 
     # Array for mapping the state space points (states) to indices
     shape = (num_periods, educ_range, num_choices, num_periods, num_periods)
@@ -143,7 +143,7 @@ def pyth_create_state_space(attr_dict):
     return state_space_args
 
 
-def pyth_backward_induction(attr_dict, state_space_args):
+def pyth_backward_induction(model_params, state_space_args):
     """Obtain the value function maximum values
     for all admissible states and periods in a backward induction procedure.
     """
@@ -157,11 +157,11 @@ def pyth_backward_induction(attr_dict, state_space_args):
     )
 
     # Unpack parameter from the model specification
-    num_periods = attr_dict["GENERAL"]["num_periods"]
-    num_draws_emax = attr_dict["SOLUTION"]["num_draws_emax"]
-    seed_emax = attr_dict["SOLUTION"]["seed_emax"]
-    shocks_cov = attr_dict["DERIVED_ATTR"]["shocks_cov"]
-    optim_paras = attr_dict["PARAMETERS"]["optim_paras"]
+    num_periods = model_params["GENERAL"]["num_periods"]
+    num_draws_emax = model_params["SOLUTION"]["num_draws_emax"]
+    seed_emax = model_params["SOLUTION"]["seed_emax"]
+    shocks_cov = model_params["DERIVED_ATTR"]["shocks_cov"]
+    optim_paras = model_params["PARAMETERS"]["optim_paras"]
 
     # Initialize container for the final result,
     # maximal value function per perdiod and state:
@@ -171,7 +171,7 @@ def pyth_backward_induction(attr_dict, state_space_args):
 
     # Construct covariates
     covariates = construct_covariates(
-        states_all, states_number_period, max_states_period, attr_dict
+        states_all, states_number_period, max_states_period, model_params
     )
 
     # Loop over all periods
@@ -190,7 +190,7 @@ def pyth_backward_induction(attr_dict, state_space_args):
 
             # Integrate out the error term
             emax = construct_emax(
-                attr_dict,
+                model_params,
                 period,
                 k,
                 educ_level,
@@ -211,13 +211,13 @@ def pyth_backward_induction(attr_dict, state_space_args):
 
 
 def construct_covariates(
-    states_all, states_number_period, max_states_period, attr_dict
+    states_all, states_number_period, max_states_period, model_params
 ):
     """Constructs additional covariates given state space components."""
 
     # Unpack attributes from the model specification:
-    num_periods = attr_dict["GENERAL"]["num_periods"]
-    educ_min = attr_dict["INITIAL_CONDITIONS"]["educ_min"]
+    num_periods = model_params["GENERAL"]["num_periods"]
+    educ_min = model_params["INITIAL_CONDITIONS"]["educ_min"]
 
     # Initialize covariates array
     covariates = np.tile(MISSING_INT, (num_periods, max_states_period, 4))
@@ -249,7 +249,7 @@ def construct_covariates(
 
 
 def construct_emax(
-    attr_dict,
+    model_params,
     period,
     k,
     educ_level,
@@ -266,7 +266,7 @@ def construct_emax(
     """
 
     # Unpack attributes from the model specification
-    delta = attr_dict["CONSTANTS"]["delta"]
+    delta = model_params["CONSTANTS"]["delta"]
 
     # Initialize container for sum of value function maximum values
     # over all error term draws for the period and state
@@ -285,12 +285,12 @@ def construct_emax(
 
         # Calculate flow utility at current period, state, and draw
         flow_utilities = calculate_utilities(
-            attr_dict, educ_level, exp_p, exp_f, optim_paras, corresponding_draws
+            model_params, educ_level, exp_p, exp_f, optim_paras, corresponding_draws
         )[0]
 
         # Obtain continuation values for all choices
         continuation_values = calculate_continuation_values(
-            attr_dict,
+            model_params,
             mapping_states_index,
             periods_emax,
             period,
