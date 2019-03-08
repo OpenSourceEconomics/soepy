@@ -11,14 +11,14 @@ def pyth_create_state_space(model_params):
     given state space components in model specification.
     """
 
-    # Unpack parameter from the model specification
-    num_choices = model_params["GENERAL"]["num_choices"]
-    num_periods = model_params["GENERAL"]["num_periods"]
-    educ_min = model_params["INITIAL_CONDITIONS"]["educ_min"]
-    educ_range = model_params["DERIVED_ATTR"]["educ_range"]
-
     # Array for mapping the state space points (states) to indices
-    shape = (num_periods, educ_range, num_choices, num_periods, num_periods)
+    shape = (
+        model_params.num_periods,
+        model_params.educ_range,
+        model_params.num_choices,
+        model_params.num_periods,
+        model_params.num_periods,
+    )
     mapping_states_index = np.tile(MISSING_INT, shape)
 
     # Maximum number of state space points per period. There
@@ -26,19 +26,21 @@ def pyth_create_state_space(model_params):
     num_states_period_upper_bound = np.prod(mapping_states_index.shape)
 
     # Array to collect all state space points that can be reached each period
-    states_all = np.tile(MISSING_INT, (num_periods, num_states_period_upper_bound, 4))
+    states_all = np.tile(
+        MISSING_INT, (model_params.num_periods, num_states_period_upper_bound, 4)
+    )
 
     # Array for the maximum number state space points per period
-    states_number_period = np.tile(MISSING_INT, num_periods)
+    states_number_period = np.tile(MISSING_INT, model_params.num_periods)
 
     # Loop over all periods / all ages
-    for period in range(num_periods):
+    for period in range(model_params.num_periods):
 
         # Start count for admissible state space points
         k = 0
 
         # Loop over all possible initial conditions for education
-        for educ_years in range(educ_range):
+        for educ_years in range(model_params.educ_range):
 
             # Check if individual has already completed education
             # and will make a labor supply choice in the period
@@ -46,17 +48,17 @@ def pyth_create_state_space(model_params):
                 continue
 
             # Loop over all admissible years of experience accumulated in part-time
-            for exp_f in range(num_periods):
+            for exp_f in range(model_params.num_periods):
 
                 # Loop over all admaissible years of experience accumulated in full-time
-                for exp_p in range(num_periods):
+                for exp_p in range(model_params.num_periods):
 
                     # The accumulation of experience cannot exceed time elapsed
                     # since individual entered the model
                     if exp_f + exp_p > period - educ_years:
                         continue
 
-                    # Add an additional entry state [educ_years + educ_min, 0, 0, 0]
+                    # Add an additional entry state [educ_years + model_params.educ_min, 0, 0, 0]
                     # for individuals who have just completed education
                     # and still have no experience in any occupation.
                     if period == educ_years:
@@ -67,7 +69,12 @@ def pyth_create_state_space(model_params):
 
                         # Record the values of the state space components
                         # for the currentry reached entry state
-                        states_all[period, k, :] = [educ_years + educ_min, 0, 0, 0]
+                        states_all[period, k, :] = [
+                            educ_years + model_params.educ_min,
+                            0,
+                            0,
+                            0,
+                        ]
 
                         # Update count once more
                         k += 1
@@ -75,7 +82,7 @@ def pyth_create_state_space(model_params):
                     else:
 
                         # Loop over the three labor market choices, N, P, F
-                        for choice_lagged in range(num_choices):
+                        for choice_lagged in range(model_params.num_choices):
 
                             # If individual has only worked full-time in the past,
                             # she can only have full-time (2) as lagged choice
@@ -115,7 +122,7 @@ def pyth_create_state_space(model_params):
                             # Record the values of the state space components
                             # for the currently reached admissible state space point
                             states_all[period, k, :] = [
-                                educ_years + educ_min,
+                                educ_years + model_params.educ_min,
                                 choice_lagged,
                                 exp_p,
                                 exp_f,
@@ -156,18 +163,15 @@ def pyth_backward_induction(model_params, state_space_args):
         state_space_args[3],
     )
 
-    # Unpack parameter from the model specification
-    num_periods = model_params["GENERAL"]["num_periods"]
-    num_draws_emax = model_params["SOLUTION"]["num_draws_emax"]
-    seed_emax = model_params["SOLUTION"]["seed_emax"]
-    shocks_cov = model_params["DERIVED_ATTR"]["shocks_cov"]
-    optim_paras = model_params["PARAMETERS"]["optim_paras"]
-
     # Initialize container for the final result,
     # maximal value function per perdiod and state:
-    periods_emax = np.tile(MISSING_FLOAT, (num_periods, max_states_period))
+    periods_emax = np.tile(MISSING_FLOAT, (model_params.num_periods, max_states_period))
 
-    draws_emax = draw_disturbances((num_periods, num_draws_emax), shocks_cov, seed_emax)
+    draws_emax = draw_disturbances(
+        (model_params.num_periods, model_params.num_draws_emax),
+        model_params.shocks_cov,
+        model_params.seed_emax,
+    )
 
     # Construct covariates
     covariates = construct_covariates(
@@ -175,7 +179,7 @@ def pyth_backward_induction(model_params, state_space_args):
     )
 
     # Loop over all periods
-    for period in range(num_periods - 1, -1, -1):
+    for period in range(model_params.num_periods - 1, -1, -1):
 
         # Select the random draws for Monte Carlo integration relevant for the period
         draws_emax_period = draws_emax[period, :, :]
@@ -195,11 +199,11 @@ def pyth_backward_induction(model_params, state_space_args):
                 k,
                 educ_level,
                 educ_years_idx,
-                num_draws_emax,
+                model_params.num_draws_emax,
                 draws_emax_period,
                 states_all,
                 mapping_states_index,
-                optim_paras,
+                model_params.optim_paras,
                 periods_emax,
             )
 
@@ -215,15 +219,11 @@ def construct_covariates(
 ):
     """Constructs additional covariates given state space components."""
 
-    # Unpack attributes from the model specification:
-    num_periods = model_params["GENERAL"]["num_periods"]
-    educ_min = model_params["INITIAL_CONDITIONS"]["educ_min"]
-
     # Initialize covariates array
-    covariates = np.tile(MISSING_INT, (num_periods, max_states_period, 4))
+    covariates = np.tile(MISSING_INT, (model_params.num_periods, max_states_period, 4))
 
     # Fill in education information
-    for period in range(num_periods):
+    for period in range(model_params.num_periods):
 
         for k in range(states_number_period[period]):
 
@@ -242,7 +242,7 @@ def construct_covariates(
             else:
                 raise ValueError("Invalid number of years of education")
 
-            covariates[period, k, 3] = educ_years - educ_min
+            covariates[period, k, 3] = educ_years - model_params.educ_min
 
     # Return final output
     return covariates
@@ -265,16 +265,13 @@ def construct_emax(
     to obtain value function maximum values for each period and state.
     """
 
-    # Unpack attributes from the model specification
-    delta = model_params["CONSTANTS"]["delta"]
-
     # Initialize container for sum of value function maximum values
     # over all error term draws for the period and state
     emax = 0.0
 
     # Loop over all error term draws
     # for the period and state currently rached by the parent loop
-    for i in range(num_draws_emax):
+    for i in range(model_params.num_draws_emax):
 
         # Extract the error term draws corresponding to
         # period number, state, and loop iteration number, i
@@ -285,7 +282,12 @@ def construct_emax(
 
         # Calculate flow utility at current period, state, and draw
         flow_utilities = calculate_utilities(
-            model_params, educ_level, exp_p, exp_f, optim_paras, corresponding_draws
+            model_params,
+            educ_level,
+            exp_p,
+            exp_f,
+            model_params.optim_paras,
+            corresponding_draws,
         )[0]
 
         # Obtain continuation values for all choices
@@ -300,7 +302,7 @@ def construct_emax(
         )
 
         # Calculate choice specific value functions
-        value_functions = flow_utilities + delta * continuation_values
+        value_functions = flow_utilities + model_params.delta * continuation_values
 
         # Obtain highest value function value among the available choices. If above
         # draws were the true shocks, maximum is the the current period value function
@@ -314,7 +316,7 @@ def construct_emax(
         # End loop
 
     # Average over the number of draws
-    emax = emax / num_draws_emax
+    emax = emax / model_params.num_draws_emax
 
     # Thus, we have integrated out the error term
 
