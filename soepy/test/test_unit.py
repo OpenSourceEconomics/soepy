@@ -9,37 +9,35 @@ from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
 from soepy.test.random_init import print_dict
+from soepy.test.random_init import read_init_file2
+from soepy.test.random_init import namedtuple_to_dict
 from soepy.test.auxiliary import cleanup
 
 
 def test1():
     """This test ensures that the columns of the output dataframe correspond to the
-    to the .
+    function output values.
     """
     for _ in range(100):
         constr = {"EDUC_MAX": 10, "AGENTS": 1, "PERIODS": 1}
         init_dict = random_init(constr)
-        attr_dict = read_init_file("test.soepy.yml")
+        model_params = read_init_file("test.soepy.yml")
         df = simulate("test.soepy.yml")
-
-        optim_paras = init_dict["PARAMETERS"]["optim_paras"]
 
         educ_level = np.array([1.0, 0.0, 0.0])
 
         exp_p, exp_f = 0.0, 0.0
 
         wage_systematic = calculate_wage_systematic(
-            educ_level, exp_p, exp_f, optim_paras
+            educ_level, exp_p, exp_f, model_params.optim_paras
         )
 
         np.testing.assert_array_equal(wage_systematic, df["Systematic Wage"])
         draw_sim = draw_disturbances(
-            (1, 1),
-            attr_dict["DERIVED_ATTR"]["shocks_cov"],
-            init_dict["SIMULATION"]["seed_sim"],
+            (1, 1), model_params.shocks_cov, model_params.seed_sim
         )
         period_wages = calculate_period_wages(
-            attr_dict, wage_systematic, draw_sim[0, 0, :]
+            model_params, wage_systematic, draw_sim[0, 0, :]
         )
         period_wages
         np.testing.assert_array_equal(
@@ -49,7 +47,9 @@ def test1():
             ),
         )
 
-        consumption_utilities = calculate_consumption_utilities(attr_dict, period_wages)
+        consumption_utilities = calculate_consumption_utilities(
+            model_params, period_wages
+        )
 
         np.testing.assert_array_equal(
             consumption_utilities,
@@ -65,7 +65,7 @@ def test1():
         )
 
         total_utilities = calculate_total_utilities(
-            attr_dict, consumption_utilities, optim_paras
+            model_params, consumption_utilities, model_params.optim_paras
         )
 
         np.testing.assert_array_equal(
@@ -118,9 +118,9 @@ def test3():
 
     for _ in range(5):
         random_init()
-        init_dict = read_init_file("test.soepy.yml")
-        print_dict(init_dict)
-        init_dict2 = read_init_file("test.soepy.yml")
+        model_params = read_init_file("test.soepy.yml")
+        init_dict = namedtuple_to_dict(model_params)
+        init_dict2 = read_init_file2("test.soepy.yml")
 
         for key in order:
             for subkey in init_dict[key].keys():

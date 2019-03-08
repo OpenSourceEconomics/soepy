@@ -4,6 +4,8 @@ import collections
 import numpy as np
 import oyaml as yaml
 
+from soepy.python.pre_processing.model_processing import expand_init_dict
+
 
 def random_init(constr=None):
     """The module provides a random dictionary generating process for test purposes."""
@@ -130,3 +132,53 @@ def print_dict(init_dict, file_name="test"):
 
     with open("{}.soepy.yml".format(file_name), "w") as outfile:
         yaml.dump(ordered_dict, outfile, explicit_start=True, indent=4)
+
+
+def namedtuple_to_dict(model_params):
+
+    """Transfers model specification from a
+    named tuple class object to dictionary."""
+
+    init_dict = {}
+
+    init_dict["GENERAL"] = {}
+    init_dict["GENERAL"]["num_periods"] = model_params.num_periods
+    init_dict["GENERAL"]["num_choices"] = model_params.num_choices
+
+    init_dict["CONSTANTS"] = {}
+    init_dict["CONSTANTS"]["delta"] = model_params.delta
+    init_dict["CONSTANTS"]["mu"] = model_params.mu
+    init_dict["CONSTANTS"]["benefits"] = model_params.benefits
+
+    init_dict["INITIAL_CONDITIONS"] = {}
+    init_dict["INITIAL_CONDITIONS"]["educ_max"] = model_params.educ_max
+    init_dict["INITIAL_CONDITIONS"]["educ_min"] = model_params.educ_min
+
+    init_dict["SIMULATION"] = {}
+    init_dict["SIMULATION"]["seed_sim"] = model_params.seed_sim
+    init_dict["SIMULATION"]["num_agents_sim"] = model_params.num_agents_sim
+
+    init_dict["SOLUTION"] = {}
+    init_dict["SOLUTION"]["seed_emax"] = model_params.seed_emax
+    init_dict["SOLUTION"]["num_draws_emax"] = model_params.num_draws_emax
+
+    init_dict["PARAMETERS"] = {}
+    init_dict["PARAMETERS"]["optim_paras"] = model_params.optim_paras
+
+    init_dict["DERIVED_ATTR"] = {}
+    init_dict["DERIVED_ATTR"]["educ_range"] = model_params.educ_range
+    init_dict["DERIVED_ATTR"]["shocks_cov"] = model_params.shocks_cov
+
+    return init_dict
+
+
+def read_init_file2(init_file_name):
+    """Reads in the model specification from yaml file."""
+
+    # Import yaml initialization file as dictionary init_dict
+    with open(init_file_name) as y:
+        init_dict = yaml.load(y)
+
+    init_dict = expand_init_dict(init_dict)
+
+    return init_dict
