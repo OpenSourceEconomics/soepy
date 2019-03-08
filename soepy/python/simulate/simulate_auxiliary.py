@@ -18,23 +18,15 @@ def pyth_simulate(model_params, model_params, state_space_args, periods_emax):
         state_space_args[3],
     )
 
-    # Unpack parameter from the model specification
-    educ_min = model_params["INITIAL_CONDITIONS"]["educ_min"]
-    educ_max = model_params["INITIAL_CONDITIONS"]["educ_max"]
-    num_periods = model_params["GENERAL"]["num_periods"]
-    num_agents_sim = model_params["SIMULATION"]["num_agents_sim"]
-    # seed_sim = model_params["SIMULATION"]["seed_sim"]
-    shocks_cov = model_params["DERIVED_ATTR"]["shocks_cov"]
-    optim_paras = model_params["PARAMETERS"]["optim_paras"]
-    delta = model_params["CONSTANTS"]["delta"]
-
-    educ_years = list(range(educ_min, educ_max + 1))
+    educ_years = list(range(model_params.educ_min, model_params.educ_max + 1))
     np.random.seed(model_params.seed_sim)
-    educ_years = np.random.choice(educ_years, num_agents_sim)
+    educ_years = np.random.choice(educ_years, model_params.num_agents_sim)
 
     # Create draws for simulated sample
     draws_sim = draw_disturbances(
-        (num_periods, num_agents_sim), shocks_cov, model_params.seed_sim
+        (model_params.num_periods, model_params.num_agents_sim),
+        model_params.shocks_cov,
+        model_params.seed_sim,
     )
 
     # Start count over all simulations/rows (number of agents times number of periods)
@@ -42,14 +34,17 @@ def pyth_simulate(model_params, model_params, state_space_args, periods_emax):
 
     # Initialize container for the final output
     num_columns = 14  # count of the information units we wish to record
-    dataset = np.tile(MISSING_FLOAT, (num_agents_sim * num_periods, num_columns))
+    dataset = np.tile(
+        MISSING_FLOAT,
+        (model_params.num_agents_sim * model_params.num_periods, num_columns),
+    )
 
     # Loop over all agents
-    for i in range(num_agents_sim):
+    for i in range(model_params.num_agents_sim):
 
         # Construct additional education information
         educ_years_i, educ_level, educ_years_idx = extract_individual_covariates(
-            educ_years, educ_min, i
+            educ_years, model_params.educ_min, i
         )
 
         # Extract the indicator of the initial state for the individual
@@ -62,7 +57,7 @@ def pyth_simulate(model_params, model_params, state_space_args, periods_emax):
         current_state = states_all[educ_years_idx, initial_state_index, :].copy()
 
         # Loop over all remaining
-        for period in range(num_periods):
+        for period in range(model_params.num_periods):
 
             # Record agent identifier, period number, and years of education
             dataset[count, :2] = i, period
@@ -99,7 +94,12 @@ def pyth_simulate(model_params, model_params, state_space_args, periods_emax):
 
             # Calculate correspongind flow utilities
             flow_utility, cons_utilities, period_wages, wage_sys = calculate_utilities(
-                model_params, educ_level, exp_p, exp_f, optim_paras, corresponding_draws
+                model_params,
+                educ_level,
+                exp_p,
+                exp_f,
+                model_params.optim_paras,
+                corresponding_draws,
             )
 
             # Obtain continuation values for all choices
@@ -114,7 +114,7 @@ def pyth_simulate(model_params, model_params, state_space_args, periods_emax):
             )
 
             # Calculate total values for all choices
-            value_functions = flow_utility + delta * continuation_values
+            value_functions = flow_utility + model_params.delta * continuation_values
 
             # Determine choice as option with highest choice specific value function
             max_idx = np.argmax(value_functions)
