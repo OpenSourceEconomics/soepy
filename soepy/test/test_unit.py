@@ -8,7 +8,6 @@ from soepy.python.pre_processing.model_processing import read_init_file
 from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
-from soepy.test.random_init import print_dict
 from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
 from soepy.test.auxiliary import cleanup

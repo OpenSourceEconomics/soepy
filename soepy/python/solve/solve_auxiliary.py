@@ -58,7 +58,8 @@ def pyth_create_state_space(model_params):
                     if exp_f + exp_p > period - educ_years:
                         continue
 
-                    # Add an additional entry state [educ_years + model_params.educ_min, 0, 0, 0]
+                    # Add an additional entry state 
+                    # [educ_years + model_params.educ_min, 0, 0, 0]
                     # for individuals who have just completed education
                     # and still have no experience in any occupation.
                     if period == educ_years:
