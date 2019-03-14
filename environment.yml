@@ -1,8 +1,9 @@
 ---
-name: soepy
+name: SOEPY_DEV
 dependencies:
 - numpy
 - pandas
 - flake8
+- black
 - pytest
 -   pip: [oyaml, nbsphinx]
