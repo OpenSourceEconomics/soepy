@@ -1,8 +1,0 @@
----
-name: soepy
-dependencies:
-- numpy
-- pandas
-- flake8
-- pytest
--   pip: [oyaml, nbsphinx]
