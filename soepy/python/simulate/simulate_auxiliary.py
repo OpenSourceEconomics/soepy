@@ -1,6 +1,5 @@
 import numpy as np
 
-from soepy.python.shared.shared_constants import MISSING_FLOAT
 from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
