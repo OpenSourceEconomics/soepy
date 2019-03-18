@@ -28,7 +28,7 @@ def test1():
         exp_p, exp_f = 0.0, 0.0
 
         wage_systematic = calculate_wage_systematic(
-            educ_level, exp_p, exp_f, model_params
+            model_params, educ_level, exp_p, exp_f
         )
 
         np.testing.assert_array_equal(wage_systematic, df["Systematic Wage"])
