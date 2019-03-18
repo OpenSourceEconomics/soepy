@@ -135,8 +135,11 @@ def extract_individual_covariates(educ_years, educ_min, i):
     elif (educ_years_i > 10) and (educ_years_i <= 12):
         educ_level = [0, 1, 0]
 
-    else:
+    elif educ_years_i > 12:
         educ_level = [0, 0, 1]
+
+    else:
+        raise ValueError("Invalid number of years of education")
 
     educ_years_idx = educ_years_i - educ_min
 
