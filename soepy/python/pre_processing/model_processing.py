@@ -38,7 +38,6 @@ def expand_init_dict(init_dict):
 
 
 def create_namedtuple(init_dict):
-
     """Transfers model specification from a dictionary
     to a named tuple class object."""
 
