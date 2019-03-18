@@ -63,9 +63,7 @@ def test1():
             ),
         )
 
-        total_utilities = calculate_total_utilities(
-            model_params, consumption_utilities
-        )
+        total_utilities = calculate_total_utilities(model_params, consumption_utilities)
 
         np.testing.assert_array_equal(
             total_utilities,
