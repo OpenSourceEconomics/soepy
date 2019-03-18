@@ -1,6 +1,7 @@
-import numpy as np
-import math
 import sys
+
+import math
+import numpy as np
 
 from soepy.python.shared.shared_constants import MISSING_FLOAT
 
