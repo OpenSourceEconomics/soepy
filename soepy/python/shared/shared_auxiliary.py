@@ -103,13 +103,6 @@ def calculate_consumption_utilities(model_params, period_wages):
         consumption_utilities[1] ** model_params.mu / model_params.mu
     )
 
-    if np.isnan(consumption_utilities[1]):
-        print(period_wages)
-        print(hours)
-        print(hours * period_wages)
-        print(consumption_utilities)
-        sys.exit("Error message")
-
     consumption_utilities[2] = (
         consumption_utilities[2] ** model_params.mu / model_params.mu
     )
