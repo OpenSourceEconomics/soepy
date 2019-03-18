@@ -12,11 +12,8 @@ def draw_disturbances(num_draws, shocks_cov, seed):
 
     # Input parameters of the distribution
     mean = [0, 0, 0]
-    shocks_cov_matrix = [
-        [shocks_cov[0], 0, 0],
-        [0, shocks_cov[1], 0],
-        [0, 0, shocks_cov[2]],
-    ]
+    shocks_cov_matrix = np.zeros((3, 3), float)
+    np.fill_diagonal(shocks_cov_matrix, shocks_cov)
 
     # Create draws from the standard normal distribution
     draws = np.random.multivariate_normal(mean, shocks_cov_matrix, num_draws)
