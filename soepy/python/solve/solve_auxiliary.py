@@ -1,6 +1,6 @@
 import numpy as np
 
-from soepy.python.shared.shared_constants import MISSING_INT, MISSING_FLOAT
+from soepy.python.shared.shared_constants import MISSING_INT
 from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
@@ -166,7 +166,7 @@ def pyth_backward_induction(model_params, state_space_args):
 
     # Initialize container for the final result,
     # maximal value function per perdiod and state:
-    periods_emax = np.tile(MISSING_FLOAT, (model_params.num_periods, max_states_period))
+    periods_emax = np.tile(np.nan, (model_params.num_periods, max_states_period))
 
     draws_emax = draw_disturbances(
         (model_params.num_periods, model_params.num_draws_emax),

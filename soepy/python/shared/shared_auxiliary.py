@@ -3,8 +3,6 @@ import sys
 import math
 import numpy as np
 
-from soepy.python.shared.shared_constants import MISSING_FLOAT
-
 
 def draw_disturbances(num_draws, shocks_cov, seed):
     """Creates desired number of draws of a multivariate standard normal distribution."""
@@ -96,16 +94,16 @@ def calculate_consumption_utilities(model_params, period_wages):
     # Calculate choice specific wages including productivity shock
     consumption_utilities = hours * period_wages
     consumption_utilities[0] = (
-        (model_params.benefits ** model_params.mu) / model_params.mu
-    )
+        model_params.benefits ** model_params.mu
+    ) / model_params.mu
 
     consumption_utilities[1] = (
-        (consumption_utilities[1] ** model_params.mu) / model_params.mu
-    )
+        consumption_utilities[1] ** model_params.mu
+    ) / model_params.mu
 
     consumption_utilities[2] = (
-        (consumption_utilities[2] ** model_params.mu) / model_params.mu
-    )
+        consumption_utilities[2] ** model_params.mu
+    ) / model_params.mu
 
     # Return function output
     return consumption_utilities
@@ -145,7 +143,7 @@ def calculate_continuation_values(
     """Obtain continuation values for each of the choices."""
 
     # Initialize container for continuation values
-    continuation_values = np.tile(MISSING_FLOAT, model_params.num_choices)
+    continuation_values = np.tile(np.nan, model_params.num_choices)
 
     if period != (model_params.num_periods - 1):
 

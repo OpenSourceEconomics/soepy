@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 
 from soepy.python.pre_processing.model_processing import read_init_file
-from soepy.python.simulate.simulate_auxiliary import replace_missing_values
 from soepy.python.simulate.simulate_auxiliary import pyth_simulate
 from soepy.python.solve.solve_python import pyth_solve
 
@@ -54,9 +53,7 @@ def simulate(init_file_name):
             DATA_FORMATS_SIM[key_] = np.float
 
     # Create data frame from simulated dataset
-    data_frame = pd.DataFrame(
-        data=replace_missing_values(dataset), columns=DATA_LABLES_SIM
-    )
+    data_frame = pd.DataFrame(data=dataset, columns=DATA_LABLES_SIM)
 
     # Set specific columns to desired data types
     data_frame = data_frame.astype(DATA_FORMATS_SIM)

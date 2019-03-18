@@ -34,8 +34,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
     # Initialize container for the final output
     num_columns = 14  # count of the information units we wish to record
     dataset = np.tile(
-        MISSING_FLOAT,
-        (model_params.num_agents_sim * model_params.num_periods, num_columns),
+        np.nan, (model_params.num_agents_sim * model_params.num_periods, num_columns)
     )
 
     # Loop over all agents
@@ -155,35 +154,3 @@ def extract_individual_covariates(educ_years, educ_min, i):
 
     # Return function output
     return educ_years_i, educ_level, educ_years_idx
-
-
-def replace_missing_values(arguments):
-    """Replace MISSING_FLOAT with NAN."""
-    # Antibugging
-    assert isinstance(arguments, tuple) or isinstance(arguments, np.ndarray)
-
-    if isinstance(arguments, np.ndarray):
-        arguments = (arguments,)
-
-    rslt = tuple()
-
-    for argument in arguments:
-
-        # Transform to float array to evaluate missing values
-        argument_internal = np.asfarray(argument)
-
-        # Determine missing values
-        is_missing = argument_internal == MISSING_FLOAT
-        if np.any(is_missing):
-            # Replace missing values
-            argument = np.asfarray(argument)
-            argument[is_missing] = np.nan
-
-        rslt += (argument,)
-
-    # Align interface
-    if len(rslt) == 1:
-        rslt = rslt[0]
-
-    # Function output
-    return rslt
