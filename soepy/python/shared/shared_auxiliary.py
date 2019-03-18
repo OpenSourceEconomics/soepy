@@ -96,15 +96,15 @@ def calculate_consumption_utilities(model_params, period_wages):
     # Calculate choice specific wages including productivity shock
     consumption_utilities = hours * period_wages
     consumption_utilities[0] = (
-        model_params.benefits ** model_params.mu / model_params.mu
+        (model_params.benefits ** model_params.mu) / model_params.mu
     )
 
     consumption_utilities[1] = (
-        consumption_utilities[1] ** model_params.mu / model_params.mu
+        (consumption_utilities[1] ** model_params.mu) / model_params.mu
     )
 
     consumption_utilities[2] = (
-        consumption_utilities[2] ** model_params.mu / model_params.mu
+        (consumption_utilities[2] ** model_params.mu) / model_params.mu
     )
 
     # Return function output
