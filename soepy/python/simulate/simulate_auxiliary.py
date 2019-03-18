@@ -72,7 +72,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
                 continue
 
             # Extract state space components
-            _, choice_lagged, exp_p, exp_f = current_state
+            _, _, exp_p, exp_f = current_state
 
             # Extract the error term draws corresponding to
             # period number and individual
