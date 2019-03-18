@@ -158,10 +158,7 @@ def pyth_backward_induction(model_params, state_space_args):
 
     # Unpack objects from agrs
     states_all, states_number_period, mapping_states_index, max_states_period = (
-        state_space_args[0],
-        state_space_args[1],
-        state_space_args[2],
-        state_space_args[3],
+        state_space_args
     )
 
     # Initialize container for the final result,
