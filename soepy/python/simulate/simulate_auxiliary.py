@@ -93,12 +93,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
 
             # Calculate correspongind flow utilities
             flow_utility, cons_utilities, period_wages, wage_sys = calculate_utilities(
-                model_params,
-                educ_level,
-                exp_p,
-                exp_f,
-                model_params.optim_paras,
-                corresponding_draws,
+                model_params, educ_level, exp_p, exp_f, corresponding_draws
             )
 
             # Obtain continuation values for all choices

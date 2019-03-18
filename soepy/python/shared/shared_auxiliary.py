@@ -27,11 +27,11 @@ def draw_disturbances(num_draws, shocks_cov, seed):
     return draws
 
 
-def calculate_utilities(model_params, educ_level, exp_p, exp_f, optim_paras, draws):
+def calculate_utilities(model_params, educ_level, exp_p, exp_f, draws):
     """Calculate period/flow utilities for all choices given state, period, and shocks."""
 
     # Calculate wage net of period productivity shock
-    wage_systematic = calculate_wage_systematic(educ_level, exp_p, exp_f, optim_paras)
+    wage_systematic = calculate_wage_systematic(educ_level, exp_p, exp_f, model_params)
 
     # Calculate period wages for the three choices includings chocks' realizations
     period_wages = calculate_period_wages(model_params, wage_systematic, draws)
@@ -40,25 +40,23 @@ def calculate_utilities(model_params, educ_level, exp_p, exp_f, optim_paras, dra
     consumption_utilities = calculate_consumption_utilities(model_params, period_wages)
 
     # Calculate total period utilities by multiplying U(.) component
-    utilities = calculate_total_utilities(
-        model_params, consumption_utilities, optim_paras
-    )
+    utilities = calculate_total_utilities(model_params, consumption_utilities)
 
     # Return function output
     return utilities, consumption_utilities, period_wages, wage_systematic
 
 
-def calculate_wage_systematic(educ_level, exp_p, exp_f, optim_paras):
+def calculate_wage_systematic(educ_level, exp_p, exp_f, model_params):
     """Calculate systematic wages, i.e., wages net of shock, for specified state."""
 
     # Initialize container
     wage_systematic = np.nan
 
     # Construct wage components
-    gamma_s0 = np.dot(educ_level, optim_paras[0:3])
-    gamma_s1 = np.dot(educ_level, optim_paras[3:6])
-    period_exp_sum = exp_p * np.dot(educ_level, optim_paras[6:9]) + exp_f
-    depreciation = 1 - np.dot(educ_level, optim_paras[9:12])
+    gamma_s0 = np.dot(educ_level, model_params.optim_paras[0:3])
+    gamma_s1 = np.dot(educ_level, model_params.optim_paras[3:6])
+    period_exp_sum = exp_p * np.dot(educ_level, model_params.optim_paras[6:9]) + exp_f
+    depreciation = 1 - np.dot(educ_level, model_params.optim_paras[9:12])
 
     # Calculate wage in the given state
     period_exp_total = period_exp_sum * depreciation + 1
@@ -120,7 +118,7 @@ def calculate_consumption_utilities(model_params, period_wages):
     return consumption_utilities
 
 
-def calculate_total_utilities(model_params, consumption_utilities, optim_paras):
+def calculate_total_utilities(model_params, consumption_utilities):
     """Calculate total period utilities for each of the choices."""
 
     # Initialize container for utilities at state space point and period
@@ -128,7 +126,11 @@ def calculate_total_utilities(model_params, consumption_utilities, optim_paras):
 
     # Calculate U(.) for the three available choices
     U_ = np.array(
-        [math.exp(0.00), math.exp(optim_paras[12]), math.exp(optim_paras[13])]
+        [
+            math.exp(0.00),
+            math.exp(model_params.optim_paras[12]),
+            math.exp(model_params.optim_paras[13]),
+        ]
     )
 
     # Calculate utilities for the avaibale joices N, P, F

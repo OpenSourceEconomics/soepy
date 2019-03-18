@@ -200,11 +200,9 @@ def pyth_backward_induction(model_params, state_space_args):
                 k,
                 educ_level,
                 educ_years_idx,
-                model_params.num_draws_emax,
                 draws_emax_period,
                 states_all,
                 mapping_states_index,
-                model_params.optim_paras,
                 periods_emax,
             )
 
@@ -255,11 +253,9 @@ def construct_emax(
     k,
     educ_level,
     educ_years_idx,
-    num_draws_emax,
     draws_emax_period,
     states_all,
     mapping_states_index,
-    optim_paras,
     periods_emax,
 ):
     """Integrate out the error terms in a Monte Carlo simulation procedure
@@ -283,12 +279,7 @@ def construct_emax(
 
         # Calculate flow utility at current period, state, and draw
         flow_utilities = calculate_utilities(
-            model_params,
-            educ_level,
-            exp_p,
-            exp_f,
-            model_params.optim_paras,
-            corresponding_draws,
+            model_params, educ_level, exp_p, exp_f, corresponding_draws
         )[0]
 
         # Obtain continuation values for all choices
