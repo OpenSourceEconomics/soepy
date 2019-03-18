@@ -29,7 +29,7 @@ def calculate_utilities(model_params, educ_level, exp_p, exp_f, draws):
     """Calculate period/flow utilities for all choices given state, period, and shocks."""
 
     # Calculate wage net of period productivity shock
-    wage_systematic = calculate_wage_systematic(educ_level, exp_p, exp_f, model_params)
+    wage_systematic = calculate_wage_systematic(model_params, educ_level, exp_p, exp_f)
 
     # Calculate period wages for the three choices includings chocks' realizations
     period_wages = calculate_period_wages(model_params, wage_systematic, draws)
@@ -44,7 +44,7 @@ def calculate_utilities(model_params, educ_level, exp_p, exp_f, draws):
     return utilities, consumption_utilities, period_wages, wage_systematic
 
 
-def calculate_wage_systematic(educ_level, exp_p, exp_f, model_params):
+def calculate_wage_systematic(model_params, educ_level, exp_p, exp_f):
     """Calculate systematic wages, i.e., wages net of shock, for specified state."""
 
     # Initialize container

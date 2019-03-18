@@ -176,7 +176,7 @@ def pyth_backward_induction(model_params, state_space_args):
 
     # Construct covariates
     covariates = construct_covariates(
-        states_all, states_number_period, max_states_period, model_params
+        model_params, states_all, states_number_period, max_states_period
     )
 
     # Loop over all periods
@@ -214,7 +214,7 @@ def pyth_backward_induction(model_params, state_space_args):
 
 
 def construct_covariates(
-    states_all, states_number_period, max_states_period, model_params
+    model_params, states_all, states_number_period, max_states_period
 ):
     """Constructs additional covariates given state space components."""
 
