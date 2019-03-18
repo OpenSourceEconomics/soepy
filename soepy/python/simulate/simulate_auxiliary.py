@@ -1,5 +1,6 @@
 import numpy as np
 
+from soepy.python.shared.shared_constants import NUM_COLUMNS_DATAFRAME
 from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
@@ -31,7 +32,9 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
     count = 0
 
     # Initialize container for the final output
-    num_columns = 14  # count of the information units we wish to record
+    num_columns = (
+        NUM_COLUMNS_DATAFRAME
+    )  # count of the information units we wish to record
     dataset = np.tile(
         np.nan, (model_params.num_agents_sim * model_params.num_periods, num_columns)
     )
