@@ -32,6 +32,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
     num_columns = (
         NUM_COLUMNS_DATAFRAME
     )  # count of the information units we wish to record
+
     dataset = np.tile(
         np.nan, (model_params.num_agents_sim * model_params.num_periods, num_columns)
     )
@@ -71,19 +72,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
                 continue
 
             # Extract state space components
-            choice_lagged, exp_p, exp_f = (
-                current_state[1],
-                current_state[2],
-                current_state[3],
-            )
-
-            # Look up the indicator for the current state
-            # k = mapping_states_index[
-            #    period, educ_years_i - educ_min, choice_lagged, exp_p, exp_f
-            # ]
-
-            # Calculate choice specific value functions
-            # for individual, period and state space point
+            _, choice_lagged, exp_p, exp_f = current_state
 
             # Extract the error term draws corresponding to
             # period number and individual
