@@ -280,7 +280,7 @@ def construct_emax(
         # Calculate flow utility at current period, state, and draw
         flow_utilities, _, _, _ = calculate_utilities(
             model_params, educ_level, exp_p, exp_f, corresponding_draws
-        )[0]
+        )
 
         # Obtain continuation values for all choices
         continuation_values = calculate_continuation_values(
