@@ -11,10 +11,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
 
     # Unpack objects from agrs
     states_all, states_number_period, mapping_states_index, max_states_period = (
-        state_space_args[0],
-        state_space_args[1],
-        state_space_args[2],
-        state_space_args[3],
+        state_space_args
     )
 
     educ_years = list(range(model_params.educ_min, model_params.educ_max + 1))
