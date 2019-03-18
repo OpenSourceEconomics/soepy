@@ -278,7 +278,7 @@ def construct_emax(
         educ_years, _, exp_p, exp_f = states_all[period, k, :]
 
         # Calculate flow utility at current period, state, and draw
-        flow_utilities = calculate_utilities(
+        flow_utilities, _, _, _ = calculate_utilities(
             model_params, educ_level, exp_p, exp_f, corresponding_draws
         )[0]
 
