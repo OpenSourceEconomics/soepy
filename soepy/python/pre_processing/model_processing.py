@@ -27,7 +27,7 @@ def expand_init_dict(init_dict):
     educ_max = init_dict["INITIAL_CONDITIONS"]["educ_max"]
     educ_range = educ_max - educ_min + 1
 
-    # Calculate covariances of the error terms given standard diviations
+    # Calculate covariances of the error terms given standard deviations
     shocks_cov = init_dict["PARAMETERS"]["optim_paras"][14:17]
     shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
 

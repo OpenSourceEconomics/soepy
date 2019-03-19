@@ -14,7 +14,7 @@ from soepy.test.auxiliary import cleanup
 
 
 def test1():
-    """This test ensures that the columns of the output dataframe correspond to the
+    """This test ensures that the columns of the output data frame correspond to the
     function output values.
     """
     for _ in range(100):
@@ -74,7 +74,7 @@ def test1():
 
 
 def test2():
-    """This test ensures that the dataframe contain only nan values if individuals are
+    """This test ensures that the data frame contain only nan values if individuals are
      still a in education.
     """
     constr = {"AGENTS": 200}
@@ -126,7 +126,7 @@ def test3():
 
 
 def test4():
-    """This test ensures that the shape of the simulated dataframe corresponds to the
+    """This test ensures that the shape of the simulated data frame corresponds to the
     to the random specifications of our initialization file.
     """
     for _ in range(5):

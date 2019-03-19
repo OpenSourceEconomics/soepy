@@ -50,7 +50,7 @@ def pyth_create_state_space(model_params):
             # Loop over all admissible years of experience accumulated in part-time
             for exp_f in range(model_params.num_periods):
 
-                # Loop over all admaissible years of experience accumulated in full-time
+                # Loop over all admissible years of experience accumulated in full-time
                 for exp_p in range(model_params.num_periods):
 
                     # The accumulation of experience cannot exceed time elapsed
@@ -69,7 +69,7 @@ def pyth_create_state_space(model_params):
                         mapping_states_index[period, educ_years, 0, 0, 0] = k
 
                         # Record the values of the state space components
-                        # for the currentry reached entry state
+                        # for the currently reached entry state
                         states_all[period, k, :] = [
                             educ_years + model_params.educ_min,
                             0,
@@ -162,7 +162,7 @@ def pyth_backward_induction(model_params, state_space_args):
     )
 
     # Initialize container for the final result,
-    # maximal value function per perdiod and state:
+    # maximal value function per period and state:
     periods_emax = np.tile(np.nan, (model_params.num_periods, max_states_period))
 
     draws_emax = draw_disturbances(
@@ -264,7 +264,7 @@ def construct_emax(
     emax = 0.0
 
     # Loop over all error term draws
-    # for the period and state currently rached by the parent loop
+    # for the period and state currently reached by the parent loop
     for i in range(model_params.num_draws_emax):
 
         # Extract the error term draws corresponding to

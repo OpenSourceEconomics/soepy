@@ -78,7 +78,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
             # period number and individual
             corresponding_draws = draws_sim[period, i, :]
 
-            # Calculate correspongind flow utilities
+            # Calculate corresponding flow utilities
             flow_utility, cons_utilities, period_wages, wage_sys = calculate_utilities(
                 model_params, educ_level, exp_p, exp_f, corresponding_draws
             )

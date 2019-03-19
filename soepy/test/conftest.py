@@ -1,9 +1,9 @@
 """This module provides the fixtures for the PYTEST runs."""
 import tempfile
 import os
+import pytest
 
 import numpy as np
-import pytest
 
 
 @pytest.fixture(scope="module", autouse=True)

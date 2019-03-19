@@ -1,4 +1,5 @@
 import math
+
 import numpy as np
 
 
@@ -26,7 +27,7 @@ def calculate_utilities(model_params, educ_level, exp_p, exp_f, draws):
     # Calculate wage net of period productivity shock
     wage_systematic = calculate_wage_systematic(model_params, educ_level, exp_p, exp_f)
 
-    # Calculate period wages for the three choices including chocks' realizations
+    # Calculate period wages for the three choices including shocks' realizations
     period_wages = calculate_period_wages(model_params, wage_systematic, draws)
 
     # Calculate 1st part of the period utilities related to consumption

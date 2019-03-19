@@ -18,8 +18,8 @@ def simulate(init_file_name):
     # Simulate agents experiences according to parameters in the model specification
     dataset = pyth_simulate(model_params, state_space_args, periods_emax)
 
-    # Create fixed objects needed to record simulated dataset to Pandas Dataframe
-    # Define column lables
+    # Create fixed objects needed to record simulated data set to Pandas DataFrame
+    # Define column labels
     DATA_LABLES_SIM = []
     DATA_LABLES_SIM += ["Identifier", "Period"]
     DATA_LABLES_SIM += ["Years of Education"]
@@ -52,7 +52,7 @@ def simulate(init_file_name):
         ]:
             DATA_FORMATS_SIM[key_] = np.float
 
-    # Create data frame from simulated dataset
+    # Create data frame from simulated data set
     data_frame = pd.DataFrame(data=dataset, columns=DATA_LABLES_SIM)
 
     # Set specific columns to desired data types
