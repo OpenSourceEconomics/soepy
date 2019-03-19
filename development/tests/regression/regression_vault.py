@@ -67,7 +67,7 @@ def check_vault():
 
         print_dict(init_dict)
 
-        df = simulate("test.grmpy.yml")
+        df = simulate("test.soepy.yml")
 
         stat_new = np.sum(df.sum())
 

@@ -1,8 +1,9 @@
 """This module contains test that check the code quality of the package."""
-from soepy.python.soepy_config import PACKAGE_DIR
-from subprocess import CalledProcessError
 import subprocess
 import os
+
+from soepy.python.soepy_config import PACKAGE_DIR
+from subprocess import CalledProcessError
 
 
 def test1():
