@@ -33,7 +33,7 @@ def test1():
 
         np.testing.assert_array_equal(wage_systematic, df["Systematic Wage"])
         draw_sim = draw_disturbances(
-            (1, 1), model_params.shocks_cov, model_params.seed_sim
+            model_params.seed_sim, model_params.shocks_cov, 1, 1
         )
         period_wages = calculate_period_wages(
             model_params, wage_systematic, draw_sim[0, 0, :]

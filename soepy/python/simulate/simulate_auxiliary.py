@@ -20,9 +20,10 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
 
     # Create draws for simulated sample
     draws_sim = draw_disturbances(
-        (model_params.num_periods, model_params.num_agents_sim),
-        model_params.shocks_cov,
         model_params.seed_sim,
+        model_params.shocks_cov,
+        model_params.num_periods,
+        model_params.num_agents_sim,
     )
 
     # Start count over all simulations/rows (number of agents times number of periods)

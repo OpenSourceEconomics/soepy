@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def draw_disturbances(num_draws, shocks_cov, seed):
+def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
     """Creates desired number of draws of a multivariate standard normal distribution."""
 
     # Set seed
@@ -13,7 +13,9 @@ def draw_disturbances(num_draws, shocks_cov, seed):
     np.fill_diagonal(shocks_cov_matrix, shocks_cov)
 
     # Create draws from the standard normal distribution
-    draws = np.random.multivariate_normal(mean, shocks_cov_matrix, num_draws)
+    draws = np.random.multivariate_normal(
+        mean, shocks_cov_matrix, (num_periods, num_draws)
+    )
 
     # Return function output
     return draws

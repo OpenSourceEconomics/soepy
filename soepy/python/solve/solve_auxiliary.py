@@ -166,9 +166,10 @@ def pyth_backward_induction(model_params, state_space_args):
     periods_emax = np.tile(np.nan, (model_params.num_periods, max_states_period))
 
     draws_emax = draw_disturbances(
-        (model_params.num_periods, model_params.num_draws_emax),
-        model_params.shocks_cov,
         model_params.seed_emax,
+        model_params.shocks_cov,
+        model_params.num_periods,
+        model_params.num_draws_emax,
     )
 
     # Construct covariates
