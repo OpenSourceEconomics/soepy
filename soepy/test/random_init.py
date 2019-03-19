@@ -177,7 +177,7 @@ def read_init_file2(init_file_name):
 
     # Import yaml initialization file as dictionary init_dict
     with open(init_file_name) as y:
-        init_dict = yaml.load(y)
+        init_dict = yaml.load(y, Loader=yaml.FullLoader)
 
     init_dict = expand_init_dict(init_dict)
 
