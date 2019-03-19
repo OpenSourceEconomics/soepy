@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-## We only support modern Python.
+# We only support modern Python.
 np.testing.assert_equal(sys.version_info[0], 3)
 np.testing.assert_equal(sys.version_info[1] >= 5, True)
 
