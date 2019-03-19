@@ -1,5 +1,3 @@
-import math
-
 import numpy as np
 
 
@@ -114,9 +112,9 @@ def calculate_total_utilities(model_params, consumption_utilities):
     # Calculate U(.) for the three available choices
     U_ = np.array(
         [
-            math.exp(0.00),
-            math.exp(model_params.optim_paras[12]),
-            math.exp(model_params.optim_paras[13]),
+            np.exp(0.00),
+            np.exp(model_params.optim_paras[12]),
+            np.exp(model_params.optim_paras[13]),
         ]
     )
 
