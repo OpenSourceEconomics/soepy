@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """This module contains the process that generates our regression test battery."""
 import os
 import json

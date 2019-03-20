@@ -1,4 +1,5 @@
 language: python
+
 python:
   - "3.6"
 
@@ -9,6 +10,7 @@ install:
 
 script:
     - py.test --cov=soepy
+    - ./development/tests/run_pr_testing.py
 
 after_success:
     - codecov
