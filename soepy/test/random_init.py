@@ -19,7 +19,7 @@ def random_init(constr=None):
     if "EDUC_MAX" in constr.keys():
         educ_max = constr["EDUC_MAX"]
     else:
-        educ_max = 14
+        educ_max = 12
 
     if "EDUC_MIN" in constr.keys():
         educ_max = constr["EDUC_MIN"]
@@ -34,7 +34,7 @@ def random_init(constr=None):
     if "PERIODS" in constr.keys():
         periods = constr["PERIODS"]
     else:
-        periods = np.random.randint(1, 5)
+        periods = np.random.randint(3, 6)
 
     if "SEED_SIM" in constr.keys():
         seed_sim = constr["SEED_SIM"]
