@@ -34,7 +34,7 @@ def random_init(constr=None):
     if "PERIODS" in constr.keys():
         periods = constr["PERIODS"]
     else:
-        periods = np.random.randint(8, 12)
+        periods = np.random.randint(1, 5)
 
     if "SEED_SIM" in constr.keys():
         seed_sim = constr["SEED_SIM"]
