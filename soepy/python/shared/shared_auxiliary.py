@@ -1,5 +1,7 @@
 import numpy as np
 
+from soepy.python.shared.shared_constants import NUM_CHOICES
+
 
 def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
     """Creates desired number of draws of a multivariate standard normal distribution."""
@@ -67,7 +69,7 @@ def calculate_period_wages(model_params, wage_systematic, draws):
     """
 
     # Initialize container
-    period_wages = np.tile(np.nan, model_params.num_choices)
+    period_wages = np.tile(np.nan, NUM_CHOICES)
 
     # Take the exponential of the disturbances
     exp_draws = np.exp(draws)
@@ -109,7 +111,7 @@ def calculate_total_utilities(model_params, consumption_utilities):
     """Calculate total period utilities for each of the choices."""
 
     # Initialize container for utilities at state space point and period
-    total_utilities = np.tile(np.nan, model_params.num_choices)
+    total_utilities = np.tile(np.nan, NUM_CHOICES)
 
     # Calculate U(.) for the three available choices
     U_ = np.array(
@@ -139,7 +141,7 @@ def calculate_continuation_values(
     """Obtain continuation values for each of the choices."""
 
     # Initialize container for continuation values
-    continuation_values = np.tile(np.nan, model_params.num_choices)
+    continuation_values = np.tile(np.nan, NUM_CHOICES)
 
     if period != (model_params.num_periods - 1):
 
@@ -162,7 +164,7 @@ def calculate_continuation_values(
         continuation_values[2] = periods_emax[period + 1, future_idx]
 
     else:
-        continuation_values = np.tile(0.0, model_params.num_choices)
+        continuation_values = np.tile(0.0, NUM_CHOICES)
 
     # Return function output
     return continuation_values

@@ -64,7 +64,6 @@ def random_init(constr=None):
         init_dict[key_] = {}
 
     init_dict["GENERAL"]["num_periods"] = periods
-    init_dict["GENERAL"]["num_choices"] = 3
 
     init_dict["CONSTANTS"]["delta"] = np.random.uniform(0.8, 0.99)
     init_dict["CONSTANTS"]["mu"] = np.random.uniform(-0.7, -0.4)
@@ -143,7 +142,6 @@ def namedtuple_to_dict(model_params):
 
     init_dict["GENERAL"] = {}
     init_dict["GENERAL"]["num_periods"] = model_params.num_periods
-    init_dict["GENERAL"]["num_choices"] = model_params.num_choices
 
     init_dict["CONSTANTS"] = {}
     init_dict["CONSTANTS"]["delta"] = model_params.delta

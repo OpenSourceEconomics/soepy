@@ -43,7 +43,6 @@ def create_namedtuple(init_dict):
 
     model_params = cl.namedtuple("model_parameters", "")
     model_params.num_periods = init_dict["GENERAL"]["num_periods"]
-    model_params.num_choices = init_dict["GENERAL"]["num_choices"]
 
     model_params.delta = init_dict["CONSTANTS"]["delta"]
     model_params.mu = init_dict["CONSTANTS"]["mu"]

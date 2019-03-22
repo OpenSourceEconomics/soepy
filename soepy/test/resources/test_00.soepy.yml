@@ -1,6 +1,6 @@
 --- !!python/object/apply:collections.OrderedDict
 -   -   - GENERAL
-        - {num_choices: 3, num_periods: 4}
+        - {num_periods: 4}
     -   - CONSTANTS
         - {benefits: 1697.770133504253, delta: 0.8328024845554892, mu: -0.6089870857364769}
     -   - INITIAL_CONDITIONS
