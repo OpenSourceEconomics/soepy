@@ -1,3 +1,5 @@
+import yaml
+
 from pathlib import Path
 
 from soepy.python.simulate.simulate_python import simulate
@@ -12,9 +14,15 @@ for file in files:
     file_list.append(str(file))
 
 file_list.sort()
+print(file_list[3])
+
+with open(file_list[3]) as y:
+    init_dict = yaml.load(y)
+
+print(init_dict["PARAMETERS"])
 
 # Generate simulated dataset
-data_frame = simulate(files[0])
+data_frame = simulate(file_list[3])
 
 # Save data frame to csv file
 data_frame.to_csv("test.soepy.csv", sep="\t")

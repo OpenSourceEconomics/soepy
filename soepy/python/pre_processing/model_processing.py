@@ -28,7 +28,11 @@ def expand_init_dict(init_dict):
     educ_range = educ_max - educ_min + 1
 
     # Calculate covariances of the error terms given standard deviations
-    shocks_cov = init_dict["PARAMETERS"]["optim_paras"][14:17]
+    shocks_cov = [
+        init_dict["PARAMETERS"]["sigma_0"],
+        init_dict["PARAMETERS"]["sigma_1"],
+        init_dict["PARAMETERS"]["sigma_2"],
+    ]
     shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
 
     init_dict["DERIVED_ATTR"] = {"educ_range": educ_range, "shocks_cov": shocks_cov}
@@ -57,7 +61,8 @@ def create_namedtuple(init_dict):
     model_params.seed_emax = init_dict["SOLUTION"]["seed_emax"]
     model_params.num_draws_emax = init_dict["SOLUTION"]["num_draws_emax"]
 
-    model_params.optim_paras = init_dict["PARAMETERS"]["optim_paras"]
+    model_params.optim_paras = list(init_dict["PARAMETERS"].values())
+    model_params.order = list(init_dict["PARAMETERS"].keys())
 
     model_params.educ_range = init_dict["DERIVED_ATTR"]["educ_range"]
     model_params.shocks_cov = init_dict["DERIVED_ATTR"]["shocks_cov"]
