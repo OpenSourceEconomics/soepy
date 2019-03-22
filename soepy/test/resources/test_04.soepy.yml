@@ -1,0 +1,20 @@
+--- !!python/object/apply:collections.OrderedDict
+-   -   - GENERAL
+        - {num_choices: 3, num_periods: 5}
+    -   - CONSTANTS
+        - {benefits: 2002.2418257435197, delta: 0.8666093075846648, mu: -0.5472749498550091}
+    -   - INITIAL_CONDITIONS
+        - {educ_max: 12, educ_min: 10}
+    -   - SIMULATION
+        - {num_agents_sim: 752, seed_sim: 1545}
+    -   - SOLUTION
+        - {num_draws_emax: 577, seed_emax: 2246}
+    -   - PARAMETERS
+        -   optim_paras: [5.4351705321284784, 5.2770406162710035, 5.311155148342683,
+                0.22669781314122325, 0.2915052267126477, 0.24979936645119566, 0.3157067798534492,
+                0.2792125915535576, 0.10067936587396205, 0.15537607730880654, 0.13683154845081688,
+                0.24687781521100877, -0.36022047869004614, -0.319616267079533, 1.8755859250707054,
+                1.9382865387956922, 1.1269916279503533]
+            order: [gamma_0s1, gamma_0s2, gamma_0s3, gamma_1s1, gamma_1s2, gamma_1s3,
+                g_s1, g_s2, g_s3, delta_s1, delta_s2, delta_s3, theta_p, theta_f,
+                sigma_0, sigma_1, sigma_2]
