@@ -1,4 +1,5 @@
 language: python
+
 python:
   - "3.6"
 
@@ -7,8 +8,13 @@ install:
     - pip install pytest-cov
     - pip install codecov
 
+# This ensures that SOEPY can be imported when running the PR testing.
+before_script:
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)
+
 script:
     - py.test --cov=soepy
+    - ./development/tests/run_pr_testing.py
 
 after_success:
     - codecov

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """The test provides the basic capabilities to run numerous property tests."""
 from datetime import timedelta
 from datetime import datetime
