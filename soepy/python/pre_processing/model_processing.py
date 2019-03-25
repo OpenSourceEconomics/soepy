@@ -1,10 +1,10 @@
-import collections as cl
-
 import oyaml as yaml
+
+import collections
 
 
 def read_init_file(init_file_name):
-    """Reads in the model specification from yaml file."""
+    """Reads in the model specification from yaml file"""
 
     # Import yaml initialization file as dictionary init_dict
     with open(init_file_name) as y:
@@ -43,28 +43,89 @@ def expand_init_dict(init_dict):
 
 def create_namedtuple(init_dict):
     """Transfers model specification from a dictionary
-    to a named tuple class object."""
+    to a named tuple class object"""
 
-    model_params = cl.namedtuple("model_parameters", "")
-    model_params.num_periods = init_dict["GENERAL"]["num_periods"]
+    init_dict_flat = flatten_init_dict(init_dict)
 
-    model_params.delta = init_dict["CONSTANTS"]["delta"]
-    model_params.mu = init_dict["CONSTANTS"]["mu"]
-    model_params.benefits = init_dict["CONSTANTS"]["benefits"]
+    init_dict_flat = group_parameters(init_dict, init_dict_flat)
 
-    model_params.educ_max = init_dict["INITIAL_CONDITIONS"]["educ_max"]
-    model_params.educ_min = init_dict["INITIAL_CONDITIONS"]["educ_min"]
-
-    model_params.seed_sim = init_dict["SIMULATION"]["seed_sim"]
-    model_params.num_agents_sim = init_dict["SIMULATION"]["num_agents_sim"]
-
-    model_params.seed_emax = init_dict["SOLUTION"]["seed_emax"]
-    model_params.num_draws_emax = init_dict["SOLUTION"]["num_draws_emax"]
-
-    model_params.optim_paras = list(init_dict["PARAMETERS"].values())
-    model_params.order = list(init_dict["PARAMETERS"].keys())
-
-    model_params.educ_range = init_dict["DERIVED_ATTR"]["educ_range"]
-    model_params.shocks_cov = init_dict["DERIVED_ATTR"]["shocks_cov"]
+    model_params = convert_dict_to_namedtuple(init_dict_flat)
 
     return model_params
+
+
+def flatten_init_dict(init_dict):
+    """Removes the grouping from the nested dictionary"""
+
+    groups = [
+        "GENERAL",
+        "CONSTANTS",
+        "INITIAL_CONDITIONS",
+        "SIMULATION",
+        "SOLUTION",
+        "DERIVED_ATTR",
+    ]
+
+    init_dict_flat = dict()
+
+    for group in groups:
+
+        keys_ = list(init_dict[group].keys())
+        values_ = list(init_dict[group].values())
+
+        for k_ in range(len(keys_)):
+            init_dict_flat[keys_[k_]] = values_[k_]
+
+    return init_dict_flat
+
+
+def group_parameters(init_dict, init_dict_flat):
+    """Groups the parameters to be estimates
+    in flat dictionary structure"""
+
+    init_dict_flat["gamma_0s"] = (
+        init_dict["PARAMETERS"]["gamma_0s1"],
+        init_dict["PARAMETERS"]["gamma_0s2"],
+        init_dict["PARAMETERS"]["gamma_0s3"],
+    )
+
+    init_dict_flat["gamma_1s"] = (
+        init_dict["PARAMETERS"]["gamma_1s1"],
+        init_dict["PARAMETERS"]["gamma_1s2"],
+        init_dict["PARAMETERS"]["gamma_1s3"],
+    )
+
+    init_dict_flat["g_s"] = (
+        init_dict["PARAMETERS"]["g_s1"],
+        init_dict["PARAMETERS"]["g_s2"],
+        init_dict["PARAMETERS"]["g_s3"],
+    )
+
+    init_dict_flat["delta_s"] = (
+        init_dict["PARAMETERS"]["delta_s1"],
+        init_dict["PARAMETERS"]["delta_s2"],
+        init_dict["PARAMETERS"]["delta_s3"],
+    )
+
+    init_dict_flat["theta_p"] = init_dict["PARAMETERS"]["theta_p"]
+    init_dict_flat["theta_f"] = init_dict["PARAMETERS"]["theta_f"]
+
+    init_dict_flat["gamma_1s"] = (
+        init_dict["PARAMETERS"]["gamma_1s1"],
+        init_dict["PARAMETERS"]["gamma_1s2"],
+        init_dict["PARAMETERS"]["gamma_1s3"],
+    )
+
+    init_dict_flat["sigma"] = (
+        init_dict["PARAMETERS"]["sigma_0"],
+        init_dict["PARAMETERS"]["sigma_1"],
+        init_dict["PARAMETERS"]["sigma_2"],
+    )
+
+    return init_dict_flat
+
+
+def convert_dict_to_namedtuple(dictionary):
+    """Coverts non-nested dictionary to namedtuple"""
+
+    return collections.namedtuple("model_parameters", dictionary.keys())(**dictionary)

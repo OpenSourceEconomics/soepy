@@ -49,15 +49,15 @@ def calculate_wage_systematic(model_params, educ_level, exp_p, exp_f):
     wage_systematic = np.nan
 
     # Construct wage components
-    gamma_s0 = np.dot(educ_level, model_params.optim_paras[0:3])
-    gamma_s1 = np.dot(educ_level, model_params.optim_paras[3:6])
-    period_exp_sum = exp_p * np.dot(educ_level, model_params.optim_paras[6:9]) + exp_f
-    depreciation = 1 - np.dot(educ_level, model_params.optim_paras[9:12])
+    gamma_0s = np.dot(educ_level, model_params.gamma_0s)
+    gamma_1s = np.dot(educ_level, model_params.gamma_1s)
+    period_exp_sum = exp_p * np.dot(educ_level, model_params.g_s) + exp_f
+    depreciation = 1 - np.dot(educ_level, model_params.delta_s)
 
     # Calculate wage in the given state
     period_exp_total = period_exp_sum * depreciation + 1
-    returns_to_exp = gamma_s1 * period_exp_total
-    wage_systematic = np.exp(gamma_s0) * returns_to_exp
+    returns_to_exp = gamma_1s * period_exp_total
+    wage_systematic = np.exp(gamma_0s) * returns_to_exp
 
     # Return function output
     return wage_systematic  # This is a scalar, equal for all choices
@@ -115,11 +115,7 @@ def calculate_total_utilities(model_params, consumption_utilities):
 
     # Calculate U(.) for the three available choices
     U_ = np.array(
-        [
-            np.exp(0.00),
-            np.exp(model_params.optim_paras[12]),
-            np.exp(model_params.optim_paras[13]),
-        ]
+        [np.exp(0.00), np.exp(model_params.theta_p), np.exp(model_params.theta_f)]
     )
 
     # Calculate utilities for the avaibale joices N, P, F
