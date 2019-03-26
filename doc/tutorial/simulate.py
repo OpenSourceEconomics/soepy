@@ -14,15 +14,15 @@ for file in files:
     file_list.append(str(file))
 
 file_list.sort()
-print(file_list[3])
+print(file_list[0])
 
-with open(file_list[3]) as y:
+with open(file_list[0]) as y:
     init_dict = yaml.load(y)
 
 print(init_dict["PARAMETERS"])
 
 # Generate simulated dataset
-data_frame = simulate(file_list[3])
+data_frame = simulate(file_list[0])
 
 # Save data frame to csv file
 data_frame.to_csv("test.soepy.csv", sep="\t")

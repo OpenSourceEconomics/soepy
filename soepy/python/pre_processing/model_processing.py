@@ -29,9 +29,9 @@ def expand_init_dict(init_dict):
 
     # Calculate covariances of the error terms given standard deviations
     shocks_cov = [
-        init_dict["PARAMETERS"]["sigma_0"],
         init_dict["PARAMETERS"]["sigma_1"],
         init_dict["PARAMETERS"]["sigma_2"],
+        init_dict["PARAMETERS"]["sigma_3"],
     ]
     shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
 
@@ -49,7 +49,7 @@ def create_namedtuple(init_dict):
 
     init_dict_flat = group_parameters(init_dict, init_dict_flat)
 
-    model_params = convert_dict_to_namedtuple(init_dict_flat)
+    model_params = dict_to_namedtuple(init_dict_flat)
 
     return model_params
 
@@ -117,15 +117,15 @@ def group_parameters(init_dict, init_dict_flat):
     )
 
     init_dict_flat["sigma"] = (
-        init_dict["PARAMETERS"]["sigma_0"],
         init_dict["PARAMETERS"]["sigma_1"],
         init_dict["PARAMETERS"]["sigma_2"],
+        init_dict["PARAMETERS"]["sigma_3"],
     )
 
     return init_dict_flat
 
 
-def convert_dict_to_namedtuple(dictionary):
+def dict_to_namedtuple(dictionary):
     """Coverts non-nested dictionary to namedtuple"""
 
     return collections.namedtuple("model_parameters", dictionary.keys())(**dictionary)

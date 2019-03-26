@@ -10,6 +10,7 @@ from soepy.python.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
+from soepy.test.random_init import init_dict_flat_to_init_dict
 from soepy.test.auxiliary import cleanup
 
 
@@ -38,7 +39,7 @@ def test1():
         period_wages = calculate_period_wages(
             model_params, wage_systematic, draw_sim[0, 0, :]
         )
-        period_wages
+
         np.testing.assert_array_equal(
             period_wages,
             np.squeeze(
@@ -81,7 +82,7 @@ def test2():
     random_init(constr)
     df = simulate("test.soepy.yml")
 
-    for year in [11, 12, 13, 14]:
+    for year in [11, 12]:
 
         df2 = df[(df["Years of Education"] == year) & (df["Period"] < year - 10)]
 
@@ -116,8 +117,13 @@ def test3():
     for _ in range(5):
         random_init()
         model_params = read_init_file("test.soepy.yml")
-        init_dict = namedtuple_to_dict(model_params)
+        init_dict_flat = namedtuple_to_dict(model_params)
+        init_dict = init_dict_flat_to_init_dict(init_dict_flat)
         init_dict2 = read_init_file2("test.soepy.yml")
+
+        print(init_dict)
+
+        print(init_dict2)
 
         for key in order:
             for subkey in init_dict[key].keys():
