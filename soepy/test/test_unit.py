@@ -121,10 +121,6 @@ def test3():
         init_dict = init_dict_flat_to_init_dict(init_dict_flat)
         init_dict2 = read_init_file2("test.soepy.yml")
 
-        print(init_dict)
-
-        print(init_dict2)
-
         for key in order:
             for subkey in init_dict[key].keys():
                 if not init_dict[key][subkey] == init_dict2[key][subkey]:
