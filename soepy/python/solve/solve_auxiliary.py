@@ -227,13 +227,13 @@ def construct_covariates(
             educ_years = states_all[period, k, 0]
 
             # Extract education information
-            if educ_years <= 10:
+            if educ_years == 10:
                 covariates[period, k, 0:3] = [1, 0, 0]
 
-            elif (educ_years > 10) and (educ_years <= 12):
+            elif educ_years == 11:
                 covariates[period, k, 0:3] = [0, 1, 0]
 
-            elif educ_years > 12:
+            elif educ_years == 12:
                 covariates[period, k, 0:3] = [0, 0, 1]
 
             else:
