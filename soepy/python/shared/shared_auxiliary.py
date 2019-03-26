@@ -77,6 +77,9 @@ def calculate_period_wages(model_params, wage_systematic, draws):
     # Calculate choice specific wages including productivity shock
     period_wages = wage_systematic * exp_draws
 
+    # Ensure that the benefits are recorded as non-labor income in data frame
+    period_wages[0] = model_params.benefits
+
     # Return function output
     return (
         period_wages
