@@ -73,8 +73,9 @@ def flatten_init_dict(init_dict):
         keys_ = list(init_dict[group].keys())
         values_ = list(init_dict[group].values())
 
-        for k_ in range(len(keys_)):
-            init_dict_flat[keys_[k_]] = values_[k_]
+        for k_, key_ in enumerate(keys_):
+
+            init_dict_flat[key_] = values_[k_]
 
     return init_dict_flat
 
