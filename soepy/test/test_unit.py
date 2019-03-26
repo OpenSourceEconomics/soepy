@@ -138,8 +138,8 @@ def test4():
     for _ in range(5):
         constr = dict()
         constr["AGENTS"] = np.random.randint(10, 100)
-        constr["PERIODS"] = np.random.randint(1, 5)
-        constr["EDUC_MAX"] = np.random.randint(10, 10 + constr["PERIODS"])
+        constr["PERIODS"] = np.random.randint(1, 6)
+        constr["EDUC_MAX"] = np.random.randint(10, min(10 + constr["PERIODS"], 12))
 
         random_init(constr)
         df = simulate("test.soepy.yml")
