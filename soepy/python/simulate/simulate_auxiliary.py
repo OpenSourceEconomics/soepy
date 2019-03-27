@@ -9,7 +9,7 @@ from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 def pyth_simulate(model_params, state_space_args, periods_emax):
     """Simulate agent experiences."""
 
-    # Unpack objects from agrs
+    # Unpack objects from state space arguments
     states_all, states_number_period, mapping_states_index, max_states_period = (
         state_space_args
     )
@@ -69,7 +69,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
                 # Update count
                 count += 1
 
-                # Skip recording experiences and leave NaN in dataset
+                # Skip recording experiences and leave NaN in data set
                 continue
 
             # Extract state space components

@@ -45,9 +45,6 @@ def calculate_utilities(model_params, educ_level, exp_p, exp_f, draws):
 def calculate_wage_systematic(model_params, educ_level, exp_p, exp_f):
     """Calculate systematic wages, i.e., wages net of shock, for specified state."""
 
-    # Initialize container
-    wage_systematic = np.nan
-
     # Construct wage components
     gamma_0s = np.dot(educ_level, model_params.gamma_0s)
     gamma_1s = np.dot(educ_level, model_params.gamma_1s)
@@ -67,9 +64,6 @@ def calculate_period_wages(model_params, wage_systematic, draws):
     """Calculate period wages for each choice including choice
     and period specific productivity shock.
     """
-
-    # Initialize container
-    period_wages = np.tile(np.nan, NUM_CHOICES)
 
     # Take the exponential of the disturbances
     exp_draws = np.exp(draws)
@@ -113,16 +107,13 @@ def calculate_consumption_utilities(model_params, period_wages):
 def calculate_total_utilities(model_params, consumption_utilities):
     """Calculate total period utilities for each of the choices."""
 
-    # Initialize container for utilities at state space point and period
-    total_utilities = np.tile(np.nan, NUM_CHOICES)
-
     # Calculate U(.) for the three available choices
-    U_ = np.array(
+    u_ = np.array(
         [np.exp(0.00), np.exp(model_params.theta_p), np.exp(model_params.theta_f)]
     )
 
-    # Calculate utilities for the avaibale joices N, P, F
-    total_utilities = consumption_utilities * U_
+    # Calculate utilities for the available choices N, P, F
+    total_utilities = consumption_utilities * u_
 
     # Return function output
     return total_utilities

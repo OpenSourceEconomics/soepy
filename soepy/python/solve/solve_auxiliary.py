@@ -156,7 +156,7 @@ def pyth_backward_induction(model_params, state_space_args):
     for all admissible states and periods in a backward induction procedure.
     """
 
-    # Unpack objects from agrs
+    # Unpack objects from state space arguments
     states_all, states_number_period, mapping_states_index, max_states_period = (
         state_space_args
     )

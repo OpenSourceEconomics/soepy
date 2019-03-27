@@ -20,7 +20,7 @@ def test1():
     """
     for _ in range(100):
         constr = {"EDUC_MAX": 10, "AGENTS": 1, "PERIODS": 1}
-        init_dict = random_init(constr)
+        random_init(constr)
         model_params = read_init_file("test.soepy.yml")
         df = simulate("test.soepy.yml")
 
