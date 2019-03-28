@@ -18,7 +18,13 @@ script:
 
 after_success:
     - codecov
-
+    
 notifications:
-  email: false
+  slack:
+      rooms:
+        - oseconomics:Ft0TAdn9N8R38vMieCPxHV0a
+      on_success: never
+      on_failure: never
+
+ email: false
 
