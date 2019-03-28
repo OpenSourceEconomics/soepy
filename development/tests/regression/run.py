@@ -42,8 +42,6 @@ def create_vault(num_test=100, seed=123456):
 
     for counter, seed in enumerate(seeds):
 
-        print(counter)
-
         np.random.seed(seed)
 
         init_dict = random_init()

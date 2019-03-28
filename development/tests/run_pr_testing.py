@@ -6,9 +6,9 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # We specify our baseline intensity here.
-num_minutes_robustness = 0.1
-num_hours_property = 0.01
-num_tests_regression = 1
+num_minutes_robustness = 60
+num_hours_property = 5
+num_tests_regression = 100
 
 # We want to run a very short test battery on TRAVIS to ensure the script is still intact.
 if os.getenv("TRAVIS") is not None:

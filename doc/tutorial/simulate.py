@@ -5,6 +5,6 @@ from soepy.test.auxiliary import cleanup
 data_frame = simulate("toy_model_init_file_1000.yml")
 
 # Save data frame to csv file
-data_frame.to_csv("test.soepy.csv", sep="\t")
+data_frame.to_pickle("test.soepy.pkl")
 
 cleanup()
