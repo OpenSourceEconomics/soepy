@@ -3,11 +3,11 @@
 1. Select issues to be addressed next and create Github Project
 2. Open Pull Request
 3. Tackle issues and run test battery before every commit
-5. Run PyCharm Code Inspection
-6. Run PR Testing before requesting a review
-7. After PR Testing has passed, request review
-8. Address comments in review and repeat 3, 4, 5, 6
-9. Merge and close PR when there are no more comments.
+4. Run PyCharm Code Inspection
+5. Run PR Testing before requesting a review
+6. After PR Testing has passed, request review
+7. Address comments in review and repeat 3, 4, 5, 6
+8. Merge and close PR when there are no more comments.
 
 ## PR TESTING
 
