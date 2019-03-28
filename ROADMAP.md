@@ -2,12 +2,12 @@
 
 We want to collect some basic information on the project's next steps.
 
-### CURRENT
+## CURRENT
 
-* We are finishing work on our pull request #35.
+*  We are finishing work on our pull request #35.
 
-* We are working on the SMM interface at https://github.com/boryana-ilieva/smm_soepy which will provide the adapter classes for the SMM estimation that we want to integrate into the package itself.
+*  We are working on the SMM interface at Boryana's [repo](https://github.com/boryana-ilieva/smm_soepy) which will provide the adapter classes for the SMM estimation that we want to integrate into the package itself.
 
-### UPCOMING
+## UPCOMING
 
-* We need to address performance issues by working with NUMBA.
+*  We need to address performance issues by working with NUMBA.
