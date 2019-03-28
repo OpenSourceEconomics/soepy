@@ -16,7 +16,7 @@ def collect_tests():
     """This function collects all available tests."""
 
     current_wd = os.getcwd()
-    os.chdir(PACKAGE_DIR + "/test")
+    os.chdir(PACKAGE_DIR / "soepy" / "test")
     test_modules = glob.glob("test_*.py")
     os.chdir(current_wd)
     test_dict = dict()

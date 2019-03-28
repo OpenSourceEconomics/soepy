@@ -19,7 +19,7 @@ def random_init(constr=None):
     if "EDUC_MAX" in constr.keys():
         educ_max = constr["EDUC_MAX"]
     else:
-        educ_max = 14
+        educ_max = 12
 
     if "EDUC_MIN" in constr.keys():
         educ_max = constr["EDUC_MIN"]
@@ -34,7 +34,7 @@ def random_init(constr=None):
     if "PERIODS" in constr.keys():
         periods = constr["PERIODS"]
     else:
-        periods = np.random.randint(8, 12)
+        periods = np.random.randint(3, 6)
 
     if "SEED_SIM" in constr.keys():
         seed_sim = constr["SEED_SIM"]
@@ -64,7 +64,6 @@ def random_init(constr=None):
         init_dict[key_] = {}
 
     init_dict["GENERAL"]["num_periods"] = periods
-    init_dict["GENERAL"]["num_choices"] = 3
 
     init_dict["CONSTANTS"]["delta"] = np.random.uniform(0.8, 0.99)
     init_dict["CONSTANTS"]["mu"] = np.random.uniform(-0.7, -0.4)
@@ -79,37 +78,29 @@ def random_init(constr=None):
     init_dict["SOLUTION"]["seed_emax"] = seed_emax
     init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
 
-    # Generate random parameterization
-    gamma0 = np.random.normal(6.0, 1.0, 3)
-    gamma1 = np.random.uniform(0.2, 0.3, 3)
-    g_s = np.random.uniform(0.02, 0.5, 3)
-    delta = np.random.uniform(0.1, 0.9, 3)
-    theta = np.random.uniform(-0.5, -0.1, 2)
-    sigma = np.random.uniform(1.0, 2.0, 3)
+    init_dict["PARAMETERS"]["gamma_0s1"], init_dict["PARAMETERS"][
+        "gamma_0s2"
+    ], init_dict["PARAMETERS"]["gamma_0s3"] = np.random.uniform(6.0, 1.0, 3).tolist()
 
-    init_dict["PARAMETERS"]["optim_paras"] = np.concatenate(
-        (gamma0, gamma1, g_s, delta, theta, sigma)
-    ).tolist()
+    init_dict["PARAMETERS"]["gamma_1s1"], init_dict["PARAMETERS"][
+        "gamma_1s2"
+    ], init_dict["PARAMETERS"]["gamma_1s3"] = np.random.uniform(0.2, 0.3, 3).tolist()
 
-    init_dict["PARAMETERS"]["order"] = [
-        "gamma_0s1",
-        "gamma_0s2",
-        "gamma_0s3",
-        "gamma_1s1",
-        "gamma_1s2",
-        "gamma_1s3",
-        "g_s1",
-        "g_s2",
-        "g_s3",
-        "delta_s1",
-        "delta_s2",
-        "delta_s3",
-        "theta_p",
-        "theta_f",
-        "sigma_0",
-        "sigma_1",
-        "sigma_2",
-    ]
+    init_dict["PARAMETERS"]["g_s1"], init_dict["PARAMETERS"]["g_s2"], init_dict[
+        "PARAMETERS"
+    ]["g_s3"] = np.random.uniform(0.02, 0.5, 3).tolist()
+
+    init_dict["PARAMETERS"]["delta_s1"], init_dict["PARAMETERS"]["delta_s2"], init_dict[
+        "PARAMETERS"
+    ]["delta_s3"] = np.random.uniform(0.1, 0.9, 3).tolist()
+
+    init_dict["PARAMETERS"]["theta_p"], init_dict["PARAMETERS"][
+        "theta_f"
+    ] = np.random.uniform(-0.5, -0.1, 2).tolist()
+
+    init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
+        "PARAMETERS"
+    ]["sigma_3"] = np.random.uniform(1.0, 2.0, 3).tolist()
 
     print_dict(init_dict)
 
@@ -134,51 +125,74 @@ def print_dict(init_dict, file_name="test"):
         yaml.dump(ordered_dict, outfile, explicit_start=True, indent=4)
 
 
-def namedtuple_to_dict(model_params):
+def namedtuple_to_dict(named_tuple):
+    """Converts named tuple to flat dictionary"""
 
-    """Transfers model specification from a
-    named tuple class object to dictionary."""
+    init_dict_flat = dict(named_tuple._asdict())
 
-    init_dict = {}
+    return init_dict_flat
 
-    init_dict["GENERAL"] = {}
-    init_dict["GENERAL"]["num_periods"] = model_params.num_periods
-    init_dict["GENERAL"]["num_choices"] = model_params.num_choices
 
-    init_dict["CONSTANTS"] = {}
-    init_dict["CONSTANTS"]["delta"] = model_params.delta
-    init_dict["CONSTANTS"]["mu"] = model_params.mu
-    init_dict["CONSTANTS"]["benefits"] = model_params.benefits
+def init_dict_flat_to_init_dict(init_dict_flat):
+    """Converts flattened init dict to init dict structure
+    as in the init file"""
 
-    init_dict["INITIAL_CONDITIONS"] = {}
-    init_dict["INITIAL_CONDITIONS"]["educ_max"] = model_params.educ_max
-    init_dict["INITIAL_CONDITIONS"]["educ_min"] = model_params.educ_min
+    init_dict = dict()
 
-    init_dict["SIMULATION"] = {}
-    init_dict["SIMULATION"]["seed_sim"] = model_params.seed_sim
-    init_dict["SIMULATION"]["num_agents_sim"] = model_params.num_agents_sim
+    init_dict["GENERAL"] = dict()
+    init_dict["GENERAL"]["num_periods"] = init_dict_flat["num_periods"]
 
-    init_dict["SOLUTION"] = {}
-    init_dict["SOLUTION"]["seed_emax"] = model_params.seed_emax
-    init_dict["SOLUTION"]["num_draws_emax"] = model_params.num_draws_emax
+    init_dict["CONSTANTS"] = dict()
+    init_dict["CONSTANTS"]["delta"] = init_dict_flat["delta"]
+    init_dict["CONSTANTS"]["mu"] = init_dict_flat["mu"]
+    init_dict["CONSTANTS"]["benefits"] = init_dict_flat["benefits"]
 
-    init_dict["PARAMETERS"] = {}
-    init_dict["PARAMETERS"]["optim_paras"] = model_params.optim_paras
+    init_dict["INITIAL_CONDITIONS"] = dict()
+    init_dict["INITIAL_CONDITIONS"]["educ_max"] = init_dict_flat["educ_max"]
+    init_dict["INITIAL_CONDITIONS"]["educ_min"] = init_dict_flat["educ_min"]
 
-    init_dict["DERIVED_ATTR"] = {}
-    init_dict["DERIVED_ATTR"]["educ_range"] = model_params.educ_range
-    init_dict["DERIVED_ATTR"]["shocks_cov"] = model_params.shocks_cov
+    init_dict["SIMULATION"] = dict()
+    init_dict["SIMULATION"]["seed_sim"] = init_dict_flat["seed_sim"]
+    init_dict["SIMULATION"]["num_agents_sim"] = init_dict_flat["num_agents_sim"]
+
+    init_dict["SOLUTION"] = dict()
+    init_dict["SOLUTION"]["seed_emax"] = init_dict_flat["seed_emax"]
+    init_dict["SOLUTION"]["num_draws_emax"] = init_dict_flat["num_draws_emax"]
+
+    init_dict["PARAMETERS"] = dict()
+    init_dict["PARAMETERS"]["gamma_0s1"], init_dict["PARAMETERS"][
+        "gamma_0s2"
+    ], init_dict["PARAMETERS"]["gamma_0s3"] = init_dict_flat["gamma_0s"]
+    init_dict["PARAMETERS"]["gamma_1s1"], init_dict["PARAMETERS"][
+        "gamma_1s2"
+    ], init_dict["PARAMETERS"]["gamma_1s3"] = init_dict_flat["gamma_1s"]
+    init_dict["PARAMETERS"]["g_s1"], init_dict["PARAMETERS"]["g_s2"], init_dict[
+        "PARAMETERS"
+    ]["g_s3"] = init_dict_flat["g_s"]
+    init_dict["PARAMETERS"]["delta_s1"], init_dict["PARAMETERS"]["delta_s2"], init_dict[
+        "PARAMETERS"
+    ]["delta_s3"] = init_dict_flat["delta_s"]
+    init_dict["PARAMETERS"]["theta_p"] = init_dict_flat["theta_p"]
+    init_dict["PARAMETERS"]["theta_f"] = init_dict_flat["theta_f"]
+    init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
+        "PARAMETERS"
+    ]["sigma_3"] = init_dict_flat["sigma"]
+
+    init_dict["DERIVED_ATTR"] = dict()
+    init_dict["DERIVED_ATTR"]["educ_range"] = init_dict_flat["educ_range"]
+    init_dict["DERIVED_ATTR"]["shocks_cov"] = init_dict_flat["shocks_cov"]
 
     return init_dict
 
 
 def read_init_file2(init_file_name):
-    """Reads in the model specification from yaml file."""
+    """Loads the model specification from yaml file
+    as dictionary and expands it without further changes"""
 
     # Import yaml initialization file as dictionary init_dict
     with open(init_file_name) as y:
-        init_dict = yaml.load(y, Loader=yaml.FullLoader)
+        init_dict_base = yaml.load(y, Loader=yaml.FullLoader)
 
-    init_dict = expand_init_dict(init_dict)
+    init_dict_expanded = expand_init_dict(init_dict_base)
 
-    return init_dict
+    return init_dict_expanded

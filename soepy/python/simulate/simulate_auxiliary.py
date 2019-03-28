@@ -9,7 +9,7 @@ from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 def pyth_simulate(model_params, state_space_args, periods_emax):
     """Simulate agent experiences."""
 
-    # Unpack objects from agrs
+    # Unpack objects from state space arguments
     states_all, states_number_period, mapping_states_index, max_states_period = (
         state_space_args
     )
@@ -69,7 +69,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
                 # Update count
                 count += 1
 
-                # Skip recording experiences and leave NaN in dataset
+                # Skip recording experiences and leave NaN in data set
                 continue
 
             # Extract state space components
@@ -130,13 +130,13 @@ def extract_individual_covariates(educ_years, educ_min, i):
     educ_years_i = educ_years[i]
 
     # Extract education information
-    if educ_years_i <= 10:
+    if educ_years_i == 10:
         educ_level = [1, 0, 0]
 
-    elif (educ_years_i > 10) and (educ_years_i <= 12):
+    elif educ_years_i == 11:
         educ_level = [0, 1, 0]
 
-    elif educ_years_i > 12:
+    elif educ_years_i == 12:
         educ_level = [0, 0, 1]
 
     else:

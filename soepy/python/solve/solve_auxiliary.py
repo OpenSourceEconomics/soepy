@@ -1,6 +1,6 @@
 import numpy as np
 
-from soepy.python.shared.shared_constants import MISSING_INT
+from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
 from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
@@ -15,7 +15,7 @@ def pyth_create_state_space(model_params):
     shape = (
         model_params.num_periods,
         model_params.educ_range,
-        model_params.num_choices,
+        NUM_CHOICES,
         model_params.num_periods,
         model_params.num_periods,
     )
@@ -83,7 +83,7 @@ def pyth_create_state_space(model_params):
                     else:
 
                         # Loop over the three labor market choices, N, P, F
-                        for choice_lagged in range(model_params.num_choices):
+                        for choice_lagged in range(NUM_CHOICES):
 
                             # If individual has only worked full-time in the past,
                             # she can only have full-time (2) as lagged choice
@@ -156,7 +156,7 @@ def pyth_backward_induction(model_params, state_space_args):
     for all admissible states and periods in a backward induction procedure.
     """
 
-    # Unpack objects from agrs
+    # Unpack objects from state space arguments
     states_all, states_number_period, mapping_states_index, max_states_period = (
         state_space_args
     )
@@ -227,13 +227,13 @@ def construct_covariates(
             educ_years = states_all[period, k, 0]
 
             # Extract education information
-            if educ_years <= 10:
+            if educ_years == 10:
                 covariates[period, k, 0:3] = [1, 0, 0]
 
-            elif (educ_years > 10) and (educ_years <= 12):
+            elif educ_years == 11:
                 covariates[period, k, 0:3] = [0, 1, 0]
 
-            elif educ_years > 12:
+            elif educ_years == 12:
                 covariates[period, k, 0:3] = [0, 0, 1]
 
             else:

@@ -1,5 +1,7 @@
 import numpy as np
 
+from soepy.python.shared.shared_constants import NUM_CHOICES
+
 
 def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
     """Creates desired number of draws of a multivariate standard normal distribution."""
@@ -43,19 +45,16 @@ def calculate_utilities(model_params, educ_level, exp_p, exp_f, draws):
 def calculate_wage_systematic(model_params, educ_level, exp_p, exp_f):
     """Calculate systematic wages, i.e., wages net of shock, for specified state."""
 
-    # Initialize container
-    wage_systematic = np.nan
-
     # Construct wage components
-    gamma_s0 = np.dot(educ_level, model_params.optim_paras[0:3])
-    gamma_s1 = np.dot(educ_level, model_params.optim_paras[3:6])
-    period_exp_sum = exp_p * np.dot(educ_level, model_params.optim_paras[6:9]) + exp_f
-    depreciation = 1 - np.dot(educ_level, model_params.optim_paras[9:12])
+    gamma_0s = np.dot(educ_level, model_params.gamma_0s)
+    gamma_1s = np.dot(educ_level, model_params.gamma_1s)
+    period_exp_sum = exp_p * np.dot(educ_level, model_params.g_s) + exp_f
+    depreciation = 1 - np.dot(educ_level, model_params.delta_s)
 
     # Calculate wage in the given state
     period_exp_total = period_exp_sum * depreciation + 1
-    returns_to_exp = gamma_s1 * period_exp_total
-    wage_systematic = np.exp(gamma_s0) * returns_to_exp
+    returns_to_exp = gamma_1s * period_exp_total
+    wage_systematic = np.exp(gamma_0s) * returns_to_exp
 
     # Return function output
     return wage_systematic  # This is a scalar, equal for all choices
@@ -66,14 +65,14 @@ def calculate_period_wages(model_params, wage_systematic, draws):
     and period specific productivity shock.
     """
 
-    # Initialize container
-    period_wages = np.tile(np.nan, model_params.num_choices)
-
     # Take the exponential of the disturbances
     exp_draws = np.exp(draws)
 
     # Calculate choice specific wages including productivity shock
     period_wages = wage_systematic * exp_draws
+
+    # Ensure that the benefits are recorded as non-labor income in data frame
+    period_wages[0] = model_params.benefits
 
     # Return function output
     return (
@@ -108,20 +107,13 @@ def calculate_consumption_utilities(model_params, period_wages):
 def calculate_total_utilities(model_params, consumption_utilities):
     """Calculate total period utilities for each of the choices."""
 
-    # Initialize container for utilities at state space point and period
-    total_utilities = np.tile(np.nan, model_params.num_choices)
-
     # Calculate U(.) for the three available choices
-    U_ = np.array(
-        [
-            np.exp(0.00),
-            np.exp(model_params.optim_paras[12]),
-            np.exp(model_params.optim_paras[13]),
-        ]
+    u_ = np.array(
+        [np.exp(0.00), np.exp(model_params.theta_p), np.exp(model_params.theta_f)]
     )
 
-    # Calculate utilities for the avaibale joices N, P, F
-    total_utilities = consumption_utilities * U_
+    # Calculate utilities for the available choices N, P, F
+    total_utilities = consumption_utilities * u_
 
     # Return function output
     return total_utilities
@@ -139,7 +131,7 @@ def calculate_continuation_values(
     """Obtain continuation values for each of the choices."""
 
     # Initialize container for continuation values
-    continuation_values = np.tile(np.nan, model_params.num_choices)
+    continuation_values = np.tile(np.nan, NUM_CHOICES)
 
     if period != (model_params.num_periods - 1):
 
@@ -162,7 +154,7 @@ def calculate_continuation_values(
         continuation_values[2] = periods_emax[period + 1, future_idx]
 
     else:
-        continuation_values = np.tile(0.0, model_params.num_choices)
+        continuation_values = np.tile(0.0, NUM_CHOICES)
 
     # Return function output
     return continuation_values

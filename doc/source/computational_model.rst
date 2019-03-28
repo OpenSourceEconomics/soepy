@@ -107,14 +107,14 @@ The individuals' flow utility is given by:
 
 .. math::
 
-    u(c_t, l_t; \theta, Z_t) = \frac{(c_t/n_t)^\mu}{\mu}exp\{U(l_t, \theta, Z_t)\}
+	u(c_t, l_t; \theta, Z_t) = \frac{(c_t/n_t)^\mu}{\mu}exp\{U(l_t, \theta, Z_t)\}
 
-    U(l_t, \theta, Z_t) =
-    \begin{cases}
-    0, & \text{if $l_t = O$,}
-    \\[4pt]
-    \theta_l + Z'_t\alpha(l_t), & \text{if $l_t = P$ or $F$},
-    \end{cases}
+	U(l_t, \theta, Z_t) =
+	\begin{cases}
+	0, & \text{if $l_t = O$,}
+	\\[4pt]
+	\theta_l + Z'_t\alpha(l_t), & \text{if $l_t = P$ or $F$},
+	\end{cases}
 
 where :math:`\alpha(l_t) = \alpha_F + \alpha_P \cdot \bf{1}` :math:`(l_t = P)`.
 
@@ -130,11 +130,11 @@ In a more involved case, the value function is maximised subject to the followin
 
 .. math::
 
-    \begin{cases}
-    a_{t+1} = (1+r)a_t + h_t w_t + m_t \tilde{h_t} \tilde{w_t} - T(l_t, X_t) - Q(t^k, h_t, \tilde{h_t}, m_t) - c_t,
-    \\[4pt]
-    a_{t+1} = \underline{a_s},
-    \end{cases}
+	\begin{cases}
+	a_{t+1} = (1+r)a_t + h_t w_t + m_t \tilde{h_t} \tilde{w_t} - T(l_t, X_t) - Q(t^k, h_t, \tilde{h_t}, m_t) - c_t,
+	\\[4pt]
+	a_{t+1} = \underline{a_s},
+	\end{cases}
 
 with initial and terminal conditions :math:`a_0 = 0` and :math:`a_{\tilde{t}+1} \geq 0`.
 
@@ -157,9 +157,9 @@ The baseline specification of the female wage process is summarized in the follo
 
 .. math::
 
-    ln \hspace{2pt} w_t^m & = \gamma_{s,0}  + \gamma_{s,1} ln(e_t + 1) + \xi_t,\\
-    ln \hspace{2pt} w_t & = ln \hspace{2pt} w_t^m - \xi_t,\\
-    e_t & = e_{t-1}(1-\delta_s) + g_s(l_{t-1}),\\
+	ln \hspace{2pt} w_t^m & = \gamma_{s,0}  + \gamma_{s,1} ln(e_t + 1) + \xi_t,\\
+	ln \hspace{2pt} w_t & = ln \hspace{2pt} w_t^m - \xi_t,\\
+	e_t & = e_{t-1}(1-\delta_s) + g_s(l_{t-1}),\\
 
 where
 
