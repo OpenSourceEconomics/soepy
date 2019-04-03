@@ -32,7 +32,7 @@ def calculate_utilities(model_params, educ_level, exp_p, exp_f, draws):
     # Calculate period wages for the three choices including shocks' realizations
     period_wages = calculate_period_wages(model_params, wage_systematic, draws)
 
-    # Calculate 1st part of the period utilities related to consumption
+    # Calculate 1st part of the period utilities related to consumptiona
     consumption_utilities = calculate_consumption_utilities(model_params, period_wages)
 
     # Calculate total period utilities by multiplying U(.) component

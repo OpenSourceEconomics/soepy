@@ -19,7 +19,7 @@ def pyth_create_state_space(model_params):
         model_params.num_periods,
         model_params.num_periods,
     )
-    mapping_states_index = np.tile(MISSING_INT, shape)
+    mapping_states_index = np.tile(np.nan, shape)
 
     # Maximum number of state space points per period. There
     # can be no more states in a period than this number.
@@ -27,11 +27,11 @@ def pyth_create_state_space(model_params):
 
     # Array to collect all state space points that can be reached each period
     states_all = np.tile(
-        MISSING_INT, (model_params.num_periods, num_states_period_upper_bound, 4)
+        np.nan, (model_params.num_periods, num_states_period_upper_bound, 4)
     )
 
     # Array for the maximum number state space points per period
-    states_number_period = np.tile(MISSING_INT, model_params.num_periods)
+    states_number_period = np.tile(np.nan, model_params.num_periods)
 
     # Loop over all periods / all ages
     for period in range(model_params.num_periods):
@@ -107,10 +107,12 @@ def pyth_create_state_space(model_params):
 
                             # Check for duplicate states
                             if (
-                                mapping_states_index[
-                                    period, educ_years, choice_lagged, exp_p, exp_f
-                                ]
-                                != MISSING_INT
+                                np.isnan(
+                                    mapping_states_index[
+                                        period, educ_years, choice_lagged, exp_p, exp_f
+                                    ]
+                                )
+                                is False
                             ):
                                 continue
 
@@ -141,10 +143,10 @@ def pyth_create_state_space(model_params):
 
     # Collect arguments
     state_space_args = (
-        states_all,
-        states_number_period,
-        mapping_states_index,
-        max_states_period,
+        states_all.astype(int),
+        states_number_period.astype(int),
+        mapping_states_index.astype(int),
+        max_states_period.astype(int),
     )
 
     # Return function output
