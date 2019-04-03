@@ -14,7 +14,7 @@ before_script:
 script:
     - py.test --cov=soepy
     - ./development/tests/run_pr_testing.py
-    - ./doc/run_sphinx_build.sh
+    - ./run_sphinx_build.sh
 
 after_success:
     - codecov
