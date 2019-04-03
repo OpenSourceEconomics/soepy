@@ -8,18 +8,16 @@ install:
     - pip install pytest-cov
     - pip install codecov
 
-# This ensures that SOEPY can be imported when running the PR testing.
 before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 script:
     - py.test --cov=soepy
     - ./development/tests/run_pr_testing.py
-    - sphinx-build -nW -b html -d _build/doctrees . _build/html
 
 after_success:
     - codecov
-    
+
 notifications:
   slack:
       rooms:
@@ -27,5 +25,5 @@ notifications:
       on_success: never
       on_failure: never
 
- email: false
+  email: false
 
