@@ -15,6 +15,7 @@ before_script:
 script:
     - py.test --cov=soepy
     - ./development/tests/run_pr_testing.py
+    - sphinx-build -nW -b html -d _build/doctrees . _build/html
 
 after_success:
     - codecov
