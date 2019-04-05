@@ -1,9 +1,10 @@
 """This module provides some configuration for the package."""
 import sys
-import soepy
 from pathlib import Path
 
 import numpy as np
+
+import soepy
 
 # We only support modern Python.
 np.testing.assert_equal(sys.version_info[:2] >= (3, 6), True)

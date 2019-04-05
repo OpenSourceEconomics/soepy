@@ -1,6 +1,6 @@
-import oyaml as yaml
-
 import collections
+
+import oyaml as yaml
 
 
 def read_init_file(init_file_name):
