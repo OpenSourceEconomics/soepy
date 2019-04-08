@@ -28,3 +28,6 @@ notifications:
 
   email: false
 
+addons:
+  apt_packages:
+    - pandoc
