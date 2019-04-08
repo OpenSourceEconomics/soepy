@@ -22,13 +22,13 @@ cmd = './run.py {:}'.format(num_minutes_robustness)
 subprocess.check_call(cmd, shell=True, cwd=SCRIPT_DIR + '/robustness')
 
 # We need to reactivate this test after our new regression vault is set up.
-is_skip = True
+is_skip = False
 if is_skip:
     print(' \n ... skipping regression tests')
 else:
     print(' \n ... running regression tests')
     cmd = ''
-    cmd += './run.py --request check -num {:}'.format(num_tests_regression)
+    cmd += './run.py --request check --num {:}'.format(num_tests_regression)
     subprocess.check_call(cmd, shell=True, cwd=SCRIPT_DIR + '/regression')
 
 print(' \n ... running property tests')
