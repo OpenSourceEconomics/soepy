@@ -1,8 +1,6 @@
 import os
-import sys
-from shutil import rmtree
 
-from setuptools import find_packages, setup, Command
+from setuptools import find_packages, setup
 
 # Package meta-data.
 NAME = "soepy"
@@ -26,39 +24,6 @@ with open(os.path.join(here, NAME, "__version__.py")) as f:
     exec(f.read(), about)
 
 
-class PublishCommand(Command):
-    """Support setup.py publish."""
-
-    description = "Build and publish the package."
-    user_options = []
-
-    @staticmethod
-    def status(s):
-        """Prints things in bold."""
-        print("\033[1m{0}\033[0m".format(s))
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        try:
-            self.status("Removing previous builds…")
-            rmtree(os.path.join(here, "dist"))
-        except FileNotFoundError:
-            pass
-
-        self.status("Building Source and Wheel (universal) distribution…")
-        os.system("{0} setup.py sdist bdist_wheel --universal".format(sys.executable))
-
-        self.status("Uploading the package to PyPi via Twine…")
-        os.system("twine upload dist/*")
-
-        sys.exit()
-
-
 setup(
     name=NAME,
     version=about["__version__"],
@@ -70,5 +35,4 @@ setup(
     install_requires=REQUIRED,
     license="MIT",
     include_package_data=True,
-    cmdclass={"publish": PublishCommand},
 )
