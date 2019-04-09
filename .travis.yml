@@ -4,9 +4,11 @@ python:
   - "3.6"
 
 install:
-    - pip install -r requirements.txt
-    - pip install pytest-cov
-    - pip install codecov
+  - sudo apt-get update
+  - ./.travis_miniconda.sh
+  - PATH="$HOME/miniconda/bin:$PATH"
+  - conda env create -f environment.yml
+  - source activate soepy
 
 before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
@@ -27,7 +29,3 @@ notifications:
       on_failure: never
 
   email: false
-
-addons:
-  apt_packages:
-    - pandoc
