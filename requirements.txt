@@ -1,8 +1,0 @@
-numpy>=1.13
-pandas>=0.24.1
-flake8>=3.5.0
-oyaml>=0.7
-pytest>=4.2.1
-Sphinx>=1.8.5
-nbsphinx>=0.4.2
-sphinx_rtd_theme

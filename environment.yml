@@ -5,6 +5,6 @@ dependencies:
 - pandas
 - flake8
 - pytest
-- pandas
+- pytest-cov
 - pandoc
-- pip: [oyaml, nbsphinx]
+- pip: [oyaml, nbsphinx, sphinx_rtd_theme, codecov]
