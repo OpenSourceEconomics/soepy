@@ -107,12 +107,10 @@ def pyth_create_state_space(model_params):
 
                             # Check for duplicate states
                             if (
-                                np.isnan(
-                                    mapping_states_index[
-                                        period, educ_years, choice_lagged, exp_p, exp_f
-                                    ]
-                                )
-                                is False
+                                mapping_states_index[
+                                    period, educ_years, choice_lagged, exp_p, exp_f
+                                ]
+                                != MISSING_INT
                             ):
                                 continue
 
