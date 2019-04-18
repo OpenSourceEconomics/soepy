@@ -6,7 +6,7 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # We specify our baseline intensity here.
-num_minutes_robustness = 60
+num_minutes_robustness = 0.1
 num_hours_property = 5
 num_tests_regression = 100
 
@@ -21,15 +21,10 @@ print(' \n ... running robustness tests')
 cmd = './run.py {:}'.format(num_minutes_robustness)
 subprocess.check_call(cmd, shell=True, cwd=SCRIPT_DIR + '/robustness')
 
-# We need to reactivate this test after our new regression vault is set up.
-is_skip = True
-if is_skip:
-    print(' \n ... skipping regression tests')
-else:
-    print(' \n ... running regression tests')
-    cmd = ''
-    cmd += './run.py --request check -num {:}'.format(num_tests_regression)
-    subprocess.check_call(cmd, shell=True, cwd=SCRIPT_DIR + '/regression')
+print(' \n ... running regression tests')
+cmd = ''
+cmd += './run.py --request check --num {:}'.format(num_tests_regression)
+subprocess.check_call(cmd, shell=True, cwd=SCRIPT_DIR + '/regression')
 
 print(' \n ... running property tests')
 cmd = './run.py --request run --hours {:}'.format(num_hours_property)

@@ -18,13 +18,8 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
     np.random.seed(model_params.seed_sim)
     educ_years = np.random.choice(educ_years, model_params.num_agents_sim)
 
-    # Create draws for simulated sample
-    draws_sim = draw_disturbances(
-        model_params.seed_sim,
-        model_params.shocks_cov,
-        model_params.num_periods,
-        model_params.num_agents_sim,
-    )
+    attrs = ["seed_sim", "shocks_cov", "num_periods", "num_agents_sim"]
+    draws_sim = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
 
     # Start count over all simulations/rows (number of agents times number of periods)
     count = 0
