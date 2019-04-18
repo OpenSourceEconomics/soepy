@@ -105,6 +105,13 @@ def pyth_create_state_space(model_params):
                             if (choice_lagged == 1) and (exp_p == 0):
                                 continue
 
+                            # If an individual has always been employed,
+                            # she cannot have non-employment (0) as lagged choice
+                            if (choice_lagged == 0) and (
+                                exp_f + exp_p == period - educ_years
+                            ):
+                                continue
+
                             # Check for duplicate states
                             if (
                                 mapping_states_index[
