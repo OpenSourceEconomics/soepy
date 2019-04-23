@@ -160,20 +160,18 @@ def test5():
     np.testing.assert_array_equal(states_number_period, [1, 4, 13, 30])
 
     # Control that the states are correct
-    states_true = np.full((576, 4), MISSING_INT)
+    states_true = np.full((4, 576, 4), MISSING_INT)
 
-    # Period zero
-    states_true[0] = [10, 0, 0, 0]
-    states_period0 = states_all[0, :, :]
-    np.testing.assert_array_equal(states_true, states_period0)
+    states_true[0, 0, :] = [10, 0, 0, 0]
 
-    # Period one
-    states_true[0:4] = [[10, 0, 0, 0], [10, 1, 1, 0], [10, 2, 0, 1], [11, 0, 0, 0]]
-    states_period1 = states_all[1, :, :]
-    np.testing.assert_array_equal(states_true, states_period1)
+    states_true[1, 0:4, :] = [
+        [10, 0, 0, 0],
+        [10, 1, 1, 0],
+        [10, 2, 0, 1],
+        [11, 0, 0, 0],
+    ]
 
-    # Period two
-    states_true[0:13] = [
+    states_true[2, 0:13, :] = [
         [10, 0, 0, 0],
         [10, 0, 1, 0],
         [10, 1, 1, 0],
@@ -188,11 +186,8 @@ def test5():
         [11, 2, 0, 1],
         [12, 0, 0, 0],
     ]
-    states_period2 = states_all[2, :, :]
-    np.testing.assert_array_equal(states_true, states_period2)
 
-    # Period three
-    states_true[0:30] = [
+    states_true[3, 0:30, :] = [
         [10, 0, 0, 0],
         [10, 0, 1, 0],
         [10, 1, 1, 0],
@@ -224,8 +219,8 @@ def test5():
         [12, 1, 1, 0],
         [12, 2, 0, 1],
     ]
-    states_period3 = states_all[3, :, :]
-    np.testing.assert_array_equal(states_true, states_period3)
+
+    np.testing.assert_array_equal(states_true, states_all)
 
 
 cleanup()
