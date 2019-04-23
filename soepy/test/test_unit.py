@@ -1,5 +1,6 @@
-import numpy as np
 from collections import namedtuple
+
+import numpy as np
 
 from soepy.python.shared.shared_auxiliary import calculate_consumption_utilities
 from soepy.python.shared.shared_auxiliary import calculate_total_utilities
