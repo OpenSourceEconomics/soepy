@@ -5,7 +5,7 @@ package:
   version: {{ data.get('version') }}
 
 source:
-  path: ../soepy_dev
+  path: ../soepy
 
 requirements:
   build:
