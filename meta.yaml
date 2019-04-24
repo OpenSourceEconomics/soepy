@@ -1,0 +1,24 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: soepy
+  version: {{ data.get('version') }}
+
+source:
+  path: ../soepy_dev
+
+requirements:
+  build:
+    - python {{ python }}
+    - setuptools
+  run:
+    - python
+    - numpy
+    - pandas
+    - yaml
+    - pytest
+
+about:
+  home: https://github.com/OpenSourceEconomics/soepy
+  license: MIT
+  summary: 'Simulate and estimate a dynamic model of human capital.'
