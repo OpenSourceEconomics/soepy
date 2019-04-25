@@ -19,6 +19,17 @@ requirements:
     - pytest
     - flake8
 
+test:
+  commands:
+    - py.test
+  files:
+    - soepy/test/test_integration.py
+    - soepy/test/test_quality.py
+    - soepy/test/test_regression.py
+    - soepy/test/test_unit.py
+  requires:
+    - pytest
+
 about:
   home: https://github.com/OpenSourceEconomics/soepy
   license: MIT
