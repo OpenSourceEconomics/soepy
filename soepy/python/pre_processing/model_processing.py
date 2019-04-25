@@ -7,9 +7,8 @@ def read_init_file(init_file_name):
     """Reads in the model specification from yaml file"""
 
     # Import yaml initialization file as dictionary init_dict
-    yaml.warnings({"YAMLLoadWarning": False})
     with open(init_file_name) as y:
-        init_dict = yaml.load(y)
+        init_dict = yaml.load(y, Loader=yaml.FullLoader)
 
     init_dict = expand_init_dict(init_dict)
 

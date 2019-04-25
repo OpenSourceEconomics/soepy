@@ -190,9 +190,8 @@ def read_init_file2(init_file_name):
     as dictionary and expands it without further changes"""
 
     # Import yaml initialization file as dictionary init_dict
-    yaml.warnings({"YAMLLoadWarning": False})
     with open(init_file_name) as y:
-        init_dict_base = yaml.load(y)
+        init_dict_base = yaml.load(y, Loader=yaml.FullLoader)
 
     init_dict_expanded = expand_init_dict(init_dict_base)
 

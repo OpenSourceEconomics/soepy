@@ -15,8 +15,9 @@ requirements:
     - python
     - numpy
     - pandas
-    - yaml
+    - pyyaml
     - pytest
+    - flake8
 
 about:
   home: https://github.com/OpenSourceEconomics/soepy
