@@ -2,6 +2,7 @@ name: soepy
 
 dependencies:
 - numpy
+- numnba
 - pandas
 - flake8
 - pytest

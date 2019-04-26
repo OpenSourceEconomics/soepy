@@ -11,6 +11,7 @@ from soepy.python.pre_processing.model_processing import read_init_file
 from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.shared.shared_constants import MISSING_INT
 from soepy.python.simulate.simulate_python import simulate
+from soepy.python.shared.shared_helpers import convert_state_space
 from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
@@ -154,7 +155,9 @@ def test5():
     model_params = namedtuple("model_params", "num_periods educ_range educ_min")
     model_params = model_params(4, 3, 10)
 
-    states_all, states_number_period, _, _ = pyth_create_state_space(model_params)
+    states, _ = pyth_create_state_space(model_params)
+
+    states_all, states_number_period, _, _ = convert_state_space(model_params, states)
 
     # Control for correct number of states in each period.
     np.testing.assert_array_equal(states_number_period, [1, 4, 13, 30])

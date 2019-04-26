@@ -1,4 +1,5 @@
 import numpy as np
+import numba
 
 from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
 from soepy.python.shared.shared_auxiliary import draw_disturbances
@@ -6,10 +7,58 @@ from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
+@numba.jit(nopython=True)
 def pyth_create_state_space(model_params):
-    """Create state space related objects
-    given state space components in model specification.
+    """Create state space object.
+
+    The state space consists of all admissible combinations of the following components:
+    period, years of education, lagged choice, full-time experience (F),
+    and part-time experience (P).
+
+    :data:`states` stores the information on states in a tabular format.
+    Each row of the table corresponds to one admissible state space point
+    and contains the values of the state space components listed above.
+    :data:`indexer` is a multidimensional array where each component
+    of the state space corresponds to one dimension. The values of the array cells
+    index the corresponding state space point in :data:`states`.
+    Traversing the state space requires incrementing the indices of :data:`indexer`
+    and selecting the corresponding state space point component values in :data:`states`.
+
+    Parameters
+    ----------
+    model_params.num_periods : int
+        Number of periods in the state space.
+    model_params.educ_range : int
+        Range of initial condition years of education in the (simulated) sample.
+    NUM_CHOICES : int
+        Number of choices agents have in each period.
+    educ_min : int
+        Minimum number of years of education in the simulated sample.
+
+    Returns
+    -------
+    states : np.ndarray
+        Array with shape (num_states, 6) containing period, experience in OCCUPATION A,
+        experience in OCCUPATION B, years of schooling, the lagged choice and the type
+        of the agent.
+    indexer : np.ndarray
+        A matrix where each dimension represents a characteristic of the state space.
+        Switching from one state is possible via incrementing appropriate indices by 1.
+
+    Examples
+    --------
+    >>> model_params = namedtuple("model_params", "num_periods educ_range educ_min")
+    >>> model_params = model_params(10, 3, 10)
+    >>> NUM_CHOICES = 3
+    >>> states, indexer = pyth_create_state_space(
+    ...     model_params
+    ... )
+    >>> states.shape
+    (1110, 5)
+    >>> indexer.shape
+    (10, 3, 3, 10, 10)
     """
+    data = []
 
     # Array for mapping the state space points (states) to indices
     shape = (
@@ -19,25 +68,14 @@ def pyth_create_state_space(model_params):
         model_params.num_periods,
         model_params.num_periods,
     )
-    mapping_states_index = np.tile(MISSING_INT, shape)
 
-    # Maximum number of state space points per period. There
-    # can be no more states in a period than this number.
-    num_states_period_upper_bound = np.prod(mapping_states_index.shape)
+    indexer = np.full(shape, MISSING_INT)
 
-    # Array to collect all state space points that can be reached each period
-    states_all = np.tile(
-        MISSING_INT, (model_params.num_periods, num_states_period_upper_bound, 4)
-    )
-
-    # Array for the maximum number state space points per period
-    states_number_period = np.tile(MISSING_INT, model_params.num_periods)
+    # Initialize counter for admissible state space points
+    i = 0
 
     # Loop over all periods / all ages
     for period in range(model_params.num_periods):
-
-        # Start count for admissible state space points
-        k = 0
 
         # Loop over all possible initial conditions for education
         for educ_years in range(model_params.educ_range):
@@ -64,21 +102,18 @@ def pyth_create_state_space(model_params):
                     # and still have no experience in any occupation.
                     if period == educ_years:
 
-                        # Assign an additional the integer count k
+                        # Assign an additional integer count i
                         # for entry state
-                        mapping_states_index[period, educ_years, 0, 0, 0] = k
+                        indexer[period, educ_years, 0, 0, 0] = i
 
                         # Record the values of the state space components
                         # for the currently reached entry state
-                        states_all[period, k, :] = [
-                            educ_years + model_params.educ_min,
-                            0,
-                            0,
-                            0,
-                        ]
+                        row = [period, educ_years + model_params.educ_min, 0, 0, 0]
 
                         # Update count once more
-                        k += 1
+                        i += 1
+
+                        data.append(row)
 
                     else:
 
@@ -106,7 +141,7 @@ def pyth_create_state_space(model_params):
                                 continue
 
                             # If an individual has always been employed,
-                            # she cannot have non-employment (0) as lagged choice
+                            # she cannot have nonemployment (0) as lagged choice
                             if (choice_lagged == 0) and (
                                 exp_f + exp_p == period - educ_years
                             ):
@@ -114,48 +149,34 @@ def pyth_create_state_space(model_params):
 
                             # Check for duplicate states
                             if (
-                                mapping_states_index[
-                                    period, educ_years, choice_lagged, exp_p, exp_f
-                                ]
+                                indexer[period, educ_years, choice_lagged, exp_p, exp_f]
                                 != MISSING_INT
                             ):
                                 continue
 
-                            # Assign the integer count k as an indicator for the
+                            # Assign the integer count i as an indicator for the
                             # currently reached admissible state space point
-                            mapping_states_index[
-                                period, educ_years, choice_lagged, exp_p, exp_f
-                            ] = k
+                            indexer[period, educ_years, choice_lagged, exp_p, exp_f] = i
+
+                            # Update count
+                            i += 1
 
                             # Record the values of the state space components
                             # for the currently reached admissible state space point
-                            states_all[period, k, :] = [
+                            row = [
+                                period,
                                 educ_years + model_params.educ_min,
                                 choice_lagged,
                                 exp_p,
                                 exp_f,
                             ]
 
-                            # Update count
-                            k += 1
+                            data.append(row)
 
-        # Record number of admissible state space points for the period currently
-        # reached in the loop
-        states_number_period[period] = k
-
-    # Auxiliary objects
-    max_states_period = max(states_number_period)
-
-    # Collect arguments
-    state_space_args = (
-        states_all,
-        states_number_period,
-        mapping_states_index,
-        max_states_period,
-    )
+        states = np.array(data)
 
     # Return function output
-    return state_space_args
+    return states, indexer
 
 
 def pyth_backward_induction(model_params, state_space_args):
