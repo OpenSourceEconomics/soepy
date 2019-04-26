@@ -2,7 +2,7 @@
 import collections
 
 import numpy as np
-import oyaml as yaml
+import yaml
 
 from soepy.python.pre_processing.model_processing import expand_init_dict
 

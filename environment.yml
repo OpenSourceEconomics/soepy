@@ -7,4 +7,6 @@ dependencies:
 - pytest
 - pytest-cov
 - pandoc
-- pip: [oyaml, nbsphinx, sphinx_rtd_theme, codecov]
+- pyyaml
+- pip
+- pip: [nbsphinx, sphinx_rtd_theme, codecov]
