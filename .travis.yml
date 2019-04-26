@@ -19,7 +19,7 @@ script:
     - ./development/tests/run_pr_testing.py
     - ./run_sphinx_build.sh
     - python -c "import soepy; soepy.test()"
-    - conda install --yes -c boryana-ilieva soepy
+    - conda install --yes -c opensourceeconomics soepy
 
 after_success:
     - codecov
