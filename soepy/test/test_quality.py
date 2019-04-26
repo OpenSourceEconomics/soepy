@@ -3,7 +3,7 @@ import subprocess
 
 import numpy as np
 
-from soepy.python.soepy_config import PACKAGE_DIR
+from soepy.soepy_config import PACKAGE_DIR
 
 
 def test1():

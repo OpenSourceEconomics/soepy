@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 from soepy.python.simulate.simulate_python import simulate
-from soepy.python.soepy_config import TEST_RESOURCES_DIR
+from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.test.auxiliary import cleanup
 from soepy.test.random_init import print_dict
 
