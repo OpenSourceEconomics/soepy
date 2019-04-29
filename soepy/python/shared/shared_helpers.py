@@ -16,7 +16,7 @@ def convert_state_space(model_params, states):
         model_params.num_periods,
         model_params.num_periods,
     )
-    mapping_states_index_converted = np.tile(MISSING_INT, shape)
+    mapping_states_index_converted = np.full(shape, MISSING_INT)
 
     num_states_period_upper_bound = np.prod(mapping_states_index_converted.shape)
 
@@ -24,7 +24,7 @@ def convert_state_space(model_params, states):
         MISSING_INT, (model_params.num_periods, num_states_period_upper_bound, 4)
     )
 
-    states_number_period_converted = np.tile(MISSING_INT, model_params.num_periods)
+    states_number_period_converted = np.full(model_params.num_periods, MISSING_INT)
 
     # Create old state space objects from new ones
     for period in range(model_params.num_periods):
