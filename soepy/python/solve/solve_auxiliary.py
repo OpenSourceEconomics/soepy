@@ -179,7 +179,9 @@ def pyth_create_state_space(model_params):
     return states, indexer
 
 
-def pyth_backward_induction(model_params, state_space_args):
+def pyth_backward_induction(
+    model_params, state_space_args, covariates, flow_utilities, draws_emax
+):
     """Obtain the value function maximum values
     for all admissible states and periods in a backward induction procedure.
     """
@@ -192,14 +194,6 @@ def pyth_backward_induction(model_params, state_space_args):
     # Initialize container for the final result,
     # maximal value function per period and state:
     periods_emax = np.tile(np.nan, (model_params.num_periods, max_states_period))
-
-    attrs = ["seed_emax", "shocks_cov", "num_periods", "num_draws_emax"]
-    draws_emax = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
-
-    # Construct covariates
-    covariates = construct_covariates(
-        state_space_args
-    )
 
     # Loop over all periods
     for period in range(model_params.num_periods - 1, -1, -1):
@@ -220,9 +214,8 @@ def pyth_backward_induction(model_params, state_space_args):
                 model_params,
                 period,
                 k,
-                educ_level,
+                flow_utilities,
                 educ_years_idx,
-                draws_emax_period,
                 states_all,
                 mapping_states_index,
                 periods_emax,
@@ -257,9 +250,8 @@ def construct_emax(
     model_params,
     period,
     k,
-    educ_level,
+    flow_utilities,
     educ_years_idx,
-    draws_emax_period,
     states_all,
     mapping_states_index,
     periods_emax,
@@ -276,17 +268,11 @@ def construct_emax(
     # for the period and state currently reached by the parent loop
     for i in range(model_params.num_draws_emax):
 
-        # Extract the error term draws corresponding to
-        # period number, state, and loop iteration number, i
-        corresponding_draws = draws_emax_period[i, :]
-
         # Extract relevant state space components
         educ_years, _, exp_p, exp_f = states_all[period, k, :]
 
         # Calculate flow utility at current period, state, and draw
-        flow_utilities, _, _, _ = calculate_utilities(
-            model_params, educ_level, exp_p, exp_f, corresponding_draws
-        )
+        current_flow_utilities = flow_utilities[period, k, i, :]
 
         # Obtain continuation values for all choices
         continuation_values = calculate_continuation_values(
@@ -300,7 +286,9 @@ def construct_emax(
         )
 
         # Calculate choice specific value functions
-        value_functions = flow_utilities + model_params.delta * continuation_values
+        value_functions = (
+            current_flow_utilities + model_params.delta * continuation_values
+        )
 
         # Obtain highest value function value among the available choices. If above
         # draws were the true shocks, maximum is the the current period value function

@@ -6,7 +6,7 @@ from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
-def pyth_simulate(model_params, state_space_args, periods_emax):
+def pyth_simulate(model_params, state_space_args, periods_emax, covariates):
     """Simulate agent experiences."""
 
     # Unpack objects from state space arguments
@@ -14,12 +14,18 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
         state_space_args
     )
 
+    # Draw random initial conditions
     educ_years = list(range(model_params.educ_min, model_params.educ_max + 1))
     np.random.seed(model_params.seed_sim)
     educ_years = np.random.choice(educ_years, model_params.num_agents_sim)
 
     attrs = ["seed_sim", "shocks_cov", "num_periods", "num_agents_sim"]
     draws_sim = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
+
+    # Calculate utilities
+    flow_utilities, cons_utilities, period_wages, wage_sys = calculate_utilities(
+        model_params, state_space_args, covariates, draws_sim
+    )
 
     # Start count over all simulations/rows (number of agents times number of periods)
     count = 0
@@ -67,17 +73,17 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
                 # Skip recording experiences and leave NaN in data set
                 continue
 
-            # Extract state space components
-            _, _, exp_p, exp_f = current_state
+            # Extract state space point index
+            _, choice_lagged, exp_p, exp_f = current_state
+            current_state_index = mapping_states_index[
+                period, educ_years_idx, choice_lagged, exp_p, exp_f
+            ]
 
-            # Extract the error term draws corresponding to
-            # period number and individual
-            corresponding_draws = draws_sim[period, i, :]
-
-            # Calculate corresponding flow utilities
-            flow_utility, cons_utilities, period_wages, wage_sys = calculate_utilities(
-                model_params, educ_level, exp_p, exp_f, corresponding_draws
-            )
+            # Extract corresponding utilities
+            cuurent_flow_utilities = flow_utilities[period, current_state_index, i, :]
+            cuurent_cons_utilities = cons_utilities[period, current_state_index, i, :]
+            cuurent_period_wages = period_wages[period, current_state_index, i, :]
+            cuurent_wage_sys = wage_sys[period, current_state_index]
 
             # Obtain continuation values for all choices
             continuation_values = calculate_continuation_values(
@@ -91,17 +97,19 @@ def pyth_simulate(model_params, state_space_args, periods_emax):
             )
 
             # Calculate total values for all choices
-            value_functions = flow_utility + model_params.delta * continuation_values
+            value_functions = (
+                cuurent_flow_utilities + model_params.delta * continuation_values
+            )
 
             # Determine choice as option with highest choice specific value function
             max_idx = np.argmax(value_functions)
 
             # Record period experiences
             dataset[count, 3:4] = max_idx
-            dataset[count, 4:5] = wage_sys
-            dataset[count, 5:8] = period_wages[:]
-            dataset[count, 8:11] = cons_utilities[:]
-            dataset[count, 11:14] = flow_utility[:]
+            dataset[count, 4:5] = cuurent_wage_sys
+            dataset[count, 5:8] = cuurent_period_wages[:]
+            dataset[count, 8:11] = cuurent_cons_utilities[:]
+            dataset[count, 11:14] = cuurent_flow_utilities[:]
 
             # Update state space component experience
             current_state[max_idx + 1] += 1
