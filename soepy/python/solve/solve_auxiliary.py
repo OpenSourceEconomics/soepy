@@ -198,7 +198,7 @@ def pyth_backward_induction(model_params, state_space_args):
 
     # Construct covariates
     covariates = construct_covariates(
-        model_params, states_all, states_number_period, max_states_period
+        state_space_args
     )
 
     # Loop over all periods
@@ -212,8 +212,8 @@ def pyth_backward_induction(model_params, state_space_args):
         for k in range(states_number_period[period]):
 
             # Construct additional education information
-            educ_level = covariates[period, k, 0:3]
-            educ_years_idx = covariates[period, k, 3]
+            educ_level = covariates[period, k, :]
+            educ_years_idx = np.where(educ_level == np.max(educ_level))[0]
 
             # Integrate out the error term
             emax = construct_emax(
@@ -235,37 +235,21 @@ def pyth_backward_induction(model_params, state_space_args):
     return periods_emax
 
 
-def construct_covariates(
-    model_params, states_all, states_number_period, max_states_period
-):
-    """Constructs additional covariates given state space components."""
+def construct_covariates(state_space_args):
+    """Construct a matrix of covariates
+    that depend only on the state space."""
 
-    # Initialize covariates array
-    covariates = np.tile(MISSING_INT, (model_params.num_periods, max_states_period, 4))
+    states_all, _, _, _ = state_space_args
 
-    # Fill in education information
-    for period in range(model_params.num_periods):
+    shape = list(states_all.shape)
+    shape[2] = 3
 
-        for k in range(states_number_period[period]):
+    covariates = np.full(shape, 0.0)
 
-            educ_years = states_all[period, k, 0]
+    covariates[:, :, 0] = np.where(states_all[:, :, 0] == 10, 1, 0)
+    covariates[:, :, 1] = np.where(states_all[:, :, 0] == 11, 1, 0)
+    covariates[:, :, 2] = np.where(states_all[:, :, 0] == 12, 1, 0)
 
-            # Extract education information
-            if educ_years == 10:
-                covariates[period, k, 0:3] = [1, 0, 0]
-
-            elif educ_years == 11:
-                covariates[period, k, 0:3] = [0, 1, 0]
-
-            elif educ_years == 12:
-                covariates[period, k, 0:3] = [0, 0, 1]
-
-            else:
-                raise ValueError("Invalid number of years of education")
-
-            covariates[period, k, 3] = educ_years - model_params.educ_min
-
-    # Return final output
     return covariates
 
 
