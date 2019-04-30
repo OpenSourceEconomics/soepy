@@ -5,6 +5,24 @@ from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
+def construct_covariates(state_space_args):
+    """Construct a matrix of covariates
+    that depend only on the state space."""
+
+    states_all, _, _, _ = state_space_args
+
+    shape = list(states_all.shape)
+    shape[2] = 3
+
+    covariates = np.full(shape, 0.0)
+
+    covariates[:, :, 0] = np.where(states_all[:, :, 0] == 10, 1, 0)
+    covariates[:, :, 1] = np.where(states_all[:, :, 0] == 11, 1, 0)
+    covariates[:, :, 2] = np.where(states_all[:, :, 0] == 12, 1, 0)
+
+    return covariates
+
+
 @numba.jit(nopython=True)
 def pyth_create_state_space(model_params):
     """Create state space object.
@@ -196,9 +214,6 @@ def pyth_backward_induction(
     # Loop over all periods
     for period in range(model_params.num_periods - 1, -1, -1):
 
-        # Select the random draws for Monte Carlo integration relevant for the period
-        draws_emax_period = draws_emax[period, :, :]
-
         # Loop over all admissible state space points
         # for the period currently reached by the parent loop
         for k in range(states_number_period[period]):
@@ -224,24 +239,6 @@ def pyth_backward_induction(
 
     # Return function output
     return periods_emax
-
-
-def construct_covariates(state_space_args):
-    """Construct a matrix of covariates
-    that depend only on the state space."""
-
-    states_all, _, _, _ = state_space_args
-
-    shape = list(states_all.shape)
-    shape[2] = 3
-
-    covariates = np.full(shape, 0.0)
-
-    covariates[:, :, 0] = np.where(states_all[:, :, 0] == 10, 1, 0)
-    covariates[:, :, 1] = np.where(states_all[:, :, 0] == 11, 1, 0)
-    covariates[:, :, 2] = np.where(states_all[:, :, 0] == 12, 1, 0)
-
-    return covariates
 
 
 def construct_emax(
