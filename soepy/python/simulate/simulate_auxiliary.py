@@ -6,13 +6,8 @@ from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
-def pyth_simulate(model_params, state_space_args, periods_emax, covariates):
+def pyth_simulate(model_params, states, indexer, periods_emax, covariates):
     """Simulate agent experiences."""
-
-    # Unpack objects from state space arguments
-    states_all, states_number_period, mapping_states_index, max_states_period = (
-        state_space_args
-    )
 
     # Draw random initial conditions
     educ_years = list(range(model_params.educ_min, model_params.educ_max + 1))
@@ -24,7 +19,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax, covariates):
 
     # Calculate utilities
     flow_utilities, cons_utilities, period_wages, wage_sys = calculate_utilities(
-        model_params, state_space_args, covariates, draws_sim
+        model_params, states, covariates, draws_sim
     )
 
     # Start count over all simulations/rows (number of agents times number of periods)
@@ -35,12 +30,13 @@ def pyth_simulate(model_params, state_space_args, periods_emax, covariates):
         NUM_COLUMNS_DATAFRAME
     )  # count of the information units we wish to record
 
-    dataset = np.tile(
-        np.nan, (model_params.num_agents_sim * model_params.num_periods, num_columns)
+    dataset = np.full(
+        (model_params.num_agents_sim * model_params.num_periods, num_columns), np.nan
     )
 
     # Loop over all agents
     for i in range(model_params.num_agents_sim):
+        print('i', i)
 
         # Construct additional education information
         educ_years_i, educ_level, educ_years_idx = extract_individual_covariates(
@@ -49,12 +45,10 @@ def pyth_simulate(model_params, state_space_args, periods_emax, covariates):
 
         # Extract the indicator of the initial state for the individual
         # depending on the individuals initial condition
-        initial_state_index = mapping_states_index[
-            educ_years_idx, educ_years_idx, 0, 0, 0
-        ]
+        initial_state_index = indexer[educ_years_idx, educ_years_idx, 0, 0, 0]
 
         # Assign the initial state as current state
-        current_state = states_all[educ_years_idx, initial_state_index, :].copy()
+        current_state = states[initial_state_index, :].copy()
 
         # Loop over all remaining
         for period in range(model_params.num_periods):
@@ -74,23 +68,30 @@ def pyth_simulate(model_params, state_space_args, periods_emax, covariates):
                 continue
 
             # Extract state space point index
-            _, choice_lagged, exp_p, exp_f = current_state
-            current_state_index = mapping_states_index[
+            _, _, choice_lagged, exp_p, exp_f = current_state
+
+            print('current_state', current_state)
+
+            current_state_index = indexer[
                 period, educ_years_idx, choice_lagged, exp_p, exp_f
             ]
 
+            print('current_state_index', current_state_index)
+
             # Extract corresponding utilities
-            cuurent_flow_utilities = flow_utilities[period, current_state_index, i, :]
-            cuurent_cons_utilities = cons_utilities[period, current_state_index, i, :]
-            cuurent_period_wages = period_wages[period, current_state_index, i, :]
-            cuurent_wage_sys = wage_sys[period, current_state_index]
+            cuurent_flow_utilities = flow_utilities[current_state_index, i, :]
+            cuurent_cons_utilities = cons_utilities[current_state_index, i, :]
+            cuurent_period_wages = period_wages[current_state_index, i, :]
+            cuurent_wage_sys = wage_sys[current_state_index]
+
+            #print('current_flow_utilities' current_flow_utilities)
 
             # Obtain continuation values for all choices
             continuation_values = calculate_continuation_values(
                 model_params,
-                mapping_states_index,
-                periods_emax,
+                indexer,
                 period,
+                periods_emax,
                 educ_years_idx,
                 exp_p,
                 exp_f,
@@ -103,6 +104,7 @@ def pyth_simulate(model_params, state_space_args, periods_emax, covariates):
 
             # Determine choice as option with highest choice specific value function
             max_idx = np.argmax(value_functions)
+            print('choice', max_idx)
 
             # Record period experiences
             dataset[count, 3:4] = max_idx
@@ -112,10 +114,12 @@ def pyth_simulate(model_params, state_space_args, periods_emax, covariates):
             dataset[count, 11:14] = cuurent_flow_utilities[:]
 
             # Update state space component experience
-            current_state[max_idx + 1] += 1
+            current_state[max_idx + 2] += 1
 
             # Update state space component choice_lagged
-            current_state[1] = max_idx
+            current_state[2] = max_idx
+
+            print('current_state_updated', current_state)
 
             # Update simulation/row count
             count += 1

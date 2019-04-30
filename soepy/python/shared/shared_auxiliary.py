@@ -23,18 +23,14 @@ def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
     return draws
 
 
-def calculate_utilities(model_params, state_space_args, covariates, draws):
+def calculate_utilities(model_params, states, covariates, draws):
     """Calculate period/flow utilities for all choices given state, period, and shocks."""
 
     # Calculate wage net of period productivity shock
-    wage_systematic = calculate_wage_systematic(
-        model_params, state_space_args, covariates
-    )
+    wage_systematic = calculate_wage_systematic(model_params, states, covariates)
 
     # Calculate period wages for the three choices including shocks' realizations
-    period_wages = calculate_period_wages(
-        model_params, state_space_args, wage_systematic, draws
-    )
+    period_wages = calculate_period_wages(model_params, states, wage_systematic, draws)
 
     # Calculate 1st part of the period utilities related to consumption
     consumption_utilities = calculate_consumption_utilities(model_params, period_wages)
@@ -46,11 +42,10 @@ def calculate_utilities(model_params, state_space_args, covariates, draws):
     return flow_utilities, consumption_utilities, period_wages, wage_systematic
 
 
-def calculate_wage_systematic(model_params, state_space_args, covariates):
+def calculate_wage_systematic(model_params, states, covariates):
     """Calculate systematic wages, i.e., wages net of shock, for specified state."""
 
-    states_all, _, _, _, = state_space_args
-    exp_p, exp_f = states_all[:, :, 2], states_all[:, :, 3]
+    exp_p, exp_f = states[:, 3], states[:, 4]
     educ_level = covariates
 
     # Construct wage components
@@ -65,36 +60,32 @@ def calculate_wage_systematic(model_params, state_space_args, covariates):
     wage_systematic = np.exp(gamma_0s) * returns_to_exp
 
     # Return function output
-    return wage_systematic  # This is a scalar, equal for all choices
-    # Dimension of outpus (num_periods by num_states)
+    # Dimension (num_states x 1): scalar equal for all choices
+    return wage_systematic
 
 
-def calculate_period_wages(model_params, state_space_args, wage_systematic, draws):
+def calculate_period_wages(model_params, states, wage_systematic, draws):
     """Calculate period wages for each choice including choice
     and period specific productivity shock.
     """
-    states_all, _, _, _, = state_space_args
-
     # Take the exponential of the disturbances
     exp_draws = np.exp(draws)
 
-    shape = (states_all.shape[0], states_all.shape[1], draws.shape[1], NUM_CHOICES)
+    shape = (states.shape[0], draws.shape[1], NUM_CHOICES)
     period_wages = np.full(shape, np.nan)
 
     # Calculate choice specific wages including productivity shock
-    for period in range(period_wages.shape[0]):
-        for state in range(period_wages.shape[1]):
-            period_wages[period, state, :, :] = (
-                wage_systematic[period, state] * exp_draws[period, :, :]
-            )
+    for state in range(period_wages.shape[0]):
+        period = states[state, 0]
+        period_wages[state, :, :] = wage_systematic[state] * exp_draws[period, :, :]
 
     # Ensure that the benefits are recorded as non-labor income in data frame
-    period_wages[:, :, :, 0] = model_params.benefits
+    period_wages[:, :, 0] = model_params.benefits
 
     # Return function output
-    return (
-        period_wages
-    )  # This is a vector, difference between choices comes from disturbance term.
+    # Dimension (num_states x num_draws x num_choices)
+    # Difference between choices comes from the error term
+    return period_wages
 
 
 def calculate_consumption_utilities(model_params, period_wages):
@@ -106,20 +97,16 @@ def calculate_consumption_utilities(model_params, period_wages):
     # Calculate choice specific wages including productivity shock
     consumption_utilities = hours * period_wages
 
-    consumption_utilities[
-        consumption_utilities == 0
-    ] = 10  # Some positive invalid value
-
-    consumption_utilities[:, :, :, 0] = (
+    consumption_utilities[:, :, 0] = (
         model_params.benefits ** model_params.mu
     ) / model_params.mu
 
-    consumption_utilities[:, :, :, 1] = (
-        consumption_utilities[:, :, :, 1] ** model_params.mu
+    consumption_utilities[:, :, 1] = (
+        consumption_utilities[:, :, 1] ** model_params.mu
     ) / model_params.mu
 
-    consumption_utilities[:, :, :, 2] = (
-        consumption_utilities[:, :, :, 2] ** model_params.mu
+    consumption_utilities[:, :, 2] = (
+        consumption_utilities[:, :, 2] ** model_params.mu
     ) / model_params.mu
 
     # Return function output
@@ -142,38 +129,28 @@ def calculate_total_utilities(model_params, consumption_utilities):
 
 
 def calculate_continuation_values(
-    model_params,
-    mapping_states_index,
-    periods_emax,
-    period,
-    educ_years_idx,
-    exp_p,
-    exp_f,
+    model_params, indexer, period, periods_emax, educ_years_idx, exp_p, exp_f
 ):
     """Obtain continuation values for each of the choices."""
 
     # Initialize container for continuation values
-    continuation_values = np.tile(np.nan, NUM_CHOICES)
+    continuation_values = np.full(NUM_CHOICES, np.nan)
 
     if period != (model_params.num_periods - 1):
 
         # Choice: Non-employment
         # Create index for extracting the continuation value
-        future_idx = mapping_states_index[period + 1, educ_years_idx, 0, exp_p, exp_f]
+        future_idx = indexer[period + 1, educ_years_idx, 0, exp_p, exp_f]
         # Extract continuation value
-        continuation_values[0] = periods_emax[period + 1, future_idx]
+        continuation_values[0] = periods_emax[future_idx]
 
         # Choice: Part-time
-        future_idx = mapping_states_index[
-            period + 1, educ_years_idx, 1, exp_p + 1, exp_f
-        ]
-        continuation_values[1] = periods_emax[period + 1, future_idx]
+        future_idx = indexer[period + 1, educ_years_idx, 1, exp_p + 1, exp_f]
+        continuation_values[1] = periods_emax[future_idx]
 
         # Choice: Full-time
-        future_idx = mapping_states_index[
-            period + 1, educ_years_idx, 2, exp_p, exp_f + 1
-        ]
-        continuation_values[2] = periods_emax[period + 1, future_idx]
+        future_idx = indexer[period + 1, educ_years_idx, 2, exp_p, exp_f + 1]
+        continuation_values[2] = periods_emax[future_idx]
 
     else:
         continuation_values = np.tile(0.0, NUM_CHOICES)

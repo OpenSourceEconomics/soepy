@@ -5,20 +5,18 @@ from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
-def construct_covariates(state_space_args):
+def construct_covariates(states):
     """Construct a matrix of covariates
     that depend only on the state space."""
 
-    states_all, _, _, _ = state_space_args
-
-    shape = list(states_all.shape)
-    shape[2] = 3
+    shape = list(states.shape)
+    shape[1] = 3
 
     covariates = np.full(shape, 0.0)
 
-    covariates[:, :, 0] = np.where(states_all[:, :, 0] == 10, 1, 0)
-    covariates[:, :, 1] = np.where(states_all[:, :, 0] == 11, 1, 0)
-    covariates[:, :, 2] = np.where(states_all[:, :, 0] == 12, 1, 0)
+    covariates[:, 0] = np.where(states[:, 1] == 10, 1, 0)
+    covariates[:, 1] = np.where(states[:, 1] == 11, 1, 0)
+    covariates[:, 2] = np.where(states[:, 1] == 12, 1, 0)
 
     return covariates
 
@@ -196,60 +194,43 @@ def pyth_create_state_space(model_params):
 
 
 def pyth_backward_induction(
-    model_params, state_space_args, covariates, flow_utilities, draws_emax
+    model_params, states, indexer, covariates, flow_utilities
 ):
     """Obtain the value function maximum values
     for all admissible states and periods in a backward induction procedure.
     """
 
-    # Unpack objects from state space arguments
-    states_all, states_number_period, mapping_states_index, max_states_period = (
-        state_space_args
-    )
-
     # Initialize container for the final result,
-    # maximal value function per period and state:
-    periods_emax = np.tile(np.nan, (model_params.num_periods, max_states_period))
+    # maximal value function per state:
+    periods_emax = np.full(states.shape[0], np.nan)
 
     # Loop over all periods
-    for period in range(model_params.num_periods - 1, -1, -1):
+    for k in reversed(range(states.shape[0])):
 
-        # Loop over all admissible state space points
-        # for the period currently reached by the parent loop
-        for k in range(states_number_period[period]):
+        # Construct additional education information
+        educ_level = covariates[k, :]
+        educ_years_idx = np.where(educ_level == np.max(educ_level))[0]
 
-            # Construct additional education information
-            educ_level = covariates[period, k, :]
-            educ_years_idx = np.where(educ_level == np.max(educ_level))[0]
+        # Integrate out the error term
+        emax = construct_emax(
+            model_params,
+            k,
+            flow_utilities,
+            educ_years_idx,
+            states,
+            indexer,
+            periods_emax,
+        )
 
-            # Integrate out the error term
-            emax = construct_emax(
-                model_params,
-                period,
-                k,
-                flow_utilities,
-                educ_years_idx,
-                states_all,
-                mapping_states_index,
-                periods_emax,
-            )
-
-            # Record function output
-            periods_emax[period, k] = emax
+        # Record function output
+        periods_emax[k] = emax
 
     # Return function output
     return periods_emax
 
 
 def construct_emax(
-    model_params,
-    period,
-    k,
-    flow_utilities,
-    educ_years_idx,
-    states_all,
-    mapping_states_index,
-    periods_emax,
+    model_params, k, flow_utilities, educ_years_idx, states, indexer, periods_emax
 ):
     """Integrate out the error terms in a Monte Carlo simulation procedure
     to obtain value function maximum values for each period and state.
@@ -264,20 +245,14 @@ def construct_emax(
     for i in range(model_params.num_draws_emax):
 
         # Extract relevant state space components
-        educ_years, _, exp_p, exp_f = states_all[period, k, :]
+        period, educ_years, _, exp_p, exp_f = states[k, :]
 
         # Calculate flow utility at current period, state, and draw
-        current_flow_utilities = flow_utilities[period, k, i, :]
+        current_flow_utilities = flow_utilities[k, i, :]
 
         # Obtain continuation values for all choices
         continuation_values = calculate_continuation_values(
-            model_params,
-            mapping_states_index,
-            periods_emax,
-            period,
-            educ_years_idx,
-            exp_p,
-            exp_f,
+            model_params, indexer, period, periods_emax, educ_years_idx, exp_p, exp_f
         )
 
         # Calculate choice specific value functions

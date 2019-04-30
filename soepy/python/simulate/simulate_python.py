@@ -13,10 +13,10 @@ def simulate(init_file_name):
     model_params = read_init_file(init_file_name)
 
     # Obtain model solution
-    state_space_args, periods_emax, covariates = pyth_solve(model_params)
+    states, indexer, periods_emax, covariates = pyth_solve(model_params)
 
     # Simulate agents experiences according to parameters in the model specification
-    dataset = pyth_simulate(model_params, state_space_args, periods_emax, covariates)
+    dataset = pyth_simulate(model_params, states, indexer, periods_emax, covariates)
 
     # Create fixed objects needed to record simulated data set to Pandas DataFrame
     # Define column labels
