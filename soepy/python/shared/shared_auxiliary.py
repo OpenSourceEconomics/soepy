@@ -1,6 +1,6 @@
 import numpy as np
 
-from soepy.python.shared.shared_constants import NUM_CHOICES, MISSING_INT
+from soepy.python.shared.shared_constants import NUM_CHOICES
 
 
 def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
@@ -79,7 +79,7 @@ def calculate_period_wages(model_params, state_space_args, wage_systematic, draw
     exp_draws = np.exp(draws)
 
     shape = (states_all.shape[0], states_all.shape[1], draws.shape[1], NUM_CHOICES)
-    period_wages = np.full(shape, MISSING_INT)
+    period_wages = np.full(shape, np.nan)
 
     # Calculate choice specific wages including productivity shock
     for period in range(period_wages.shape[0]):

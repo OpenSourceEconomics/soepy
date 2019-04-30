@@ -2,8 +2,6 @@ import numpy as np
 import numba
 
 from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
-from soepy.python.shared.shared_auxiliary import draw_disturbances
-from soepy.python.shared.shared_auxiliary import calculate_utilities
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 

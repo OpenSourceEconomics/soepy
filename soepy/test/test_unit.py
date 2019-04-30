@@ -7,6 +7,7 @@ from soepy.python.shared.shared_auxiliary import calculate_total_utilities
 from soepy.python.shared.shared_auxiliary import calculate_wage_systematic
 from soepy.python.shared.shared_auxiliary import calculate_period_wages
 from soepy.python.solve.solve_auxiliary import pyth_create_state_space
+from soepy.python.solve.solve_auxiliary import construct_covariates
 from soepy.python.pre_processing.model_processing import read_init_file
 from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.shared.shared_constants import MISSING_INT
@@ -29,35 +30,39 @@ def test1():
         model_params = read_init_file("test.soepy.yml")
         df = simulate("test.soepy.yml")
 
-        educ_level = np.array([1.0, 0.0, 0.0])
+        states, _ = pyth_create_state_space(model_params)
+        state_space_args = convert_state_space(model_params, states)
+        covariates = construct_covariates(state_space_args)
 
-        exp_p, exp_f = 0.0, 0.0
-
+        # Test systematic wages
         wage_systematic = calculate_wage_systematic(
-            model_params, educ_level, exp_p, exp_f
+            model_params, state_space_args, covariates
         )
 
-        np.testing.assert_array_equal(wage_systematic, df["Systematic Wage"])
+        np.testing.assert_array_equal(wage_systematic[0, 0], df["Systematic Wage"])
+
+        # Test period wages
         draw_sim = draw_disturbances(
             model_params.seed_sim, model_params.shocks_cov, 1, 1
         )
         period_wages = calculate_period_wages(
-            model_params, wage_systematic, draw_sim[0, 0, :]
+            model_params, state_space_args, wage_systematic, draw_sim
         )
 
         np.testing.assert_array_equal(
-            period_wages,
+            period_wages[0, 0, 0, :],
             np.squeeze(
                 df[["Period Wage N", "Period Wage P", "Period Wage F"]].values.T
             ),
         )
 
+        # Test consumption utilities
         consumption_utilities = calculate_consumption_utilities(
             model_params, period_wages
         )
 
         np.testing.assert_array_equal(
-            consumption_utilities,
+            consumption_utilities[0, 0, 0, :],
             np.squeeze(
                 df[
                     [
@@ -69,10 +74,11 @@ def test1():
             ),
         )
 
-        total_utilities = calculate_total_utilities(model_params, consumption_utilities)
+        # Test total utilities
+        flow_utilities = calculate_total_utilities(model_params, consumption_utilities)
 
         np.testing.assert_array_equal(
-            total_utilities,
+            flow_utilities[0, 0, 0, :],
             np.squeeze(
                 df[["Flow Utility N", "Flow Utility P", "Flow Utility F"]].values
             ),
