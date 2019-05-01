@@ -36,7 +36,6 @@ def pyth_simulate(model_params, states, indexer, periods_emax, covariates):
 
     # Loop over all agents
     for i in range(model_params.num_agents_sim):
-        print('i', i)
 
         # Construct additional education information
         educ_years_i, educ_level, educ_years_idx = extract_individual_covariates(
@@ -70,21 +69,15 @@ def pyth_simulate(model_params, states, indexer, periods_emax, covariates):
             # Extract state space point index
             _, _, choice_lagged, exp_p, exp_f = current_state
 
-            print('current_state', current_state)
-
             current_state_index = indexer[
                 period, educ_years_idx, choice_lagged, exp_p, exp_f
             ]
-
-            print('current_state_index', current_state_index)
 
             # Extract corresponding utilities
             cuurent_flow_utilities = flow_utilities[current_state_index, i, :]
             cuurent_cons_utilities = cons_utilities[current_state_index, i, :]
             cuurent_period_wages = period_wages[current_state_index, i, :]
             cuurent_wage_sys = wage_sys[current_state_index]
-
-            #print('current_flow_utilities' current_flow_utilities)
 
             # Obtain continuation values for all choices
             continuation_values = calculate_continuation_values(
@@ -104,7 +97,6 @@ def pyth_simulate(model_params, states, indexer, periods_emax, covariates):
 
             # Determine choice as option with highest choice specific value function
             max_idx = np.argmax(value_functions)
-            print('choice', max_idx)
 
             # Record period experiences
             dataset[count, 3:4] = max_idx
@@ -118,8 +110,6 @@ def pyth_simulate(model_params, states, indexer, periods_emax, covariates):
 
             # Update state space component choice_lagged
             current_state[2] = max_idx
-
-            print('current_state_updated', current_state)
 
             # Update simulation/row count
             count += 1

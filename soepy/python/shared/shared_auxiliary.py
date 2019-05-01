@@ -153,7 +153,7 @@ def calculate_continuation_values(
         continuation_values[2] = periods_emax[future_idx]
 
     else:
-        continuation_values = np.tile(0.0, NUM_CHOICES)
+        continuation_values = np.full(NUM_CHOICES, 0.0)
 
     # Return function output
     return continuation_values
