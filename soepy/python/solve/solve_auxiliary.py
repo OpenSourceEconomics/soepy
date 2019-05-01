@@ -245,7 +245,7 @@ def construct_emax(
     for i in range(model_params.num_draws_emax):
 
         # Extract relevant state space components
-        period, educ_years, _, exp_p, exp_f = states[k, :]
+        period, _, _, exp_p, exp_f = states[k, :]
 
         # Calculate flow utility at current period, state, and draw
         current_flow_utilities = flow_utilities[k, i, :]
