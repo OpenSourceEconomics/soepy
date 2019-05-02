@@ -38,9 +38,8 @@ def pyth_simulate(model_params, states, indexer, periods_emax, covariates):
     for i in range(model_params.num_agents_sim):
 
         # Construct additional education information
-        educ_years_i, educ_level, educ_years_idx = extract_individual_covariates(
-            educ_years, model_params.educ_min, i
-        )
+        educ_years_i = educ_years[i]
+        educ_years_idx = educ_years_i - model_params.educ_min
 
         # Extract the indicator of the initial state for the individual
         # depending on the individuals initial condition
@@ -116,30 +115,3 @@ def pyth_simulate(model_params, states, indexer, periods_emax, covariates):
 
     # Return function output
     return dataset
-
-
-def extract_individual_covariates(educ_years, educ_min, i):
-    """Constructs additional covariates given agent indicator."""
-    # Determine education level given number of years of education
-    # Would it be more efficient to do this somewhere else?
-
-    # Unpack state space components
-    educ_years_i = educ_years[i]
-
-    # Extract education information
-    if educ_years_i == 10:
-        educ_level = [1, 0, 0]
-
-    elif educ_years_i == 11:
-        educ_level = [0, 1, 0]
-
-    elif educ_years_i == 12:
-        educ_level = [0, 0, 1]
-
-    else:
-        raise ValueError("Invalid number of years of education")
-
-    educ_years_idx = educ_years_i - educ_min
-
-    # Return function output
-    return educ_years_i, educ_level, educ_years_idx
