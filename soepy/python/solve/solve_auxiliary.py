@@ -5,12 +5,12 @@ from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
+@numba.jit(nopython=True)
 def construct_covariates(states):
     """Construct a matrix of covariates
     that depend only on the state space."""
 
-    shape = list(states.shape)
-    shape[1] = 3
+    shape = (states.shape[0], 3)
 
     covariates = np.full(shape, 0.0)
 
