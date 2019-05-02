@@ -24,7 +24,43 @@ def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
 
 
 def calculate_utilities(model_params, states, covariates, draws):
-    """Calculate period/flow utilities for all choices given state, period, and shocks."""
+    """Calculate period/flow utilities for all choices given state, period, and shocks.
+
+    Parameters
+    ----------
+    model_params : namedtuple
+        Contains all parameters of the model including information on dimensions
+        (number of periods, agents, random draws, etc.) and coefficients to be
+        estimated.
+    states : np.ndarray
+        Array with shape (num_states, 6) containing period, experience in OCCUPATION A,
+        experience in OCCUPATION B, years of schooling, the lagged choice and the type
+        of the agent.
+    covariates: np.ndarray
+        Array with shape (num_states, number of covariates) containing all additional
+        covariates, which depend only on the state space information.
+    draws : np.ndarray
+        Array with dimension (num_periods, num_draws, NUM_CHOICES). The number of draws is
+        equal to num_draws_emax when the function is called during model solution,
+        and equal to num_agents_sim when called during the simulation routine.
+
+    Returns
+    -------
+    wage_systematic : array
+        One dimensional array with length num_states containing the part of the wages
+        at the respective state space point that do not depend on the agent's choice,
+        nor on the random shock.
+    period_wages : np.ndarray
+        Array with shape (num_states, num_draws, NUM_CHOICES). Contains the wages for
+        the period given agent's period choice and error term draw.
+    consumption_utilities : np.ndarray
+        Array with shape (num_states, num_draws, NUM_CHOICES) containing part
+        of the utility related to consumption.
+    flow_utilities : np.ndarray
+        Array with shape (num_states, num_draws, NUM_CHOICES) containing total
+        flow utility of each choice given error term draw at each state.
+
+    """
 
     # Calculate wage net of period productivity shock
     wage_systematic = calculate_wage_systematic(model_params, states, covariates)
@@ -43,16 +79,16 @@ def calculate_utilities(model_params, states, covariates, draws):
 
 
 def calculate_wage_systematic(model_params, states, covariates):
-    """Calculate systematic wages, i.e., wages net of shock, for specified state."""
+    """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
     exp_p, exp_f = states[:, 3], states[:, 4]
     educ_level = covariates
 
     # Construct wage components
-    gamma_0s = np.dot(educ_level, model_params.gamma_0s)
-    gamma_1s = np.dot(educ_level, model_params.gamma_1s)
-    period_exp_sum = exp_p * np.dot(educ_level, model_params.g_s) + exp_f
-    depreciation = 1 - np.dot(educ_level, model_params.delta_s)
+    gamma_0s = np.dot(educ_level, np.array(model_params.gamma_0s))
+    gamma_1s = np.dot(educ_level, np.array(model_params.gamma_1s))
+    period_exp_sum = exp_p * np.dot(educ_level, np.array(model_params.g_s)) + exp_f
+    depreciation = 1 - np.dot(educ_level, np.array(model_params.delta_s))
 
     # Calculate wage in the given state
     period_exp_total = period_exp_sum * depreciation + 1

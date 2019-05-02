@@ -5,10 +5,37 @@ from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
 from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
-@numba.jit(nopython=True)
 def construct_covariates(states):
     """Construct a matrix of covariates
-    that depend only on the state space."""
+    that depend only on the state space.
+
+    Parameters
+    ---------
+    states : np.ndarray
+        Array with shape (num_states, 6) containing period, experience in OCCUPATION A,
+        experience in OCCUPATION B, years of schooling, the lagged choice and the type
+        of the agent.
+
+    Returns
+    -------
+    covariates : np.ndarray
+        Array with shape (num_states, number of covariates) containing all additional
+        covariates, which depend only on the state space information.
+
+    Examples
+    --------
+    >>> states = np.array([
+    >>> [0, 10, 0, 0, 0],
+    >>> [1, 11, 0, 0, 0],
+    >>> [2, 12, 0, 0, 0],
+    >>> ])
+
+    >>> covariates = construct_covariates(states)
+    >>> covariates
+    array([[1., 0., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]])
+    """
 
     shape = (states.shape[0], 3)
 
@@ -193,9 +220,7 @@ def pyth_create_state_space(model_params):
     return states, indexer
 
 
-def pyth_backward_induction(
-    model_params, states, indexer, covariates, flow_utilities
-):
+def pyth_backward_induction(model_params, states, indexer, covariates, flow_utilities):
     """Obtain the value function maximum values
     for all admissible states and periods in a backward induction procedure.
     """
