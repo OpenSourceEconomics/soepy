@@ -10,9 +10,7 @@ from soepy.python.solve.solve_auxiliary import pyth_create_state_space
 from soepy.python.solve.solve_auxiliary import construct_covariates
 from soepy.python.pre_processing.model_processing import read_init_file
 from soepy.python.shared.shared_auxiliary import draw_disturbances
-from soepy.python.shared.shared_constants import MISSING_INT
 from soepy.python.simulate.simulate_python import simulate
-from soepy.python.shared.shared_helpers import convert_state_space
 from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
@@ -160,73 +158,58 @@ def test5():
 
     states, _ = pyth_create_state_space(model_params)
 
-    states_all, states_number_period, _, _ = convert_state_space(model_params, states)
-
-    # Control for correct number of states in each period.
-    np.testing.assert_array_equal(states_number_period, [1, 4, 13, 30])
-
-    # Control that the states are correct
-    states_true = np.full((4, 576, 4), MISSING_INT)
-
-    states_true[0, 0, :] = [10, 0, 0, 0]
-
-    states_true[1, 0:4, :] = [
-        [10, 0, 0, 0],
-        [10, 1, 1, 0],
-        [10, 2, 0, 1],
-        [11, 0, 0, 0],
+    states_true = [
+        [0, 10, 0, 0, 0],
+        [1, 10, 0, 0, 0],
+        [1, 10, 1, 1, 0],
+        [1, 10, 2, 0, 1],
+        [1, 11, 0, 0, 0],
+        [2, 10, 0, 0, 0],
+        [2, 10, 0, 1, 0],
+        [2, 10, 1, 1, 0],
+        [2, 10, 1, 2, 0],
+        [2, 10, 0, 0, 1],
+        [2, 10, 2, 0, 1],
+        [2, 10, 1, 1, 1],
+        [2, 10, 2, 1, 1],
+        [2, 10, 2, 0, 2],
+        [2, 11, 0, 0, 0],
+        [2, 11, 1, 1, 0],
+        [2, 11, 2, 0, 1],
+        [2, 12, 0, 0, 0],
+        [3, 10, 0, 0, 0],
+        [3, 10, 0, 1, 0],
+        [3, 10, 1, 1, 0],
+        [3, 10, 0, 2, 0],
+        [3, 10, 1, 2, 0],
+        [3, 10, 1, 3, 0],
+        [3, 10, 0, 0, 1],
+        [3, 10, 2, 0, 1],
+        [3, 10, 0, 1, 1],
+        [3, 10, 1, 1, 1],
+        [3, 10, 2, 1, 1],
+        [3, 10, 1, 2, 1],
+        [3, 10, 2, 2, 1],
+        [3, 10, 0, 0, 2],
+        [3, 10, 2, 0, 2],
+        [3, 10, 1, 1, 2],
+        [3, 10, 2, 1, 2],
+        [3, 10, 2, 0, 3],
+        [3, 11, 0, 0, 0],
+        [3, 11, 0, 1, 0],
+        [3, 11, 1, 1, 0],
+        [3, 11, 1, 2, 0],
+        [3, 11, 0, 0, 1],
+        [3, 11, 2, 0, 1],
+        [3, 11, 1, 1, 1],
+        [3, 11, 2, 1, 1],
+        [3, 11, 2, 0, 2],
+        [3, 12, 0, 0, 0],
+        [3, 12, 1, 1, 0],
+        [3, 12, 2, 0, 1],
     ]
 
-    states_true[2, 0:13, :] = [
-        [10, 0, 0, 0],
-        [10, 0, 1, 0],
-        [10, 1, 1, 0],
-        [10, 1, 2, 0],
-        [10, 0, 0, 1],
-        [10, 2, 0, 1],
-        [10, 1, 1, 1],
-        [10, 2, 1, 1],
-        [10, 2, 0, 2],
-        [11, 0, 0, 0],
-        [11, 1, 1, 0],
-        [11, 2, 0, 1],
-        [12, 0, 0, 0],
-    ]
-
-    states_true[3, 0:30, :] = [
-        [10, 0, 0, 0],
-        [10, 0, 1, 0],
-        [10, 1, 1, 0],
-        [10, 0, 2, 0],
-        [10, 1, 2, 0],
-        [10, 1, 3, 0],
-        [10, 0, 0, 1],
-        [10, 2, 0, 1],
-        [10, 0, 1, 1],
-        [10, 1, 1, 1],
-        [10, 2, 1, 1],
-        [10, 1, 2, 1],
-        [10, 2, 2, 1],
-        [10, 0, 0, 2],
-        [10, 2, 0, 2],
-        [10, 1, 1, 2],
-        [10, 2, 1, 2],
-        [10, 2, 0, 3],
-        [11, 0, 0, 0],
-        [11, 0, 1, 0],
-        [11, 1, 1, 0],
-        [11, 1, 2, 0],
-        [11, 0, 0, 1],
-        [11, 2, 0, 1],
-        [11, 1, 1, 1],
-        [11, 2, 1, 1],
-        [11, 2, 0, 2],
-        [12, 0, 0, 0],
-        [12, 1, 1, 0],
-        [12, 2, 0, 1],
-    ]
-
-    np.testing.assert_array_equal(states_true, states_all)
+    np.testing.assert_array_equal(states_true, states[0:48, :])
 
 
 cleanup()
