@@ -79,9 +79,9 @@ def pyth_create_state_space(model_params):
     Returns
     -------
     states : np.ndarray
-        Array with shape (num_states, 6) containing period, experience in OCCUPATION A,
-        experience in OCCUPATION B, years of schooling, the lagged choice and the type
-        of the agent.
+        Array with shape (num_states, 5) containing period, years of schooling,
+        the lagged choice, the years of experience in part-time, and the
+        years of experience in full-time employment.
     indexer : np.ndarray
         A matrix where each dimension represents a characteristic of the state space.
         Switching from one state is possible via incrementing appropriate indices by 1.

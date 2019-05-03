@@ -33,9 +33,9 @@ def calculate_utilities(model_params, states, covariates, draws):
         (number of periods, agents, random draws, etc.) and coefficients to be
         estimated.
     states : np.ndarray
-        Array with shape (num_states, 6) containing period, experience in OCCUPATION A,
-        experience in OCCUPATION B, years of schooling, the lagged choice and the type
-        of the agent.
+        Array with shape (num_states, 5) containing period, years of schooling,
+        the lagged choice, the years of experience in part-time, and the
+        years of experience in full-time employment.
     covariates: np.ndarray
         Array with shape (num_states, number of covariates) containing all additional
         covariates, which depend only on the state space information.
@@ -57,7 +57,7 @@ def calculate_utilities(model_params, states, covariates, draws):
         Array with shape (num_states, num_draws, NUM_CHOICES) containing part
         of the utility related to consumption.
     flow_utilities : np.ndarray
-        Array with shape (num_states, num_draws, NUM_CHOICES) containing total
+        Array with dimensions (num_states, num_draws, NUM_CHOICES) containing total
         flow utility of each choice given error term draw at each state.
 
     """
