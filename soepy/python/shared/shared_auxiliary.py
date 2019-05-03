@@ -96,7 +96,6 @@ def calculate_wage_systematic(model_params, states, covariates):
     wage_systematic = np.exp(gamma_0s) * returns_to_exp
 
     # Return function output
-    # Dimension (num_states x 1): scalar equal for all choices
     return wage_systematic
 
 
@@ -119,8 +118,6 @@ def calculate_period_wages(model_params, states, wage_systematic, draws):
     period_wages[:, :, 0] = model_params.benefits
 
     # Return function output
-    # Dimension (num_states x num_draws x num_choices)
-    # Difference between choices comes from the error term
     return period_wages
 
 
