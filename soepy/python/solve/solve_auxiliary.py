@@ -1,7 +1,7 @@
 import numpy as np
 import numba
 
-from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES, INVALID_FLOAT
+from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
 
 
 def construct_covariates(states):
@@ -269,15 +269,15 @@ def pyth_backward_induction(model_params, states, indexer, flow_utilities):
             # corresponding to the continuation values
             emaxs = get_continuation_values(
                 model_params, states_period, indexer, emaxs
-            )  # njit
+            )
 
         # Extract current period information for current loop calculation
         emaxs_period = emaxs[np.where(states[:, 0] == period)]
 
         # Calculate emax for current period reached by the loop
         emax_period = construct_emax(
-            model_params, flow_utilities_period, emaxs_period
-        )  # guvectorize
+            model_params.delta, flow_utilities_period, emaxs_period
+        )
         emaxs_period[:, 3] = emax_period
         emaxs[np.where(states[:, 0] == period)] = emaxs_period
 
@@ -327,9 +327,12 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
     return emaxs
 
 
-@numba.jit(nopython=True)
-def construct_emax(model_params, flow_utilities_period, emaxs_period):
-    """Simulate expected maximum utility for a given distribution of the unobservable.
+@numba.guvectorize(
+    ["f4, f4[:, :], f4[:], f4[:]", "f8, f8[:, :], f8[:], f8[:]"],
+    "(), (p, n), (m) -> ()",
+)
+def construct_emax(delta, flow_utilities_period, emaxs_period, emax_period):
+    """Simulate expected maximum utility for a given distribution of the unobservables.
 
     The function calculates the maximum expected value function over the distribution
     of the error term at each state space point in the period currently reached by the
@@ -359,30 +362,26 @@ def construct_emax(model_params, flow_utilities_period, emaxs_period):
     -------
     emax_period : np.array
         Expected maximum value function of the current state space point.
-        Array of length number of states in the current period. The vector
+        Array of lentgh number of states in the current period. The vector
         corresponds to the second block of values in the data:`emaxs` object.
 
     .. _Monte Carlo integration:
         https://en.wikipedia.org/wiki/Monte_Carlo_integration
 
     """
-    num_states_period = emaxs_period.shape[0]
-    emax_period = np.zeros(num_states_period)
+    num_draws, num_choices = flow_utilities_period.shape
 
-    for i in range(model_params.num_draws_emax):
-        current_max_value_function = np.full((num_states_period,), INVALID_FLOAT)
+    for i in range(num_draws):
+        current_max_value_function = -99.0
 
-        for j in range(NUM_CHOICES):
+        for j in range(num_choices):
             value_function_choice = (
-                flow_utilities_period[:, i, j] + model_params.delta * emaxs_period[:, j]
+                flow_utilities_period[i, j] + delta * emaxs_period[j]
             )
 
-            for k in range(num_states_period):
-                if value_function_choice[k] > current_max_value_function[k]:
-                    current_max_value_function[k] = value_function_choice[k]
+            if value_function_choice > current_max_value_function:
+                current_max_value_function = value_function_choice
 
         emax_period += current_max_value_function
 
-    emax_period /= model_params.num_draws_emax
-
-    return emax_period
+    emax_period /= num_draws
