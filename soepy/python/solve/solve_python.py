@@ -24,9 +24,7 @@ def pyth_solve(model_params):
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
-    periods_emax = pyth_backward_induction(
-        model_params, states, indexer, covariates, flow_utilities
-    )
+    emaxs = pyth_backward_induction(model_params, states, indexer, flow_utilities)
 
     # Return function output
-    return states, indexer, periods_emax, covariates
+    return states, indexer, emaxs, covariates

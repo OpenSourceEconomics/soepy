@@ -1,8 +1,7 @@
 import numpy as np
 import numba
 
-from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
-from soepy.python.shared.shared_auxiliary import calculate_continuation_values
+from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES, INVALID_FLOAT
 
 
 def construct_covariates(states):
@@ -220,86 +219,168 @@ def pyth_create_state_space(model_params):
     return states, indexer
 
 
-def pyth_backward_induction(model_params, states, indexer, covariates, flow_utilities):
-    """Obtain the value function maximum values
-    for all admissible states and periods in a backward induction procedure.
+def pyth_backward_induction(model_params, states, indexer, flow_utilities):
+    """Get expected maximum value function at every state space point.
+
+    Parameters
+    ----------
+    model_params : namedtuple
+        Contains all parameters of the model including information on dimensions
+        (number of periods, agents, random draws, etc.) and coefficients to be
+        estimated.
+    states : np.ndarray
+        Array with shape (num_states, 5) containing period, years of schooling,
+        the lagged choice, the years of experience in part-time, and the
+        years of experience in full-time employment.
+    indexer : np.ndarray
+        Array where each dimension represents a componenet of the state space.
+        :data:`states[k]` returns the values of the state space components
+        at state :data:`k`. Indexing :data:`indexer` by the same state space
+        component values returns :data:`k`.
+    flow_utilities : np.ndarray
+        Array with dimensions (num_states, num_draws, NUM_CHOICES) containing total
+        flow utility of each choice given error term draw at each state.
+
+    Returns
+    -------
+    emaxs : np.ndarray
+        An array of dimension (num_states, num choices + 1). The object's rows contain
+        the continuation values of each choice at the specific state space points
+        as its first elements. The last row element corresponds to the maximum
+        expected value function of the state.
     """
 
-    # Initialize container for the final result,
-    # maximal value function per state:
-    periods_emax = np.full(states.shape[0], np.nan)
+    emaxs = np.zeros((states.shape[0], NUM_CHOICES + 1))
 
-    # Loop over all periods
-    for k in reversed(range(states.shape[0])):
+    # Loop backwards over all periods
+    for period in reversed(range(model_params.num_periods)):
 
-        # Construct additional education information
-        educ_level = covariates[k, :]
-        educ_years_idx = np.where(educ_level == np.max(educ_level))[0]
+        # Extract period information
+        states_period = states[np.where(states[:, 0] == period)]  # as slice
+        flow_utilities_period = flow_utilities[np.where(states[:, 0] == period)]
 
-        # Integrate out the error term
-        emax = construct_emax(
-            model_params,
-            k,
-            flow_utilities,
-            educ_years_idx,
-            states,
-            indexer,
-            periods_emax,
-        )
+        # Continuation value calculation not performed for last period
+        # since continuation values are known to be zero
+        if period == model_params.num_periods - 1:
+            pass
+        else:
 
-        # Record function output
-        periods_emax[k] = emax
+            # Fill first block of elements in emaxs for the current period
+            # corresponding to the continuation values
+            emaxs = get_continuation_values(
+                model_params, states_period, indexer, emaxs
+            )  # njit
 
-    # Return function output
-    return periods_emax
+        # Extract current period information for current loop calculation
+        emaxs_period = emaxs[np.where(states[:, 0] == period)]
+
+        # Calculate emax for current period reached by the loop
+        emax_period = construct_emax(
+            model_params, flow_utilities_period, emaxs_period
+        )  # guvectorize
+        emaxs_period[:, 3] = emax_period
+        emaxs[np.where(states[:, 0] == period)] = emaxs_period
+
+    return emaxs
 
 
-def construct_emax(
-    model_params, k, flow_utilities, educ_years_idx, states, indexer, periods_emax
-):
-    """Integrate out the error terms in a Monte Carlo simulation procedure
-    to obtain value function maximum values for each period and state.
+def get_continuation_values(model_params, states_subset, indexer, emaxs):
+    """Obtain continuation values for each of the choices at each state
+    of the period currently reached by the parent loop.
+
+    This function takes a parent node and looks up the continuation values
+    of each of the available choices. It takes the entire block of
+    data:`emaxs` corresponding to the period and fills in the first block
+    of elements corresponding to the continuation values.
+    The continuation value of each choice is the expected maximum value
+    function of the next period's state if the particular choice was
+    taken this period. The expected maximum value function values are
+    contained as the last element of the data:`emaxs` row of next
+    period's state.
+
+    Warning
+    -------
+    This function must be extremely performant as the lookup is done for each state in a
+    state space (except for states in the last period) for each evaluation of the
+    optimization of parameters.
     """
+    for i in range(states_subset.shape[0]):
+        # Unpack parent state and get index
+        period, educ_years, choice_lagged, exp_p, exp_f = states_subset[i]
+        k_parent = indexer[
+            period, educ_years - model_params.educ_min, choice_lagged, exp_p, exp_f
+        ]
 
-    # Initialize container for sum of value function maximum values
-    # over all error term draws for the period and state
-    emax = 0.0
+        # Choice: Non-employment
+        k = indexer[period + 1, educ_years - model_params.educ_min, 0, exp_p, exp_f]
+        emaxs[k_parent, 0] = emaxs[k, 3]
 
-    # Loop over all error term draws
-    # for the period and state currently reached by the parent loop
+        # Choice: Part-time
+        k = indexer[period + 1, educ_years - model_params.educ_min, 1, exp_p + 1, exp_f]
+        emaxs[k_parent, 1] = emaxs[k, 3]
+
+        # Choice: Full-time
+        k = indexer[period + 1, educ_years - model_params.educ_min, 2, exp_p, exp_f + 1]
+        emaxs[k_parent, 2] = emaxs[k, 3]
+
+    return emaxs
+
+
+def construct_emax(model_params, flow_utilities_period, emaxs_period):
+    """Simulate expected maximum utility for a given distribution of the unobservable.
+
+    The function calculates the maximum expected value function over the distribution
+    of the error term at each state space point in the period currently reached by the
+    parent loop. The expectation calculation is performed via `Monte Carlo integration`_.
+    The goal is to approximate an integral by evaluating the integrand at randomly chosen
+    points. In this setting, one wants to approximate the expected maximum utility of
+    the current state.
+
+    Parameters
+    ----------
+    model_params : namedtuple
+        Contains all parameters of the model including information on dimensions
+        (number of periods, agents, random draws, etc.) and coefficients to be
+        estimated.
+    flow_utilities_period : np.ndarray
+        Array with dimensions (number of states in period, num_draws, NUM_CHOICES)
+        containing total flow utility of each choice given error term draw
+        at each state.
+    emaxs_period : np.ndarray
+        An array of dimension (num. states in period, num choices + 1).
+        The object's rows contain the continuation values of each choice at the specific
+        state space points as its first elements. The last row element corresponds
+        to the maximum expected value function of the state. This column is
+        full of zeros for the input object.
+
+    Returns
+    -------
+    emax_period : np.array
+        Expected maximum value function of the current state space point.
+        Array of length number of states in the current period. The vector
+        corresponds to the second block of values in the data:`emaxs` object.
+
+    .. _Monte Carlo integration:
+        https://en.wikipedia.org/wiki/Monte_Carlo_integration
+
+    """
+    num_states_period = emaxs_period.shape[0]
+    emax_period = np.zeros(num_states_period)
+
     for i in range(model_params.num_draws_emax):
+        current_max_value_function = np.repeat(INVALID_FLOAT, num_states_period)
 
-        # Extract relevant state space components
-        period, _, _, exp_p, exp_f = states[k, :]
+        for j in range(NUM_CHOICES):
+            value_function_choice = (
+                flow_utilities_period[:, i, j] + model_params.delta * emaxs_period[:, j]
+            )
 
-        # Calculate flow utility at current period, state, and draw
-        current_flow_utilities = flow_utilities[k, i, :]
+            for k in range(num_states_period):
+                if value_function_choice[k] > current_max_value_function[k]:
+                    current_max_value_function[k] = value_function_choice[k]
 
-        # Obtain continuation values for all choices
-        continuation_values = calculate_continuation_values(
-            model_params, indexer, period, periods_emax, educ_years_idx, exp_p, exp_f
-        )
+        emax_period += current_max_value_function
 
-        # Calculate choice specific value functions
-        value_functions = (
-            current_flow_utilities + model_params.delta * continuation_values
-        )
+    emax_period /= model_params.num_draws_emax
 
-        # Obtain highest value function value among the available choices. If above
-        # draws were the true shocks, maximum is the the current period value function
-        # value. It is the sum the flow utility and next periods value function given an
-        # optimal decision in the future and an optimal choice in the current period.
-        maximum = max(value_functions)
-
-        # Add to sum over all draws
-        emax += maximum
-
-        # End loop
-
-    # Average over the number of draws
-    emax = emax / model_params.num_draws_emax
-
-    # Thus, we have integrated out the error term
-
-    # Return function output
-    return emax
+    return emax_period

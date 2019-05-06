@@ -159,34 +159,3 @@ def calculate_total_utilities(model_params, consumption_utilities):
 
     # Return function output
     return total_utilities
-
-
-def calculate_continuation_values(
-    model_params, indexer, period, periods_emax, educ_years_idx, exp_p, exp_f
-):
-    """Obtain continuation values for each of the choices."""
-
-    # Initialize container for continuation values
-    continuation_values = np.full(NUM_CHOICES, np.nan)
-
-    if period != (model_params.num_periods - 1):
-
-        # Choice: Non-employment
-        # Create index for extracting the continuation value
-        future_idx = indexer[period + 1, educ_years_idx, 0, exp_p, exp_f]
-        # Extract continuation value
-        continuation_values[0] = periods_emax[future_idx]
-
-        # Choice: Part-time
-        future_idx = indexer[period + 1, educ_years_idx, 1, exp_p + 1, exp_f]
-        continuation_values[1] = periods_emax[future_idx]
-
-        # Choice: Full-time
-        future_idx = indexer[period + 1, educ_years_idx, 2, exp_p, exp_f + 1]
-        continuation_values[2] = periods_emax[future_idx]
-
-    else:
-        continuation_values = np.full(NUM_CHOICES, 0.0)
-
-    # Return function output
-    return continuation_values
