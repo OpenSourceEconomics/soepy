@@ -22,7 +22,7 @@ def random_init(constr=None):
         educ_max = 12
 
     if "EDUC_MIN" in constr.keys():
-        educ_max = constr["EDUC_MIN"]
+        educ_min = constr["EDUC_MIN"]
     else:
         educ_min = 10
 
