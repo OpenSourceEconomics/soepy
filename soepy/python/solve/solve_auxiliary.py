@@ -327,6 +327,7 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
     return emaxs
 
 
+@numba.jit(nopython=True)
 def construct_emax(model_params, flow_utilities_period, emaxs_period):
     """Simulate expected maximum utility for a given distribution of the unobservable.
 
@@ -369,7 +370,7 @@ def construct_emax(model_params, flow_utilities_period, emaxs_period):
     emax_period = np.zeros(num_states_period)
 
     for i in range(model_params.num_draws_emax):
-        current_max_value_function = np.repeat(INVALID_FLOAT, num_states_period)
+        current_max_value_function = np.full((num_states_period, ), INVALID_FLOAT)
 
         for j in range(NUM_CHOICES):
             value_function_choice = (
