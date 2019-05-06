@@ -1,7 +1,5 @@
 import numpy as np
 
-import numba
-
 from soepy.python.shared.shared_constants import NUM_CHOICES
 
 
@@ -25,7 +23,6 @@ def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
     return draws
 
 
-@numba.jit(nopython=False)
 def calculate_utilities(model_params, states, covariates, draws):
     """Calculate period/flow utilities for all choices given state, period, and shocks.
 
@@ -81,7 +78,6 @@ def calculate_utilities(model_params, states, covariates, draws):
     return flow_utilities, consumption_utilities, period_wages, wage_systematic
 
 
-@numba.jit(nopython=False)
 def calculate_wage_systematic(model_params, states, covariates):
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
@@ -103,7 +99,6 @@ def calculate_wage_systematic(model_params, states, covariates):
     return wage_systematic
 
 
-@numba.jit(nopython=False)
 def calculate_period_wages(model_params, states, wage_systematic, draws):
     """Calculate period wages for each choice including choice
     and period specific productivity shock.
@@ -126,7 +121,6 @@ def calculate_period_wages(model_params, states, wage_systematic, draws):
     return period_wages
 
 
-@numba.jit(nopython=False)
 def calculate_consumption_utilities(model_params, period_wages):
     """Calculate the first part of the period utilities related to consumption."""
 
@@ -152,7 +146,6 @@ def calculate_consumption_utilities(model_params, period_wages):
     return consumption_utilities
 
 
-@numba.jit(nopython=False)
 def calculate_total_utilities(model_params, consumption_utilities):
     """Calculate total period utilities for each of the choices."""
 

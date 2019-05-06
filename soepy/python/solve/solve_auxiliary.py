@@ -267,9 +267,7 @@ def pyth_backward_induction(model_params, states, indexer, flow_utilities):
 
             # Fill first block of elements in emaxs for the current period
             # corresponding to the continuation values
-            emaxs = get_continuation_values(
-                model_params, states_period, indexer, emaxs
-            )
+            emaxs = get_continuation_values(model_params, states_period, indexer, emaxs)
 
         # Extract current period information for current loop calculation
         emaxs_period = emaxs[np.where(states[:, 0] == period)]
