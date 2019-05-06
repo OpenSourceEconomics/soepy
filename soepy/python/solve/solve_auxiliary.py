@@ -284,6 +284,7 @@ def pyth_backward_induction(model_params, states, indexer, flow_utilities):
     return emaxs
 
 
+@numba.njit(nogil=True)
 def get_continuation_values(model_params, states_subset, indexer, emaxs):
     """Obtain continuation values for each of the choices at each state
     of the period currently reached by the parent loop.
