@@ -108,7 +108,7 @@ def calculate_period_wages(model_params, states, wage_systematic, draws):
     # Take the exponential of the disturbances
     exp_draws = np.exp(draws)
 
-    shape = (states.shape[0], draws.shape[1], NUM_CHOICES)
+    shape = (wage_systematic.shape[0], draws.shape[1], NUM_CHOICES)
     period_wages = np.full(shape, np.nan)
 
     # Calculate choice specific wages including productivity shock
