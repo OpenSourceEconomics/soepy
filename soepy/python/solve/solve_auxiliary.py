@@ -66,7 +66,7 @@ def pyth_create_state_space(model_params):
 
     Parameters
     ----------
-    model_params.num_periods : namedtuple
+    model_params: namedtuple
         Namedtuple containing all information relevant for running a simulation.
         Includes parameters, dimensions, information on initial conditions, etc.
 
