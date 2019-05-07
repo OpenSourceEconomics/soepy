@@ -5,15 +5,15 @@ from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
 
 
 def construct_covariates(states):
-    """Construct a matrix of covariates
+    """Construct a matrix of all the covariates
     that depend only on the state space.
 
     Parameters
     ---------
     states : np.ndarray
-        Array with shape (num_states, 6) containing period, experience in OCCUPATION A,
-        experience in OCCUPATION B, years of schooling, the lagged choice and the type
-        of the agent.
+        Array with shape (num_states, 5) containing period, years of education,
+        the lagged choice, years of experience in part-time and in full-time
+         employment of the agent.
 
     Returns
     -------
@@ -66,14 +66,9 @@ def pyth_create_state_space(model_params):
 
     Parameters
     ----------
-    model_params.num_periods : int
-        Number of periods in the state space.
-    model_params.educ_range : int
-        Range of initial condition years of education in the (simulated) sample.
-    NUM_CHOICES : int
-        Number of choices agents have in each period.
-    educ_min : int
-        Minimum number of years of education in the simulated sample.
+    model_params.num_periods : namedtuple
+        Namedtuple containing all information relevant for running a simulation.
+        Includes parameters, dimensions, information on initial conditions, etc.
 
     Returns
     -------
@@ -87,6 +82,7 @@ def pyth_create_state_space(model_params):
 
     Examples
     --------
+    >>> from collections import namedtuple
     >>> model_params = namedtuple("model_params", "num_periods educ_range educ_min")
     >>> model_params = model_params(10, 3, 10)
     >>> NUM_CHOICES = 3
@@ -125,10 +121,10 @@ def pyth_create_state_space(model_params):
             if educ_years > period:
                 continue
 
-            # Loop over all admissible years of experience accumulated in part-time
+            # Loop over all admissible years of experience accumulated in full-time
             for exp_f in range(model_params.num_periods):
 
-                # Loop over all admissible years of experience accumulated in full-time
+                # Loop over all admissible years of experience accumulated in part-time
                 for exp_p in range(model_params.num_periods):
 
                     # The accumulation of experience cannot exceed time elapsed
@@ -181,7 +177,7 @@ def pyth_create_state_space(model_params):
                                 continue
 
                             # If an individual has always been employed,
-                            # she cannot have nonemployment (0) as lagged choice
+                            # she cannot have non-employment (0) as lagged choice
                             if (choice_lagged == 0) and (
                                 exp_f + exp_p == period - educ_years
                             ):
@@ -341,10 +337,8 @@ def construct_emax(delta, flow_utilities_period, emaxs_period, emax_period):
 
     Parameters
     ----------
-    model_params : namedtuple
-        Contains all parameters of the model including information on dimensions
-        (number of periods, agents, random draws, etc.) and coefficients to be
-        estimated.
+    delta : int
+        Dynamic discount factor.
     flow_utilities_period : np.ndarray
         Array with dimensions (number of states in period, num_draws, NUM_CHOICES)
         containing total flow utility of each choice given error term draw
