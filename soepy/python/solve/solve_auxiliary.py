@@ -1,7 +1,7 @@
 import numpy as np
 import numba
 
-from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES
+from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES, INVALID_FLOAT
 
 
 def construct_covariates(states):
@@ -364,7 +364,7 @@ def construct_emax(delta, flow_utilities_period, emaxs_period, emax_period):
     num_draws, num_choices = flow_utilities_period.shape
 
     for i in range(num_draws):
-        current_max_value_function = -99.0
+        current_max_value_function = INVALID_FLOAT
 
         for j in range(num_choices):
             value_function_choice = (
