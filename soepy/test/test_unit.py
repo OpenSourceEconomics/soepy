@@ -22,7 +22,7 @@ def test1():
     """This test ensures that the columns of the output data frame correspond to the
     function output values.
     """
-    for _ in range(100):
+    for _ in range(10):
         constr = {"EDUC_MAX": 10, "AGENTS": 1, "PERIODS": 1}
         random_init(constr)
         model_params = read_init_file("test.soepy.yml")

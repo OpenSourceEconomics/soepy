@@ -3,10 +3,9 @@ import numpy as np
 from soepy.python.shared.shared_constants import NUM_COLUMNS_DATAFRAME
 from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.shared.shared_auxiliary import calculate_utilities
-from soepy.python.shared.shared_auxiliary import calculate_continuation_values
 
 
-def pyth_simulate(model_params, states, indexer, periods_emax, covariates):
+def pyth_simulate(model_params, states, indexer, emaxs, covariates):
     """Simulate agent experiences."""
 
     # Draw random initial conditions
@@ -73,25 +72,17 @@ def pyth_simulate(model_params, states, indexer, periods_emax, covariates):
             ]
 
             # Extract corresponding utilities
-            cuurent_flow_utilities = flow_utilities[current_state_index, i, :]
-            cuurent_cons_utilities = cons_utilities[current_state_index, i, :]
-            cuurent_period_wages = period_wages[current_state_index, i, :]
-            cuurent_wage_sys = wage_sys[current_state_index]
+            current_flow_utilities = flow_utilities[current_state_index, i, :]
+            current_cons_utilities = cons_utilities[current_state_index, i, :]
+            current_period_wages = period_wages[current_state_index, i, :]
+            current_wage_sys = wage_sys[current_state_index]
 
-            # Obtain continuation values for all choices
-            continuation_values = calculate_continuation_values(
-                model_params,
-                indexer,
-                period,
-                periods_emax,
-                educ_years_idx,
-                exp_p,
-                exp_f,
-            )
+            # Extract continuation values for all choices
+            continuation_values = emaxs[current_state_index, 0:3]
 
             # Calculate total values for all choices
             value_functions = (
-                cuurent_flow_utilities + model_params.delta * continuation_values
+                current_flow_utilities + model_params.delta * continuation_values
             )
 
             # Determine choice as option with highest choice specific value function
@@ -99,10 +90,10 @@ def pyth_simulate(model_params, states, indexer, periods_emax, covariates):
 
             # Record period experiences
             dataset[count, 3:4] = max_idx
-            dataset[count, 4:5] = cuurent_wage_sys
-            dataset[count, 5:8] = cuurent_period_wages[:]
-            dataset[count, 8:11] = cuurent_cons_utilities[:]
-            dataset[count, 11:14] = cuurent_flow_utilities[:]
+            dataset[count, 4:5] = current_wage_sys
+            dataset[count, 5:8] = current_period_wages[:]
+            dataset[count, 8:11] = current_cons_utilities[:]
+            dataset[count, 11:14] = current_flow_utilities[:]
 
             # Update state space component experience
             current_state[max_idx + 2] += 1

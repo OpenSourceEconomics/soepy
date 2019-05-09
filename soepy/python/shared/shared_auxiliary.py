@@ -1,5 +1,7 @@
 import numpy as np
 
+import numba
+
 from soepy.python.shared.shared_constants import NUM_CHOICES
 
 
@@ -33,9 +35,9 @@ def calculate_utilities(model_params, states, covariates, draws):
         (number of periods, agents, random draws, etc.) and coefficients to be
         estimated.
     states : np.ndarray
-        Array with shape (num_states, 6) containing period, experience in OCCUPATION A,
-        experience in OCCUPATION B, years of schooling, the lagged choice and the type
-        of the agent.
+        Array with shape (num_states, 5) containing period, years of schooling,
+        the lagged choice, the years of experience in part-time, and the
+        years of experience in full-time employment.
     covariates: np.ndarray
         Array with shape (num_states, number of covariates) containing all additional
         covariates, which depend only on the state space information.
@@ -57,7 +59,7 @@ def calculate_utilities(model_params, states, covariates, draws):
         Array with shape (num_states, num_draws, NUM_CHOICES) containing part
         of the utility related to consumption.
     flow_utilities : np.ndarray
-        Array with shape (num_states, num_draws, NUM_CHOICES) containing total
+        Array with dimensions (num_states, num_draws, NUM_CHOICES) containing total
         flow utility of each choice given error term draw at each state.
 
     """
@@ -106,7 +108,7 @@ def calculate_period_wages(model_params, states, wage_systematic, draws):
     # Take the exponential of the disturbances
     exp_draws = np.exp(draws)
 
-    shape = (states.shape[0], draws.shape[1], NUM_CHOICES)
+    shape = (wage_systematic.shape[0], draws.shape[1], NUM_CHOICES)
     period_wages = np.full(shape, np.nan)
 
     # Calculate choice specific wages including productivity shock
@@ -121,6 +123,7 @@ def calculate_period_wages(model_params, states, wage_systematic, draws):
     return period_wages
 
 
+@numba.jit(nopython=True)
 def calculate_consumption_utilities(model_params, period_wages):
     """Calculate the first part of the period utilities related to consumption."""
 
@@ -129,18 +132,11 @@ def calculate_consumption_utilities(model_params, period_wages):
 
     # Calculate choice specific wages including productivity shock
     consumption_utilities = hours * period_wages
+    consumption_utilities[:, :, 0] = model_params.benefits
 
-    consumption_utilities[:, :, 0] = (
-        model_params.benefits ** model_params.mu
-    ) / model_params.mu
-
-    consumption_utilities[:, :, 1] = (
-        consumption_utilities[:, :, 1] ** model_params.mu
-    ) / model_params.mu
-
-    consumption_utilities[:, :, 2] = (
-        consumption_utilities[:, :, 2] ** model_params.mu
-    ) / model_params.mu
+    consumption_utilities = (
+        np.power(consumption_utilities, model_params.mu) / model_params.mu
+    )
 
     # Return function output
     return consumption_utilities
@@ -159,34 +155,3 @@ def calculate_total_utilities(model_params, consumption_utilities):
 
     # Return function output
     return total_utilities
-
-
-def calculate_continuation_values(
-    model_params, indexer, period, periods_emax, educ_years_idx, exp_p, exp_f
-):
-    """Obtain continuation values for each of the choices."""
-
-    # Initialize container for continuation values
-    continuation_values = np.full(NUM_CHOICES, np.nan)
-
-    if period != (model_params.num_periods - 1):
-
-        # Choice: Non-employment
-        # Create index for extracting the continuation value
-        future_idx = indexer[period + 1, educ_years_idx, 0, exp_p, exp_f]
-        # Extract continuation value
-        continuation_values[0] = periods_emax[future_idx]
-
-        # Choice: Part-time
-        future_idx = indexer[period + 1, educ_years_idx, 1, exp_p + 1, exp_f]
-        continuation_values[1] = periods_emax[future_idx]
-
-        # Choice: Full-time
-        future_idx = indexer[period + 1, educ_years_idx, 2, exp_p, exp_f + 1]
-        continuation_values[2] = periods_emax[future_idx]
-
-    else:
-        continuation_values = np.full(NUM_CHOICES, 0.0)
-
-    # Return function output
-    return continuation_values
