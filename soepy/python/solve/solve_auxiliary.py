@@ -324,6 +324,8 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
 @numba.guvectorize(
     ["f4, f4[:, :], f4[:], f4[:]", "f8, f8[:, :], f8[:], f8[:]"],
     "(), (p, n), (m) -> ()",
+    nopython=True,
+    target="parallel",
 )
 def construct_emax(delta, flow_utilities_period, emaxs_period, emax_period):
     """Simulate expected maximum utility for a given distribution of the unobservables.
@@ -363,6 +365,8 @@ def construct_emax(delta, flow_utilities_period, emaxs_period, emax_period):
     """
     num_draws, num_choices = flow_utilities_period.shape
 
+    emax_period[0] = 0.0
+
     for i in range(num_draws):
         current_max_value_function = INVALID_FLOAT
 
@@ -374,6 +378,6 @@ def construct_emax(delta, flow_utilities_period, emaxs_period, emax_period):
             if value_function_choice > current_max_value_function:
                 current_max_value_function = value_function_choice
 
-        emax_period += current_max_value_function
+        emax_period[0] += current_max_value_function
 
-    emax_period /= num_draws
+    emax_period[0] /= num_draws
