@@ -123,7 +123,7 @@ def calculate_period_wages(model_params, states, wage_systematic, draws):
     return period_wages
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, parallel=True)
 def calculate_consumption_utilities(model_params, period_wages):
     """Calculate the first part of the period utilities related to consumption."""
 
@@ -134,9 +134,7 @@ def calculate_consumption_utilities(model_params, period_wages):
     consumption_utilities = hours * period_wages
     consumption_utilities[:, :, 0] = model_params.benefits
 
-    consumption_utilities = (
-        np.power(consumption_utilities, model_params.mu) / model_params.mu
-    )
+    consumption_utilities = (consumption_utilities ** model_params.mu) / model_params.mu
 
     # Return function output
     return consumption_utilities
