@@ -94,7 +94,7 @@ def calculate_wage_systematic(model_params, states, covariates):
 
     # Calculate wage in the given state
     period_exp_total = period_exp_sum * depreciation + 1
-    returns_to_exp = gamma_1s * period_exp_total
+    returns_to_exp = np.exp(gamma_1s * np.log(period_exp_total))
     wage_systematic = np.exp(gamma_0s) * returns_to_exp
 
     # Return function output
