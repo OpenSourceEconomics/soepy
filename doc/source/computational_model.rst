@@ -11,7 +11,7 @@ This section lays out the computational model corresponding to the current versi
 
 Structural equations
 ---------------------
-"
+
 In the toy model, the individual's utility is given by:
 
 .. math::
