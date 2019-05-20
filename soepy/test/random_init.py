@@ -67,7 +67,7 @@ def random_init(constr=None):
 
     init_dict["CONSTANTS"]["delta"] = np.random.uniform(0.8, 0.99)
     init_dict["CONSTANTS"]["mu"] = np.random.uniform(-0.7, -0.4)
-    init_dict["CONSTANTS"]["benefits"] = np.random.uniform(1600.0, 2200.0)
+    init_dict["CONSTANTS"]["benefits"] = np.random.uniform(4.0, 7.0)
 
     init_dict["INITIAL_CONDITIONS"]["educ_max"] = educ_max
     init_dict["INITIAL_CONDITIONS"]["educ_min"] = educ_min
@@ -80,11 +80,11 @@ def random_init(constr=None):
 
     init_dict["PARAMETERS"]["gamma_0s1"], init_dict["PARAMETERS"][
         "gamma_0s2"
-    ], init_dict["PARAMETERS"]["gamma_0s3"] = np.random.uniform(6.0, 1.0, 3).tolist()
+    ], init_dict["PARAMETERS"]["gamma_0s3"] = np.random.uniform(0.5, 4.0, 3).tolist()
 
     init_dict["PARAMETERS"]["gamma_1s1"], init_dict["PARAMETERS"][
         "gamma_1s2"
-    ], init_dict["PARAMETERS"]["gamma_1s3"] = np.random.uniform(0.2, 0.3, 3).tolist()
+    ], init_dict["PARAMETERS"]["gamma_1s3"] = np.random.uniform(0.08, 0.3, 3).tolist()
 
     init_dict["PARAMETERS"]["g_s1"], init_dict["PARAMETERS"]["g_s2"], init_dict[
         "PARAMETERS"
@@ -96,11 +96,11 @@ def random_init(constr=None):
 
     init_dict["PARAMETERS"]["theta_p"], init_dict["PARAMETERS"][
         "theta_f"
-    ] = np.random.uniform(-0.5, -0.1, 2).tolist()
+    ] = np.random.uniform(0.5, 5, 2).tolist()
 
     init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
         "PARAMETERS"
-    ]["sigma_3"] = np.random.uniform(1.0, 2.0, 3).tolist()
+    ]["sigma_3"] = np.random.uniform(0.002, 2.0, 3).tolist()
 
     print_dict(init_dict)
 
