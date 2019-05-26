@@ -1,6 +1,8 @@
+import subprocess
 from collections import namedtuple
 
 import numpy as np
+
 
 from soepy.python.shared.shared_auxiliary import calculate_consumption_utilities
 from soepy.python.shared.shared_auxiliary import calculate_total_utilities
@@ -16,6 +18,7 @@ from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
 from soepy.test.random_init import init_dict_flat_to_init_dict
 from soepy.test.auxiliary import cleanup
+from soepy.soepy_config import PACKAGE_DIR
 
 
 def test1():
@@ -210,6 +213,20 @@ def test5():
     ]
 
     np.testing.assert_array_equal(states_true, states[0:48, :])
+
+
+def test6():
+    """This test ensures that the examples that are parts of the docstrings work
+    as intended.
+    """
+    np.testing.assert_equal(
+        subprocess.call(
+            ["python", "-m", "doctest", "solve_auxiliary.py"],
+            shell=True,
+            cwd=PACKAGE_DIR / "python" / "solve",
+        ),
+        0,
+    )
 
 
 cleanup()
