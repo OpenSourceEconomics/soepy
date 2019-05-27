@@ -15,7 +15,7 @@ before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 script:
-    - py.test --cov=soepy
+    - py.test
     - ./development/tests/run_pr_testing.py
     - ./run_sphinx_build.sh
     - python -c "import soepy; soepy.test()"

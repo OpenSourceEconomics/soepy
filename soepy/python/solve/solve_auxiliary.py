@@ -24,10 +24,10 @@ def construct_covariates(states):
     Examples
     --------
     >>> states = np.array([
-    >>> [0, 10, 0, 0, 0],
-    >>> [1, 11, 0, 0, 0],
-    >>> [2, 12, 0, 0, 0],
-    >>> ])
+    ... [0, 10, 0, 0, 0],
+    ... [1, 11, 0, 0, 0],
+    ... [2, 12, 0, 0, 0]
+    ... ])
 
     >>> covariates = construct_covariates(states)
     >>> covariates
