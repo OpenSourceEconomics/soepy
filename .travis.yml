@@ -3,23 +3,30 @@ language: python
 python:
   - "3.6"
 
+# The tests run only if it is an PR or if a tag is pushed. This should prevent duplicate
+# builds with pr and push. We cannot disable push as it also disables deployment via
+# tags.
+if: type != push OR tag IS present OR branch = master
+
 install:
   - sudo apt-get update
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - PATH="$HOME/miniconda/bin:$PATH"
   - conda env create -f environment.yml
+  - conda init
   - source activate soepy
+  - pre-commit install -f --install-hooks
 
 before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 script:
-    - py.test
     - ./development/tests/run_pr_testing.py
     - ./run_sphinx_build.sh
     - python -c "import soepy; soepy.test()"
     - conda install --yes -c opensourceeconomics soepy
+    - pre-commit run -a
 
 after_success:
     - codecov

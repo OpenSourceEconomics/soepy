@@ -32,25 +32,14 @@ def simulate(init_file_name):
         "Consumption Utility F",
     ]
     DATA_LABLES_SIM += ["Flow Utility N", "Flow Utility P", "Flow Utility F"]
+    DATA_LABLES_SIM += ["Value Functions N", "Value Functions P", "Value Functions F"]
 
     # Define data types for data set columns
     DATA_FORMATS_SIM = dict()
     for key_ in DATA_LABLES_SIM:
-        DATA_FORMATS_SIM[key_] = np.int
-        if key_ in [
-            "Choice",
-            "Systematic Wage",
-            "Period Wage N",
-            "Period Wage P",
-            "Period Wage F",
-            "Consumption Utility N",
-            "Consumption Utility P",
-            "Consumption Utility F",
-            "Flow Utility N",
-            "Flow Utility P",
-            "Flow Utility F",
-        ]:
-            DATA_FORMATS_SIM[key_] = np.float
+        DATA_FORMATS_SIM[key_] = np.float
+        if key_ in ["Identifier", "Period", "Years of Education"]:
+            DATA_FORMATS_SIM[key_] = np.int
 
     # Create data frame from simulated data set
     data_frame = pd.DataFrame(data=dataset, columns=DATA_LABLES_SIM)

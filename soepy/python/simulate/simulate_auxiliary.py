@@ -94,6 +94,7 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
             dataset[count, 5:8] = current_period_wages[:]
             dataset[count, 8:11] = current_cons_utilities[:]
             dataset[count, 11:14] = current_flow_utilities[:]
+            dataset[count, 14:17] = value_functions
 
             # Update state space component experience
             current_state[max_idx + 2] += 1
