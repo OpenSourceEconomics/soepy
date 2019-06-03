@@ -64,7 +64,7 @@ def check_vault():
 
     for test in tests:
 
-        expected_df, init_dict = test
+        init_dict, expected_df = test
 
         calculated_df = simulate(init_dict)
 
