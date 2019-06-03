@@ -5,7 +5,7 @@ from soepy.python.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 
 
-@pytest.mark.parametrize('idx', range(10))
+@pytest.mark.parametrize("idx", range(10))
 def test1(idx):
     """This test runs a random selection of five regression tests from
     our regression test battery.

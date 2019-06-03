@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """This module contains the process that generates our regression test battery."""
-import os
 import argparse
 import pickle
 import numpy as np
@@ -8,7 +7,6 @@ import numpy as np
 from soepy.python.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.test.random_init import random_init
-from soepy.test.random_init import print_dict
 from soepy.test.auxiliary import cleanup
 
 

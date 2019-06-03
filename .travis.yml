@@ -9,7 +9,7 @@ install:
   - bash miniconda.sh -b -p $HOME/miniconda
   - PATH="$HOME/miniconda/bin:$PATH"
   - conda env create -f environment.yml
-  - source activate soepy
+  - conda activate soepy
 
 before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
@@ -20,6 +20,7 @@ script:
     - ./run_sphinx_build.sh
     - python -c "import soepy; soepy.test()"
     - conda install --yes -c opensourceeconomics soepy
+    - pre-commit run -a
 
 after_success:
     - codecov

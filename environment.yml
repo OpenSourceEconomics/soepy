@@ -10,4 +10,4 @@ dependencies:
 - pandoc
 - pyyaml
 - pip
-- pip: [nbsphinx, sphinx_rtd_theme, codecov]
+- pip: [nbsphinx, sphinx_rtd_theme, codecov, pre-commit]
