@@ -11,6 +11,7 @@ dependencies:
 - pytest-cov
 - pandoc
 - pyyaml
+- sphinx
 - sphinx_rtd_theme
 - codecov
 - pip
