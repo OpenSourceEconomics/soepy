@@ -1,8 +1,8 @@
 import numpy as np
 
-from soepy.python.shared.shared_constants import NUM_COLUMNS_DATAFRAME
+from soepy.python.shared.shared_constants import NUM_COLUMNS_DATAFRAME, HOURS
 from soepy.python.shared.shared_auxiliary import draw_disturbances
-from soepy.python.shared.shared_auxiliary import calculate_utilities
+from soepy.python.shared.shared_auxiliary import calculate_utility_components
 
 
 def pyth_simulate(model_params, states, indexer, emaxs, covariates):
@@ -17,20 +17,16 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
     draws_sim = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
 
     # Calculate utilities
-    flow_utilities, cons_utilities, period_wages, wage_sys = calculate_utilities(
-        model_params, states, covariates, draws_sim
+    log_wage_systematic, nonconsumption_utilities = calculate_utility_components(
+        model_params, states, covariates
     )
 
     # Start count over all simulations/rows (number of agents times number of periods)
     count = 0
 
-    # Initialize container for the final output
-    num_columns = (
-        NUM_COLUMNS_DATAFRAME
-    )  # count of the information units we wish to record
-
     dataset = np.full(
-        (model_params.num_agents_sim * model_params.num_periods, num_columns), np.nan
+        (model_params.num_agents_sim * model_params.num_periods, NUM_COLUMNS_DATAFRAME),
+        np.nan,
     )
 
     # Loop over all agents
@@ -51,8 +47,7 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
         for period in range(model_params.num_periods):
 
             # Record agent identifier, period number, and years of education
-            dataset[count, :2] = i, period
-            dataset[count, 2:3] = educ_years_i
+            dataset[count, :3] = i, period, educ_years_i
 
             # Make sure that experiences are recorded only after
             # the individual has completed education and entered the model
@@ -72,37 +67,42 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
             ]
 
             # Extract corresponding utilities
-            current_flow_utilities = flow_utilities[current_state_index, i, :]
-            current_cons_utilities = cons_utilities[current_state_index, i, :]
-            current_period_wages = period_wages[current_state_index, i, :]
-            current_wage_sys = wage_sys[current_state_index]
+            current_log_wage_systematic = log_wage_systematic[current_state_index]
+
+            current_wages = np.exp(
+                current_log_wage_systematic + draws_sim[period, i]
+            )
+            current_wages[0] = model_params.benefits
 
             # Extract continuation values for all choices
-            continuation_values = emaxs[current_state_index, 0:3]
+            continuation_values = emaxs[current_state_index, :3]
 
             # Calculate total values for all choices
-            value_functions = (
-                current_flow_utilities + model_params.delta * continuation_values
+            flow_utilities = (
+                (HOURS * current_wages) ** model_params.mu
+                / model_params.mu
+                * nonconsumption_utilities
             )
 
+            value_functions = flow_utilities + model_params.delta * continuation_values
+
             # Determine choice as option with highest choice specific value function
-            max_idx = np.argmax(value_functions)
+            choice = np.argmax(value_functions)
 
             # Record period experiences
-            dataset[count, 3:4] = max_idx
-            dataset[count, 4:5] = current_wage_sys
-            dataset[count, 5:8] = current_period_wages[:]
-            dataset[count, 8:11] = current_cons_utilities[:]
-            dataset[count, 11:14] = current_flow_utilities[:]
+            dataset[count, 3] = choice
+            dataset[count, 4] = current_log_wage_systematic
+            dataset[count, 5:8] = current_wages
+            dataset[count, 8:11] = nonconsumption_utilities
+            dataset[count, 11:14] = continuation_values
 
             # Update state space component experience
-            current_state[max_idx + 2] += 1
+            current_state[choice + 2] += 1
 
             # Update state space component choice_lagged
-            current_state[2] = max_idx
+            current_state[2] = choice
 
             # Update simulation/row count
             count += 1
 
-    # Return function output
     return dataset

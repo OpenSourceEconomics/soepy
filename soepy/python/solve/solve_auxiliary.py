@@ -1,7 +1,13 @@
 import numpy as np
 import numba
+import pandas as pd
 
-from soepy.python.shared.shared_constants import MISSING_INT, NUM_CHOICES, INVALID_FLOAT
+from soepy.python.shared.shared_constants import (
+    MISSING_INT,
+    NUM_CHOICES,
+    INVALID_FLOAT,
+    HOURS,
+)
 
 
 def construct_covariates(states):
@@ -21,28 +27,9 @@ def construct_covariates(states):
         Array with shape (num_states, number of covariates) containing all additional
         covariates, which depend only on the state space information.
 
-    Examples
-    --------
-    >>> states = np.array([
-    ... [0, 10, 0, 0, 0],
-    ... [1, 11, 0, 0, 0],
-    ... [2, 12, 0, 0, 0]
-    ... ])
-
-    >>> covariates = construct_covariates(states)
-    >>> covariates
-    array([[1., 0., 0.],
-           [0., 1., 0.],
-           [0., 0., 1.]])
     """
-
-    shape = (states.shape[0], 3)
-
-    covariates = np.full(shape, 0.0)
-
-    covariates[:, 0] = np.where(states[:, 1] == 10, 1, 0)
-    covariates[:, 1] = np.where(states[:, 1] == 11, 1, 0)
-    covariates[:, 2] = np.where(states[:, 1] == 12, 1, 0)
+    educ_level = pd.Series(states[:, 1])
+    covariates = pd.cut(educ_level, bins=[0, 10, 11, 12], labels=[0, 1, 2]).to_numpy()
 
     return covariates
 
@@ -215,7 +202,9 @@ def pyth_create_state_space(model_params):
     return states, indexer
 
 
-def pyth_backward_induction(model_params, states, indexer, flow_utilities):
+def pyth_backward_induction(
+    model_params, states, indexer, log_wage_systematic, nonconsumption_utilities, draws
+):
     """Get expected maximum value function at every state space point.
 
     Parameters
@@ -253,7 +242,7 @@ def pyth_backward_induction(model_params, states, indexer, flow_utilities):
 
         # Extract period information
         states_period = states[np.where(states[:, 0] == period)]  # as slice
-        flow_utilities_period = flow_utilities[np.where(states[:, 0] == period)]
+        log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
@@ -270,7 +259,14 @@ def pyth_backward_induction(model_params, states, indexer, flow_utilities):
 
         # Calculate emax for current period reached by the loop
         emax_period = construct_emax(
-            model_params.delta, flow_utilities_period, emaxs_period
+            model_params.delta,
+            log_wage_systematic_period,
+            nonconsumption_utilities,
+            draws[period],
+            emaxs_period[:, :3],
+            HOURS,
+            model_params.mu,
+            model_params.benefits,
         )
         emaxs_period[:, 3] = emax_period
         emaxs[np.where(states[:, 0] == period)] = emaxs_period
@@ -322,20 +318,30 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
 
 
 @numba.guvectorize(
-    ["f4, f4[:, :], f4[:], f4[:]", "f8, f8[:, :], f8[:], f8[:]"],
-    "(), (p, n), (m) -> ()",
+    ["f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:]"],
+    "(), (), (n_choices), (n_draws, n_choices), (n_choices), (n_choices), (), () -> ()",
     nopython=True,
     target="parallel",
 )
-def construct_emax(delta, flow_utilities_period, emaxs_period, emax_period):
+def construct_emax(
+    delta,
+    log_wage_systematic,
+    nonconsumption_utilities,
+    draws,
+    emaxs,
+    hours,
+    mu,
+    benefits,
+    emax,
+):
     """Simulate expected maximum utility for a given distribution of the unobservables.
 
-    The function calculates the maximum expected value function over the distribution
-    of the error term at each state space point in the period currently reached by the
-    parent loop. The expectation calculation is performed via `Monte Carlo integration`_.
-    The goal is to approximate an integral by evaluating the integrand at randomly chosen
-    points. In this setting, one wants to approximate the expected maximum utility of
-    the current state.
+    The function calculates the maximum expected value function over the distribution of
+    the error term at each state space point in the period currently reached by the
+    parent loop. The expectation calculation is performed via `Monte Carlo
+    integration`_. The goal is to approximate an integral by evaluating the integrand at
+    randomly chosen points. In this setting, one wants to approximate the expected
+    maximum utility of the current state.
 
     Parameters
     ----------
@@ -345,7 +351,7 @@ def construct_emax(delta, flow_utilities_period, emaxs_period, emax_period):
         Array with dimensions (number of states in period, num_draws, NUM_CHOICES)
         containing total flow utility of each choice given error term draw
         at each state.
-    emaxs_period : np.ndarray
+    emaxs : np.ndarray
         An array of dimension (num. states in period, num choices + 1).
         The object's rows contain the continuation values of each choice at the specific
         state space points as its first elements. The last row element corresponds
@@ -354,7 +360,7 @@ def construct_emax(delta, flow_utilities_period, emaxs_period, emax_period):
 
     Returns
     -------
-    emax_period : np.array
+    emax : np.array
         Expected maximum value function of the current state space point.
         Array of lentgh number of states in the current period. The vector
         corresponds to the second block of values in the data:`emaxs` object.
@@ -363,21 +369,25 @@ def construct_emax(delta, flow_utilities_period, emaxs_period, emax_period):
         https://en.wikipedia.org/wiki/Monte_Carlo_integration
 
     """
-    num_draws, num_choices = flow_utilities_period.shape
+    num_draws, num_choices = draws.shape
 
-    emax_period[0] = 0.0
+    emax[0] = 0.0
 
     for i in range(num_draws):
-        current_max_value_function = INVALID_FLOAT
+
+        current_max_total_utility = INVALID_FLOAT
 
         for j in range(num_choices):
-            value_function_choice = (
-                flow_utilities_period[i, j] + delta * emaxs_period[j]
-            )
+            if j == 0:
+                wage = benefits
+            else:
+                wage = np.exp(log_wage_systematic + draws[i, j])
+            consumption_utility = (hours[j] * wage) ** mu / mu
+            total_utility = consumption_utility * nonconsumption_utilities[j]
 
-            if value_function_choice > current_max_value_function:
-                current_max_value_function = value_function_choice
+            if total_utility > current_max_total_utility:
+                current_max_total_utility = total_utility
 
-        emax_period[0] += current_max_value_function
+        emax[0] += current_max_total_utility
 
-    emax_period[0] /= num_draws
+    emax[0] /= num_draws
