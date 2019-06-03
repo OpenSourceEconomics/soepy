@@ -16,12 +16,12 @@ install:
   - conda env create -f environment.yml
   - conda init
   - source activate soepy
+  - pre-commit install -f --install-hooks
 
 before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 script:
-    - py.test
     - ./development/tests/run_pr_testing.py
     - ./run_sphinx_build.sh
     - python -c "import soepy; soepy.test()"
