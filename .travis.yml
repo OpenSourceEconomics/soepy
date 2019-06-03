@@ -15,7 +15,7 @@ install:
   - PATH="$HOME/miniconda/bin:$PATH"
   - conda env create -f environment.yml
   - conda init
-  - conda activate soepy
+  - source activate soepy
 
 before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
