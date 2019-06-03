@@ -68,7 +68,7 @@ def check_vault():
 
         calculated_df = simulate(init_dict)
 
-        for col in expected_df.filter(columns="Value Functions").columns.tolist():
+        for col in expected_df.filter(like="Value Functions").columns.tolist():
             expected_df[col].equals(calculated_df[col])
 
     cleanup("regression")
