@@ -66,7 +66,7 @@ def check_vault():
 
         expected_df, init_dict = test
 
-        calculated_df = simulate("test.soepy.yml")
+        calculated_df = simulate(init_dict)
 
         for col in expected_df.filter(columns="Value Functions").columns.tolist():
             expected_df[col].equals(calculated_df[col])
