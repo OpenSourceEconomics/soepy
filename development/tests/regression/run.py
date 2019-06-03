@@ -54,7 +54,7 @@ def create_vault(num_test=100, seed=123456):
         pickle.dump(tests, file)
 
 
-def check_vault():
+def check_vault(num_test):
     """This function runs another simulation for each init file in our regression vault.
     """
     vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
@@ -62,7 +62,7 @@ def check_vault():
     with open(vault, "rb") as file:
         tests = pickle.load(file)
 
-    for test in tests:
+    for test in tests[:num_test]:
 
         init_dict, expected_df = test
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     request, num_test, seed = process_arguments(parser)
 
     if request == "check":
-        check_vault()
+        check_vault(num_test)
 
     elif request == "create":
 
