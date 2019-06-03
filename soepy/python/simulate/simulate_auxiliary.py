@@ -95,6 +95,7 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
             dataset[count, 5:8] = current_wages
             dataset[count, 8:11] = nonconsumption_utilities
             dataset[count, 11:14] = continuation_values
+            dataset[count, 14:17] = value_functions
 
             # Update state space component experience
             current_state[choice + 2] += 1

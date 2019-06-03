@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 """This module contains the process that generates our regression test battery."""
-import os
-import json
 import argparse
-
+import pickle
 import numpy as np
 
 from soepy.python.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.test.random_init import random_init
-from soepy.test.random_init import print_dict
 from soepy.test.auxiliary import cleanup
 
 
@@ -37,7 +34,8 @@ def create_vault(num_test=100, seed=123456):
     """This function creates our regression vault."""
     np.random.seed(seed)
     seeds = np.random.randint(0, 1000, size=num_test)
-    file_dir = os.path.join(TEST_RESOURCES_DIR, "regression_vault.soepy.json")
+    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
+
     tests = []
 
     for counter, seed in enumerate(seeds):
@@ -48,31 +46,30 @@ def create_vault(num_test=100, seed=123456):
 
         df = simulate("test.soepy.yml")
 
-        stat = np.sum(df.sum())
+        tests += [(init_dict, df)]
 
-        tests += [(stat, init_dict)]
     cleanup("regression")
 
-    json.dump(tests, open(file_dir, "w"))
+    with open(vault, "wb") as file:
+        pickle.dump(tests, file)
 
 
-def check_vault():
+def check_vault(num_test):
     """This function runs another simulation for each init file in our regression vault.
     """
-    file_dir = os.path.join(TEST_RESOURCES_DIR, "regression_vault.soepy.json")
+    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
 
-    tests = json.load(open(file_dir, "r"))
-    for test in tests:
+    with open(vault, "rb") as file:
+        tests = pickle.load(file)
 
-        stat, init_dict = test
+    for test in tests[:num_test]:
 
-        print_dict(init_dict)
+        init_dict, expected_df = test
 
-        df = simulate("test.soepy.yml")
+        calculated_df = simulate(init_dict)
 
-        stat_new = np.sum(df.sum())
-
-        np.testing.assert_array_almost_equal(stat, stat_new)
+        for col in expected_df.filter(like="Value Functions").columns.tolist():
+            expected_df[col].equals(calculated_df[col])
 
     cleanup("regression")
 
@@ -103,7 +100,7 @@ if __name__ == "__main__":
     request, num_test, seed = process_arguments(parser)
 
     if request == "check":
-        check_vault()
+        check_vault(num_test)
 
     elif request == "create":
 

@@ -1,34 +1,26 @@
-import json
+import pickle
 
-import numpy as np
-
+import pytest
 from soepy.python.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
-from soepy.test.auxiliary import cleanup
-from soepy.test.random_init import print_dict
 
 
-def test1():
+@pytest.mark.parametrize("idx", range(10))
+def test1(idx):
     """This test runs a random selection of five regression tests from
     our regression test battery.
     """
 
-    fname = TEST_RESOURCES_DIR / "regression_vault.soepy.json"
-    tests = json.load(open(fname))
-    random_choice = np.random.choice(range(len(tests)), 5)
-    tests = [tests[i] for i in random_choice]
+    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
 
-    for test in tests:
+    with open(vault, "rb") as file:
+        tests = pickle.load(file)
 
-        stat, init_dict = test
+    test = tests[idx]
 
-        print_dict(init_dict)
+    init_dict, expected_df = test
 
-        df = simulate("test.soepy.yml")
+    calculated_df = simulate(init_dict)
 
-        stat_new = np.sum(df.sum())
-
-        np.testing.assert_array_equal(stat_new, stat)
-
-
-cleanup()
+    for col in expected_df.filter(like="Value Functions").columns.tolist():
+        expected_df[col].equals(calculated_df)
