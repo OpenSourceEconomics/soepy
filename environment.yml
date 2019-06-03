@@ -11,9 +11,10 @@ dependencies:
 - pytest-cov
 - pandoc
 - pyyaml
-- sphinx
+- nbsphinx
 - sphinx_rtd_theme
 - codecov
+- ipython
 - pip
 - pip:
   - pre-commit
