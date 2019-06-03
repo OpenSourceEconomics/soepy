@@ -3,3 +3,5 @@ __pycache__/
 doc/build/
 .ipynb_checkpoints
 .pytest_cache/
+.coverage
+*.egg-info/

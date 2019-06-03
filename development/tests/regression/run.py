@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 """This module contains the process that generates our regression test battery."""
 import os
-import json
 import argparse
-
+import pickle
 import numpy as np
 
 from soepy.python.simulate.simulate_python import simulate
@@ -37,7 +36,8 @@ def create_vault(num_test=100, seed=123456):
     """This function creates our regression vault."""
     np.random.seed(seed)
     seeds = np.random.randint(0, 1000, size=num_test)
-    file_dir = os.path.join(TEST_RESOURCES_DIR, "regression_vault.soepy.json")
+    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
+
     tests = []
 
     for counter, seed in enumerate(seeds):
@@ -48,31 +48,30 @@ def create_vault(num_test=100, seed=123456):
 
         df = simulate("test.soepy.yml")
 
-        stat = np.sum(df.sum())
+        tests += [(init_dict, df)]
 
-        tests += [(stat, init_dict)]
     cleanup("regression")
 
-    json.dump(tests, open(file_dir, "w"))
+    with open(vault, "wb") as file:
+        pickle.dump(tests, file)
 
 
 def check_vault():
     """This function runs another simulation for each init file in our regression vault.
     """
-    file_dir = os.path.join(TEST_RESOURCES_DIR, "regression_vault.soepy.json")
+    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
 
-    tests = json.load(open(file_dir, "r"))
+    with open(vault, "rb") as file:
+        tests = pickle.load(file)
+
     for test in tests:
 
-        stat, init_dict = test
+        expected_df, init_dict = test
 
-        print_dict(init_dict)
+        calculated_df = simulate("test.soepy.yml")
 
-        df = simulate("test.soepy.yml")
-
-        stat_new = np.sum(df.sum())
-
-        np.testing.assert_array_almost_equal(stat, stat_new)
+        for col in expected_df.filter(columns="Value Functions").columns.tolist():
+            expected_df[col].equals(calculated_df[col])
 
     cleanup("regression")
 
