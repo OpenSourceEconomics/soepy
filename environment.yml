@@ -1,5 +1,7 @@
 name: soepy
-
+channels:
+  - defaults
+  - conda-forge
 dependencies:
 - numpy
 - numba
@@ -9,5 +11,9 @@ dependencies:
 - pytest-cov
 - pandoc
 - pyyaml
+- sphinx_rtd_theme
+- codecov
 - pip
-- pip: [nbsphinx, sphinx_rtd_theme, codecov, pre-commit]
+- pip:
+  - pre-commit
+
