@@ -20,19 +20,25 @@ def simulate(init_file_name):
 
     # Create fixed objects needed to record simulated data set to Pandas DataFrame
     # Define column labels
-    DATA_LABLES_SIM = []
-    DATA_LABLES_SIM += ["Identifier", "Period"]
-    DATA_LABLES_SIM += ["Years of Education"]
-    DATA_LABLES_SIM += ["Choice"]
-    DATA_LABLES_SIM += ["Systematic Wage"]
-    DATA_LABLES_SIM += ["Period Wage N", "Period Wage P", "Period Wage F"]
-    DATA_LABLES_SIM += [
-        "Consumption Utility N",
-        "Consumption Utility P",
-        "Consumption Utility F",
+    DATA_LABLES_SIM = [
+        "Identifier",
+        "Period",
+        "Years of Education",
+        "Choice",
+        "Log Systematic Wage",
+        "Period Wage N",
+        "Period Wage P",
+        "Period Wage F",
+        "Non-Consumption Utility N",
+        "Non-Consumption Utility P",
+        "Non-Consumption Utility F",
+        "Continuation Value N",
+        "Continuation Value P",
+        "Continuation Value F",
+        "Value Functions N",
+        "Value Functions P",
+        "Value Functions F",
     ]
-    DATA_LABLES_SIM += ["Flow Utility N", "Flow Utility P", "Flow Utility F"]
-    DATA_LABLES_SIM += ["Value Functions N", "Value Functions P", "Value Functions F"]
 
     # Define data types for data set columns
     DATA_FORMATS_SIM = dict()

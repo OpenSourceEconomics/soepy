@@ -2,14 +2,8 @@ from collections import namedtuple
 
 import numpy as np
 
-from soepy.python.shared.shared_auxiliary import calculate_consumption_utilities
-from soepy.python.shared.shared_auxiliary import calculate_total_utilities
-from soepy.python.shared.shared_auxiliary import calculate_wage_systematic
-from soepy.python.shared.shared_auxiliary import calculate_period_wages
 from soepy.python.solve.solve_auxiliary import pyth_create_state_space
-from soepy.python.solve.solve_auxiliary import construct_covariates
 from soepy.python.pre_processing.model_processing import read_init_file
-from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
@@ -18,69 +12,7 @@ from soepy.test.random_init import init_dict_flat_to_init_dict
 from soepy.test.auxiliary import cleanup
 
 
-def test1():
-    """This test ensures that the columns of the output data frame correspond to the
-    function output values.
-    """
-    for _ in range(10):
-        constr = {"EDUC_MAX": 10, "AGENTS": 1, "PERIODS": 1}
-        random_init(constr)
-        model_params = read_init_file("test.soepy.yml")
-        df = simulate("test.soepy.yml")
-
-        states, _ = pyth_create_state_space(model_params)
-        covariates = construct_covariates(states)
-
-        # Test systematic wages
-        wage_systematic = calculate_wage_systematic(model_params, states, covariates)
-
-        np.testing.assert_array_equal(wage_systematic[0], df["Systematic Wage"])
-
-        # Test period wages
-        draw_sim = draw_disturbances(
-            model_params.seed_sim, model_params.shocks_cov, 1, 1
-        )
-        period_wages = calculate_period_wages(
-            model_params, states, wage_systematic, draw_sim
-        )
-
-        np.testing.assert_array_equal(
-            period_wages[0, 0, :],
-            np.squeeze(
-                df[["Period Wage N", "Period Wage P", "Period Wage F"]].values.T
-            ),
-        )
-
-        # Test consumption utilities
-        consumption_utilities = calculate_consumption_utilities(
-            model_params, period_wages
-        )
-
-        np.testing.assert_array_equal(
-            consumption_utilities[0, 0, :],
-            np.squeeze(
-                df[
-                    [
-                        "Consumption Utility N",
-                        "Consumption Utility P",
-                        "Consumption Utility F",
-                    ]
-                ].values.T
-            ),
-        )
-
-        # Test total utilities
-        flow_utilities = calculate_total_utilities(model_params, consumption_utilities)
-
-        np.testing.assert_array_equal(
-            flow_utilities[0, 0, :],
-            np.squeeze(
-                df[["Flow Utility N", "Flow Utility P", "Flow Utility F"]].values
-            ),
-        )
-
-
-def test2():
+def test():
     """This test ensures that the data frame contain only nan values if individuals are
      still a in education.
     """
