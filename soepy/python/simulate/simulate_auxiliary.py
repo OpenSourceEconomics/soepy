@@ -69,19 +69,24 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
             # Extract corresponding utilities
             current_log_wage_systematic = log_wage_systematic[current_state_index]
 
-            current_wages = np.exp(
-                current_log_wage_systematic + draws_sim[period, i]
-            )
+            current_wages = np.exp(current_log_wage_systematic + draws_sim[period, i])
             current_wages[0] = model_params.benefits
 
             # Extract continuation values for all choices
             continuation_values = emaxs[current_state_index, :3]
 
             # Calculate total values for all choices
-            flow_utilities = (
-                (HOURS * current_wages) ** model_params.mu
+            flow_utilities = np.full(3, np.nan)
+
+            flow_utilities[0] = (
+                model_params.benefits ** model_params.mu
                 / model_params.mu
-                * nonconsumption_utilities
+                * nonconsumption_utilities[0]
+            )
+            flow_utilities[1:] = (
+                (HOURS[1:] * current_wages[1:]) ** model_params.mu
+                / model_params.mu
+                * nonconsumption_utilities[1:]
             )
 
             value_functions = flow_utilities + model_params.delta * continuation_values

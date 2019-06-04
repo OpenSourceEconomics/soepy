@@ -378,11 +378,14 @@ def construct_emax(
         current_max_total_utility = INVALID_FLOAT
 
         for j in range(num_choices):
+
+            wage = np.exp(log_wage_systematic + draws[i, j])
+
             if j == 0:
-                wage = benefits
+                consumption_utility = benefits ** mu / mu
             else:
-                wage = np.exp(log_wage_systematic + draws[i, j])
-            consumption_utility = (hours[j] * wage) ** mu / mu
+                consumption_utility = (hours[j] * wage) ** mu / mu
+
             total_utility = consumption_utility * nonconsumption_utilities[j]
 
             if total_utility > current_max_total_utility:
