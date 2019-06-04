@@ -48,11 +48,10 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
         ].to_numpy()
 
         # Get all agents in the period.
-        current_states = (
-            initial_states_in_period
-            if period == 0
-            else np.vstack((current_states, initial_states_in_period))
-        )
+        if period == 0:
+            current_states = initial_states_in_period
+        else:
+            current_states = np.vstack((current_states, initial_states_in_period))
 
         idx = indexer[
             current_states[:, 1],
