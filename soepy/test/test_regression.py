@@ -22,7 +22,7 @@ def test1(idx):
 
     calculated_df = simulate(init_dict)
 
-    for col in expected_df.filter(like="Value Functions").columns.tolist():
+    for col in expected_df.filter(like="Value_Functions").columns.tolist():
         print(col)
         np.testing.assert_array_almost_equal(
             expected_df[col][expected_df[col].notna()],
