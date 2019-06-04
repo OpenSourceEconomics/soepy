@@ -386,7 +386,9 @@ def construct_emax(
             else:
                 consumption_utility = (hours[j] * wage) ** mu / mu
 
-            total_utility = consumption_utility * nonconsumption_utilities[j]
+            total_utility = (
+                consumption_utility * nonconsumption_utilities[j] + delta * emaxs[j]
+            )
 
             if total_utility > current_max_total_utility:
                 current_max_total_utility = total_utility
