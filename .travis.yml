@@ -14,19 +14,25 @@ install:
   - bash miniconda.sh -b -p $HOME/miniconda
   - PATH="$HOME/miniconda/bin:$PATH"
   - conda env create -f environment.yml
-  - conda init
   - source activate soepy
-  - pre-commit install -f --install-hooks
 
 before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 script:
-    - ./development/tests/run_pr_testing.py
-    - ./run_sphinx_build.sh
-    - python -c "import soepy; soepy.test()"
-    - conda install --yes -c opensourceeconomics soepy
+    # Test code quality.
+    - pre-commit install -f --install-hooks
     - pre-commit run -a
+
+    # Test documentation.
+    - ./run_sphinx_build.sh
+
+    # Run test battery.
+    - ./development/tests/run_pr_testing.py
+    - python -c "import soepy; soepy.test()"
+
+    # Build conda package.
+    - conda install --yes -c opensourceeconomics soepy
 
 after_success:
     - codecov
