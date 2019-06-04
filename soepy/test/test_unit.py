@@ -22,13 +22,13 @@ def test():
 
     for year in [11, 12]:
 
-        df2 = df[(df["Years of Education"] == year) & (df["Period"] < year - 10)]
+        df2 = df[(df["Years_of_Education"] == year) & (df["Period"] < year - 10)]
 
         df2 = df2[
             [
                 col
                 for col in df2.columns.values
-                if col not in ["Identifier", "Period", "Years of Education"]
+                if col not in ["Identifier", "Period", "Years_of_Education"]
             ]
         ]
         a = np.empty(df2.shape)
