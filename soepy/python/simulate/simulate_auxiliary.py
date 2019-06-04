@@ -39,26 +39,27 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
         columns=DATA_LABLES_SIM[:6],
     ).astype(np.int)
 
-    current_states = pd.DataFrame(columns=DATA_LABLES_SIM).astype(int)
-
     data = []
 
     for period in range(model_params.num_periods):
 
+        initial_states_in_period = initial_states.loc[
+            initial_states.Years_of_Education.eq(period + model_params.educ_min)
+        ].to_numpy()
+
         # Get all agents in the period.
-        current_states = current_states.append(
-            initial_states.loc[
-                initial_states.Years_of_Education.eq(period + model_params.educ_min)
-            ],
-            sort=False,
+        current_states = (
+            initial_states_in_period
+            if period == 0
+            else np.vstack((current_states, initial_states_in_period))
         )
 
         idx = indexer[
-            current_states.Period.to_numpy(),
-            current_states.Years_of_Education.to_numpy() - model_params.educ_min,
-            current_states.Lagged_Choice.to_numpy(),
-            current_states.Experience_Part_Time.to_numpy(),
-            current_states.Experience_Full_Time.to_numpy(),
+            current_states[:, 1],
+            current_states[:, 2] - model_params.educ_min,
+            current_states[:, 3],
+            current_states[:, 4],
+            current_states[:, 5],
         ]
 
         # Extract corresponding utilities
@@ -66,7 +67,7 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
 
         current_wages = np.exp(
             current_log_wage_systematic.reshape(-1, 1)
-            + draws_sim[period, current_states.Identifier]
+            + draws_sim[period, current_states[:, 0]]
         )
         current_wages[:, 0] = model_params.benefits
 
@@ -93,38 +94,37 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
         choice = np.argmax(value_functions, axis=1)
 
         # Record period experiences
-        period_df = current_states.copy()
-        period_df["Choice"] = choice
-        period_df["Log_Systematic_Wage"] = current_log_wage_systematic
-        period_df[["Period_Wage_N", "Period_Wage_P", "Period_Wage_F"]] = current_wages
-        period_df[
-            [
-                "Non_Consumption_Utility_N",
-                "Non_Consumption_Utility_P",
-                "Non_Consumption_Utility_F",
-            ]
-        ] = nonconsumption_utilities
-        period_df[
-            ["Continuation_Value_N", "Continuation_Value_P", "Continuation_Value_F"]
-        ] = continuation_values
-        period_df[
-            ["Value_Function_N", "Value_Function_P", "Value_Function_F"]
-        ] = value_functions
+        rows = np.column_stack(
+            (
+                current_states.copy(),
+                choice,
+                current_log_wage_systematic,
+                current_wages,
+                np.tile(nonconsumption_utilities, (current_states.shape[0], 1)),
+                continuation_values,
+                value_functions,
+            )
+        )
 
         # Update current states
-        current_states.Period += 1
-        current_states.Lagged_Choice = period_df.Choice
-        current_states.loc[
-            current_states.Lagged_Choice.eq(1), "Experience_Part_Time"
-        ] += 1
-        current_states.loc[
-            current_states.Lagged_Choice.eq(2), "Experience_Full_Time"
-        ] += 1
+        current_states[:, 1] += 1
+        current_states[:, 3] = choice
+        # current_states[np.arange(current_states.shape[0]), choice + 3] = np.where(
+        #     0 < choice,
+        #     current_states[np.arange(current_states.shape[0]), choice + 3] + 1,
+        #     current_states[np.arange(current_states.shape[0]), choice + 3],
+        # )
+        current_states[:, 4] = np.where(
+            choice == 1, current_states[:, 4] + 1, current_states[:, 4]
+        )
+        current_states[:, 5] = np.where(
+            choice == 2, current_states[:, 5] + 1, current_states[:, 5]
+        )
 
-        data.append(period_df)
+        data.append(rows)
 
     dataset = (
-        pd.concat(data, sort=False)
+        pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM)
         .astype(DATA_FORMATS_SIM)
         .set_index(["Identifier", "Period"], drop=False)
     )
