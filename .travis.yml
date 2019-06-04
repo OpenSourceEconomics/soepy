@@ -22,11 +22,11 @@ before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 script:
+    - pre-commit run -a
     - ./development/tests/run_pr_testing.py
     - ./run_sphinx_build.sh
     - python -c "import soepy; soepy.test()"
     - conda install --yes -c opensourceeconomics soepy
-    - pre-commit run -a
 
 after_success:
     - codecov
