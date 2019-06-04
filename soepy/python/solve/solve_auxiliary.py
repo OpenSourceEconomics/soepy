@@ -317,6 +317,40 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
     return emaxs
 
 
+@numba.njit
+def _get_max_aggregated_utilities(
+    delta,
+    log_wage_systematic,
+    nonconsumption_utilities,
+    draws,
+    emaxs,
+    hours,
+    mu,
+    benefits,
+):
+    num_choices = nonconsumption_utilities.shape[0]
+
+    current_max_value_function = INVALID_FLOAT
+
+    for j in range(num_choices):
+
+        wage = np.exp(log_wage_systematic + draws[j])
+
+        if j == 0:
+            consumption_utility = benefits ** mu / mu
+        else:
+            consumption_utility = (hours[j] * wage) ** mu / mu
+
+        value_function_choice = (
+            consumption_utility * nonconsumption_utilities[j] + delta * emaxs[j]
+        )
+
+        if value_function_choice > current_max_value_function:
+            current_max_value_function = value_function_choice
+
+    return current_max_value_function
+
+
 @numba.guvectorize(
     ["f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:]"],
     "(), (), (n_choices), (n_draws, n_choices), (n_choices), (n_choices), (), () -> ()",
@@ -369,30 +403,23 @@ def construct_emax(
         https://en.wikipedia.org/wiki/Monte_Carlo_integration
 
     """
-    num_draws, num_choices = draws.shape
+    num_draws = draws.shape[0]
 
     emax[0] = 0.0
 
     for i in range(num_draws):
 
-        current_max_total_utility = INVALID_FLOAT
+        max_total_utility = _get_max_aggregated_utilities(
+            delta,
+            log_wage_systematic,
+            nonconsumption_utilities,
+            draws[i],
+            emaxs,
+            hours,
+            mu,
+            benefits,
+        )
 
-        for j in range(num_choices):
-
-            wage = np.exp(log_wage_systematic + draws[i, j])
-
-            if j == 0:
-                consumption_utility = benefits ** mu / mu
-            else:
-                consumption_utility = (hours[j] * wage) ** mu / mu
-
-            total_utility = (
-                consumption_utility * nonconsumption_utilities[j] + delta * emaxs[j]
-            )
-
-            if total_utility > current_max_total_utility:
-                current_max_total_utility = total_utility
-
-        emax[0] += current_max_total_utility
+        emax[0] += max_total_utility
 
     emax[0] /= num_draws
