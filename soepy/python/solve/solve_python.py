@@ -1,7 +1,7 @@
 from soepy.python.solve.solve_auxiliary import pyth_create_state_space
 from soepy.python.solve.solve_auxiliary import construct_covariates
 from soepy.python.shared.shared_auxiliary import draw_disturbances
-from soepy.python.shared.shared_auxiliary import calculate_utilities
+from soepy.python.shared.shared_auxiliary import calculate_utility_components
 from soepy.python.solve.solve_auxiliary import pyth_backward_induction
 
 
@@ -36,8 +36,10 @@ def pyth_solve(model_params):
     covariates : np.ndarray
         Array with shape (num_states, number of covariates) containing all additional
         covariates, which depend only on the state space information.
-    emax_period : np.array
-        Expected maximum value function of the current state space point.
+    emaxs : np.ndarray
+        Array with shape (num states, num_choices +1). First block of dimension
+        num_choices contains continuation values of the state space point.
+        Lat element contains the expected maximum value function of the state space point.
     """
 
     # Create all necessary grids and objects related to the state space
@@ -49,14 +51,21 @@ def pyth_solve(model_params):
     attrs = ["seed_emax", "shocks_cov", "num_periods", "num_draws_emax"]
     draws_emax = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
 
-    flow_utilities, _, _, _ = calculate_utilities(
-        model_params, states, covariates, draws_emax
+    log_wage_systematic, nonconsumption_utility = calculate_utility_components(
+        model_params, states, covariates
     )
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
-    emaxs = pyth_backward_induction(model_params, states, indexer, flow_utilities)
+    emaxs = pyth_backward_induction(
+        model_params,
+        states,
+        indexer,
+        log_wage_systematic,
+        nonconsumption_utility,
+        draws_emax,
+    )
 
     # Return function output
     return states, indexer, covariates, emaxs
