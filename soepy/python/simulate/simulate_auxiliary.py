@@ -21,12 +21,12 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
     attrs = ["seed_sim", "shocks_cov", "num_periods", "num_agents_sim"]
     draws_sim = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
 
-    # Calculate utilities
+    # Calculate utility components
     log_wage_systematic, nonconsumption_utilities = calculate_utility_components(
         model_params, states, covariates
     )
 
-    # Create initial states.
+    # Determine initial states according to initial conditions
     initial_states = pd.DataFrame(
         np.column_stack(
             (
@@ -41,6 +41,7 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
 
     data = []
 
+    # Loop over all periods
     for period in range(model_params.num_periods):
 
         initial_states_in_period = initial_states.loc[
@@ -70,9 +71,6 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
         )
         current_wages[:, 0] = model_params.benefits
 
-        # Extract continuation values for all choices
-        continuation_values = emaxs[idx, :3]
-
         # Calculate total values for all choices
         flow_utilities = np.full((current_states.shape[0], 3), np.nan)
 
@@ -86,6 +84,9 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
             / model_params.mu
             * nonconsumption_utilities[1:]
         )
+
+        # Extract continuation values for all choices
+        continuation_values = emaxs[idx, :3]
 
         value_functions = flow_utilities + model_params.delta * continuation_values
 
@@ -105,6 +106,8 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
             )
         )
 
+        data.append(rows)
+
         # Update current states
         current_states[:, 1] += 1
         current_states[:, 3] = choice
@@ -114,8 +117,6 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
         current_states[:, 5] = np.where(
             choice == 2, current_states[:, 5] + 1, current_states[:, 5]
         )
-
-        data.append(rows)
 
     dataset = (
         pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM)

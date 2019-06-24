@@ -36,8 +36,10 @@ def pyth_solve(model_params):
     covariates : np.ndarray
         Array with shape (num_states, number of covariates) containing all additional
         covariates, which depend only on the state space information.
-    emax_period : np.array
-        Expected maximum value function of the current state space point.
+    emaxs : np.ndarray
+        Array with shape (num states, num_choices +1). First block of dimension
+        num_choices contains continuation values of the state space point.
+        Lat element contains the expected maximum value function of the state space point.
     """
 
     # Create all necessary grids and objects related to the state space

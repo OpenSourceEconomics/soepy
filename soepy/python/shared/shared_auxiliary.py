@@ -22,7 +22,7 @@ def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
 
 
 def calculate_utility_components(model_params, states, covariates):
-    """Calculate period/flow utilities for all choices given state, period, and shocks.
+    """Calculate utility components for all choices given state, period, and shocks.
 
     Parameters
     ----------
@@ -40,19 +40,13 @@ def calculate_utility_components(model_params, states, covariates):
 
     Returns
     -------
-    wage_systematic : array
+    log_wage_systematic : array
         One dimensional array with length num_states containing the part of the wages
         at the respective state space point that do not depend on the agent's choice,
         nor on the random shock.
-    period_wages : np.ndarray
-        Array with shape (num_states, num_draws, NUM_CHOICES). Contains the wages for
-        the period given agent's period choice and error term draw.
-    consumption_utilities : np.ndarray
-        Array with shape (num_states, num_draws, NUM_CHOICES) containing part
-        of the utility related to consumption.
-    flow_utilities : np.ndarray
-        Array with dimensions (num_states, num_draws, NUM_CHOICES) containing total
-        flow utility of each choice given error term draw at each state.
+    nonconsumption_utilities : np.ndarray
+        Array of dimension (num_states, num_choices) containing the utility
+        contribution of non-pecuniary factors.
 
     """
     log_wage_systematic = calculate_log_wage_systematic(
@@ -85,7 +79,7 @@ def calculate_log_wage_systematic(model_params, states, covariates):
 
 
 def calculate_nonconsumption_utility(model_params):
-    # Calculate U(.) for the three available choices
+    """Calculate non-pecuniary utility contribution."""
     nonconsumption_utility = np.exp([0, model_params.theta_p, model_params.theta_f])
 
     return nonconsumption_utility

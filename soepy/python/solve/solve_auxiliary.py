@@ -206,6 +206,10 @@ def pyth_backward_induction(
     model_params, states, indexer, log_wage_systematic, nonconsumption_utilities, draws
 ):
     """Get expected maximum value function at every state space point.
+    Backward induction is performed all at once for all states in a given period.
+    The function loops through each period. The included construct_emax function
+    implicitly loops through all states in the period currently reached by the
+    parent loop.
 
     Parameters
     ----------
@@ -222,9 +226,13 @@ def pyth_backward_induction(
         :data:`states[k]` returns the values of the state space components
         at state :data:`k`. Indexing :data:`indexer` by the same state space
         component values returns :data:`k`.
-    flow_utilities : np.ndarray
-        Array with dimensions (num_states, num_draws, NUM_CHOICES) containing total
-        flow utility of each choice given error term draw at each state.
+    log_wage_systematic : np.array
+        One dimensional array with length num_states containing the part of the wages
+        at the respective state space point that do not depend on the agent's choice,
+        nor on the random shock.
+    nonconsumption_utilities : np.ndarray
+        Array of dimension (num_states, num_choices) containing the utility
+        contribution of non-pecuniary factors.
 
     Returns
     -------
@@ -241,7 +249,7 @@ def pyth_backward_induction(
     for period in reversed(range(model_params.num_periods)):
 
         # Extract period information
-        states_period = states[np.where(states[:, 0] == period)]  # as slice
+        states_period = states[np.where(states[:, 0] == period)]
         log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
 
         # Continuation value calculation not performed for last period
@@ -373,24 +381,40 @@ def construct_emax(
     The function calculates the maximum expected value function over the distribution of
     the error term at each state space point in the period currently reached by the
     parent loop. The expectation calculation is performed via `Monte Carlo
-    integration`_. The goal is to approximate an integral by evaluating the integrand at
+    integration`. The goal is to approximate an integral by evaluating the integrand at
     randomly chosen points. In this setting, one wants to approximate the expected
-    maximum utility of the current state.
+    maximum utility of a given state.
 
     Parameters
     ----------
     delta : int
         Dynamic discount factor.
-    flow_utilities_period : np.ndarray
-        Array with dimensions (number of states in period, num_draws, NUM_CHOICES)
-        containing total flow utility of each choice given error term draw
-        at each state.
+    log_wage_systematic : array
+        One dimensional array with length num_states containing the part of the wages
+        at the respective state space point that do not depend on the agent's choice,
+        nor on the random shock.
+    nonconsumption_utilities : np.ndarray
+        Array of dimension (num_states, num_choices) containing the utility
+        contribution of non-pecuniary factors.
+    draws : np.ndarray
+        Array of dimension (num_periods, num_choices, num_draws). Randomly drawn
+        realisations of the error term used to integrate out the distribution of
+        the error term.
     emaxs : np.ndarray
         An array of dimension (num. states in period, num choices + 1).
         The object's rows contain the continuation values of each choice at the specific
         state space points as its first elements. The last row element corresponds
         to the maximum expected value function of the state. This column is
         full of zeros for the input object.
+    hours : np.array
+        Array of constants, corresponding to the working hours associated with
+        each employment choice.
+    mu : int
+        Constant governing the degree of risk aversion and inter-temporal
+        substitution in the model.
+    benefits : int
+        Constant level of hourly income received in case of choice N,
+        non-employment.
 
     Returns
     -------
