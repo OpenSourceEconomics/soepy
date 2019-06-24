@@ -31,5 +31,5 @@ DATA_LABLES_SIM = [
 
 # Define data types for data set columns
 DATA_FORMATS_SIM = {
-    key: (np.int if key in DATA_LABLES_SIM[:3] else np.float) for key in DATA_LABLES_SIM
+    key: (np.int if key in DATA_LABLES_SIM[:7] else np.float) for key in DATA_LABLES_SIM
 }

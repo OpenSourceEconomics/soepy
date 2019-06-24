@@ -108,11 +108,6 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
         # Update current states
         current_states[:, 1] += 1
         current_states[:, 3] = choice
-        # current_states[np.arange(current_states.shape[0]), choice + 3] = np.where(
-        #     0 < choice,
-        #     current_states[np.arange(current_states.shape[0]), choice + 3] + 1,
-        #     current_states[np.arange(current_states.shape[0]), choice + 3],
-        # )
         current_states[:, 4] = np.where(
             choice == 1, current_states[:, 4] + 1, current_states[:, 4]
         )
