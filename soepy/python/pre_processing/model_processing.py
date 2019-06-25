@@ -38,7 +38,11 @@ def expand_init_dict(init_dict):
     ]
     shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
 
-    init_dict["DERIVED_ATTR"] = {"educ_range": educ_range, "shocks_cov": shocks_cov}
+    # Extract the number of types
+    num_types = len([v for k, v in init_dict['PARAMETERS'].items() if 'share' in k]) + 1
+
+    # Append derived attributes to init_dict
+    init_dict["DERIVED_ATTR"] = {"educ_range": educ_range, "shocks_cov": shocks_cov, "num_types": num_types}
 
     # Return function output
     return init_dict
@@ -113,6 +117,7 @@ def group_parameters(init_dict, init_dict_flat):
 
     init_dict_flat["theta_p"] = init_dict["PARAMETERS"]["theta_p"]
     init_dict_flat["theta_f"] = init_dict["PARAMETERS"]["theta_f"]
+    init_dict_flat["share_1"] = init_dict["PARAMETERS"]["share_1"]
 
     init_dict_flat["gamma_1s"] = (
         init_dict["PARAMETERS"]["gamma_1s1"],

@@ -1,6 +1,6 @@
 ---
 GENERAL:
-    num_periods: 10
+    num_periods: 40
     num_choices: 3
 CONSTANTS:
     delta: 0.98
@@ -30,6 +30,7 @@ PARAMETERS:
     delta_s3: 0.070
     theta_p: 1.900
     theta_f: 2.441
+    share_1: 0.50
     sigma_1: 0.010
     sigma_2: 0.192
     sigma_3: 0.470
