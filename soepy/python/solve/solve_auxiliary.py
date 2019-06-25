@@ -77,9 +77,9 @@ def pyth_create_state_space(model_params):
     ...     model_params
     ... )
     >>> states.shape
-    (1110, 5)
+    (2220, 6)
     >>> indexer.shape
-    (10, 3, 3, 10, 10)
+    (10, 3, 3, 10, 10, 2)
     """
     data = []
 
@@ -90,6 +90,7 @@ def pyth_create_state_space(model_params):
         NUM_CHOICES,
         model_params.num_periods,
         model_params.num_periods,
+        model_params.num_types,
     )
 
     indexer = np.full(shape, MISSING_INT)
@@ -100,101 +101,129 @@ def pyth_create_state_space(model_params):
     # Loop over all periods / all ages
     for period in range(model_params.num_periods):
 
-        # Loop over all possible initial conditions for education
-        for educ_years in range(model_params.educ_range):
+        for type_ in range(model_params.num_types):
 
-            # Check if individual has already completed education
-            # and will make a labor supply choice in the period
-            if educ_years > period:
-                continue
+            # Loop over all possible initial conditions for education
+            for educ_years in range(model_params.educ_range):
 
-            # Loop over all admissible years of experience accumulated in full-time
-            for exp_f in range(model_params.num_periods):
+                # Check if individual has already completed education
+                # and will make a labor supply choice in the period
+                if educ_years > period:
+                    continue
 
-                # Loop over all admissible years of experience accumulated in part-time
-                for exp_p in range(model_params.num_periods):
+                # Loop over all admissible years of experience accumulated in full-time
+                for exp_f in range(model_params.num_periods):
 
-                    # The accumulation of experience cannot exceed time elapsed
-                    # since individual entered the model
-                    if exp_f + exp_p > period - educ_years:
-                        continue
+                    # Loop over all admissible years of experience accumulated in part-time
+                    for exp_p in range(model_params.num_periods):
 
-                    # Add an additional entry state
-                    # [educ_years + model_params.educ_min, 0, 0, 0]
-                    # for individuals who have just completed education
-                    # and still have no experience in any occupation.
-                    if period == educ_years:
+                        # The accumulation of experience cannot exceed time elapsed
+                        # since individual entered the model
+                        if exp_f + exp_p > period - educ_years:
+                            continue
 
-                        # Assign an additional integer count i
-                        # for entry state
-                        indexer[period, educ_years, 0, 0, 0] = i
+                        # Add an additional entry state
+                        # [educ_years + model_params.educ_min, 0, 0, 0]
+                        # for individuals who have just completed education
+                        # and still have no experience in any occupation.
+                        if period == educ_years:
 
-                        # Record the values of the state space components
-                        # for the currently reached entry state
-                        row = [period, educ_years + model_params.educ_min, 0, 0, 0]
-
-                        # Update count once more
-                        i += 1
-
-                        data.append(row)
-
-                    else:
-
-                        # Loop over the three labor market choices, N, P, F
-                        for choice_lagged in range(NUM_CHOICES):
-
-                            # If individual has only worked full-time in the past,
-                            # she can only have full-time (2) as lagged choice
-                            if (choice_lagged != 2) and (exp_f == period - educ_years):
-                                continue
-
-                            # If individual has only worked part-time in the past,
-                            # she can only have part-time (1) as lagged choice
-                            if (choice_lagged != 1) and (exp_p == period - educ_years):
-                                continue
-
-                            # If an individual has never worked full-time,
-                            # she cannot have that lagged activity
-                            if (choice_lagged == 2) and (exp_f == 0):
-                                continue
-
-                            # If an individual has never worked part-time,
-                            # she cannot have that lagged activity
-                            if (choice_lagged == 1) and (exp_p == 0):
-                                continue
-
-                            # If an individual has always been employed,
-                            # she cannot have non-employment (0) as lagged choice
-                            if (choice_lagged == 0) and (
-                                exp_f + exp_p == period - educ_years
-                            ):
-                                continue
-
-                            # Check for duplicate states
-                            if (
-                                indexer[period, educ_years, choice_lagged, exp_p, exp_f]
-                                != MISSING_INT
-                            ):
-                                continue
-
-                            # Assign the integer count i as an indicator for the
-                            # currently reached admissible state space point
-                            indexer[period, educ_years, choice_lagged, exp_p, exp_f] = i
-
-                            # Update count
-                            i += 1
+                            # Assign an additional integer count i
+                            # for entry state
+                            indexer[period, educ_years, 0, 0, 0, type_] = i
 
                             # Record the values of the state space components
-                            # for the currently reached admissible state space point
+                            # for the currently reached entry state
                             row = [
                                 period,
                                 educ_years + model_params.educ_min,
-                                choice_lagged,
-                                exp_p,
-                                exp_f,
+                                0,
+                                0,
+                                0,
+                                type_,
                             ]
 
+                            # Update count once more
+                            i += 1
+
                             data.append(row)
+
+                        else:
+
+                            # Loop over the three labor market choices, N, P, F
+                            for choice_lagged in range(NUM_CHOICES):
+
+                                # If individual has only worked full-time in the past,
+                                # she can only have full-time (2) as lagged choice
+                                if (choice_lagged != 2) and (
+                                    exp_f == period - educ_years
+                                ):
+                                    continue
+
+                                # If individual has only worked part-time in the past,
+                                # she can only have part-time (1) as lagged choice
+                                if (choice_lagged != 1) and (
+                                    exp_p == period - educ_years
+                                ):
+                                    continue
+
+                                # If an individual has never worked full-time,
+                                # she cannot have that lagged activity
+                                if (choice_lagged == 2) and (exp_f == 0):
+                                    continue
+
+                                # If an individual has never worked part-time,
+                                # she cannot have that lagged activity
+                                if (choice_lagged == 1) and (exp_p == 0):
+                                    continue
+
+                                # If an individual has always been employed,
+                                # she cannot have non-employment (0) as lagged choice
+                                if (choice_lagged == 0) and (
+                                    exp_f + exp_p == period - educ_years
+                                ):
+                                    continue
+
+                                # Check for duplicate states
+                                if (
+                                    indexer[
+                                        period,
+                                        educ_years,
+                                        choice_lagged,
+                                        exp_p,
+                                        exp_f,
+                                        type_,
+                                    ]
+                                    != MISSING_INT
+                                ):
+                                    continue
+
+                                # Assign the integer count i as an indicator for the
+                                # currently reached admissible state space point
+                                indexer[
+                                    period,
+                                    educ_years,
+                                    choice_lagged,
+                                    exp_p,
+                                    exp_f,
+                                    type_,
+                                ] = i
+
+                                # Update count
+                                i += 1
+
+                                # Record the values of the state space components
+                                # for the currently reached admissible state space point
+                                row = [
+                                    period,
+                                    educ_years + model_params.educ_min,
+                                    choice_lagged,
+                                    exp_p,
+                                    exp_f,
+                                    type_,
+                                ]
+
+                                data.append(row)
 
         states = np.array(data)
 

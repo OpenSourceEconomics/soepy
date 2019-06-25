@@ -39,10 +39,14 @@ def expand_init_dict(init_dict):
     shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
 
     # Extract the number of types
-    num_types = len([v for k, v in init_dict['PARAMETERS'].items() if 'share' in k]) + 1
+    num_types = len([v for k, v in init_dict["PARAMETERS"].items() if "share" in k]) + 1
 
     # Append derived attributes to init_dict
-    init_dict["DERIVED_ATTR"] = {"educ_range": educ_range, "shocks_cov": shocks_cov, "num_types": num_types}
+    init_dict["DERIVED_ATTR"] = {
+        "educ_range": educ_range,
+        "shocks_cov": shocks_cov,
+        "num_types": num_types,
+    }
 
     # Return function output
     return init_dict
