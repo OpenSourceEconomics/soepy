@@ -65,8 +65,10 @@ def check_vault(num_test):
     for test in tests[:num_test]:
 
         init_dict, expected_df = test
+        init_dict["PARAMETERS"]["share_1"] = 1.0
 
         calculated_df = simulate(init_dict)
+        calculated_df = calculated_df.drop(columns=["Type"])
 
         for col in expected_df.columns.tolist():
             expected_df[col].equals(calculated_df[col])

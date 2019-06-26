@@ -70,7 +70,9 @@ def pyth_create_state_space(model_params):
     Examples
     --------
     >>> from collections import namedtuple
-    >>> model_params = namedtuple("model_params", "num_periods educ_range educ_min num_types")
+    >>> model_params = namedtuple(
+    ...     "model_params", "num_periods educ_range educ_min num_types"
+    ... )
     >>> model_params = model_params(10, 3, 10, 2)
     >>> NUM_CHOICES = 3
     >>> states, indexer = pyth_create_state_space(
@@ -114,7 +116,8 @@ def pyth_create_state_space(model_params):
                 # Loop over all admissible years of experience accumulated in full-time
                 for exp_f in range(model_params.num_periods):
 
-                    # Loop over all admissible years of experience accumulated in part-time
+                    # Loop over all admissible years of experience accumulated
+                    # in part-time
                     for exp_p in range(model_params.num_periods):
 
                         # The accumulation of experience cannot exceed time elapsed
