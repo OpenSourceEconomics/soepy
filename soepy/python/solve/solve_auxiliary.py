@@ -70,8 +70,8 @@ def pyth_create_state_space(model_params):
     Examples
     --------
     >>> from collections import namedtuple
-    >>> model_params = namedtuple("model_params", "num_periods educ_range educ_min")
-    >>> model_params = model_params(10, 3, 10)
+    >>> model_params = namedtuple("model_params", "num_periods educ_range educ_min num_types")
+    >>> model_params = model_params(10, 3, 10, 2)
     >>> NUM_CHOICES = 3
     >>> states, indexer = pyth_create_state_space(
     ...     model_params

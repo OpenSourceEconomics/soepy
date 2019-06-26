@@ -52,8 +52,6 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
     # Loop over all periods
     for period in range(model_params.num_periods):
 
-        print(period)
-
         initial_states_in_period = initial_states.loc[
             initial_states.Years_of_Education.eq(period + model_params.educ_min)
         ].to_numpy()

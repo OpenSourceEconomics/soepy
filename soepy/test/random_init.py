@@ -51,6 +51,11 @@ def random_init(constr=None):
     else:
         num_draws_emax = np.random.randint(400, 600)
 
+    if "SHARE_1" in constr.keys():
+        share_1 = constr["SHARE_1"]
+    else:
+        share_1 = np.random.uniform(0, 1)
+
     init_dict = dict()
 
     for key_ in [
@@ -97,6 +102,7 @@ def random_init(constr=None):
     init_dict["PARAMETERS"]["theta_p"], init_dict["PARAMETERS"][
         "theta_f"
     ] = np.random.uniform(0.5, 5, 2).tolist()
+    init_dict["PARAMETERS"]["share_1"] = share_1
 
     init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
         "PARAMETERS"
@@ -174,6 +180,7 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     ]["delta_s3"] = init_dict_flat["delta_s"]
     init_dict["PARAMETERS"]["theta_p"] = init_dict_flat["theta_p"]
     init_dict["PARAMETERS"]["theta_f"] = init_dict_flat["theta_f"]
+    init_dict["PARAMETERS"]["share_1"] = init_dict_flat["share_1"]
     init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
         "PARAMETERS"
     ]["sigma_3"] = init_dict_flat["sigma"]
