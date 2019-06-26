@@ -13,6 +13,7 @@ DATA_LABLES_SIM = [
     "Lagged_Choice",
     "Experience_Part_Time",
     "Experience_Full_Time",
+    "Type",
     "Choice",
     "Log_Systematic_Wage",
     "Period_Wage_N",

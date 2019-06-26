@@ -41,11 +41,17 @@ def expand_init_dict(init_dict):
     # Extract the number of types
     num_types = len([v for k, v in init_dict["PARAMETERS"].items() if "share" in k]) + 1
 
+    # Aggregate type shares in list object
+    type_shares = [
+        1 - sum([v for k, v in init_dict["PARAMETERS"].items() if "share" in k])
+    ] + [v for k, v in init_dict["PARAMETERS"].items() if "share" in k]
+
     # Append derived attributes to init_dict
     init_dict["DERIVED_ATTR"] = {
         "educ_range": educ_range,
         "shocks_cov": shocks_cov,
         "num_types": num_types,
+        "type_shares": type_shares,
     }
 
     # Return function output

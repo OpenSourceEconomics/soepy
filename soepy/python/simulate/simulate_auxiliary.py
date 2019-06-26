@@ -18,11 +18,18 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
     np.random.seed(model_params.seed_sim)
     initial_educ_years = np.random.choice(educ_years, model_params.num_agents_sim)
 
+    # Draw random type
+    type_ = np.random.choice(
+        list(np.arange(model_params.num_types)),
+        model_params.num_agents_sim,
+        p=model_params.type_shares,
+    )
+
     attrs = ["seed_sim", "shocks_cov", "num_periods", "num_agents_sim"]
     draws_sim = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
 
     # Calculate utility components
-    log_wage_systematic, nonconsumption_utilities = calculate_utility_components(
+    log_wage_systematic, non_consumption_utilities = calculate_utility_components(
         model_params, states, covariates
     )
 
@@ -34,15 +41,18 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
                 initial_educ_years - model_params.educ_min,
                 initial_educ_years,
                 np.zeros((model_params.num_agents_sim, 3)),
+                type_,
             )
         ),
-        columns=DATA_LABLES_SIM[:6],
+        columns=DATA_LABLES_SIM[:7],
     ).astype(np.int)
 
     data = []
 
     # Loop over all periods
     for period in range(model_params.num_periods):
+
+        print(period)
 
         initial_states_in_period = initial_states.loc[
             initial_states.Years_of_Education.eq(period + model_params.educ_min)
@@ -60,10 +70,12 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
             current_states[:, 3],
             current_states[:, 4],
             current_states[:, 5],
+            current_states[:, 6],
         ]
 
         # Extract corresponding utilities
         current_log_wage_systematic = log_wage_systematic[idx]
+        current_non_consumption_utilities = non_consumption_utilities[idx]
 
         current_wages = np.exp(
             current_log_wage_systematic.reshape(-1, 1)
@@ -77,12 +89,12 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
         flow_utilities[:, 0] = (
             model_params.benefits ** model_params.mu
             / model_params.mu
-            * nonconsumption_utilities[0]
+            * current_non_consumption_utilities[:, 0]
         )
         flow_utilities[:, 1:] = (
             (HOURS[1:] * current_wages[:, 1:]) ** model_params.mu
             / model_params.mu
-            * nonconsumption_utilities[1:]
+            * current_non_consumption_utilities[:, 1:]
         )
 
         # Extract continuation values for all choices
@@ -100,7 +112,7 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
                 choice,
                 current_log_wage_systematic,
                 current_wages,
-                np.tile(nonconsumption_utilities, (current_states.shape[0], 1)),
+                current_non_consumption_utilities,
                 continuation_values,
                 value_functions,
             )
