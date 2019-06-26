@@ -334,21 +334,21 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
     """
     for i in range(states_subset.shape[0]):
         # Unpack parent state and get index
-        period, educ_years, choice_lagged, exp_p, exp_f = states_subset[i]
+        period, educ_years, choice_lagged, exp_p, exp_f, type_ = states_subset[i]
         k_parent = indexer[
-            period, educ_years - model_params.educ_min, choice_lagged, exp_p, exp_f
+            period, educ_years - model_params.educ_min, choice_lagged, exp_p, exp_f, type_
         ]
 
         # Choice: Non-employment
-        k = indexer[period + 1, educ_years - model_params.educ_min, 0, exp_p, exp_f]
+        k = indexer[period + 1, educ_years - model_params.educ_min, 0, exp_p, exp_f, type_]
         emaxs[k_parent, 0] = emaxs[k, 3]
 
         # Choice: Part-time
-        k = indexer[period + 1, educ_years - model_params.educ_min, 1, exp_p + 1, exp_f]
+        k = indexer[period + 1, educ_years - model_params.educ_min, 1, exp_p + 1, exp_f, type_]
         emaxs[k_parent, 1] = emaxs[k, 3]
 
         # Choice: Full-time
-        k = indexer[period + 1, educ_years - model_params.educ_min, 2, exp_p, exp_f + 1]
+        k = indexer[period + 1, educ_years - model_params.educ_min, 2, exp_p, exp_f + 1, type_]
         emaxs[k_parent, 2] = emaxs[k, 3]
 
     return emaxs

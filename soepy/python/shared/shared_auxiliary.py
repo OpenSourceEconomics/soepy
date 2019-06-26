@@ -53,7 +53,7 @@ def calculate_utility_components(model_params, states, covariates):
         model_params, states, covariates
     )
 
-    nonconsumption_utility = calculate_nonconsumption_utility(model_params)
+    nonconsumption_utility = calculate_nonconsumption_utility(model_params, states)
 
     return log_wage_systematic, nonconsumption_utility
 
@@ -78,8 +78,12 @@ def calculate_log_wage_systematic(model_params, states, covariates):
     return log_wage_systematic
 
 
-def calculate_nonconsumption_utility(model_params):
+def calculate_nonconsumption_utility(model_params, states):
     """Calculate non-pecuniary utility contribution."""
-    nonconsumption_utility = np.exp([0, model_params.theta_p, model_params.theta_f])
+
+    nonconsumption_utility = np.ones((states.shape[0], NUM_CHOICES))
+    nonconsumption_utility[np.where(states[:, 5] == 1)] = np.exp(
+        [0, model_params.theta_p, model_params.theta_f]
+    )
 
     return nonconsumption_utility
