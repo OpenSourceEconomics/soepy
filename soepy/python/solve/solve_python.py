@@ -51,7 +51,7 @@ def pyth_solve(model_params):
     attrs = ["seed_emax", "shocks_cov", "num_periods", "num_draws_emax"]
     draws_emax = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
 
-    log_wage_systematic, nonconsumption_utility = calculate_utility_components(
+    log_wage_systematic, non_consumption_utilities = calculate_utility_components(
         model_params, states, covariates
     )
 
@@ -63,7 +63,7 @@ def pyth_solve(model_params):
         states,
         indexer,
         log_wage_systematic,
-        nonconsumption_utility,
+        non_consumption_utilities,
         draws_emax,
     )
 

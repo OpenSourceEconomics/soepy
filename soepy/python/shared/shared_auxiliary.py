@@ -1,5 +1,7 @@
 import numpy as np
 
+from soepy.python.shared.shared_constants import NUM_CHOICES
+
 
 def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
     """Creates desired number of draws of a multivariate standard normal

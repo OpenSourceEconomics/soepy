@@ -232,7 +232,7 @@ def pyth_create_state_space(model_params):
 
 
 def pyth_backward_induction(
-    model_params, states, indexer, log_wage_systematic, nonconsumption_utilities, draws
+    model_params, states, indexer, log_wage_systematic, non_consumption_utilities, draws
 ):
     """Get expected maximum value function at every state space point.
     Backward induction is performed all at once for all states in a given period.
@@ -259,7 +259,7 @@ def pyth_backward_induction(
         One dimensional array with length num_states containing the part of the wages
         at the respective state space point that do not depend on the agent's choice,
         nor on the random shock.
-    nonconsumption_utilities : np.ndarray
+    non_consumption_utilities : np.ndarray
         Array of dimension (num_states, num_choices) containing the utility
         contribution of non-pecuniary factors.
 
@@ -280,6 +280,9 @@ def pyth_backward_induction(
         # Extract period information
         states_period = states[np.where(states[:, 0] == period)]
         log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
+        non_consumption_utilities_period = non_consumption_utilities[
+            states[:, 0] == period
+        ]
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
@@ -298,7 +301,7 @@ def pyth_backward_induction(
         emax_period = construct_emax(
             model_params.delta,
             log_wage_systematic_period,
-            nonconsumption_utilities,
+            non_consumption_utilities_period,
             draws[period],
             emaxs_period[:, :3],
             HOURS,
@@ -336,19 +339,30 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
         # Unpack parent state and get index
         period, educ_years, choice_lagged, exp_p, exp_f, type_ = states_subset[i]
         k_parent = indexer[
-            period, educ_years - model_params.educ_min, choice_lagged, exp_p, exp_f, type_
+            period,
+            educ_years - model_params.educ_min,
+            choice_lagged,
+            exp_p,
+            exp_f,
+            type_,
         ]
 
         # Choice: Non-employment
-        k = indexer[period + 1, educ_years - model_params.educ_min, 0, exp_p, exp_f, type_]
+        k = indexer[
+            period + 1, educ_years - model_params.educ_min, 0, exp_p, exp_f, type_
+        ]
         emaxs[k_parent, 0] = emaxs[k, 3]
 
         # Choice: Part-time
-        k = indexer[period + 1, educ_years - model_params.educ_min, 1, exp_p + 1, exp_f, type_]
+        k = indexer[
+            period + 1, educ_years - model_params.educ_min, 1, exp_p + 1, exp_f, type_
+        ]
         emaxs[k_parent, 1] = emaxs[k, 3]
 
         # Choice: Full-time
-        k = indexer[period + 1, educ_years - model_params.educ_min, 2, exp_p, exp_f + 1, type_]
+        k = indexer[
+            period + 1, educ_years - model_params.educ_min, 2, exp_p, exp_f + 1, type_
+        ]
         emaxs[k_parent, 2] = emaxs[k, 3]
 
     return emaxs
@@ -358,14 +372,14 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
 def _get_max_aggregated_utilities(
     delta,
     log_wage_systematic,
-    nonconsumption_utilities,
+    non_consumption_utilities,
     draws,
     emaxs,
     hours,
     mu,
     benefits,
 ):
-    num_choices = nonconsumption_utilities.shape[0]
+    num_choices = NUM_CHOICES
 
     current_max_value_function = INVALID_FLOAT
 
@@ -379,7 +393,7 @@ def _get_max_aggregated_utilities(
             consumption_utility = (hours[j] * wage) ** mu / mu
 
         value_function_choice = (
-            consumption_utility * nonconsumption_utilities[j] + delta * emaxs[j]
+            consumption_utility * non_consumption_utilities[j] + delta * emaxs[j]
         )
 
         if value_function_choice > current_max_value_function:
@@ -397,7 +411,7 @@ def _get_max_aggregated_utilities(
 def construct_emax(
     delta,
     log_wage_systematic,
-    nonconsumption_utilities,
+    non_consumption_utilities,
     draws,
     emaxs,
     hours,
@@ -422,7 +436,7 @@ def construct_emax(
         One dimensional array with length num_states containing the part of the wages
         at the respective state space point that do not depend on the agent's choice,
         nor on the random shock.
-    nonconsumption_utilities : np.ndarray
+    non_consumption_utilities : np.ndarray
         Array of dimension (num_states, num_choices) containing the utility
         contribution of non-pecuniary factors.
     draws : np.ndarray
@@ -465,7 +479,7 @@ def construct_emax(
         max_total_utility = _get_max_aggregated_utilities(
             delta,
             log_wage_systematic,
-            nonconsumption_utilities,
+            non_consumption_utilities,
             draws[i],
             emaxs,
             hours,
