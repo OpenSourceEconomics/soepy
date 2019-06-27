@@ -46,7 +46,7 @@ def calculate_utility_components(model_params, states, covariates):
         One dimensional array with length num_states containing the part of the wages
         at the respective state space point that do not depend on the agent's choice,
         nor on the random shock.
-    nonconsumption_utilities : np.ndarray
+    non_consumption_utilities : np.ndarray
         Array of dimension (num_states, num_choices) containing the utility
         contribution of non-pecuniary factors.
 
@@ -55,9 +55,9 @@ def calculate_utility_components(model_params, states, covariates):
         model_params, states, covariates
     )
 
-    nonconsumption_utility = calculate_nonconsumption_utility(model_params, states)
+    non_consumption_utility = calculate_non_consumption_utility(model_params, states)
 
-    return log_wage_systematic, nonconsumption_utility
+    return log_wage_systematic, non_consumption_utility
 
 
 def calculate_log_wage_systematic(model_params, states, covariates):
@@ -80,12 +80,14 @@ def calculate_log_wage_systematic(model_params, states, covariates):
     return log_wage_systematic
 
 
-def calculate_nonconsumption_utility(model_params, states):
+def calculate_non_consumption_utility(model_params, states):
     """Calculate non-pecuniary utility contribution."""
 
-    nonconsumption_utility = np.ones((states.shape[0], NUM_CHOICES))
-    nonconsumption_utility[np.where(states[:, 5] == 1)] = np.exp(
-        [0, model_params.theta_p, model_params.theta_f]
-    )
+    non_consumption_utility = np.ones((states.shape[0], NUM_CHOICES))
 
-    return nonconsumption_utility
+    for i in range(1, model_params.num_types):
+        non_consumption_utility[np.where(states[:, 5] == i)] = np.exp(
+            [0, model_params.theta_p[i - 1], model_params.theta_f[i - 1]]
+        )
+
+    return non_consumption_utility

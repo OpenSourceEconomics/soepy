@@ -61,6 +61,10 @@ def expand_init_dict(init_dict):
         "type_shares": type_shares,
     }
 
+    # Rename type associated entries
+    init_dict["PARAMETERS"]["theta_p1"] = init_dict["PARAMETERS"].pop("theta_p")
+    init_dict["PARAMETERS"]["theta_f1"] = init_dict["PARAMETERS"].pop("theta_f")
+
     # Return function output
     return init_dict
 
@@ -132,9 +136,15 @@ def group_parameters(init_dict, init_dict_flat):
         init_dict["PARAMETERS"]["delta_s3"],
     )
 
-    init_dict_flat["theta_p"] = init_dict["PARAMETERS"]["theta_p"]
-    init_dict_flat["theta_f"] = init_dict["PARAMETERS"]["theta_f"]
-    init_dict_flat["share_1"] = init_dict["PARAMETERS"]["share_1"]
+    init_dict_flat["theta_p"] = [
+        v for k, v in init_dict["PARAMETERS"].items() if "theta_p" in k
+    ]
+    init_dict_flat["theta_f"] = [
+        v for k, v in init_dict["PARAMETERS"].items() if "theta_f" in k
+    ]
+
+    for i in range(1, init_dict["DERIVED_ATTR"]["num_types"]):
+        init_dict_flat["share_" + str(i)] = init_dict["PARAMETERS"]["share_" + str(i)]
 
     init_dict_flat["gamma_1s"] = (
         init_dict["PARAMETERS"]["gamma_1s1"],
