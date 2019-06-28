@@ -51,11 +51,6 @@ def random_init(constr=None):
     else:
         num_draws_emax = np.random.randint(400, 600)
 
-    if "SHARE_1" in constr.keys():
-        share_1 = constr["SHARE_1"]
-    else:
-        share_1 = np.random.uniform(0, 1)
-
     init_dict = dict()
 
     for key_ in [
@@ -99,10 +94,29 @@ def random_init(constr=None):
         "PARAMETERS"
     ]["delta_s3"] = np.random.uniform(0.1, 0.9, 3).tolist()
 
-    init_dict["PARAMETERS"]["theta_p"], init_dict["PARAMETERS"][
-        "theta_f"
-    ] = np.random.uniform(0.5, 5, 2).tolist()
-    init_dict["PARAMETERS"]["share_1"] = share_1
+    # Random number of types: 1, 2, or 3
+    num_types = 1
+    # num_types = int(np.random.choice([1,2,3] ,1))
+
+    # One type: ensure share equals 1
+    if num_types == 1:
+        init_dict["PARAMETERS"]["theta_p"], init_dict["PARAMETERS"][
+            "theta_f"
+        ] = np.random.uniform(0.5, 5, 2).tolist()
+        init_dict["PARAMETERS"]["share_1"] = 1.0
+
+    # More than one type:
+    else:
+        for i in range(1, num_types):
+            # Draw random parameters
+            init_dict["PARAMETERS"]["theta_p" + str(i)], init_dict["PARAMETERS"][
+                "theta_f" + str(i)
+                ] = np.random.uniform(0.5, 5, 2).tolist()
+
+            # Draw shares that sum up to one
+            shares = np.random.uniform(1, 10, num_types)
+            shares /= shares.sum()
+            init_dict["PARAMETERS"]["share_" + str(i)] = shares[i]
 
     init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
         "PARAMETERS"
