@@ -111,7 +111,7 @@ def random_init(constr=None):
             # Draw random parameters
             init_dict["PARAMETERS"]["theta_p" + str(i)], init_dict["PARAMETERS"][
                 "theta_f" + str(i)
-                ] = np.random.uniform(0.5, 5, 2).tolist()
+            ] = np.random.uniform(0.5, 5, 2).tolist()
 
             # Draw shares that sum up to one
             shares = np.random.uniform(1, 10, num_types)
