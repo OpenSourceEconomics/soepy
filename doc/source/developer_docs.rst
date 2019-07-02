@@ -3,6 +3,27 @@ Developer Notes
 
 In this part, we provide detailed explanation on how certain elements of the computational model are implemented in the current version of the code. There can be multiple ways of casting a given computation model in code. Here we specify programming choices made when implementing certain aspects of the model and provide logic and specification.
 
+
+Version 0.2
+***********
+
+Types
+-----
+
+A new extension of the model includes the introduction of unobserved heterogeneity in the form of discrete mass points
+in the disutility of work. We refer to the existence of a fixed number of individual types in the model. We estimate
+the frequencies of each type in the population as well as the disutility of part-time and full-time work, `theta_p`
+and `theta_f`, for all types compared to the baseline type (coefficient equal zero).
+
+Note the convention for the specification of the `init_file` after the introduction of types:
+
+* One type: `theta_p0`, `theta_f0`, `share_0` has to be equal one
+* More types: `theta_pi`, `theta_fi`, `share_i`, for each `i` from 1 to the number of types including.
+
+
+Version 0.1
+************
+
 pyth_create_state_space
 -----------------------
 
@@ -17,6 +38,7 @@ The inputs of the function come from the model specification. They consist of ne
 Outputs
 """""""
 The tate space related outputs of the function are collected in the array "args". "args" contains:
+
 * states_all: an array of tuples of state space components that constitute an admissible state space point each and taken together represent the entirity of admissible states across all periods in the model
 * states_number_period: a one dimensional array (i.e., a vector) that collects the number of admissible state space points for each period
 * mapping_state_index: an array which maps each state recorded in states all to a unique integer identifier
