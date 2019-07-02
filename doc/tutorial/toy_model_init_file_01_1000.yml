@@ -1,7 +1,6 @@
 ---
 GENERAL:
     num_periods: 40
-    num_choices: 3
 CONSTANTS:
     delta: 0.98
     mu: -0.56
