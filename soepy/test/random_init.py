@@ -94,9 +94,9 @@ def random_init(constr=None):
         "PARAMETERS"
     ]["delta_s3"] = np.random.uniform(0.1, 0.9, 3).tolist()
 
-    # Random number of types: 1, 2, or 3
+    # Random number of types: 1, 2, 3, 4, or 5
     num_types = 1
-    # num_types = int(np.random.choice([1,2,3] ,1))
+    # num_types = int(np.random.choice([1, 2, 3, 4, 5], 1))
 
     # One type: ensure share equals 1
     if num_types == 1:
