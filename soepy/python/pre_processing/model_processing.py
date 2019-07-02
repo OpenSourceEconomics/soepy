@@ -61,10 +61,6 @@ def expand_init_dict(init_dict):
         "type_shares": type_shares,
     }
 
-    # Rename type associated entries
-    init_dict["PARAMETERS"]["theta_p1"] = init_dict["PARAMETERS"].pop("theta_p")
-    init_dict["PARAMETERS"]["theta_f1"] = init_dict["PARAMETERS"].pop("theta_f")
-
     # Return function output
     return init_dict
 
