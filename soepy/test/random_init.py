@@ -100,8 +100,8 @@ def random_init(constr=None):
 
     # One type: ensure share equals 1
     if num_types == 1:
-        init_dict["PARAMETERS"]["theta_p"], init_dict["PARAMETERS"][
-            "theta_f"
+        init_dict["PARAMETERS"]["theta_p1"], init_dict["PARAMETERS"][
+            "theta_f1"
         ] = np.random.uniform(0.5, 5, 2).tolist()
         init_dict["PARAMETERS"]["share_1"] = 1.0
 
