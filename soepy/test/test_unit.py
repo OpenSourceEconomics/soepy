@@ -194,6 +194,3 @@ def test_unit_states_hard_code():
     ]
 
     np.testing.assert_array_equal(states_true, states[0:96, :])
-
-
-cleanup()
