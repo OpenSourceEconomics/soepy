@@ -39,19 +39,22 @@ def expand_init_dict(init_dict):
     shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
 
     # Extract the number of types
+    type_shares_non_baseline = [
+        v for k, v in init_dict["PARAMETERS"].items() if "share" in k
+    ]
 
-    if [v for k, v in init_dict["PARAMETERS"].items() if "share" in k] == 1.0:
+    # One type if one share value in init file which is equal to exactly one
+    if type_shares_non_baseline == 1.0:
         num_types = 1
         type_shares = 1.0
+    # Determine the number of types depending on the number of share values
+    # specified in the init file
     else:
-        num_types = (
-            len([v for k, v in init_dict["PARAMETERS"].items() if "share" in k]) + 1
-        )
+        num_types = len(type_shares_non_baseline) + 1
 
         # Aggregate type shares in list object
-        type_shares = [
-            1 - sum([v for k, v in init_dict["PARAMETERS"].items() if "share" in k])
-        ] + [v for k, v in init_dict["PARAMETERS"].items() if "share" in k]
+        # Share of baseline types equal to one minus sum of remaining type shares
+        type_shares = [1 - sum(type_shares_non_baseline)] + type_shares_non_baseline
 
     # Append derived attributes to init_dict
     init_dict["DERIVED_ATTR"] = {
