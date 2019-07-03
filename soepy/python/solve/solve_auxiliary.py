@@ -382,11 +382,10 @@ def _get_max_aggregated_utilities(
     mu,
     benefits,
 ):
-    num_choices = NUM_CHOICES
 
     current_max_value_function = INVALID_FLOAT
 
-    for j in range(num_choices):
+    for j in range(NUM_CHOICES):
 
         wage = np.exp(log_wage_systematic + draws[j])
 
