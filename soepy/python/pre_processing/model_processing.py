@@ -135,12 +135,10 @@ def group_parameters(init_dict, init_dict_flat):
         init_dict["PARAMETERS"]["delta_s3"],
     )
 
-    init_dict_flat["theta_p"] = [
-        v for k, v in init_dict["PARAMETERS"].items() if "theta_p" in k
-    ]
-    init_dict_flat["theta_f"] = [
-        v for k, v in init_dict["PARAMETERS"].items() if "theta_f" in k
-    ]
+    for i in ["p", "f"]:
+        init_dict_flat["theta_" + i] = [
+            v for k, v in init_dict["PARAMETERS"].items() if str("theta_" + i) in k
+        ]
 
     for i in range(1, init_dict["DERIVED_ATTR"]["num_types"]):
         init_dict_flat["share_" + str(i)] = init_dict["PARAMETERS"]["share_" + str(i)]
