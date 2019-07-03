@@ -10,7 +10,6 @@ from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
 from soepy.test.random_init import init_dict_flat_to_init_dict
-from soepy.test.auxiliary import cleanup
 
 
 def test_unit_nan():

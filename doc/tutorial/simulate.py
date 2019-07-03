@@ -1,5 +1,5 @@
 import soepy
-from soepy.test.auxiliary import cleanup
+from development.tests.auxiliary.auxiliary import cleanup
 
 # Generate simulated dataset
 data_frame = soepy.simulate("toy_model_init_file_01_1000.yml")
