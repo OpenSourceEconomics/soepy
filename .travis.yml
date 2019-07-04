@@ -30,7 +30,9 @@ script:
     # Run test battery.
     - ./development/tests/run_pr_testing.py
     - python -c "import soepy; soepy.test()"
-    - ls -al
+    
+    # Monitoring code coverage
+    - py.test
     - codecov
 
     # Build conda package.
