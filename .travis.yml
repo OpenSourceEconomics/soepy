@@ -31,12 +31,15 @@ script:
     - ./development/tests/run_pr_testing.py
     - python -c "import soepy; soepy.test()"
     
-    # Monitoring code coverage
+    # Monitoring code coverage, previous commands do not 
+    # create a proper coverage report.
     - py.test
-    - codecov
 
     # Build conda package.
     - conda install --yes -c opensourceeconomics soepy
+
+after_success:
+    - codecov
 
 notifications:
   slack:
