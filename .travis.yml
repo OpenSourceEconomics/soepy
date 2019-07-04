@@ -30,12 +30,11 @@ script:
     # Run test battery.
     - ./development/tests/run_pr_testing.py
     - python -c "import soepy; soepy.test()"
+    - ls -al
+    - codecov
 
     # Build conda package.
     - conda install --yes -c opensourceeconomics soepy
-
-after_success:
-    - codecov
 
 notifications:
   slack:
