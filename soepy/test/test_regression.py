@@ -21,11 +21,10 @@ def test1(idx):
     init_dict, expected_df = test
 
     # Modifications for type testing
-    init_dict["PARAMETERS"]["share_1"] = 1.0
 
-    # Rename type associated entries
-    init_dict["PARAMETERS"]["theta_p1"] = init_dict["PARAMETERS"].pop("theta_p")
-    init_dict["PARAMETERS"]["theta_f1"] = init_dict["PARAMETERS"].pop("theta_f")
+    # Rename single type associated entries to constant
+    init_dict["PARAMETERS"]["const_p"] = init_dict["PARAMETERS"].pop("theta_p")
+    init_dict["PARAMETERS"]["const_f"] = init_dict["PARAMETERS"].pop("theta_f")
 
     calculated_df = simulate(init_dict)
     calculated_df = calculated_df.drop(columns=["Type"])

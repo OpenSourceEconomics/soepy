@@ -83,7 +83,10 @@ def calculate_log_wage_systematic(model_params, states, covariates):
 def calculate_non_consumption_utility(model_params, states):
     """Calculate non-pecuniary utility contribution."""
 
-    non_consumption_utility = np.ones((states.shape[0], NUM_CHOICES))
+    non_consumption_utility = np.full(
+        (states.shape[0], NUM_CHOICES),
+        np.exp([0, model_params.const_p, model_params.const_f]),
+    )
 
     for i in range(1, model_params.num_types):
         non_consumption_utility[np.where(states[:, 5] == i)] = np.exp(

@@ -127,13 +127,18 @@ def group_parameters(init_dict, init_dict_flat):
         init_dict["PARAMETERS"]["delta_s3"],
     )
 
-    for i in ["p", "f"]:
-        init_dict_flat["theta_" + i] = [
-            v for k, v in init_dict["PARAMETERS"].items() if str("theta_" + i) in k
-        ]
+    if init_dict["DERIVED_ATTR"]["num_types"] > 1:
+        for i in ["p", "f"]:
+            init_dict_flat["theta_" + i] = [
+                v for k, v in init_dict["PARAMETERS"].items() if str("theta_" + i) in k
+            ]
 
-    for i in range(1, init_dict["DERIVED_ATTR"]["num_types"]):
-        init_dict_flat["share_" + str(i)] = init_dict["PARAMETERS"]["share_" + str(i)]
+        for i in range(1, init_dict["DERIVED_ATTR"]["num_types"]):
+            init_dict_flat["share_" + str(i)] = init_dict["PARAMETERS"][
+                "share_" + str(i)
+            ]
+    else:
+        pass
 
     init_dict_flat["gamma_1s"] = (
         init_dict["PARAMETERS"]["gamma_1s1"],
@@ -146,6 +151,9 @@ def group_parameters(init_dict, init_dict_flat):
         init_dict["PARAMETERS"]["sigma_2"],
         init_dict["PARAMETERS"]["sigma_3"],
     )
+
+    init_dict_flat["const_p"] = init_dict["PARAMETERS"]["const_p"]
+    init_dict_flat["const_f"] = init_dict["PARAMETERS"]["const_f"]
 
     return init_dict_flat
 

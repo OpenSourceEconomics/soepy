@@ -17,9 +17,9 @@ and `theta_f`, for all types compared to the baseline type (coefficient equal ze
 
 Note the convention for the specification of the `init_file` after the introduction of types:
 
-* One type: `theta_p1`, `theta_f1`, `share_1` has to be equal to 1.0. For this case, `model_params.num_types` equals 2:
-    * the baseline type with coefficients equal to zero, which occurs with zero probability
-    * type one, which is the type of all individuals in the simulated data_frame.
+* One type: `theta_pi`, `theta_fi`, `share_i` are not included in the initialisation file:
+    * baseline type with coefficients `theta_p` and `theta_f` equal to zero, which occurs with zero probability 1.
+    * above implies that the coefficients for the baseline type equal the constant.
 * More types: `theta_pi`, `theta_fi`, `share_i`, for each `i` from 1 to the number of types including.
 
 
