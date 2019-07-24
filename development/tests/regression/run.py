@@ -65,7 +65,9 @@ def check_vault(num_test):
     for test in tests[:num_test]:
 
         init_dict, expected_df = test
-        init_dict["PARAMETERS"]["share_1"] = 1.0
+
+        init_dict["PARAMETERS"]["const_p"] = init_dict["PARAMETERS"].pop("theta_p")
+        init_dict["PARAMETERS"]["const_f"] = init_dict["PARAMETERS"].pop("theta_f")
 
         calculated_df = simulate(init_dict)
         calculated_df = calculated_df.drop(columns=["Type"])
