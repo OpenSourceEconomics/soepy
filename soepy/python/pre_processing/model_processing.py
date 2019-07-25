@@ -134,8 +134,8 @@ def group_parameters(init_dict, init_dict_flat):
             ]
 
         for i in range(1, init_dict["DERIVED_ATTR"]["num_types"]):
-            init_dict_flat["share_" + str(i)] = init_dict["PARAMETERS"][
-                "share_" + str(i)
+            init_dict_flat["share_" + "{}".format(i)] = init_dict["PARAMETERS"][
+                "share_" + "{}".format(i)
             ]
     else:
         pass

@@ -104,14 +104,14 @@ def random_init(constr=None):
 
     for i in range(1, num_types):
         # Draw random parameters
-        init_dict["PARAMETERS"]["theta_p" + str(i)], init_dict["PARAMETERS"][
-            "theta_f" + str(i)
+        init_dict["PARAMETERS"]["theta_p" + "{}".format(i)], init_dict["PARAMETERS"][
+            "theta_f" + "{}".format(i)
         ] = np.random.uniform(0.5, 5, 2).tolist()
 
         # Draw shares that sum up to one
         shares = np.random.uniform(1, 10, num_types)
         shares /= shares.sum()
-        init_dict["PARAMETERS"]["share_" + str(i)] = shares[i]
+        init_dict["PARAMETERS"]["share_" + "{}".format(i)] = shares[i]
 
     init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
         "PARAMETERS"
