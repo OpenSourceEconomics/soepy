@@ -1,7 +1,6 @@
 ---
 GENERAL:
     num_periods: 40
-    num_choices: 3
 CONSTANTS:
     delta: 0.98
     mu: -0.56
@@ -30,6 +29,12 @@ PARAMETERS:
     delta_s3: 0.070
     const_p: 1.900
     const_f: 2.441
+    theta_p1: 1.900
+    theta_f1: 2.441
+    theta_p2: 1.000
+    theta_f2: 2.000
+    share_1: 0.2
+    share_2: 0.3
     sigma_1: 0.010
     sigma_2: 0.192
     sigma_3: 0.470
