@@ -37,7 +37,6 @@ def test_unit_nan():
         np.testing.assert_array_equal(df2.values, a)
 
 
-@pytest.mark.skip(reason="adjustment due after init format revision")
 def test_unit_init_print():
     """This test ensures that the init file printing process work as intended. For this
      purpose we generate random init file specifications import the resulting files,
