@@ -91,7 +91,7 @@ def calculate_non_consumption_utility(model_params, states):
     for i in range(1, model_params.num_types):
         non_consumption_utility[np.where(states[:, 5] == i)] += [
             0,
-            np.exp(0, model_params.theta_p[i - 1]),
+            np.exp(model_params.theta_p[i - 1]),
             np.exp(model_params.theta_f[i - 1]),
         ]
 
