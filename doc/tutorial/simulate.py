@@ -2,9 +2,6 @@ import soepy
 from development.tests.auxiliary.auxiliary import cleanup
 
 # Generate simulated dataset
-data_frame = soepy.simulate("toy_model_init_file_01_1000.yml")
-
-# Save data frame to csv file
-data_frame.to_pickle("test.soepy.pkl")
+data_frame = soepy.simulate("toy_model_init_file_02_1000_3types.yml")
 
 cleanup()
