@@ -40,7 +40,7 @@ def expand_init_dict(init_dict):
 
     # Extract the number of types
     type_shares_non_baseline = [
-        v for k, v in init_dict["PARAMETERS"].items() if "share" in k
+        _ for k, _ in init_dict["PARAMETERS"].items() if "share" in k
     ]
     num_types = len(type_shares_non_baseline) + 1
 
