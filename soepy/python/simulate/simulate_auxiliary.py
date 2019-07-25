@@ -84,10 +84,10 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
         # Calculate total values for all choices
         flow_utilities = np.full((current_states.shape[0], 3), np.nan)
 
-        flow_utilities[:, 0] = (
+        flow_utilities[:, :1] = (
             model_params.benefits ** model_params.mu
             / model_params.mu
-            * current_non_consumption_utilities[:, 0]
+            * current_non_consumption_utilities[:, :1]
         )
         flow_utilities[:, 1:] = (
             (HOURS[1:] * current_wages[:, 1:]) ** model_params.mu
