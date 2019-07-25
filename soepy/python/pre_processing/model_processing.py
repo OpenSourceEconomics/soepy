@@ -130,7 +130,9 @@ def group_parameters(init_dict, init_dict_flat):
     if init_dict["DERIVED_ATTR"]["num_types"] > 1:
         for i in ["p", "f"]:
             init_dict_flat["theta_" + i] = [
-                v for k, v in init_dict["PARAMETERS"].items() if str("theta_" + i) in k
+                v
+                for k, v in init_dict["PARAMETERS"].items()
+                if "{}".format("theta_" + i) in k
             ]
 
         for i in range(1, init_dict["DERIVED_ATTR"]["num_types"]):
