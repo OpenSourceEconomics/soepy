@@ -9,10 +9,9 @@ from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
 from soepy.test.random_init import init_dict_flat_to_init_dict
-from soepy.test.auxiliary import cleanup
 
 
-def test():
+def test_unit_nan():
     """This test ensures that the data frame contain only nan values if individuals are
      still a in education.
     """
@@ -37,7 +36,7 @@ def test():
         np.testing.assert_array_equal(df2.values, a)
 
 
-def test3():
+def test_unit_init_print():
     """This test ensures that the init file printing process work as intended. For this
      purpose we generate random init file specifications import the resulting files,
      write the specifications to another init file, import it again and comparing both
@@ -65,7 +64,7 @@ def test3():
                     raise AssertionError()
 
 
-def test4():
+def test_unit_data_frame_shape():
     """This test ensures that the shape of the simulated data frame corresponds to the
     to the random specifications of our initialization file.
     """
@@ -81,67 +80,114 @@ def test4():
         np.testing.assert_array_equal(df.shape[0], constr["AGENTS"] * constr["PERIODS"])
 
 
-def test5():
+def test_unit_states_hard_code():
     """This test ensures that the state space creation generates the correct admissible
     state space points for the first 4 periods."""
 
-    model_params = namedtuple("model_params", "num_periods educ_range educ_min")
-    model_params = model_params(4, 3, 10)
+    model_params = namedtuple(
+        "model_params", "num_periods educ_range educ_min num_types"
+    )
+    model_params = model_params(4, 3, 10, 2)
 
     states, _ = pyth_create_state_space(model_params)
 
     states_true = [
-        [0, 10, 0, 0, 0],
-        [1, 10, 0, 0, 0],
-        [1, 10, 1, 1, 0],
-        [1, 10, 2, 0, 1],
-        [1, 11, 0, 0, 0],
-        [2, 10, 0, 0, 0],
-        [2, 10, 0, 1, 0],
-        [2, 10, 1, 1, 0],
-        [2, 10, 1, 2, 0],
-        [2, 10, 0, 0, 1],
-        [2, 10, 2, 0, 1],
-        [2, 10, 1, 1, 1],
-        [2, 10, 2, 1, 1],
-        [2, 10, 2, 0, 2],
-        [2, 11, 0, 0, 0],
-        [2, 11, 1, 1, 0],
-        [2, 11, 2, 0, 1],
-        [2, 12, 0, 0, 0],
-        [3, 10, 0, 0, 0],
-        [3, 10, 0, 1, 0],
-        [3, 10, 1, 1, 0],
-        [3, 10, 0, 2, 0],
-        [3, 10, 1, 2, 0],
-        [3, 10, 1, 3, 0],
-        [3, 10, 0, 0, 1],
-        [3, 10, 2, 0, 1],
-        [3, 10, 0, 1, 1],
-        [3, 10, 1, 1, 1],
-        [3, 10, 2, 1, 1],
-        [3, 10, 1, 2, 1],
-        [3, 10, 2, 2, 1],
-        [3, 10, 0, 0, 2],
-        [3, 10, 2, 0, 2],
-        [3, 10, 1, 1, 2],
-        [3, 10, 2, 1, 2],
-        [3, 10, 2, 0, 3],
-        [3, 11, 0, 0, 0],
-        [3, 11, 0, 1, 0],
-        [3, 11, 1, 1, 0],
-        [3, 11, 1, 2, 0],
-        [3, 11, 0, 0, 1],
-        [3, 11, 2, 0, 1],
-        [3, 11, 1, 1, 1],
-        [3, 11, 2, 1, 1],
-        [3, 11, 2, 0, 2],
-        [3, 12, 0, 0, 0],
-        [3, 12, 1, 1, 0],
-        [3, 12, 2, 0, 1],
+        [0, 10, 0, 0, 0, 0],
+        [0, 10, 0, 0, 0, 1],
+        [1, 10, 0, 0, 0, 0],
+        [1, 10, 1, 1, 0, 0],
+        [1, 10, 2, 0, 1, 0],
+        [1, 11, 0, 0, 0, 0],
+        [1, 10, 0, 0, 0, 1],
+        [1, 10, 1, 1, 0, 1],
+        [1, 10, 2, 0, 1, 1],
+        [1, 11, 0, 0, 0, 1],
+        [2, 10, 0, 0, 0, 0],
+        [2, 10, 0, 1, 0, 0],
+        [2, 10, 1, 1, 0, 0],
+        [2, 10, 1, 2, 0, 0],
+        [2, 10, 0, 0, 1, 0],
+        [2, 10, 2, 0, 1, 0],
+        [2, 10, 1, 1, 1, 0],
+        [2, 10, 2, 1, 1, 0],
+        [2, 10, 2, 0, 2, 0],
+        [2, 11, 0, 0, 0, 0],
+        [2, 11, 1, 1, 0, 0],
+        [2, 11, 2, 0, 1, 0],
+        [2, 12, 0, 0, 0, 0],
+        [2, 10, 0, 0, 0, 1],
+        [2, 10, 0, 1, 0, 1],
+        [2, 10, 1, 1, 0, 1],
+        [2, 10, 1, 2, 0, 1],
+        [2, 10, 0, 0, 1, 1],
+        [2, 10, 2, 0, 1, 1],
+        [2, 10, 1, 1, 1, 1],
+        [2, 10, 2, 1, 1, 1],
+        [2, 10, 2, 0, 2, 1],
+        [2, 11, 0, 0, 0, 1],
+        [2, 11, 1, 1, 0, 1],
+        [2, 11, 2, 0, 1, 1],
+        [2, 12, 0, 0, 0, 1],
+        [3, 10, 0, 0, 0, 0],
+        [3, 10, 0, 1, 0, 0],
+        [3, 10, 1, 1, 0, 0],
+        [3, 10, 0, 2, 0, 0],
+        [3, 10, 1, 2, 0, 0],
+        [3, 10, 1, 3, 0, 0],
+        [3, 10, 0, 0, 1, 0],
+        [3, 10, 2, 0, 1, 0],
+        [3, 10, 0, 1, 1, 0],
+        [3, 10, 1, 1, 1, 0],
+        [3, 10, 2, 1, 1, 0],
+        [3, 10, 1, 2, 1, 0],
+        [3, 10, 2, 2, 1, 0],
+        [3, 10, 0, 0, 2, 0],
+        [3, 10, 2, 0, 2, 0],
+        [3, 10, 1, 1, 2, 0],
+        [3, 10, 2, 1, 2, 0],
+        [3, 10, 2, 0, 3, 0],
+        [3, 11, 0, 0, 0, 0],
+        [3, 11, 0, 1, 0, 0],
+        [3, 11, 1, 1, 0, 0],
+        [3, 11, 1, 2, 0, 0],
+        [3, 11, 0, 0, 1, 0],
+        [3, 11, 2, 0, 1, 0],
+        [3, 11, 1, 1, 1, 0],
+        [3, 11, 2, 1, 1, 0],
+        [3, 11, 2, 0, 2, 0],
+        [3, 12, 0, 0, 0, 0],
+        [3, 12, 1, 1, 0, 0],
+        [3, 12, 2, 0, 1, 0],
+        [3, 10, 0, 0, 0, 1],
+        [3, 10, 0, 1, 0, 1],
+        [3, 10, 1, 1, 0, 1],
+        [3, 10, 0, 2, 0, 1],
+        [3, 10, 1, 2, 0, 1],
+        [3, 10, 1, 3, 0, 1],
+        [3, 10, 0, 0, 1, 1],
+        [3, 10, 2, 0, 1, 1],
+        [3, 10, 0, 1, 1, 1],
+        [3, 10, 1, 1, 1, 1],
+        [3, 10, 2, 1, 1, 1],
+        [3, 10, 1, 2, 1, 1],
+        [3, 10, 2, 2, 1, 1],
+        [3, 10, 0, 0, 2, 1],
+        [3, 10, 2, 0, 2, 1],
+        [3, 10, 1, 1, 2, 1],
+        [3, 10, 2, 1, 2, 1],
+        [3, 10, 2, 0, 3, 1],
+        [3, 11, 0, 0, 0, 1],
+        [3, 11, 0, 1, 0, 1],
+        [3, 11, 1, 1, 0, 1],
+        [3, 11, 1, 2, 0, 1],
+        [3, 11, 0, 0, 1, 1],
+        [3, 11, 2, 0, 1, 1],
+        [3, 11, 1, 1, 1, 1],
+        [3, 11, 2, 1, 1, 1],
+        [3, 11, 2, 0, 2, 1],
+        [3, 12, 0, 0, 0, 1],
+        [3, 12, 1, 1, 0, 1],
+        [3, 12, 2, 0, 1, 1],
     ]
 
-    np.testing.assert_array_equal(states_true, states[0:48, :])
-
-
-cleanup()
+    np.testing.assert_array_equal(states_true, states[0:96, :])

@@ -94,9 +94,25 @@ def random_init(constr=None):
         "PARAMETERS"
     ]["delta_s3"] = np.random.uniform(0.1, 0.9, 3).tolist()
 
-    init_dict["PARAMETERS"]["theta_p"], init_dict["PARAMETERS"][
-        "theta_f"
+    init_dict["PARAMETERS"]["const_p"], init_dict["PARAMETERS"][
+        "const_f"
     ] = np.random.uniform(0.5, 5, 2).tolist()
+
+    # Random number of types: 1, 2, 3, or 4
+    num_types = int(np.random.choice([1, 2, 3, 4], 1))
+    # Draw shares that sum up to one
+    shares = np.random.uniform(1, 10, num_types)
+    shares /= shares.sum()
+    shares = shares.tolist()
+
+    for i in range(1, num_types):
+        # Draw random parameters
+        init_dict["PARAMETERS"]["theta_p" + "{}".format(i)], init_dict["PARAMETERS"][
+            "theta_f" + "{}".format(i)
+        ] = np.random.uniform(-0.05, -4, 2).tolist()
+
+        # Assign shares
+        init_dict["PARAMETERS"]["share_" + "{}".format(i)] = shares[i]
 
     init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
         "PARAMETERS"
@@ -172,8 +188,22 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["PARAMETERS"]["delta_s1"], init_dict["PARAMETERS"]["delta_s2"], init_dict[
         "PARAMETERS"
     ]["delta_s3"] = init_dict_flat["delta_s"]
-    init_dict["PARAMETERS"]["theta_p"] = init_dict_flat["theta_p"]
-    init_dict["PARAMETERS"]["theta_f"] = init_dict_flat["theta_f"]
+
+    init_dict["PARAMETERS"]["const_p"] = init_dict_flat["const_p"]
+    init_dict["PARAMETERS"]["const_f"] = init_dict_flat["const_f"]
+
+    for i in range(1, init_dict_flat["num_types"]):
+
+        init_dict["PARAMETERS"]["theta_p" + "{}".format(i)] = init_dict_flat["theta_p"][
+            i - 1
+        ]
+        init_dict["PARAMETERS"]["theta_f" + "{}".format(i)] = init_dict_flat["theta_f"][
+            i - 1
+        ]
+        init_dict["PARAMETERS"]["share_" + "{}".format(i)] = init_dict_flat[
+            "share_" + "{}".format(i)
+        ]
+
     init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
         "PARAMETERS"
     ]["sigma_3"] = init_dict_flat["sigma"]

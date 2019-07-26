@@ -70,16 +70,18 @@ def pyth_create_state_space(model_params):
     Examples
     --------
     >>> from collections import namedtuple
-    >>> model_params = namedtuple("model_params", "num_periods educ_range educ_min")
-    >>> model_params = model_params(10, 3, 10)
+    >>> model_params = namedtuple(
+    ...     "model_params", "num_periods educ_range educ_min num_types"
+    ... )
+    >>> model_params = model_params(10, 3, 10, 2)
     >>> NUM_CHOICES = 3
     >>> states, indexer = pyth_create_state_space(
     ...     model_params
     ... )
     >>> states.shape
-    (1110, 5)
+    (2220, 6)
     >>> indexer.shape
-    (10, 3, 3, 10, 10)
+    (10, 3, 3, 10, 10, 2)
     """
     data = []
 
@@ -90,6 +92,7 @@ def pyth_create_state_space(model_params):
         NUM_CHOICES,
         model_params.num_periods,
         model_params.num_periods,
+        model_params.num_types,
     )
 
     indexer = np.full(shape, MISSING_INT)
@@ -100,101 +103,130 @@ def pyth_create_state_space(model_params):
     # Loop over all periods / all ages
     for period in range(model_params.num_periods):
 
-        # Loop over all possible initial conditions for education
-        for educ_years in range(model_params.educ_range):
+        for type_ in range(model_params.num_types):
 
-            # Check if individual has already completed education
-            # and will make a labor supply choice in the period
-            if educ_years > period:
-                continue
+            # Loop over all possible initial conditions for education
+            for educ_years in range(model_params.educ_range):
 
-            # Loop over all admissible years of experience accumulated in full-time
-            for exp_f in range(model_params.num_periods):
+                # Check if individual has already completed education
+                # and will make a labor supply choice in the period
+                if educ_years > period:
+                    continue
 
-                # Loop over all admissible years of experience accumulated in part-time
-                for exp_p in range(model_params.num_periods):
+                # Loop over all admissible years of experience accumulated in full-time
+                for exp_f in range(model_params.num_periods):
 
-                    # The accumulation of experience cannot exceed time elapsed
-                    # since individual entered the model
-                    if exp_f + exp_p > period - educ_years:
-                        continue
+                    # Loop over all admissible years of experience accumulated
+                    # in part-time
+                    for exp_p in range(model_params.num_periods):
 
-                    # Add an additional entry state
-                    # [educ_years + model_params.educ_min, 0, 0, 0]
-                    # for individuals who have just completed education
-                    # and still have no experience in any occupation.
-                    if period == educ_years:
+                        # The accumulation of experience cannot exceed time elapsed
+                        # since individual entered the model
+                        if exp_f + exp_p > period - educ_years:
+                            continue
 
-                        # Assign an additional integer count i
-                        # for entry state
-                        indexer[period, educ_years, 0, 0, 0] = i
+                        # Add an additional entry state
+                        # [educ_years + model_params.educ_min, 0, 0, 0]
+                        # for individuals who have just completed education
+                        # and still have no experience in any occupation.
+                        if period == educ_years:
 
-                        # Record the values of the state space components
-                        # for the currently reached entry state
-                        row = [period, educ_years + model_params.educ_min, 0, 0, 0]
-
-                        # Update count once more
-                        i += 1
-
-                        data.append(row)
-
-                    else:
-
-                        # Loop over the three labor market choices, N, P, F
-                        for choice_lagged in range(NUM_CHOICES):
-
-                            # If individual has only worked full-time in the past,
-                            # she can only have full-time (2) as lagged choice
-                            if (choice_lagged != 2) and (exp_f == period - educ_years):
-                                continue
-
-                            # If individual has only worked part-time in the past,
-                            # she can only have part-time (1) as lagged choice
-                            if (choice_lagged != 1) and (exp_p == period - educ_years):
-                                continue
-
-                            # If an individual has never worked full-time,
-                            # she cannot have that lagged activity
-                            if (choice_lagged == 2) and (exp_f == 0):
-                                continue
-
-                            # If an individual has never worked part-time,
-                            # she cannot have that lagged activity
-                            if (choice_lagged == 1) and (exp_p == 0):
-                                continue
-
-                            # If an individual has always been employed,
-                            # she cannot have non-employment (0) as lagged choice
-                            if (choice_lagged == 0) and (
-                                exp_f + exp_p == period - educ_years
-                            ):
-                                continue
-
-                            # Check for duplicate states
-                            if (
-                                indexer[period, educ_years, choice_lagged, exp_p, exp_f]
-                                != MISSING_INT
-                            ):
-                                continue
-
-                            # Assign the integer count i as an indicator for the
-                            # currently reached admissible state space point
-                            indexer[period, educ_years, choice_lagged, exp_p, exp_f] = i
-
-                            # Update count
-                            i += 1
+                            # Assign an additional integer count i
+                            # for entry state
+                            indexer[period, educ_years, 0, 0, 0, type_] = i
 
                             # Record the values of the state space components
-                            # for the currently reached admissible state space point
+                            # for the currently reached entry state
                             row = [
                                 period,
                                 educ_years + model_params.educ_min,
-                                choice_lagged,
-                                exp_p,
-                                exp_f,
+                                0,
+                                0,
+                                0,
+                                type_,
                             ]
 
+                            # Update count once more
+                            i += 1
+
                             data.append(row)
+
+                        else:
+
+                            # Loop over the three labor market choices, N, P, F
+                            for choice_lagged in range(NUM_CHOICES):
+
+                                # If individual has only worked full-time in the past,
+                                # she can only have full-time (2) as lagged choice
+                                if (choice_lagged != 2) and (
+                                    exp_f == period - educ_years
+                                ):
+                                    continue
+
+                                # If individual has only worked part-time in the past,
+                                # she can only have part-time (1) as lagged choice
+                                if (choice_lagged != 1) and (
+                                    exp_p == period - educ_years
+                                ):
+                                    continue
+
+                                # If an individual has never worked full-time,
+                                # she cannot have that lagged activity
+                                if (choice_lagged == 2) and (exp_f == 0):
+                                    continue
+
+                                # If an individual has never worked part-time,
+                                # she cannot have that lagged activity
+                                if (choice_lagged == 1) and (exp_p == 0):
+                                    continue
+
+                                # If an individual has always been employed,
+                                # she cannot have non-employment (0) as lagged choice
+                                if (choice_lagged == 0) and (
+                                    exp_f + exp_p == period - educ_years
+                                ):
+                                    continue
+
+                                # Check for duplicate states
+                                if (
+                                    indexer[
+                                        period,
+                                        educ_years,
+                                        choice_lagged,
+                                        exp_p,
+                                        exp_f,
+                                        type_,
+                                    ]
+                                    != MISSING_INT
+                                ):
+                                    continue
+
+                                # Assign the integer count i as an indicator for the
+                                # currently reached admissible state space point
+                                indexer[
+                                    period,
+                                    educ_years,
+                                    choice_lagged,
+                                    exp_p,
+                                    exp_f,
+                                    type_,
+                                ] = i
+
+                                # Update count
+                                i += 1
+
+                                # Record the values of the state space components
+                                # for the currently reached admissible state space point
+                                row = [
+                                    period,
+                                    educ_years + model_params.educ_min,
+                                    choice_lagged,
+                                    exp_p,
+                                    exp_f,
+                                    type_,
+                                ]
+
+                                data.append(row)
 
         states = np.array(data)
 
@@ -203,7 +235,7 @@ def pyth_create_state_space(model_params):
 
 
 def pyth_backward_induction(
-    model_params, states, indexer, log_wage_systematic, nonconsumption_utilities, draws
+    model_params, states, indexer, log_wage_systematic, non_consumption_utilities, draws
 ):
     """Get expected maximum value function at every state space point.
     Backward induction is performed all at once for all states in a given period.
@@ -230,7 +262,7 @@ def pyth_backward_induction(
         One dimensional array with length num_states containing the part of the wages
         at the respective state space point that do not depend on the agent's choice,
         nor on the random shock.
-    nonconsumption_utilities : np.ndarray
+    non_consumption_utilities : np.ndarray
         Array of dimension (num_states, num_choices) containing the utility
         contribution of non-pecuniary factors.
 
@@ -251,6 +283,9 @@ def pyth_backward_induction(
         # Extract period information
         states_period = states[np.where(states[:, 0] == period)]
         log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
+        non_consumption_utilities_period = non_consumption_utilities[
+            states[:, 0] == period
+        ]
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
@@ -269,7 +304,7 @@ def pyth_backward_induction(
         emax_period = construct_emax(
             model_params.delta,
             log_wage_systematic_period,
-            nonconsumption_utilities,
+            non_consumption_utilities_period,
             draws[period],
             emaxs_period[:, :3],
             HOURS,
@@ -305,21 +340,32 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
     """
     for i in range(states_subset.shape[0]):
         # Unpack parent state and get index
-        period, educ_years, choice_lagged, exp_p, exp_f = states_subset[i]
+        period, educ_years, choice_lagged, exp_p, exp_f, type_ = states_subset[i]
         k_parent = indexer[
-            period, educ_years - model_params.educ_min, choice_lagged, exp_p, exp_f
+            period,
+            educ_years - model_params.educ_min,
+            choice_lagged,
+            exp_p,
+            exp_f,
+            type_,
         ]
 
         # Choice: Non-employment
-        k = indexer[period + 1, educ_years - model_params.educ_min, 0, exp_p, exp_f]
+        k = indexer[
+            period + 1, educ_years - model_params.educ_min, 0, exp_p, exp_f, type_
+        ]
         emaxs[k_parent, 0] = emaxs[k, 3]
 
         # Choice: Part-time
-        k = indexer[period + 1, educ_years - model_params.educ_min, 1, exp_p + 1, exp_f]
+        k = indexer[
+            period + 1, educ_years - model_params.educ_min, 1, exp_p + 1, exp_f, type_
+        ]
         emaxs[k_parent, 1] = emaxs[k, 3]
 
         # Choice: Full-time
-        k = indexer[period + 1, educ_years - model_params.educ_min, 2, exp_p, exp_f + 1]
+        k = indexer[
+            period + 1, educ_years - model_params.educ_min, 2, exp_p, exp_f + 1, type_
+        ]
         emaxs[k_parent, 2] = emaxs[k, 3]
 
     return emaxs
@@ -329,18 +375,17 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
 def _get_max_aggregated_utilities(
     delta,
     log_wage_systematic,
-    nonconsumption_utilities,
+    non_consumption_utilities,
     draws,
     emaxs,
     hours,
     mu,
     benefits,
 ):
-    num_choices = nonconsumption_utilities.shape[0]
 
     current_max_value_function = INVALID_FLOAT
 
-    for j in range(num_choices):
+    for j in range(NUM_CHOICES):
 
         wage = np.exp(log_wage_systematic + draws[j])
 
@@ -350,7 +395,7 @@ def _get_max_aggregated_utilities(
             consumption_utility = (hours[j] * wage) ** mu / mu
 
         value_function_choice = (
-            consumption_utility * nonconsumption_utilities[j] + delta * emaxs[j]
+            consumption_utility * non_consumption_utilities[j] + delta * emaxs[j]
         )
 
         if value_function_choice > current_max_value_function:
@@ -368,7 +413,7 @@ def _get_max_aggregated_utilities(
 def construct_emax(
     delta,
     log_wage_systematic,
-    nonconsumption_utilities,
+    non_consumption_utilities,
     draws,
     emaxs,
     hours,
@@ -393,7 +438,7 @@ def construct_emax(
         One dimensional array with length num_states containing the part of the wages
         at the respective state space point that do not depend on the agent's choice,
         nor on the random shock.
-    nonconsumption_utilities : np.ndarray
+    non_consumption_utilities : np.ndarray
         Array of dimension (num_states, num_choices) containing the utility
         contribution of non-pecuniary factors.
     draws : np.ndarray
@@ -436,7 +481,7 @@ def construct_emax(
         max_total_utility = _get_max_aggregated_utilities(
             delta,
             log_wage_systematic,
-            nonconsumption_utilities,
+            non_consumption_utilities,
             draws[i],
             emaxs,
             hours,

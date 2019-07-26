@@ -38,7 +38,23 @@ def expand_init_dict(init_dict):
     ]
     shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
 
-    init_dict["DERIVED_ATTR"] = {"educ_range": educ_range, "shocks_cov": shocks_cov}
+    # Extract the number of types
+    type_shares_non_baseline = [
+        _ for k, _ in init_dict["PARAMETERS"].items() if "share" in k
+    ]
+    num_types = len(type_shares_non_baseline) + 1
+
+    # Aggregate type shares in list object
+    # Share of baseline types equal to one minus sum of remaining type shares
+    type_shares = [1 - sum(type_shares_non_baseline)] + type_shares_non_baseline
+
+    # Append derived attributes to init_dict
+    init_dict["DERIVED_ATTR"] = {
+        "educ_range": educ_range,
+        "shocks_cov": shocks_cov,
+        "num_types": num_types,
+        "type_shares": type_shares,
+    }
 
     # Return function output
     return init_dict
@@ -111,8 +127,20 @@ def group_parameters(init_dict, init_dict_flat):
         init_dict["PARAMETERS"]["delta_s3"],
     )
 
-    init_dict_flat["theta_p"] = init_dict["PARAMETERS"]["theta_p"]
-    init_dict_flat["theta_f"] = init_dict["PARAMETERS"]["theta_f"]
+    if init_dict["DERIVED_ATTR"]["num_types"] > 1:
+        for i in ["p", "f"]:
+            init_dict_flat["theta_" + i] = [
+                v
+                for k, v in init_dict["PARAMETERS"].items()
+                if "{}".format("theta_" + i) in k
+            ]
+
+        for i in range(1, init_dict["DERIVED_ATTR"]["num_types"]):
+            init_dict_flat["share_" + "{}".format(i)] = init_dict["PARAMETERS"][
+                "share_" + "{}".format(i)
+            ]
+    else:
+        pass
 
     init_dict_flat["gamma_1s"] = (
         init_dict["PARAMETERS"]["gamma_1s1"],
@@ -125,6 +153,9 @@ def group_parameters(init_dict, init_dict_flat):
         init_dict["PARAMETERS"]["sigma_2"],
         init_dict["PARAMETERS"]["sigma_3"],
     )
+
+    init_dict_flat["const_p"] = init_dict["PARAMETERS"]["const_p"]
+    init_dict_flat["const_f"] = init_dict["PARAMETERS"]["const_f"]
 
     return init_dict_flat
 
