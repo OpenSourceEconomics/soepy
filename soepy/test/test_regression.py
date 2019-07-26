@@ -20,13 +20,7 @@ def test1(idx):
 
     init_dict, expected_df = test
 
-    # Modifications for type testing
-    # Rename single type associated entries to constant
-    init_dict["PARAMETERS"]["const_p"] = init_dict["PARAMETERS"].pop("theta_p")
-    init_dict["PARAMETERS"]["const_f"] = init_dict["PARAMETERS"].pop("theta_f")
-
     calculated_df = simulate(init_dict)
-    calculated_df = calculated_df.drop(columns=["Type"])
 
     for col in expected_df.columns.tolist():
         print(col)

@@ -30,7 +30,7 @@ def process_arguments(parser):
     return request, num_test, seed
 
 
-def create_vault(num_test=100, seed=123456):
+def create_vault(num_test=1000, seed=123456):
     """This function creates our regression vault."""
     np.random.seed(seed)
     seeds = np.random.randint(0, 1000, size=num_test)
@@ -66,11 +66,7 @@ def check_vault(num_test):
 
         init_dict, expected_df = test
 
-        init_dict["PARAMETERS"]["const_p"] = init_dict["PARAMETERS"].pop("theta_p")
-        init_dict["PARAMETERS"]["const_f"] = init_dict["PARAMETERS"].pop("theta_f")
-
         calculated_df = simulate(init_dict)
-        calculated_df = calculated_df.drop(columns=["Type"])
 
         for col in expected_df.columns.tolist():
             expected_df[col].equals(calculated_df[col])
