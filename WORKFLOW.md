@@ -8,6 +8,7 @@
 6. After PR Testing has passed, request review
 7. Address comments in review and repeat 3, 4, 5, 6
 8. Merge and close PR when there are no more comments.
+9. Update ROADMAP.md
 
 ## PR TESTING
 
