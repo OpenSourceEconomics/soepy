@@ -29,10 +29,10 @@ PARAMETERS:
     delta_s3: 0.070
     const_p: 1.900
     const_f: 2.441
-    theta_p1: 1.900
-    theta_f1: 2.441
-    theta_p2: 1.000
-    theta_f2: 2.000
+    theta_p1: -0.200
+    theta_f1: -0.500
+    theta_p2: -0.100
+    theta_f2: -0.300
     share_1: 0.2
     share_2: 0.3
     sigma_1: 0.010

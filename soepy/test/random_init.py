@@ -109,7 +109,7 @@ def random_init(constr=None):
         # Draw random parameters
         init_dict["PARAMETERS"]["theta_p" + "{}".format(i)], init_dict["PARAMETERS"][
             "theta_f" + "{}".format(i)
-        ] = np.random.uniform(0.5, 5, 2).tolist()
+        ] = np.random.uniform(-0.05, -4, 2).tolist()
 
         # Assign shares
         init_dict["PARAMETERS"]["share_" + "{}".format(i)] = shares[i]
