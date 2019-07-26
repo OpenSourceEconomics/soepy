@@ -1,7 +1,6 @@
 from collections import namedtuple
 
 import numpy as np
-import pytest
 
 from soepy.python.solve.solve_auxiliary import pyth_create_state_space
 from soepy.python.pre_processing.model_processing import read_init_file
