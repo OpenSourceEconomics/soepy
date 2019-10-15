@@ -48,8 +48,10 @@ def pyth_solve(model_params, model_spec):
     # Create objects that depend only on the state space
     covariates = construct_covariates(states)
 
-    attrs = ["seed_emax", "shocks_cov", "num_periods", "num_draws_emax"]
-    draws_emax = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
+    attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
+    draws_emax = draw_disturbances(
+        *[getattr(model_spec, attr) for attr in attrs_spec], model_params
+    )
 
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
         model_params, states, covariates

@@ -3,7 +3,7 @@ import numpy as np
 from soepy.python.shared.shared_constants import NUM_CHOICES
 
 
-def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
+def draw_disturbances(seed, num_periods, num_draws, model_params):
     """Creates desired number of draws of a multivariate standard normal
     distribution.
 
@@ -13,6 +13,11 @@ def draw_disturbances(seed, shocks_cov, num_periods, num_draws):
     # Input parameters of the distribution
     mean = [0, 0, 0]
     shocks_cov_matrix = np.zeros((3, 3), float)
+    shocks_cov = [
+        model_params.sigma_1 ** 2,
+        model_params.sigma_2 ** 2,
+        model_params.sigma_3 ** 2,
+    ]
     np.fill_diagonal(shocks_cov_matrix, shocks_cov)
 
     # Create draws from the standard normal distribution
