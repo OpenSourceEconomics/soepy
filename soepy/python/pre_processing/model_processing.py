@@ -71,7 +71,7 @@ def read_model_params_init(model_params_df):
     model_params_dict_expanded = expand_model_params_dict(model_params_dict)
 
     # Remove nested structure of dictionary
-    model_params_dict_flat = flatten_model_params_dict(model_params_dict_expanded)
+    model_params_dict_flat = group_parameters(model_params_dict_expanded)
 
     # Save as namedtuple
     model_params = dict_to_namedtuple_params(model_params_dict_flat)
@@ -80,43 +80,81 @@ def read_model_params_init(model_params_df):
 
 
 def expand_model_params_dict(model_params_dict):
+    # Calculate covariances of the error terms given standard deviations
+    shocks_cov = [
+        model_params_dict["sd_wage_shock"]["sigma_1"],
+        model_params_dict["sd_wage_shock"]["sigma_2"],
+        model_params_dict["sd_wage_shock"]["sigma_3"],
+    ]
+    shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
+
     # Extract the values of the type shares
     type_shares_non_baseline = [
         _ for k, _ in model_params_dict["shares"].items() if "share" in k
     ]
 
-    # Share of baseline types equal to one minus sum of remaining type shares
-    share_0 = 1 - sum(type_shares_non_baseline)
+    num_types = len(type_shares_non_baseline) + 1
 
-    # Append derived attribute to model_params_dict
-    model_params_dict["shares"].update({"share_0": share_0})
+    # Aggregate type shares in list object
+    # Share of baseline types equal to one minus sum of remaining type shares
+    type_shares = [1 - sum(type_shares_non_baseline)] + type_shares_non_baseline
+
+    # Append derived attributes to init_dict
+    model_params_dict["derived_attr"] = {
+        "shocks_cov": shocks_cov,
+        "type_shares": type_shares,
+        "num_types": num_types,
+    }
 
     return model_params_dict
 
 
-def flatten_model_params_dict(model_params_dict):
-    """Removes the grouping from the nested dictionary"""
+def group_parameters(model_params_dict_expanded):
+    """Groups the parameters to be estimates
+    in flat dictionary structure"""
 
-    groups = [
-        "const_wage_eq",
-        "disutil_work",
-        "exp_accm",
-        "exp_deprec",
-        "exp_returns",
-        "hetrg_unobs",
-        "sd_wage_shock",
-        "shares",
+    model_params_dict_flat = {}
+
+    model_params_dict_flat["gamma_0s"] = list(
+        model_params_dict_expanded["const_wage_eq"].values()
+    )
+
+    model_params_dict_flat["gamma_1s"] = list(
+        model_params_dict_expanded["exp_returns"].values()
+    )
+
+    model_params_dict_flat["g_s"] = list(
+        model_params_dict_expanded["exp_accm"].values()
+    )
+
+    model_params_dict_flat["delta_s"] = list(
+        model_params_dict_expanded["exp_deprec"].values()
+    )
+
+    model_params_dict_flat["const_p"] = model_params_dict_expanded["disutil_work"][
+        "const_p"
+    ]
+    model_params_dict_flat["const_f"] = model_params_dict_expanded["disutil_work"][
+        "const_f"
     ]
 
-    model_params_dict_flat = dict()
+    model_params_dict_flat["shocks_cov"] = model_params_dict_expanded["derived_attr"][
+        "shocks_cov"
+    ]
+    model_params_dict_flat["type_shares"] = model_params_dict_expanded["derived_attr"][
+        "type_shares"
+    ]
 
-    for group in groups:
+    if model_params_dict_expanded["derived_attr"]["num_types"] > 1:
+        for i in ["p", "f"]:
+            model_params_dict_flat["theta_" + i] = [
+                v
+                for k, v in model_params_dict_expanded["hetrg_unobs"].items()
+                if "{}".format("theta_" + i) in k
+            ]
 
-        keys_ = list(model_params_dict[group].keys())
-        values_ = list(model_params_dict[group].values())
-
-        for k_, key_ in enumerate(keys_):
-            model_params_dict_flat[key_] = values_[k_]
+    else:
+        pass
 
     return model_params_dict_flat
 
@@ -201,64 +239,3 @@ def dict_to_namedtuple_spec(dictionary):
     return collections.namedtuple("model_specification", dictionary.keys())(
         **dictionary
     )
-
-
-def group_parameters(init_dict, init_dict_flat):
-    """Groups the parameters to be estimates
-    in flat dictionary structure"""
-
-    init_dict_flat["gamma_0s"] = (
-        init_dict["PARAMETERS"]["gamma_0s1"],
-        init_dict["PARAMETERS"]["gamma_0s2"],
-        init_dict["PARAMETERS"]["gamma_0s3"],
-    )
-
-    init_dict_flat["gamma_1s"] = (
-        init_dict["PARAMETERS"]["gamma_1s1"],
-        init_dict["PARAMETERS"]["gamma_1s2"],
-        init_dict["PARAMETERS"]["gamma_1s3"],
-    )
-
-    init_dict_flat["g_s"] = (
-        init_dict["PARAMETERS"]["g_s1"],
-        init_dict["PARAMETERS"]["g_s2"],
-        init_dict["PARAMETERS"]["g_s3"],
-    )
-
-    init_dict_flat["delta_s"] = (
-        init_dict["PARAMETERS"]["delta_s1"],
-        init_dict["PARAMETERS"]["delta_s2"],
-        init_dict["PARAMETERS"]["delta_s3"],
-    )
-
-    if init_dict["DERIVED_ATTR"]["num_types"] > 1:
-        for i in ["p", "f"]:
-            init_dict_flat["theta_" + i] = [
-                v
-                for k, v in init_dict["PARAMETERS"].items()
-                if "{}".format("theta_" + i) in k
-            ]
-
-        for i in range(1, init_dict["DERIVED_ATTR"]["num_types"]):
-            init_dict_flat["share_" + "{}".format(i)] = init_dict["PARAMETERS"][
-                "share_" + "{}".format(i)
-            ]
-    else:
-        pass
-
-    init_dict_flat["gamma_1s"] = (
-        init_dict["PARAMETERS"]["gamma_1s1"],
-        init_dict["PARAMETERS"]["gamma_1s2"],
-        init_dict["PARAMETERS"]["gamma_1s3"],
-    )
-
-    init_dict_flat["sigma"] = (
-        init_dict["PARAMETERS"]["sigma_1"],
-        init_dict["PARAMETERS"]["sigma_2"],
-        init_dict["PARAMETERS"]["sigma_3"],
-    )
-
-    init_dict_flat["const_p"] = init_dict["PARAMETERS"]["const_p"]
-    init_dict_flat["const_f"] = init_dict["PARAMETERS"]["const_f"]
-
-    return init_dict_flat
