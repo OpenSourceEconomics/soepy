@@ -5,7 +5,7 @@ from soepy.python.shared.shared_auxiliary import calculate_utility_components
 from soepy.python.solve.solve_auxiliary import pyth_backward_induction
 
 
-def pyth_solve(model_params):
+def pyth_solve(model_params, model_spec):
     """Solve the model by backward induction.
 
     The solution routine performs four key operations:
@@ -43,7 +43,7 @@ def pyth_solve(model_params):
     """
 
     # Create all necessary grids and objects related to the state space
-    states, indexer = pyth_create_state_space(model_params)
+    states, indexer = pyth_create_state_space(model_spec)
 
     # Create objects that depend only on the state space
     covariates = construct_covariates(states)

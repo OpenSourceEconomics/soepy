@@ -35,7 +35,7 @@ def construct_covariates(states):
 
 
 @numba.jit(nopython=True)
-def pyth_create_state_space(model_params):
+def pyth_create_state_space(model_spec):
     """Create state space object.
 
     The state space consists of all admissible combinations of the following components:
@@ -70,13 +70,13 @@ def pyth_create_state_space(model_params):
     Examples
     --------
     >>> from collections import namedtuple
-    >>> model_params = namedtuple(
-    ...     "model_params", "num_periods educ_range educ_min num_types"
+    >>> model_spec = namedtuple(
+    ...     "model_specification", "num_periods educ_range educ_min num_types"
     ... )
-    >>> model_params = model_params(10, 3, 10, 2)
+    >>> model_spec = model_spec(10, 3, 10, 2)
     >>> NUM_CHOICES = 3
     >>> states, indexer = pyth_create_state_space(
-    ...     model_params
+    ...     model_spec
     ... )
     >>> states.shape
     (2220, 6)
@@ -87,12 +87,12 @@ def pyth_create_state_space(model_params):
 
     # Array for mapping the state space points (states) to indices
     shape = (
-        model_params.num_periods,
-        model_params.educ_range,
+        model_spec.num_periods,
+        model_spec.educ_range,
         NUM_CHOICES,
-        model_params.num_periods,
-        model_params.num_periods,
-        model_params.num_types,
+        model_spec.num_periods,
+        model_spec.num_periods,
+        model_spec.num_types,
     )
 
     indexer = np.full(shape, MISSING_INT)
@@ -101,12 +101,12 @@ def pyth_create_state_space(model_params):
     i = 0
 
     # Loop over all periods / all ages
-    for period in range(model_params.num_periods):
+    for period in range(model_spec.num_periods):
 
-        for type_ in range(model_params.num_types):
+        for type_ in range(model_spec.num_types):
 
             # Loop over all possible initial conditions for education
-            for educ_years in range(model_params.educ_range):
+            for educ_years in range(model_spec.educ_range):
 
                 # Check if individual has already completed education
                 # and will make a labor supply choice in the period
@@ -114,11 +114,11 @@ def pyth_create_state_space(model_params):
                     continue
 
                 # Loop over all admissible years of experience accumulated in full-time
-                for exp_f in range(model_params.num_periods):
+                for exp_f in range(model_spec.num_periods):
 
                     # Loop over all admissible years of experience accumulated
                     # in part-time
-                    for exp_p in range(model_params.num_periods):
+                    for exp_p in range(model_spec.num_periods):
 
                         # The accumulation of experience cannot exceed time elapsed
                         # since individual entered the model
@@ -139,7 +139,7 @@ def pyth_create_state_space(model_params):
                             # for the currently reached entry state
                             row = [
                                 period,
-                                educ_years + model_params.educ_min,
+                                educ_years + model_spec.educ_min,
                                 0,
                                 0,
                                 0,
@@ -219,7 +219,7 @@ def pyth_create_state_space(model_params):
                                 # for the currently reached admissible state space point
                                 row = [
                                     period,
-                                    educ_years + model_params.educ_min,
+                                    educ_years + model_spec.educ_min,
                                     choice_lagged,
                                     exp_p,
                                     exp_f,
