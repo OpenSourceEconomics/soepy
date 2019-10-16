@@ -89,15 +89,21 @@ def expand_model_params_dict(model_params_dict):
     shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
 
     # Extract the values of the type shares
-    type_shares_non_baseline = [
-        _ for k, _ in model_params_dict["shares"].items() if "share" in k
-    ]
+    try:
+        type_shares_non_baseline = [
+            _ for k, _ in model_params_dict["shares"].items() if "share" in k
+        ]
 
-    num_types = len(type_shares_non_baseline) + 1
+        num_types = len(type_shares_non_baseline) + 1
 
-    # Aggregate type shares in list object
-    # Share of baseline types equal to one minus sum of remaining type shares
-    type_shares = [1 - sum(type_shares_non_baseline)] + type_shares_non_baseline
+        # Aggregate type shares in list object
+        # Share of baseline types equal to one minus sum of remaining type shares
+        type_shares = [1 - sum(type_shares_non_baseline)] + type_shares_non_baseline
+
+    except KeyError:
+
+        type_shares = [1]
+        num_types = 1
 
     # Append derived attributes to init_dict
     model_params_dict["derived_attr"] = {
@@ -197,7 +203,10 @@ def expand_model_spec_dict(model_spec_init_dict, model_params_df):
     educ_range = educ_max - educ_min + 1
 
     # Determine number of types
-    num_types = len(model_params_df.loc["shares"].to_numpy()) + 1
+    try:
+        num_types = len(model_params_df.loc["shares"].to_numpy()) + 1
+    except KeyError:
+        num_types = 1
 
     # Append derived attributes to init_dict
     model_spec_init_dict["DERIVED_ATTR"] = {
