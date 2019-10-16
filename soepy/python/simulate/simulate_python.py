@@ -11,7 +11,7 @@ def simulate(init_file_name):
     # Read in model specification from yaml file
     model_params_df = transform_old_init_dict_to_df(init_file_name)
     model_params = read_model_params_init(model_params_df)
-    model_spec = read_model_spec_init(init_file_name)
+    model_spec = read_model_spec_init(init_file_name, model_params_df)
 
     # Obtain model solution
     states, indexer, covariates, emaxs = pyth_solve(model_params, model_spec)

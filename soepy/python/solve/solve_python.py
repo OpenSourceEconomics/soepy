@@ -54,14 +54,13 @@ def pyth_solve(model_params, model_spec):
     )
 
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
-        model_params, states, covariates
+        model_params, model_spec, states, covariates
     )
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
     emaxs = pyth_backward_induction(
-        model_params,
         model_spec,
         states,
         indexer,
