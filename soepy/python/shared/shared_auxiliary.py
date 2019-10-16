@@ -23,7 +23,7 @@ def draw_disturbances(seed, num_periods, num_draws, model_params):
     return draws
 
 
-def calculate_utility_components(model_params, states, covariates):
+def calculate_utility_components(model_params, model_spec, states, covariates):
     """Calculate utility components for all choices given state, period, and shocks.
 
     Parameters
@@ -55,7 +55,9 @@ def calculate_utility_components(model_params, states, covariates):
         model_params, states, covariates
     )
 
-    non_consumption_utility = calculate_non_consumption_utility(model_params, states)
+    non_consumption_utility = calculate_non_consumption_utility(
+        model_params, model_spec, states
+    )
 
     return log_wage_systematic, non_consumption_utility
 
@@ -80,14 +82,14 @@ def calculate_log_wage_systematic(model_params, states, covariates):
     return log_wage_systematic
 
 
-def calculate_non_consumption_utility(model_params, states):
+def calculate_non_consumption_utility(model_params, model_spec, states):
     """Calculate non-pecuniary utility contribution."""
 
     non_consumption_utility = np.full(
         (states.shape[0], NUM_CHOICES), [0, model_params.const_p, model_params.const_f]
     )
 
-    for i in range(1, model_params.num_types):
+    for i in range(1, model_spec.num_types):
         non_consumption_utility[np.where(states[:, 5] == i)] += [
             0,
             model_params.theta_p[i - 1],
