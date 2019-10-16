@@ -62,6 +62,7 @@ def pyth_solve(model_params, model_spec):
     # numerically in a Monte Carlo procedure
     emaxs = pyth_backward_induction(
         model_params,
+        model_spec,
         states,
         indexer,
         log_wage_systematic,
