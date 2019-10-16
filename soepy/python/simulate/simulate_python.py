@@ -17,6 +17,6 @@ def simulate(init_file_name):
     states, indexer, covariates, emaxs = pyth_solve(model_params, model_spec)
 
     # Simulate agents experiences according to parameters in the model specification
-    df = pyth_simulate(model_params, states, indexer, emaxs, covariates)
+    df = pyth_simulate(model_params, model_spec, states, indexer, emaxs, covariates)
 
     return df

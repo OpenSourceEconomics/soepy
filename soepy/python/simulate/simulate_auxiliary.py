@@ -10,37 +10,39 @@ from soepy.python.shared.shared_auxiliary import draw_disturbances
 from soepy.python.shared.shared_auxiliary import calculate_utility_components
 
 
-def pyth_simulate(model_params, states, indexer, emaxs, covariates):
+def pyth_simulate(model_params, model_spec, states, indexer, emaxs, covariates):
     """Simulate agent experiences."""
 
     # Draw random initial conditions
-    educ_years = list(range(model_params.educ_min, model_params.educ_max + 1))
-    np.random.seed(model_params.seed_sim)
-    initial_educ_years = np.random.choice(educ_years, model_params.num_agents_sim)
+    educ_years = list(range(model_spec.educ_min, model_spec.educ_max + 1))
+    np.random.seed(model_spec.seed_sim)
+    initial_educ_years = np.random.choice(educ_years, model_spec.num_agents_sim)
 
     # Draw random type
     type_ = np.random.choice(
-        list(np.arange(model_params.num_types)),
-        model_params.num_agents_sim,
+        list(np.arange(model_spec.num_types)),
+        model_spec.num_agents_sim,
         p=model_params.type_shares,
     )
 
-    attrs = ["seed_sim", "shocks_cov", "num_periods", "num_agents_sim"]
-    draws_sim = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
+    attrs_spec = ["seed_sim", "num_periods", "num_agents_sim"]
+    draws_sim = draw_disturbances(
+        *[getattr(model_spec, attr) for attr in attrs_spec], model_params
+    )
 
     # Calculate utility components
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
-        model_params, states, covariates
+        model_params, model_spec, states, covariates
     )
 
     # Determine initial states according to initial conditions
     initial_states = pd.DataFrame(
         np.column_stack(
             (
-                np.arange(model_params.num_agents_sim),
-                initial_educ_years - model_params.educ_min,
+                np.arange(model_spec.num_agents_sim),
+                initial_educ_years - model_spec.educ_min,
                 initial_educ_years,
-                np.zeros((model_params.num_agents_sim, 3)),
+                np.zeros((model_spec.num_agents_sim, 3)),
                 type_,
             )
         ),
@@ -50,10 +52,10 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
     data = []
 
     # Loop over all periods
-    for period in range(model_params.num_periods):
+    for period in range(model_spec.num_periods):
 
         initial_states_in_period = initial_states.loc[
-            initial_states.Years_of_Education.eq(period + model_params.educ_min)
+            initial_states.Years_of_Education.eq(period + model_spec.educ_min)
         ].to_numpy()
 
         # Get all agents in the period.
@@ -64,7 +66,7 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
 
         idx = indexer[
             current_states[:, 1],
-            current_states[:, 2] - model_params.educ_min,
+            current_states[:, 2] - model_spec.educ_min,
             current_states[:, 3],
             current_states[:, 4],
             current_states[:, 5],
@@ -79,26 +81,26 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
             current_log_wage_systematic.reshape(-1, 1)
             + draws_sim[period, current_states[:, 0]]
         )
-        current_wages[:, 0] = model_params.benefits
+        current_wages[:, 0] = model_spec.benefits
 
         # Calculate total values for all choices
         flow_utilities = np.full((current_states.shape[0], 3), np.nan)
 
         flow_utilities[:, :1] = (
-            model_params.benefits ** model_params.mu
-            / model_params.mu
+            model_spec.benefits ** model_spec.mu
+            / model_spec.mu
             * current_non_consumption_utilities[:, :1]
         )
         flow_utilities[:, 1:] = (
-            (HOURS[1:] * current_wages[:, 1:]) ** model_params.mu
-            / model_params.mu
+            (HOURS[1:] * current_wages[:, 1:]) ** model_spec.mu
+            / model_spec.mu
             * current_non_consumption_utilities[:, 1:]
         )
 
         # Extract continuation values for all choices
         continuation_values = emaxs[idx, :3]
 
-        value_functions = flow_utilities + model_params.delta * continuation_values
+        value_functions = flow_utilities + model_spec.delta * continuation_values
 
         # Determine choice as option with highest choice specific value function
         choice = np.argmax(value_functions, axis=1)
@@ -136,7 +138,7 @@ def pyth_simulate(model_params, states, indexer, emaxs, covariates):
 
     # Fill gaps in history with NaNs.
     index = pd.MultiIndex.from_product(
-        [range(model_params.num_agents_sim), range(model_params.num_periods)]
+        [range(model_spec.num_agents_sim), range(model_spec.num_periods)]
     )
     dataset = dataset.reindex(index)
 
