@@ -119,7 +119,7 @@ def group_parameters(model_params_dict_expanded):
     """Groups the parameters to be estimates
     in flat dictionary structure"""
 
-    model_params_dict_flat = {}
+    model_params_dict_flat = dict()
 
     model_params_dict_flat["gamma_0s"] = list(
         model_params_dict_expanded["const_wage_eq"].values()
@@ -137,12 +137,8 @@ def group_parameters(model_params_dict_expanded):
         model_params_dict_expanded["exp_deprec"].values()
     )
 
-    model_params_dict_flat["const_p"] = model_params_dict_expanded["disutil_work"][
-        "const_p"
-    ]
-    model_params_dict_flat["const_f"] = model_params_dict_expanded["disutil_work"][
-        "const_f"
-    ]
+    for key_ in list(model_params_dict_expanded["disutil_work"].keys()):
+        model_params_dict_flat[key_] = model_params_dict_expanded["disutil_work"][key_]
 
     model_params_dict_flat["shocks_cov"] = model_params_dict_expanded["derived_attr"][
         "shocks_cov"
