@@ -54,9 +54,6 @@ def transform_old_init_dict_to_df(init_file_name):
     return model_params_df
 
 
-# Pre-processing of model parameters to be estimated
-
-
 def read_model_params_init(model_params_df):
     """Reads in specification of model parameters
     from a pickled data frame and saves parameters as named tuple."""
@@ -165,9 +162,6 @@ def dict_to_namedtuple_params(dictionary):
     """Coverts non-nested dictionary to namedtuple"""
 
     return collections.namedtuple("model_parameters", dictionary.keys())(**dictionary)
-
-
-# Pre-processing of model specification: values that do not change during estimation
 
 
 def read_model_spec_init(model_spec_init, model_params):
