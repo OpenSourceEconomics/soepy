@@ -63,7 +63,7 @@ def read_model_params_init(model_params_df):
 
     # Transform data frame to dictionary
     model_params_dict = {
-        l: model_params_df.xs(l)["value"].to_dict()
+        l: model_params_df.loc[l]["value"].to_dict()
         for l in model_params_df.index.levels[0]
     }
 
