@@ -17,7 +17,7 @@ def test_unit_nan():
     """
     constr = {"AGENTS": 200}
     random_init(constr)
-    df = simulate("test.soepy.yml")
+    df = simulate("test.soepy.pkl", "test.soepy.yml")
 
     for year in [11, 12]:
 
@@ -76,7 +76,7 @@ def test_unit_data_frame_shape():
         constr["EDUC_MAX"] = np.random.randint(10, min(10 + constr["PERIODS"], 12))
 
         random_init(constr)
-        df = simulate("test.soepy.yml")
+        df = simulate("test.soepy.pkl", "test.soepy.yml")
 
         np.testing.assert_array_equal(df.shape[0], constr["AGENTS"] * constr["PERIODS"])
 
