@@ -1,5 +1,4 @@
 from collections import namedtuple
-import pytest
 
 import numpy as np
 
