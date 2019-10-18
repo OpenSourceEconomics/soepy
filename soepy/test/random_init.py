@@ -2,11 +2,16 @@
 import collections
 
 import numpy as np
+import pandas as pd
 import yaml
 
 
 def random_init(constr=None):
-    """The module provides a random dictionary generating process for test purposes."""
+    """The module provides a random dictionary generating process for test purposes.
+    It generates a random model_spec init dictionary and a random model_params init
+    dataframe."""
+
+    # Generate model spec init dict
 
     # Check for pre specified constraints
     if constr is not None:
@@ -49,7 +54,7 @@ def random_init(constr=None):
     else:
         num_draws_emax = np.random.randint(400, 600)
 
-    init_dict = dict()
+    model_spec_init_dict = dict()
 
     for key_ in [
         "GENERAL",
@@ -57,42 +62,47 @@ def random_init(constr=None):
         "INITIAL_CONDITIONS",
         "SIMULATION",
         "SOLUTION",
-        "PARAMETERS",
     ]:
-        init_dict[key_] = {}
+        model_spec_init_dict[key_] = {}
 
-    init_dict["GENERAL"]["num_periods"] = periods
+    model_spec_init_dict["GENERAL"]["num_periods"] = periods
 
-    init_dict["CONSTANTS"]["delta"] = np.random.uniform(0.8, 0.99)
-    init_dict["CONSTANTS"]["mu"] = np.random.uniform(-0.7, -0.4)
-    init_dict["CONSTANTS"]["benefits"] = np.random.uniform(4.0, 7.0)
+    model_spec_init_dict["CONSTANTS"]["delta"] = np.random.uniform(0.8, 0.99)
+    model_spec_init_dict["CONSTANTS"]["mu"] = np.random.uniform(-0.7, -0.4)
+    model_spec_init_dict["CONSTANTS"]["benefits"] = np.random.uniform(4.0, 7.0)
 
-    init_dict["INITIAL_CONDITIONS"]["educ_max"] = educ_max
-    init_dict["INITIAL_CONDITIONS"]["educ_min"] = educ_min
+    model_spec_init_dict["INITIAL_CONDITIONS"]["educ_max"] = educ_max
+    model_spec_init_dict["INITIAL_CONDITIONS"]["educ_min"] = educ_min
 
-    init_dict["SIMULATION"]["seed_sim"] = seed_sim
-    init_dict["SIMULATION"]["num_agents_sim"] = agents
+    model_spec_init_dict["SIMULATION"]["seed_sim"] = seed_sim
+    model_spec_init_dict["SIMULATION"]["num_agents_sim"] = agents
 
-    init_dict["SOLUTION"]["seed_emax"] = seed_emax
-    init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
+    model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
+    model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
 
-    init_dict["PARAMETERS"]["gamma_0s1"], init_dict["PARAMETERS"][
+    print_dict(model_spec_init_dict)
+
+    # Generate model params init data frame
+
+    model_params_init_dict = dict()
+
+    model_params_init_dict["gamma_0s1"], model_params_init_dict[
         "gamma_0s2"
-    ], init_dict["PARAMETERS"]["gamma_0s3"] = np.random.uniform(0.5, 4.0, 3).tolist()
+    ], model_params_init_dict["gamma_0s3"] = np.random.uniform(0.5, 4.0, 3).tolist()
 
-    init_dict["PARAMETERS"]["gamma_1s1"], init_dict["PARAMETERS"][
+    model_params_init_dict["gamma_1s1"], model_params_init_dict[
         "gamma_1s2"
-    ], init_dict["PARAMETERS"]["gamma_1s3"] = np.random.uniform(0.08, 0.3, 3).tolist()
+    ], model_params_init_dict["gamma_1s3"] = np.random.uniform(0.08, 0.3, 3).tolist()
 
-    init_dict["PARAMETERS"]["g_s1"], init_dict["PARAMETERS"]["g_s2"], init_dict[
-        "PARAMETERS"
-    ]["g_s3"] = np.random.uniform(0.02, 0.5, 3).tolist()
+    model_params_init_dict["g_s1"], model_params_init_dict[
+        "g_s2"
+    ], model_params_init_dict["g_s3"] = np.random.uniform(0.02, 0.5, 3).tolist()
 
-    init_dict["PARAMETERS"]["delta_s1"], init_dict["PARAMETERS"]["delta_s2"], init_dict[
-        "PARAMETERS"
-    ]["delta_s3"] = np.random.uniform(0.1, 0.9, 3).tolist()
+    model_params_init_dict["delta_s1"], model_params_init_dict[
+        "delta_s2"
+    ], model_params_init_dict["delta_s3"] = np.random.uniform(0.1, 0.9, 3).tolist()
 
-    init_dict["PARAMETERS"]["const_p"], init_dict["PARAMETERS"][
+    model_params_init_dict["const_p"], model_params_init_dict[
         "const_f"
     ] = np.random.uniform(0.5, 5, 2).tolist()
 
@@ -105,35 +115,61 @@ def random_init(constr=None):
 
     for i in range(1, num_types):
         # Draw random parameters
-        init_dict["PARAMETERS"]["theta_p" + "{}".format(i)], init_dict["PARAMETERS"][
+        model_params_init_dict["theta_p" + "{}".format(i)], model_params_init_dict[
             "theta_f" + "{}".format(i)
         ] = np.random.uniform(-0.05, -4, 2).tolist()
 
         # Assign shares
-        init_dict["PARAMETERS"]["share_" + "{}".format(i)] = shares[i]
+        model_params_init_dict["share_" + "{}".format(i)] = shares[i]
 
-    init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
-        "PARAMETERS"
-    ]["sigma_3"] = np.random.uniform(0.002, 2.0, 3).tolist()
+    model_params_init_dict["sigma_1"], model_params_init_dict[
+        "sigma_2"
+    ], model_params_init_dict["sigma_3"] = np.random.uniform(0.002, 2.0, 3).tolist()
 
-    print_dict(init_dict)
+    # Determine categories
+    category = []
 
-    return init_dict
+    for (key, value) in model_params_init_dict.items():
+        # Check if key is even then add pair to new dictionary
+        if "gamma_0" in key:
+            category.append("const_wage_eq")
+        elif "gamma_1" in key:
+            category.append("exp_returns")
+        elif "g_s" in key:
+            category.append("exp_accm")
+        elif "delta" in key:
+            category.append("exp_deprec")
+        elif "const" in key:
+            category.append("disutil_work")
+        elif "theta" in key:
+            category.append("hetrg_unobs")
+        elif "share" in key:
+            category.append("shares")
+        elif "sigma" in key:
+            category.append("sd_wage_shock")
+
+    # Create data frame
+    columns = ["name", "value"]
+
+    data = list(model_params_init_dict.items())
+
+    random_model_params_df = pd.DataFrame(data, columns=columns)
+
+    random_model_params_df.insert(0, "category", category, True)
+
+    random_model_params_df.set_index(["category", "name"], inplace=True)
+
+    random_model_params_df.to_pickle("test.soepy.pkl")
+
+    return model_spec_init_dict, random_model_params_df
 
 
-def print_dict(init_dict, file_name="test"):
+def print_dict(model_spec_init_dict, file_name="test"):
     """This function prints the initialization dict to a *.yml file."""
     ordered_dict = collections.OrderedDict()
-    order = [
-        "GENERAL",
-        "CONSTANTS",
-        "INITIAL_CONDITIONS",
-        "SIMULATION",
-        "SOLUTION",
-        "PARAMETERS",
-    ]
+    order = ["GENERAL", "CONSTANTS", "INITIAL_CONDITIONS", "SIMULATION", "SOLUTION"]
     for key_ in order:
-        ordered_dict[key_] = init_dict[key_]
+        ordered_dict[key_] = model_spec_init_dict[key_]
 
     with open("{}.soepy.yml".format(file_name), "w") as outfile:
         yaml.dump(ordered_dict, outfile, explicit_start=True, indent=4)

@@ -9,7 +9,12 @@ def read_model_params_init(model_params_init_file_name):
     """Reads in specification of model parameters
     from a pickled data frame and saves parameters as named tuple."""
 
-    model_params_df = pd.read_pickle(model_params_init_file_name)
+    if isinstance(model_params_init_file_name, str):
+        model_params_df = pd.read_pickle(model_params_init_file_name)
+    elif isinstance(model_params_init_file_name, pd.DataFrame):
+        model_params_df = model_params_init_file_name
+    else:
+        raise NotImplementedError
 
     # Transform data frame to dictionary
     model_params_dict = {
