@@ -5,58 +5,11 @@ import yaml
 import pandas as pd
 
 
-def transform_old_init_dict_to_df(init_file_name):
-    """Reads in init file in yaml format or
-    dictionary as in soepy master branch.
-    Transforms dictionary in a parameters data frame
-    we wish to establish as the new init file format."""
-
-    # Import yaml initialization file as dictionary init_dict
-    if isinstance(init_file_name, str):
-        with open(init_file_name) as y:
-            init_dict = yaml.load(y, Loader=yaml.FullLoader)
-    else:
-        init_dict = init_file_name
-
-    # Determine categories
-    category = []
-
-    for (key, value) in init_dict["PARAMETERS"].items():
-        # Check if key is even then add pair to new dictionary
-        if "gamma_0" in key:
-            category.append("const_wage_eq")
-        elif "gamma_1" in key:
-            category.append("exp_returns")
-        elif "g_s" in key:
-            category.append("exp_accm")
-        elif "delta" in key:
-            category.append("exp_deprec")
-        elif "const" in key:
-            category.append("disutil_work")
-        elif "theta" in key:
-            category.append("hetrg_unobs")
-        elif "share" in key:
-            category.append("shares")
-        elif "sigma" in key:
-            category.append("sd_wage_shock")
-
-    # Create data frame
-    columns = ["name", "value"]
-
-    data = list(init_dict["PARAMETERS"].items())
-
-    model_params_df = pd.DataFrame(data, columns=columns)
-
-    model_params_df.insert(0, "category", category, True)
-
-    model_params_df.set_index(["category", "name"], inplace=True)
-
-    return model_params_df
-
-
-def read_model_params_init(model_params_df):
+def read_model_params_init(model_params_init_file_name):
     """Reads in specification of model parameters
     from a pickled data frame and saves parameters as named tuple."""
+
+    model_params_df = pd.read_pickle(model_params_init_file_name)
 
     # Transform data frame to dictionary
     model_params_dict = {
@@ -73,7 +26,7 @@ def read_model_params_init(model_params_df):
     # Save as namedtuple
     model_params = dict_to_namedtuple_params(model_params_dict_flat)
 
-    return model_params
+    return model_params_df, model_params
 
 
 def expand_model_params_dict(model_params_dict):
