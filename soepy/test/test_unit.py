@@ -3,6 +3,8 @@ import pytest
 
 import numpy as np
 
+from soepy.python.pre_processing.model_processing import read_model_spec_init
+from soepy.python.pre_processing.model_processing import read_model_params_init
 from soepy.python.solve.solve_auxiliary import pyth_create_state_space
 from soepy.python.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
@@ -36,26 +38,19 @@ def test_unit_nan():
         np.testing.assert_array_equal(df2.values, a)
 
 
-@pytest.mark.skip(reason="function interfaces not build for this test to work yet.")
 def test_unit_init_print():
     """This test ensures that the init file printing process work as intended. For this
      purpose we generate random init file specifications import the resulting files,
      write the specifications to another init file, import it again and comparing both
       initialization dicts
       """
-    order = [
-        "GENERAL",
-        "CONSTANTS",
-        "INITIAL_CONDITIONS",
-        "SIMULATION",
-        "SOLUTION",
-        "PARAMETERS",
-    ]
+    order = ["GENERAL", "CONSTANTS", "INITIAL_CONDITIONS", "SIMULATION", "SOLUTION"]
 
     for _ in range(5):
         random_init()
-        model_params = read_init_file("test.soepy.yml")
-        init_dict_flat = namedtuple_to_dict(model_params)
+        model_params_df, _ = read_model_params_init("test.soepy.pkl")
+        model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
+        init_dict_flat = namedtuple_to_dict(model_spec)
         init_dict = init_dict_flat_to_init_dict(init_dict_flat)
         init_dict2 = read_init_file2("test.soepy.yml")
 

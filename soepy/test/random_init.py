@@ -209,43 +209,6 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["SOLUTION"]["seed_emax"] = init_dict_flat["seed_emax"]
     init_dict["SOLUTION"]["num_draws_emax"] = init_dict_flat["num_draws_emax"]
 
-    init_dict["PARAMETERS"] = dict()
-    init_dict["PARAMETERS"]["gamma_0s1"], init_dict["PARAMETERS"][
-        "gamma_0s2"
-    ], init_dict["PARAMETERS"]["gamma_0s3"] = init_dict_flat["gamma_0s"]
-    init_dict["PARAMETERS"]["gamma_1s1"], init_dict["PARAMETERS"][
-        "gamma_1s2"
-    ], init_dict["PARAMETERS"]["gamma_1s3"] = init_dict_flat["gamma_1s"]
-    init_dict["PARAMETERS"]["g_s1"], init_dict["PARAMETERS"]["g_s2"], init_dict[
-        "PARAMETERS"
-    ]["g_s3"] = init_dict_flat["g_s"]
-    init_dict["PARAMETERS"]["delta_s1"], init_dict["PARAMETERS"]["delta_s2"], init_dict[
-        "PARAMETERS"
-    ]["delta_s3"] = init_dict_flat["delta_s"]
-
-    init_dict["PARAMETERS"]["const_p"] = init_dict_flat["const_p"]
-    init_dict["PARAMETERS"]["const_f"] = init_dict_flat["const_f"]
-
-    for i in range(1, init_dict_flat["num_types"]):
-
-        init_dict["PARAMETERS"]["theta_p" + "{}".format(i)] = init_dict_flat["theta_p"][
-            i - 1
-        ]
-        init_dict["PARAMETERS"]["theta_f" + "{}".format(i)] = init_dict_flat["theta_f"][
-            i - 1
-        ]
-        init_dict["PARAMETERS"]["share_" + "{}".format(i)] = init_dict_flat[
-            "share_" + "{}".format(i)
-        ]
-
-    init_dict["PARAMETERS"]["sigma_1"], init_dict["PARAMETERS"]["sigma_2"], init_dict[
-        "PARAMETERS"
-    ]["sigma_3"] = init_dict_flat["sigma"]
-
-    init_dict["DERIVED_ATTR"] = dict()
-    init_dict["DERIVED_ATTR"]["educ_range"] = init_dict_flat["educ_range"]
-    init_dict["DERIVED_ATTR"]["shocks_cov"] = init_dict_flat["shocks_cov"]
-
     return init_dict
 
 
@@ -255,8 +218,6 @@ def read_init_file2(init_file_name):
 
     # Import yaml initialization file as dictionary init_dict
     with open(init_file_name) as y:
-        init_dict_base = yaml.load(y, Loader=yaml.FullLoader)
+        init_dict = yaml.load(y, Loader=yaml.FullLoader)
 
-    init_dict_expanded = expand_init_dict(init_dict_base)
-
-    return init_dict_expanded
+    return init_dict
