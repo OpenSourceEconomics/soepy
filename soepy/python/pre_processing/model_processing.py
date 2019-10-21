@@ -2,78 +2,170 @@ import collections
 
 import yaml
 
+import pandas as pd
 
-def read_init_file(init_file_name):
-    """Reads in the model specification from yaml file"""
 
-    # Import yaml initialization file as dictionary init_dict
-    if isinstance(init_file_name, str):
-        with open(init_file_name) as y:
-            init_dict = yaml.load(y, Loader=yaml.FullLoader)
+def read_model_params_init(model_params_init_file_name):
+    """Reads in specification of model parameters
+    from a pickled data frame and saves parameters as named tuple."""
+
+    if isinstance(model_params_init_file_name, str):
+        model_params_df = pd.read_pickle(model_params_init_file_name)
+    elif isinstance(model_params_init_file_name, pd.DataFrame):
+        model_params_df = model_params_init_file_name
     else:
-        init_dict = init_file_name
+        raise NotImplementedError
 
-    init_dict = expand_init_dict(init_dict)
+    # Transform data frame to dictionary
+    model_params_dict = {
+        l: model_params_df.loc[l, "value"].to_dict()
+        for l in model_params_df.index.levels[0]
+    }
 
-    model_params = create_namedtuple(init_dict)
+    # Add share of baseline type to parameters dictionary
+    model_params_dict_expanded = expand_model_params_dict(model_params_dict)
 
-    return model_params
+    # Remove nested structure of dictionary
+    model_params_dict_flat = group_parameters(model_params_dict_expanded)
+
+    # Save as namedtuple
+    model_params = dict_to_namedtuple_params(model_params_dict_flat)
+
+    return model_params_df, model_params
 
 
-def expand_init_dict(init_dict):
-    """Enhances read in initialization dictionary by
-    adding model parameters derived from the
-    specified initialisation file"""
-
-    # Calculate range of years of education in the (simulated) sample
-    educ_min = init_dict["INITIAL_CONDITIONS"]["educ_min"]
-    educ_max = init_dict["INITIAL_CONDITIONS"]["educ_max"]
-    educ_range = educ_max - educ_min + 1
-
+def expand_model_params_dict(model_params_dict):
     # Calculate covariances of the error terms given standard deviations
     shocks_cov = [
-        init_dict["PARAMETERS"]["sigma_1"],
-        init_dict["PARAMETERS"]["sigma_2"],
-        init_dict["PARAMETERS"]["sigma_3"],
+        model_params_dict["sd_wage_shock"]["sigma_1"],
+        model_params_dict["sd_wage_shock"]["sigma_2"],
+        model_params_dict["sd_wage_shock"]["sigma_3"],
     ]
     shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
 
-    # Extract the number of types
-    type_shares_non_baseline = [
-        _ for k, _ in init_dict["PARAMETERS"].items() if "share" in k
-    ]
-    num_types = len(type_shares_non_baseline) + 1
+    # Extract the values of the type shares
+    try:
+        type_shares_non_baseline = [
+            _ for k, _ in model_params_dict["shares"].items() if "share" in k
+        ]
 
-    # Aggregate type shares in list object
-    # Share of baseline types equal to one minus sum of remaining type shares
-    type_shares = [1 - sum(type_shares_non_baseline)] + type_shares_non_baseline
+        num_types = len(type_shares_non_baseline) + 1
+
+        # Aggregate type shares in list object
+        # Share of baseline types equal to one minus sum of remaining type shares
+        type_shares = [1 - sum(type_shares_non_baseline)] + type_shares_non_baseline
+
+    except KeyError:
+
+        type_shares = [1]
+        num_types = 1
 
     # Append derived attributes to init_dict
-    init_dict["DERIVED_ATTR"] = {
-        "educ_range": educ_range,
+    model_params_dict["derived_attr"] = {
         "shocks_cov": shocks_cov,
-        "num_types": num_types,
         "type_shares": type_shares,
+        "num_types": num_types,
     }
 
-    # Return function output
-    return init_dict
+    return model_params_dict
 
 
-def create_namedtuple(init_dict):
-    """Transfers model specification from a dictionary
-    to a named tuple class object"""
+def group_parameters(model_params_dict_expanded):
+    """Groups the parameters to be estimates
+    in flat dictionary structure"""
 
-    init_dict_flat = flatten_init_dict(init_dict)
+    model_params_dict_flat = dict()
 
-    init_dict_flat = group_parameters(init_dict, init_dict_flat)
+    model_params_dict_flat["gamma_0s"] = list(
+        model_params_dict_expanded["const_wage_eq"].values()
+    )
 
-    model_params = dict_to_namedtuple(init_dict_flat)
+    model_params_dict_flat["gamma_1s"] = list(
+        model_params_dict_expanded["exp_returns"].values()
+    )
 
-    return model_params
+    model_params_dict_flat["g_s"] = list(
+        model_params_dict_expanded["exp_accm"].values()
+    )
+
+    model_params_dict_flat["delta_s"] = list(
+        model_params_dict_expanded["exp_deprec"].values()
+    )
+
+    for key_ in list(model_params_dict_expanded["disutil_work"].keys()):
+        model_params_dict_flat[key_] = model_params_dict_expanded["disutil_work"][key_]
+
+    model_params_dict_flat["shocks_cov"] = model_params_dict_expanded["derived_attr"][
+        "shocks_cov"
+    ]
+    model_params_dict_flat["type_shares"] = model_params_dict_expanded["derived_attr"][
+        "type_shares"
+    ]
+
+    if model_params_dict_expanded["derived_attr"]["num_types"] > 1:
+        for i in ["p", "f"]:
+            model_params_dict_flat["theta_" + i] = [
+                v
+                for k, v in model_params_dict_expanded["hetrg_unobs"].items()
+                if "{}".format("theta_" + i) in k
+            ]
+
+    else:
+        pass
+
+    return model_params_dict_flat
 
 
-def flatten_init_dict(init_dict):
+def dict_to_namedtuple_params(dictionary):
+    """Coverts non-nested dictionary to namedtuple"""
+
+    return collections.namedtuple("model_parameters", dictionary.keys())(**dictionary)
+
+
+def read_model_spec_init(model_spec_init, model_params):
+    """Reads in the model specification from yaml file.
+    This initialisation component contains only information
+    that does not change dirung estimation. Inputs are made
+    available as named tuple."""
+
+    # Import yaml initialization file as dictionary init_dict
+    if isinstance(model_spec_init, str):
+        with open(model_spec_init) as y:
+            model_spec_init_dict = yaml.load(y, Loader=yaml.FullLoader)
+    else:
+        model_spec_init_dict = model_spec_init
+
+    model_spec_dict = expand_model_spec_dict(model_spec_init_dict, model_params)
+
+    model_spec_dict_flat = flatten_model_spec_dict(model_spec_dict)
+
+    model_spec = dict_to_namedtuple_spec(model_spec_dict_flat)
+
+    return model_spec
+
+
+def expand_model_spec_dict(model_spec_init_dict, model_params_df):
+    # Calculate range of years of education in the (simulated) sample
+    educ_min = model_spec_init_dict["INITIAL_CONDITIONS"]["educ_min"]
+    educ_max = model_spec_init_dict["INITIAL_CONDITIONS"]["educ_max"]
+    educ_range = educ_max - educ_min + 1
+
+    # Determine number of types
+    try:
+        num_types = len(model_params_df.loc["shares"].to_numpy()) + 1
+    except KeyError:
+        num_types = 1
+
+    # Append derived attributes to init_dict
+    model_spec_init_dict["DERIVED_ATTR"] = {
+        "educ_range": educ_range,
+        "num_types": num_types,
+    }
+
+    return model_spec_init_dict
+
+
+def flatten_model_spec_dict(model_spec_dict):
     """Removes the grouping from the nested dictionary"""
 
     groups = [
@@ -85,82 +177,22 @@ def flatten_init_dict(init_dict):
         "DERIVED_ATTR",
     ]
 
-    init_dict_flat = dict()
+    model_spec_dict_flat = dict()
 
     for group in groups:
 
-        keys_ = list(init_dict[group].keys())
-        values_ = list(init_dict[group].values())
+        keys_ = list(model_spec_dict[group].keys())
+        values_ = list(model_spec_dict[group].values())
 
         for k_, key_ in enumerate(keys_):
+            model_spec_dict_flat[key_] = values_[k_]
 
-            init_dict_flat[key_] = values_[k_]
-
-    return init_dict_flat
-
-
-def group_parameters(init_dict, init_dict_flat):
-    """Groups the parameters to be estimates
-    in flat dictionary structure"""
-
-    init_dict_flat["gamma_0s"] = (
-        init_dict["PARAMETERS"]["gamma_0s1"],
-        init_dict["PARAMETERS"]["gamma_0s2"],
-        init_dict["PARAMETERS"]["gamma_0s3"],
-    )
-
-    init_dict_flat["gamma_1s"] = (
-        init_dict["PARAMETERS"]["gamma_1s1"],
-        init_dict["PARAMETERS"]["gamma_1s2"],
-        init_dict["PARAMETERS"]["gamma_1s3"],
-    )
-
-    init_dict_flat["g_s"] = (
-        init_dict["PARAMETERS"]["g_s1"],
-        init_dict["PARAMETERS"]["g_s2"],
-        init_dict["PARAMETERS"]["g_s3"],
-    )
-
-    init_dict_flat["delta_s"] = (
-        init_dict["PARAMETERS"]["delta_s1"],
-        init_dict["PARAMETERS"]["delta_s2"],
-        init_dict["PARAMETERS"]["delta_s3"],
-    )
-
-    if init_dict["DERIVED_ATTR"]["num_types"] > 1:
-        for i in ["p", "f"]:
-            init_dict_flat["theta_" + i] = [
-                v
-                for k, v in init_dict["PARAMETERS"].items()
-                if "{}".format("theta_" + i) in k
-            ]
-
-        for i in range(1, init_dict["DERIVED_ATTR"]["num_types"]):
-            init_dict_flat["share_" + "{}".format(i)] = init_dict["PARAMETERS"][
-                "share_" + "{}".format(i)
-            ]
-    else:
-        pass
-
-    init_dict_flat["gamma_1s"] = (
-        init_dict["PARAMETERS"]["gamma_1s1"],
-        init_dict["PARAMETERS"]["gamma_1s2"],
-        init_dict["PARAMETERS"]["gamma_1s3"],
-    )
-
-    init_dict_flat["sigma"] = (
-        init_dict["PARAMETERS"]["sigma_1"],
-        init_dict["PARAMETERS"]["sigma_2"],
-        init_dict["PARAMETERS"]["sigma_3"],
-    )
-
-    init_dict_flat["const_p"] = init_dict["PARAMETERS"]["const_p"]
-    init_dict_flat["const_f"] = init_dict["PARAMETERS"]["const_f"]
-
-    return init_dict_flat
+    return model_spec_dict_flat
 
 
-def dict_to_namedtuple(dictionary):
+def dict_to_namedtuple_spec(dictionary):
     """Coverts non-nested dictionary to namedtuple"""
 
-    return collections.namedtuple("model_parameters", dictionary.keys())(**dictionary)
+    return collections.namedtuple("model_specification", dictionary.keys())(
+        **dictionary
+    )

@@ -2,8 +2,9 @@ from collections import namedtuple
 
 import numpy as np
 
+from soepy.python.pre_processing.model_processing import read_model_spec_init
+from soepy.python.pre_processing.model_processing import read_model_params_init
 from soepy.python.solve.solve_auxiliary import pyth_create_state_space
-from soepy.python.pre_processing.model_processing import read_init_file
 from soepy.python.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
@@ -17,7 +18,7 @@ def test_unit_nan():
     """
     constr = {"AGENTS": 200}
     random_init(constr)
-    df = simulate("test.soepy.yml")
+    df = simulate("test.soepy.pkl", "test.soepy.yml")
 
     for year in [11, 12]:
 
@@ -42,19 +43,13 @@ def test_unit_init_print():
      write the specifications to another init file, import it again and comparing both
       initialization dicts
       """
-    order = [
-        "GENERAL",
-        "CONSTANTS",
-        "INITIAL_CONDITIONS",
-        "SIMULATION",
-        "SOLUTION",
-        "PARAMETERS",
-    ]
+    order = ["GENERAL", "CONSTANTS", "INITIAL_CONDITIONS", "SIMULATION", "SOLUTION"]
 
     for _ in range(5):
         random_init()
-        model_params = read_init_file("test.soepy.yml")
-        init_dict_flat = namedtuple_to_dict(model_params)
+        model_params_df, _ = read_model_params_init("test.soepy.pkl")
+        model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
+        init_dict_flat = namedtuple_to_dict(model_spec)
         init_dict = init_dict_flat_to_init_dict(init_dict_flat)
         init_dict2 = read_init_file2("test.soepy.yml")
 
@@ -75,7 +70,7 @@ def test_unit_data_frame_shape():
         constr["EDUC_MAX"] = np.random.randint(10, min(10 + constr["PERIODS"], 12))
 
         random_init(constr)
-        df = simulate("test.soepy.yml")
+        df = simulate("test.soepy.pkl", "test.soepy.yml")
 
         np.testing.assert_array_equal(df.shape[0], constr["AGENTS"] * constr["PERIODS"])
 

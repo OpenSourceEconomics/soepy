@@ -35,9 +35,6 @@ script:
     # create a proper coverage report.
     - py.test
 
-    # Build conda package.
-    - conda install --yes -c opensourceeconomics soepy
-
 after_success:
     - codecov
 

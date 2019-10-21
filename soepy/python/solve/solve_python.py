@@ -5,7 +5,7 @@ from soepy.python.shared.shared_auxiliary import calculate_utility_components
 from soepy.python.solve.solve_auxiliary import pyth_backward_induction
 
 
-def pyth_solve(model_params):
+def pyth_solve(model_params, model_spec):
     """Solve the model by backward induction.
 
     The solution routine performs four key operations:
@@ -43,23 +43,25 @@ def pyth_solve(model_params):
     """
 
     # Create all necessary grids and objects related to the state space
-    states, indexer = pyth_create_state_space(model_params)
+    states, indexer = pyth_create_state_space(model_spec)
 
     # Create objects that depend only on the state space
     covariates = construct_covariates(states)
 
-    attrs = ["seed_emax", "shocks_cov", "num_periods", "num_draws_emax"]
-    draws_emax = draw_disturbances(*[getattr(model_params, attr) for attr in attrs])
+    attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
+    draws_emax = draw_disturbances(
+        *[getattr(model_spec, attr) for attr in attrs_spec], model_params
+    )
 
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
-        model_params, states, covariates
+        model_params, model_spec, states, covariates
     )
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
     emaxs = pyth_backward_induction(
-        model_params,
+        model_spec,
         states,
         indexer,
         log_wage_systematic,
