@@ -129,7 +129,7 @@ def random_init(constr=None):
     # Determine categories
     category = []
 
-    for (key, value) in model_params_init_dict.items():
+    for (key, _) in model_params_init_dict.items():
         # Check if key is even then add pair to new dictionary
         if "gamma_0" in key:
             category.append("const_wage_eq")
