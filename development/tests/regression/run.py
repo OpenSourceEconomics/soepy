@@ -4,7 +4,7 @@ import argparse
 import pickle
 import numpy as np
 
-from soepy.python.simulate.simulate_python import simulate
+from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.test.random_init import random_init
 from development.tests.auxiliary.auxiliary import cleanup
