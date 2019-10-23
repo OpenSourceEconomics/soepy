@@ -62,7 +62,7 @@ def calculate_utility_components(model_params, model_spec, states, covariates):
     return log_wage_systematic, non_consumption_utility
 
 
-def calculate_log_wage_systematic(model_params, states, covariates):
+def calculate_log_wage_systematic(model_params, states, covariates, expected=False):
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
     exp_p, exp_f = states[:, 3], states[:, 4]
@@ -71,7 +71,14 @@ def calculate_log_wage_systematic(model_params, states, covariates):
     # Construct wage components
     gamma_0s = np.array(model_params.gamma_0s)[educ_level]
     gamma_1s = np.array(model_params.gamma_1s)[educ_level]
-    period_exp_sum = exp_p * np.array(model_params.g_s)[educ_level] + exp_f
+
+    if expected == True:
+        period_exp_sum = exp_p + exp_f
+    elif expected == False:
+        period_exp_sum = exp_p * np.array(model_params.g_s)[educ_level] + exp_f
+    else:
+        raise NotImplementedError
+
     depreciation = 1 - np.array(model_params.delta_s)[educ_level]
 
     # Calculate wage in the given state
