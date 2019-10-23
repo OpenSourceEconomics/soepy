@@ -23,7 +23,9 @@ def draw_disturbances(seed, num_periods, num_draws, model_params):
     return draws
 
 
-def calculate_utility_components(model_params, model_spec, states, covariates, expected=True):
+def calculate_utility_components(
+    model_params, model_spec, states, covariates, expected=True
+):
     """Calculate utility components for all choices given state, period, and shocks.
 
     Parameters
@@ -72,9 +74,9 @@ def calculate_log_wage_systematic(model_params, states, covariates, expected):
     gamma_0s = np.array(model_params.gamma_0s)[educ_level]
     gamma_1s = np.array(model_params.gamma_1s)[educ_level]
 
-    if expected == True:
+    if expected is True:
         period_exp_sum = exp_p + exp_f
-    elif expected == False:
+    elif expected is False:
         period_exp_sum = exp_p * np.array(model_params.g_s)[educ_level] + exp_f
     else:
         raise NotImplementedError
