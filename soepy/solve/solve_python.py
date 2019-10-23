@@ -1,8 +1,8 @@
-from soepy.python.solve.solve_auxiliary import pyth_create_state_space
-from soepy.python.solve.solve_auxiliary import construct_covariates
-from soepy.python.shared.shared_auxiliary import draw_disturbances
-from soepy.python.shared.shared_auxiliary import calculate_utility_components
-from soepy.python.solve.solve_auxiliary import pyth_backward_induction
+from soepy.solve.solve_auxiliary import pyth_create_state_space
+from soepy.solve.solve_auxiliary import construct_covariates
+from soepy.shared.shared_auxiliary import draw_disturbances
+from soepy.shared.shared_auxiliary import calculate_utility_components
+from soepy.solve.solve_auxiliary import pyth_backward_induction
 
 
 def pyth_solve(model_params, model_spec):

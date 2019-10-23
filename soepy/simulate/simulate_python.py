@@ -1,7 +1,7 @@
-from soepy.python.pre_processing.model_processing import read_model_params_init
-from soepy.python.pre_processing.model_processing import read_model_spec_init
-from soepy.python.simulate.simulate_auxiliary import pyth_simulate
-from soepy.python.solve.solve_python import pyth_solve
+from soepy.pre_processing.model_processing import read_model_params_init
+from soepy.pre_processing.model_processing import read_model_spec_init
+from soepy.simulate.simulate_auxiliary import pyth_simulate
+from soepy.solve.solve_python import pyth_solve
 
 
 def simulate(model_params_init_file_name, model_spec_init_file_name):
