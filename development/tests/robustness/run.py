@@ -3,7 +3,7 @@
 import datetime
 import sys
 
-from soepy.python.simulate.simulate_python import simulate
+from soepy.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
 
 
