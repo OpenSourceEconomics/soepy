@@ -1,7 +1,7 @@
 import pickle
 import numpy as np
 import pytest
-from soepy.python.simulate.simulate_python import simulate
+from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 
 

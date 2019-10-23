@@ -2,7 +2,7 @@ import numpy as np
 import numba
 import pandas as pd
 
-from soepy.python.shared.shared_constants import (
+from soepy.shared.shared_constants import (
     MISSING_INT,
     NUM_CHOICES,
     INVALID_FLOAT,

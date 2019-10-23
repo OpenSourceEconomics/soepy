@@ -2,10 +2,10 @@ from collections import namedtuple
 
 import numpy as np
 
-from soepy.python.pre_processing.model_processing import read_model_spec_init
-from soepy.python.pre_processing.model_processing import read_model_params_init
-from soepy.python.solve.solve_auxiliary import pyth_create_state_space
-from soepy.python.simulate.simulate_python import simulate
+from soepy.pre_processing.model_processing import read_model_spec_init
+from soepy.pre_processing.model_processing import read_model_params_init
+from soepy.solve.solve_auxiliary import pyth_create_state_space
+from soepy.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
