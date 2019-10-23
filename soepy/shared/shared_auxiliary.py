@@ -23,7 +23,7 @@ def draw_disturbances(seed, num_periods, num_draws, model_params):
     return draws
 
 
-def calculate_utility_components(model_params, model_spec, states, covariates):
+def calculate_utility_components(model_params, model_spec, states, covariates, expected=True):
     """Calculate utility components for all choices given state, period, and shocks.
 
     Parameters
@@ -52,7 +52,7 @@ def calculate_utility_components(model_params, model_spec, states, covariates):
 
     """
     log_wage_systematic = calculate_log_wage_systematic(
-        model_params, states, covariates
+        model_params, states, covariates, expected
     )
 
     non_consumption_utility = calculate_non_consumption_utility(
@@ -62,7 +62,7 @@ def calculate_utility_components(model_params, model_spec, states, covariates):
     return log_wage_systematic, non_consumption_utility
 
 
-def calculate_log_wage_systematic(model_params, states, covariates, expected=False):
+def calculate_log_wage_systematic(model_params, states, covariates, expected):
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
     exp_p, exp_f = states[:, 3], states[:, 4]
