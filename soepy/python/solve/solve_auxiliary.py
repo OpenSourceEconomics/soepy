@@ -35,7 +35,7 @@ def construct_covariates(states):
 
 
 @numba.jit(nopython=True)
-def pyth_create_state_space(model_params):
+def pyth_create_state_space(model_spec):
     """Create state space object.
 
     The state space consists of all admissible combinations of the following components:
@@ -70,13 +70,13 @@ def pyth_create_state_space(model_params):
     Examples
     --------
     >>> from collections import namedtuple
-    >>> model_params = namedtuple(
-    ...     "model_params", "num_periods educ_range educ_min num_types"
+    >>> model_spec = namedtuple(
+    ...     "model_specification", "num_periods educ_range educ_min num_types"
     ... )
-    >>> model_params = model_params(10, 3, 10, 2)
+    >>> model_spec = model_spec(10, 3, 10, 2)
     >>> NUM_CHOICES = 3
     >>> states, indexer = pyth_create_state_space(
-    ...     model_params
+    ...     model_spec
     ... )
     >>> states.shape
     (2220, 6)
@@ -87,12 +87,12 @@ def pyth_create_state_space(model_params):
 
     # Array for mapping the state space points (states) to indices
     shape = (
-        model_params.num_periods,
-        model_params.educ_range,
+        model_spec.num_periods,
+        model_spec.educ_range,
         NUM_CHOICES,
-        model_params.num_periods,
-        model_params.num_periods,
-        model_params.num_types,
+        model_spec.num_periods,
+        model_spec.num_periods,
+        model_spec.num_types,
     )
 
     indexer = np.full(shape, MISSING_INT)
@@ -101,12 +101,12 @@ def pyth_create_state_space(model_params):
     i = 0
 
     # Loop over all periods / all ages
-    for period in range(model_params.num_periods):
+    for period in range(model_spec.num_periods):
 
-        for type_ in range(model_params.num_types):
+        for type_ in range(model_spec.num_types):
 
             # Loop over all possible initial conditions for education
-            for educ_years in range(model_params.educ_range):
+            for educ_years in range(model_spec.educ_range):
 
                 # Check if individual has already completed education
                 # and will make a labor supply choice in the period
@@ -114,11 +114,11 @@ def pyth_create_state_space(model_params):
                     continue
 
                 # Loop over all admissible years of experience accumulated in full-time
-                for exp_f in range(model_params.num_periods):
+                for exp_f in range(model_spec.num_periods):
 
                     # Loop over all admissible years of experience accumulated
                     # in part-time
-                    for exp_p in range(model_params.num_periods):
+                    for exp_p in range(model_spec.num_periods):
 
                         # The accumulation of experience cannot exceed time elapsed
                         # since individual entered the model
@@ -139,7 +139,7 @@ def pyth_create_state_space(model_params):
                             # for the currently reached entry state
                             row = [
                                 period,
-                                educ_years + model_params.educ_min,
+                                educ_years + model_spec.educ_min,
                                 0,
                                 0,
                                 0,
@@ -219,7 +219,7 @@ def pyth_create_state_space(model_params):
                                 # for the currently reached admissible state space point
                                 row = [
                                     period,
-                                    educ_years + model_params.educ_min,
+                                    educ_years + model_spec.educ_min,
                                     choice_lagged,
                                     exp_p,
                                     exp_f,
@@ -235,7 +235,7 @@ def pyth_create_state_space(model_params):
 
 
 def pyth_backward_induction(
-    model_params, states, indexer, log_wage_systematic, non_consumption_utilities, draws
+    model_spec, states, indexer, log_wage_systematic, non_consumption_utilities, draws
 ):
     """Get expected maximum value function at every state space point.
     Backward induction is performed all at once for all states in a given period.
@@ -278,7 +278,7 @@ def pyth_backward_induction(
     emaxs = np.zeros((states.shape[0], NUM_CHOICES + 1))
 
     # Loop backwards over all periods
-    for period in reversed(range(model_params.num_periods)):
+    for period in reversed(range(model_spec.num_periods)):
 
         # Extract period information
         states_period = states[np.where(states[:, 0] == period)]
@@ -289,27 +289,27 @@ def pyth_backward_induction(
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
-        if period == model_params.num_periods - 1:
+        if period == model_spec.num_periods - 1:
             pass
         else:
 
             # Fill first block of elements in emaxs for the current period
             # corresponding to the continuation values
-            emaxs = get_continuation_values(model_params, states_period, indexer, emaxs)
+            emaxs = get_continuation_values(model_spec, states_period, indexer, emaxs)
 
         # Extract current period information for current loop calculation
         emaxs_period = emaxs[np.where(states[:, 0] == period)]
 
         # Calculate emax for current period reached by the loop
         emax_period = construct_emax(
-            model_params.delta,
+            model_spec.delta,
             log_wage_systematic_period,
             non_consumption_utilities_period,
             draws[period],
             emaxs_period[:, :3],
             HOURS,
-            model_params.mu,
-            model_params.benefits,
+            model_spec.mu,
+            model_spec.benefits,
         )
         emaxs_period[:, 3] = emax_period
         emaxs[np.where(states[:, 0] == period)] = emaxs_period
@@ -318,7 +318,7 @@ def pyth_backward_induction(
 
 
 @numba.njit(nogil=True)
-def get_continuation_values(model_params, states_subset, indexer, emaxs):
+def get_continuation_values(model_spec, states_subset, indexer, emaxs):
     """Obtain continuation values for each of the choices at each state
     of the period currently reached by the parent loop.
 
@@ -342,29 +342,24 @@ def get_continuation_values(model_params, states_subset, indexer, emaxs):
         # Unpack parent state and get index
         period, educ_years, choice_lagged, exp_p, exp_f, type_ = states_subset[i]
         k_parent = indexer[
-            period,
-            educ_years - model_params.educ_min,
-            choice_lagged,
-            exp_p,
-            exp_f,
-            type_,
+            period, educ_years - model_spec.educ_min, choice_lagged, exp_p, exp_f, type_
         ]
 
         # Choice: Non-employment
         k = indexer[
-            period + 1, educ_years - model_params.educ_min, 0, exp_p, exp_f, type_
+            period + 1, educ_years - model_spec.educ_min, 0, exp_p, exp_f, type_
         ]
         emaxs[k_parent, 0] = emaxs[k, 3]
 
         # Choice: Part-time
         k = indexer[
-            period + 1, educ_years - model_params.educ_min, 1, exp_p + 1, exp_f, type_
+            period + 1, educ_years - model_spec.educ_min, 1, exp_p + 1, exp_f, type_
         ]
         emaxs[k_parent, 1] = emaxs[k, 3]
 
         # Choice: Full-time
         k = indexer[
-            period + 1, educ_years - model_params.educ_min, 2, exp_p, exp_f + 1, type_
+            period + 1, educ_years - model_spec.educ_min, 2, exp_p, exp_f + 1, type_
         ]
         emaxs[k_parent, 2] = emaxs[k, 3]
 

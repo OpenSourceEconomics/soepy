@@ -11,3 +11,4 @@ We want to collect some basic information on the project's next steps.
 * we seek to enable estimation with `estimagic`
 * introduce explicit role for beliefs in code base
 * start on exogenous fertility process and enforce explicit role for SOEP-IS data in construction of moments
+

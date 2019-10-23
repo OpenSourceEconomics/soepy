@@ -11,7 +11,7 @@ def func(maxrt):
     stop = datetime.datetime.now() + maxrt
     while datetime.datetime.now() < stop:
         random_init()
-        simulate("test.soepy.yml")
+        simulate("test.soepy.pkl", "test.soepy.yml")
 
 
 if __name__ == "__main__":

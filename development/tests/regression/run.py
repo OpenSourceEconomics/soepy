@@ -42,11 +42,11 @@ def create_vault(num_test=1000, seed=123456):
 
         np.random.seed(seed)
 
-        init_dict = random_init()
+        model_spec_init_dict, random_model_params_df = random_init()
 
-        df = simulate("test.soepy.yml")
+        df = simulate("test.soepy.pkl", "test.soepy.yml")
 
-        tests += [(init_dict, df)]
+        tests += [(model_spec_init_dict, random_model_params_df, df)]
 
     cleanup("regression")
 
@@ -64,9 +64,9 @@ def check_vault(num_test):
 
     for test in tests[:num_test]:
 
-        init_dict, expected_df = test
+        model_spec_init_dict, random_model_params_df, expected_df = test
 
-        calculated_df = simulate(init_dict)
+        calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
         for col in expected_df.columns.tolist():
             expected_df[col].equals(calculated_df[col])
