@@ -24,12 +24,6 @@ script:
     - pre-commit install -f --install-hooks
     - pre-commit run -a
 
-    # Test documentation.
-    - ./run_sphinx_build.sh
-
-    # Test tutorial simulations
-    - cd doc/tutorial; python simulate.py
-
     # Run test battery.
     - ./development/tests/run_pr_testing.py
     - python -c "import soepy; soepy.test()"
@@ -37,6 +31,12 @@ script:
     # Monitoring code coverage, previous commands do not 
     # create a proper coverage report.
     - py.test
+
+    # Test documentation.
+    - cd doc; make html
+
+    # Test tutorial simulations.
+    - cd tutorial; python simulate.py
 
 after_success:
     - codecov
