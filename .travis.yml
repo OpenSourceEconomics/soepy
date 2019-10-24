@@ -33,10 +33,10 @@ script:
     - py.test
 
     # Test documentation.
-    - cd doc; make html
+    - cd doc; make html; cd ../..
 
     # Test tutorial simulations.
-    - cd tutorial; python simulate.py
+    - cd tutorial; python simulate.py; cd ../..
 
 after_success:
     - codecov
