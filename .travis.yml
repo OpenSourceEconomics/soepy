@@ -36,7 +36,7 @@ script:
     - cd doc; make html; cd ../..
 
     # Test tutorial simulations.
-    - cd tutorial; python simulate.py; cd ../..
+    - cd doc/tutorial; python simulate.py; cd ../..
 
 after_success:
     - codecov
