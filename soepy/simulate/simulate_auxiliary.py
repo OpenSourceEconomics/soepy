@@ -28,7 +28,7 @@ def pyth_simulate(model_params, model_spec, states, indexer, emaxs, covariates):
 
     # Calculate utility components
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
-        model_params, model_spec, states, covariates, False
+        model_params, model_spec, states, covariates, is_expected=False
     )
 
     # Determine initial states according to initial conditions

@@ -24,7 +24,7 @@ def draw_disturbances(seed, num_periods, num_draws, model_params):
 
 
 def calculate_utility_components(
-    model_params, model_spec, states, covariates, expected=True
+    model_params, model_spec, states, covariates, is_expected=True
 ):
     """Calculate utility components for all choices given state, period, and shocks.
 
@@ -41,6 +41,10 @@ def calculate_utility_components(
     covariates: np.ndarray
         Array with shape (num_states, number of covariates) containing all additional
         covariates, which depend only on the state space information.
+    is_expected: bool
+        A boolean indicator that differentiates between the human capital accumulation
+        process that agents expect (is_expected = True) and that the market generates
+        (is_expected = False)
 
     Returns
     -------
@@ -54,7 +58,7 @@ def calculate_utility_components(
 
     """
     log_wage_systematic = calculate_log_wage_systematic(
-        model_params, states, covariates, expected
+        model_params, states, covariates, is_expected
     )
 
     non_consumption_utility = calculate_non_consumption_utility(
@@ -64,7 +68,7 @@ def calculate_utility_components(
     return log_wage_systematic, non_consumption_utility
 
 
-def calculate_log_wage_systematic(model_params, states, covariates, expected):
+def calculate_log_wage_systematic(model_params, states, covariates, is_expected):
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
     exp_p, exp_f = states[:, 3], states[:, 4]
@@ -74,12 +78,10 @@ def calculate_log_wage_systematic(model_params, states, covariates, expected):
     gamma_0s = np.array(model_params.gamma_0s)[educ_level]
     gamma_1s = np.array(model_params.gamma_1s)[educ_level]
 
-    if expected is True:
+    if is_expected:
         period_exp_sum = exp_p + exp_f
-    elif expected is False:
-        period_exp_sum = exp_p * np.array(model_params.g_s)[educ_level] + exp_f
     else:
-        raise NotImplementedError
+        period_exp_sum = exp_p * np.array(model_params.g_s)[educ_level] + exp_f
 
     depreciation = 1 - np.array(model_params.delta_s)[educ_level]
 
