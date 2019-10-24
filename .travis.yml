@@ -28,7 +28,7 @@ script:
     - ./run_sphinx_build.sh
 
     # Test tutorial simulations
-    - ./doc/tutorial/simulate.py
+    - cd doc/tutorial; python simulate.py
 
     # Run test battery.
     - ./development/tests/run_pr_testing.py
