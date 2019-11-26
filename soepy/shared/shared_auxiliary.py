@@ -24,7 +24,7 @@ def draw_disturbances(seed, num_periods, num_draws, model_params):
 
 
 def calculate_utility_components(
-    model_params, model_spec, states, covariates, is_expected=True
+    model_params, model_spec, states, covariates, is_expected
 ):
     """Calculate utility components for all choices given state, period, and shocks.
 

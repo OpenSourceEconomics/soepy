@@ -5,7 +5,7 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 
 
-def pyth_solve(model_params, model_spec):
+def pyth_solve(model_params, model_spec, is_expected):
     """Solve the model by backward induction.
 
     The solution routine performs four key operations:
@@ -54,7 +54,7 @@ def pyth_solve(model_params, model_spec):
     )
 
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
-        model_params, model_spec, states, covariates
+        model_params, model_spec, states, covariates, is_expected
     )
 
     # Solve the model in a backward induction procedure
