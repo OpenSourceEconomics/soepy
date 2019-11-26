@@ -21,8 +21,14 @@ def pyth_solve(model_params, model_spec, is_expected):
     Parameters
     __________
     model_params : namedtuple
-        Namedtuple containing all information relevant for running a simulation.
-        Includes parameters, dimensions, information on initial conditions, etc.
+        Namedtuple containing all structural, potentially free and estimable,
+        parameters relevant for running a simulation.
+    model_spec : namedtuple
+        Namedtuple containing all fixed parameters relevant for running a simulation
+    is_expected: bool
+        A boolean indicator that differentiates between the human capital accumulation
+        process that agents expect (is_expected = True) and that the market generates
+        (is_expected = False)
 
     Returns
     _______
