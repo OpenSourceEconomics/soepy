@@ -86,25 +86,34 @@ def random_init(constr=None):
 
     model_params_init_dict = dict()
 
-    model_params_init_dict["gamma_0s1"], model_params_init_dict[
-        "gamma_0s2"
-    ], model_params_init_dict["gamma_0s3"] = np.random.uniform(0.5, 4.0, 3).tolist()
+    (
+        model_params_init_dict["gamma_0s1"],
+        model_params_init_dict["gamma_0s2"],
+        model_params_init_dict["gamma_0s3"],
+    ) = np.random.uniform(0.5, 4.0, 3).tolist()
 
-    model_params_init_dict["gamma_1s1"], model_params_init_dict[
-        "gamma_1s2"
-    ], model_params_init_dict["gamma_1s3"] = np.random.uniform(0.08, 0.3, 3).tolist()
+    (
+        model_params_init_dict["gamma_1s1"],
+        model_params_init_dict["gamma_1s2"],
+        model_params_init_dict["gamma_1s3"],
+    ) = np.random.uniform(0.08, 0.3, 3).tolist()
 
-    model_params_init_dict["g_s1"], model_params_init_dict[
-        "g_s2"
-    ], model_params_init_dict["g_s3"] = np.random.uniform(0.02, 0.5, 3).tolist()
+    (
+        model_params_init_dict["g_s1"],
+        model_params_init_dict["g_s2"],
+        model_params_init_dict["g_s3"],
+    ) = np.random.uniform(0.02, 0.5, 3).tolist()
 
-    model_params_init_dict["delta_s1"], model_params_init_dict[
-        "delta_s2"
-    ], model_params_init_dict["delta_s3"] = np.random.uniform(0.1, 0.9, 3).tolist()
+    (
+        model_params_init_dict["delta_s1"],
+        model_params_init_dict["delta_s2"],
+        model_params_init_dict["delta_s3"],
+    ) = np.random.uniform(0.1, 0.9, 3).tolist()
 
-    model_params_init_dict["const_p"], model_params_init_dict[
-        "const_f"
-    ] = np.random.uniform(0.5, 5, 2).tolist()
+    (
+        model_params_init_dict["const_p"],
+        model_params_init_dict["const_f"],
+    ) = np.random.uniform(0.5, 5, 2).tolist()
 
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
@@ -115,16 +124,19 @@ def random_init(constr=None):
 
     for i in range(1, num_types):
         # Draw random parameters
-        model_params_init_dict["theta_p" + "{}".format(i)], model_params_init_dict[
-            "theta_f" + "{}".format(i)
-        ] = np.random.uniform(-0.05, -4, 2).tolist()
+        (
+            model_params_init_dict["theta_p" + "{}".format(i)],
+            model_params_init_dict["theta_f" + "{}".format(i)],
+        ) = np.random.uniform(-0.05, -4, 2).tolist()
 
         # Assign shares
         model_params_init_dict["share_" + "{}".format(i)] = shares[i]
 
-    model_params_init_dict["sigma_1"], model_params_init_dict[
-        "sigma_2"
-    ], model_params_init_dict["sigma_3"] = np.random.uniform(0.002, 2.0, 3).tolist()
+    (
+        model_params_init_dict["sigma_1"],
+        model_params_init_dict["sigma_2"],
+        model_params_init_dict["sigma_3"],
+    ) = np.random.uniform(0.002, 2.0, 3).tolist()
 
     # Determine categories
     category = []

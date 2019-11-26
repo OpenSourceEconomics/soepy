@@ -6,7 +6,9 @@ from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
 
 
-def pyth_simulate(model_params, model_spec, states, indexer, emaxs, covariates, is_expected):
+def pyth_simulate(
+    model_params, model_spec, states, indexer, emaxs, covariates, is_expected
+):
     """Simulate agent experiences."""
 
     # Draw random initial conditions
