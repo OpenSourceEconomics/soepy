@@ -48,9 +48,9 @@ def pyth_create_state_space(model_spec):
 
     Parameters
     ----------
-    model_params: namedtuple
-        Namedtuple containing all information relevant for running a simulation.
-        Includes parameters, dimensions, information on initial conditions, etc.
+    model_spec: namedtuple
+        Namedtuple containing all fixed parameters describing the model and its
+         state space that are relevant for running a simulation.
 
     Returns
     -------
@@ -240,10 +240,9 @@ def pyth_backward_induction(
 
     Parameters
     ----------
-    model_params : namedtuple
-        Contains all parameters of the model including information on dimensions
-        (number of periods, agents, random draws, etc.) and coefficients to be
-        estimated.
+    model_spec : namedtuple
+        Contains all fixed parameters of the model including information on dimensions
+        such as number of periods, agents, random draws, etc.
     states : np.ndarray
         Array with shape (num_states, 5) containing period, years of schooling,
         the lagged choice, the years of experience in part-time, and the

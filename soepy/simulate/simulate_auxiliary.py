@@ -6,7 +6,9 @@ from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
 
 
-def pyth_simulate(model_params, model_spec, states, indexer, emaxs, covariates):
+def pyth_simulate(
+    model_params, model_spec, states, indexer, emaxs, covariates, is_expected
+):
     """Simulate agent experiences."""
 
     # Draw random initial conditions
@@ -28,7 +30,7 @@ def pyth_simulate(model_params, model_spec, states, indexer, emaxs, covariates):
 
     # Calculate utility components
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
-        model_params, model_spec, states, covariates, is_expected=False
+        model_params, model_spec, states, covariates, is_expected
     )
 
     # Determine initial states according to initial conditions
@@ -109,6 +111,7 @@ def pyth_simulate(model_params, model_spec, states, indexer, emaxs, covariates):
                 current_log_wage_systematic,
                 current_wages,
                 current_non_consumption_utilities,
+                flow_utilities,
                 continuation_values,
                 value_functions,
             )

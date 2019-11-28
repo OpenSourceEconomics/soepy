@@ -5,7 +5,7 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 
 
-def pyth_solve(model_params, model_spec):
+def pyth_solve(model_params, model_spec, is_expected):
     """Solve the model by backward induction.
 
     The solution routine performs four key operations:
@@ -21,8 +21,14 @@ def pyth_solve(model_params, model_spec):
     Parameters
     __________
     model_params : namedtuple
-        Namedtuple containing all information relevant for running a simulation.
-        Includes parameters, dimensions, information on initial conditions, etc.
+        Namedtuple containing all structural, potentially free and estimable,
+        parameters relevant for running a simulation.
+    model_spec : namedtuple
+        Namedtuple containing all fixed parameters relevant for running a simulation
+    is_expected: bool
+        A boolean indicator that differentiates between the human capital accumulation
+        process that agents expect (is_expected = True) and that the market generates
+        (is_expected = False)
 
     Returns
     _______
@@ -54,7 +60,7 @@ def pyth_solve(model_params, model_spec):
     )
 
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
-        model_params, model_spec, states, covariates
+        model_params, model_spec, states, covariates, is_expected
     )
 
     # Solve the model in a backward induction procedure
