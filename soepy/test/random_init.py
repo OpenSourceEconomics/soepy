@@ -29,6 +29,21 @@ def random_init(constr=None):
     else:
         educ_min = 10
 
+    if "EDUC_LOW_BOUND" in constr.keys():
+        educ_low_bound = constr["EDUC_LOW_BOUND"]
+    else:
+        educ_low_bound = 10
+
+    if "EDUC_MIDDLE_BOUND" in constr.keys():
+        educ_middle_bound = constr["EDUC_MIDDLE_BOUND"]
+    else:
+        educ_middle_bound = 11
+
+    if "EDUC_HIGH_BOUND" in constr.keys():
+        educ_high_bound = constr["EDUC_HIGH_BOUND"]
+    else:
+        educ_high_bound = 12
+
     if "AGENTS" in constr.keys():
         agents = constr["AGENTS"]
     else:
@@ -73,6 +88,9 @@ def random_init(constr=None):
 
     model_spec_init_dict["INITIAL_CONDITIONS"]["educ_max"] = educ_max
     model_spec_init_dict["INITIAL_CONDITIONS"]["educ_min"] = educ_min
+    model_spec_init_dict["INITIAL_CONDITIONS"]["educ_low_bound"] = educ_low_bound
+    model_spec_init_dict["INITIAL_CONDITIONS"]["educ_middle_bound"] = educ_middle_bound
+    model_spec_init_dict["INITIAL_CONDITIONS"]["educ_high_bound"] = educ_high_bound
 
     model_spec_init_dict["SIMULATION"]["seed_sim"] = seed_sim
     model_spec_init_dict["SIMULATION"]["num_agents_sim"] = agents

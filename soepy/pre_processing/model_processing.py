@@ -172,6 +172,7 @@ def flatten_model_spec_dict(model_spec_dict):
         "GENERAL",
         "CONSTANTS",
         "INITIAL_CONDITIONS",
+        "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
         "DERIVED_ATTR",
