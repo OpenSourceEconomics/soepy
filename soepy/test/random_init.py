@@ -29,6 +29,21 @@ def random_init(constr=None):
     else:
         educ_min = 10
 
+    if "LOW_BOUND" in constr.keys():
+        low_bound = constr["LOW_BOUND"]
+    else:
+        low_bound = 10
+
+    if "MIDDLE_BOUND" in constr.keys():
+        middle_bound = constr["MIDDLE_BOUND"]
+    else:
+        middle_bound = 11
+
+    if "HIGH_BOUND" in constr.keys():
+        high_bound = constr["HIGH_BOUND"]
+    else:
+        high_bound = 12
+
     if "AGENTS" in constr.keys():
         agents = constr["AGENTS"]
     else:
@@ -60,6 +75,7 @@ def random_init(constr=None):
         "GENERAL",
         "CONSTANTS",
         "INITIAL_CONDITIONS",
+        "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
     ]:
@@ -73,6 +89,10 @@ def random_init(constr=None):
 
     model_spec_init_dict["INITIAL_CONDITIONS"]["educ_max"] = educ_max
     model_spec_init_dict["INITIAL_CONDITIONS"]["educ_min"] = educ_min
+
+    model_spec_init_dict["EDUC_LEVEL_BOUNDS"]["low_bound"] = low_bound
+    model_spec_init_dict["EDUC_LEVEL_BOUNDS"]["middle_bound"] = middle_bound
+    model_spec_init_dict["EDUC_LEVEL_BOUNDS"]["high_bound"] = high_bound
 
     model_spec_init_dict["SIMULATION"]["seed_sim"] = seed_sim
     model_spec_init_dict["SIMULATION"]["num_agents_sim"] = agents
@@ -179,7 +199,14 @@ def random_init(constr=None):
 def print_dict(model_spec_init_dict, file_name="test"):
     """This function prints the initialization dict to a *.yml file."""
     ordered_dict = collections.OrderedDict()
-    order = ["GENERAL", "CONSTANTS", "INITIAL_CONDITIONS", "SIMULATION", "SOLUTION"]
+    order = [
+        "GENERAL",
+        "CONSTANTS",
+        "INITIAL_CONDITIONS",
+        "EDUC_LEVEL_BOUNDS",
+        "SIMULATION",
+        "SOLUTION",
+    ]
     for key_ in order:
         ordered_dict[key_] = model_spec_init_dict[key_]
 
@@ -212,6 +239,11 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["INITIAL_CONDITIONS"] = dict()
     init_dict["INITIAL_CONDITIONS"]["educ_max"] = init_dict_flat["educ_max"]
     init_dict["INITIAL_CONDITIONS"]["educ_min"] = init_dict_flat["educ_min"]
+
+    init_dict["EDUC_LEVEL_BOUNDS"] = dict()
+    init_dict["EDUC_LEVEL_BOUNDS"]["low_bound"] = init_dict_flat["low_bound"]
+    init_dict["EDUC_LEVEL_BOUNDS"]["middle_bound"] = init_dict_flat["middle_bound"]
+    init_dict["EDUC_LEVEL_BOUNDS"]["high_bound"] = init_dict_flat["high_bound"]
 
     init_dict["SIMULATION"] = dict()
     init_dict["SIMULATION"]["seed_sim"] = init_dict_flat["seed_sim"]

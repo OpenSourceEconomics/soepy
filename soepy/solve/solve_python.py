@@ -52,7 +52,7 @@ def pyth_solve(model_params, model_spec, is_expected):
     states, indexer = pyth_create_state_space(model_spec)
 
     # Create objects that depend only on the state space
-    covariates = construct_covariates(states)
+    covariates = construct_covariates(states, model_spec)
 
     attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
     draws_emax = draw_disturbances(

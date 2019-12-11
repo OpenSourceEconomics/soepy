@@ -5,7 +5,7 @@ import pandas as pd
 from soepy.shared.shared_constants import MISSING_INT, NUM_CHOICES, INVALID_FLOAT, HOURS
 
 
-def construct_covariates(states):
+def construct_covariates(states, model_spec):
     """Construct a matrix of all the covariates
     that depend only on the state space.
 
@@ -24,7 +24,11 @@ def construct_covariates(states):
 
     """
     educ_level = pd.Series(states[:, 1])
-    covariates = pd.cut(educ_level, bins=[0, 10, 11, 12], labels=[0, 1, 2]).to_numpy()
+    covariates = pd.cut(
+        educ_level,
+        bins=[0, model_spec.low_bound, model_spec.middle_bound, model_spec.high_bound],
+        labels=[0, 1, 2],
+    ).to_numpy()
 
     return covariates
 
