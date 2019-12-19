@@ -1,13 +1,14 @@
 import pickle
+import random
+
 import numpy as np
-import pytest
+
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 
 
-@pytest.mark.parametrize("idx", range(10))
-def test1(idx):
-    """This test runs a random selection of five regression tests from
+def test1():
+    """This test runs a random selection of test regression tests from
     our regression test battery.
     """
 
@@ -16,14 +17,15 @@ def test1(idx):
     with open(vault, "rb") as file:
         tests = pickle.load(file)
 
-    test = tests[idx]
+    random.seed(787)
+    for i in random.sample(range(0, 100), 10):
 
-    model_spec_init_dict, random_model_params_df, expected_df = test
+        model_spec_init_dict, random_model_params_df, expected_df = tests[i]
 
-    calculated_df = simulate(random_model_params_df, model_spec_init_dict)
+        calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
-    for col in expected_df.columns.tolist():
-        np.testing.assert_array_almost_equal(
-            expected_df[col][expected_df[col].notna()],
-            calculated_df[col][calculated_df[col].notna()],
-        )
+        for col in expected_df.columns.tolist():
+            np.testing.assert_array_almost_equal(
+                expected_df[col][expected_df[col].notna()],
+                calculated_df[col][calculated_df[col].notna()],
+            )
