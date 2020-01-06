@@ -17,7 +17,6 @@ def test1():
     with open(vault, "rb") as file:
         tests = pickle.load(file)
 
-    random.seed(787)
     for i in random.sample(range(0, 100), 10):
 
         model_spec_init_dict, random_model_params_df, expected_df = tests[i]
