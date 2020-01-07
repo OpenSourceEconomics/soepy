@@ -1,4 +1,4 @@
-from collections import namedtuple
+import collections
 
 import numpy as np
 
@@ -79,7 +79,7 @@ def test_unit_states_hard_code():
     """This test ensures that the state space creation generates the correct admissible
     state space points for the first 4 periods."""
 
-    model_params = namedtuple(
+    model_params = collections.namedtuple(
         "model_params", "num_periods educ_range educ_min num_types"
     )
     model_params = model_params(4, 3, 10, 2)
