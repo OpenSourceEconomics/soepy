@@ -1,13 +1,21 @@
 import numpy as np
 import pandas as pd
 
-from soepy.shared.shared_constants import HOURS, DATA_LABLES_SIM, DATA_FORMATS_SIM
+from soepy.shared.shared_constants import HOURS, DATA_LABLES_SIM, DATA_FORMATS_SIM, LAST_CHILD_BEARING_PERIOD
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
 
 
 def pyth_simulate(
-    model_params, model_spec, states, indexer, emaxs, covariates, is_expected
+    model_params,
+    model_spec,
+    states,
+    indexer,
+    emaxs,
+    covariates,
+    child_age_update_rule,
+    prob_child,
+    is_expected,
 ):
     """Simulate agent experiences."""
 
@@ -23,6 +31,7 @@ def pyth_simulate(
         p=model_params.type_shares,
     )
 
+    # Draw shocks
     attrs_spec = ["seed_sim", "num_periods", "num_agents_sim"]
     draws_sim = draw_disturbances(
         *[getattr(model_spec, attr) for attr in attrs_spec], model_params
@@ -56,6 +65,16 @@ def pyth_simulate(
             initial_states.Years_of_Education.eq(period + model_spec.educ_min)
         ].to_numpy()
 
+        # Draw indicator of child appearing in the first period
+        kids_init_draw = np.random.binomial(
+            size=initial_states_in_period.shape[0], n=1, p=prob_child[period],
+        )
+
+        # Convert to init age of child
+        child_init_age = np.where(kids_init_draw == 0, -1, 0)
+        # Add column to state space
+        initial_states_in_period = np.c_[initial_states_in_period, child_init_age]
+
         # Get all agents in the period.
         if period == 0:
             current_states = initial_states_in_period
@@ -69,6 +88,7 @@ def pyth_simulate(
             current_states[:, 4],
             current_states[:, 5],
             current_states[:, 6],
+            current_states[:, 7],
         ]
 
         # Extract corresponding utilities
@@ -103,6 +123,26 @@ def pyth_simulate(
         # Determine choice as option with highest choice specific value function
         choice = np.argmax(value_functions, axis=1)
 
+        # Modification for simulations with very few periods
+        # where maximum childbearing age is not reached by the end of the model
+        if period == model_spec.num_periods - 1:
+            child_current_age = current_states[:, 7]
+        # Periods where the probability to have a child is still positive
+        elif period <= LAST_CHILD_BEARING_PERIOD:
+            # Update current states according to exogenous processes
+            # Relate to child age updating
+            kids_current_draw = np.random.binomial(
+                size=current_states.shape[0], n=1, p=prob_child[period + 1],
+            )
+
+            # Convert to age of child according to age update rule
+            child_current_age = np.where(
+                kids_current_draw == 0, child_age_update_rule[idx], 0
+            )
+            # Periods where no new child can arrive
+        else:
+            child_current_age = child_age_update_rule[idx]
+
         # Record period experiences
         rows = np.column_stack(
             (
@@ -119,7 +159,7 @@ def pyth_simulate(
 
         data.append(rows)
 
-        # Update current states
+        # Update current states according to choice
         current_states[:, 1] += 1
         current_states[:, 3] = choice
         current_states[:, 4] = np.where(
@@ -128,6 +168,7 @@ def pyth_simulate(
         current_states[:, 5] = np.where(
             choice == 2, current_states[:, 5] + 1, current_states[:, 5]
         )
+        current_states[:, 7] = child_current_age
 
     dataset = (
         pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM)

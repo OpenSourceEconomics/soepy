@@ -2,6 +2,10 @@ from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.solve.solve_auxiliary import construct_covariates
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
+from soepy.exogenous_processes.children import (
+    define_child_age_update_rule,
+    gen_prob_child_vector,
+)
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 
 
@@ -63,6 +67,10 @@ def pyth_solve(model_params, model_spec, is_expected):
         model_params, model_spec, states, covariates, is_expected
     )
 
+    # Get information concerning exogenous processes
+    prob_child = gen_prob_child_vector(model_spec)
+    child_age_update_rule = define_child_age_update_rule(states, covariates)
+
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
@@ -73,7 +81,9 @@ def pyth_solve(model_params, model_spec, is_expected):
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,
+        child_age_update_rule,
+        prob_child,
     )
 
     # Return function output
-    return states, indexer, covariates, emaxs
+    return states, indexer, covariates, emaxs, prob_child, child_age_update_rule

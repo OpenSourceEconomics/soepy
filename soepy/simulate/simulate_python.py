@@ -12,13 +12,21 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
     model_spec = read_model_spec_init(model_spec_init_file_name, model_params_df)
 
     # Obtain model solution
-    states, indexer, covariates, emaxs = pyth_solve(
+    states, indexer, covariates, emaxs, prob_child, child_age_update_rule, = pyth_solve(
         model_params, model_spec, is_expected
     )
 
     # Simulate agents experiences according to parameters in the model specification
     df = pyth_simulate(
-        model_params, model_spec, states, indexer, emaxs, covariates, is_expected=False
+        model_params,
+        model_spec,
+        states,
+        indexer,
+        emaxs,
+        covariates,
+        child_age_update_rule,
+        prob_child,
+        is_expected=False,
     )
 
     return df

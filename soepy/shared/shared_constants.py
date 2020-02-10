@@ -5,6 +5,8 @@ MISSING_INT = -99
 INVALID_FLOAT = -99.0
 NUM_CHOICES = 3
 HOURS = np.array([0, 18, 38])
+KIDS_AGES = np.arange(-1, 12)
+LAST_CHILD_BEARING_PERIOD = 24
 
 DATA_LABLES_SIM = [
     "Identifier",
@@ -14,6 +16,7 @@ DATA_LABLES_SIM = [
     "Experience_Part_Time",
     "Experience_Full_Time",
     "Type",
+    "Age_Younghest_Child",
     "Choice",
     "Log_Systematic_Wage",
     "Period_Wage_N",
@@ -33,7 +36,6 @@ DATA_LABLES_SIM = [
     "Value_Function_F",
 ]
 
-# Define data types for data set columns
 DATA_FORMATS_SIM = {
-    key: (np.int if key in DATA_LABLES_SIM[:7] else np.float) for key in DATA_LABLES_SIM
+    key: (np.int if key in DATA_LABLES_SIM[:8] else np.float) for key in DATA_LABLES_SIM
 }
