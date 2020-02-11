@@ -1,7 +1,12 @@
 import numpy as np
 import pandas as pd
 
-from soepy.shared.shared_constants import HOURS, DATA_LABLES_SIM, DATA_FORMATS_SIM, LAST_CHILD_BEARING_PERIOD
+from soepy.shared.shared_constants import (
+    HOURS,
+    DATA_LABLES_SIM,
+    DATA_FORMATS_SIM,
+    LAST_CHILD_BEARING_PERIOD,
+)
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
 
