@@ -152,7 +152,8 @@ def pyth_create_state_space(model_spec):
                     if educ_years > period:
                         continue
 
-                    # Loop over all admissible years of experience accumulated in full-time
+                    # Loop over all admissible years of experience
+                    # accumulated in full-time
                     for exp_f in range(model_spec.num_periods):
 
                         # Loop over all admissible years of experience accumulated
@@ -258,7 +259,8 @@ def pyth_create_state_space(model_spec):
                                     i += 1
 
                                     # Record the values of the state space components
-                                    # for the currently reached admissible state space point
+                                    # for the currently reached admissible
+                                    # state space point
                                     row = [
                                         period,
                                         educ_years + model_spec.educ_min,
@@ -427,7 +429,8 @@ def get_continuation_values(
             age_kid,
         ]
 
-        # TODO: Can I not actually use two for loops here: loop over states and then over choices
+        # TODO: Can I not actually use two for loops here:
+        #  loop over states and then over choices
 
         # Child: No arrival
         # Choice: Non-employment

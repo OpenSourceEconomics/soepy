@@ -109,8 +109,8 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
             model_params.theta_f[i - 1],
         ]
 
-    # Children constribution
-    ## TODO: Introduce as free paramters in model spec
+    # Children contribution
+    # TODO: Introduce as free parameters in model spec
 
     # No children
     non_consumption_utility[np.where(covariates[:, 1] == 0)] += [
