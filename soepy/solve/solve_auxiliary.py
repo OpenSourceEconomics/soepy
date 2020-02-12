@@ -85,21 +85,21 @@ def pyth_create_state_space(model_spec):
         A matrix where each dimension represents a characteristic of the state space.
         Switching from one state is possible via incrementing appropriate indices by 1.
 
-    Examples
-    --------
-    >>> from collections import namedtuple
-    >>> model_spec = namedtuple(
-    ...     "model_specification", "num_periods educ_range educ_min num_types"
-    ... )
-    >>> model_spec = model_spec(10, 3, 10, 2)
-    >>> NUM_CHOICES = 3
-    >>> states, indexer = pyth_create_state_space(
-    ...     model_spec
-    ... )
-    >>> states.shape
-    (2220, 6)
-    >>> indexer.shape
-    (10, 3, 3, 10, 10, 2)
+    # Examples
+    # --------
+    # >>> from collections import namedtuple
+    # >>> model_spec = namedtuple(
+    # ...     "model_specification", "num_periods educ_range educ_min num_types"
+    # ... )
+    # >>> model_spec = model_spec(10, 3, 10, 2)
+    # >>> NUM_CHOICES = 3
+    # >>> states, indexer = pyth_create_state_space(
+    # ...     model_spec
+    # ... )
+    # >>> states.shape
+    # (2220, 6)
+    # >>> indexer.shape
+    # (10, 3, 3, 10, 10, 2)
     """
     data = []
 
