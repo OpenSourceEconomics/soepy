@@ -25,8 +25,6 @@ def test1():
         const_p = random_model_params_df.loc[("disutil_work", "const_p")]["value"]
         const_f = random_model_params_df.loc[("disutil_work", "const_f")]["value"]
 
-        print(const_p, const_f)
-
         random_model_params_df.loc[("disutil_work", "no_kids_f"), "value"] = const_f
         random_model_params_df.loc[("disutil_work", "no_kids_p"), "value"] = (
             const_p - const_f

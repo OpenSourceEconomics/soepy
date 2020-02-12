@@ -96,14 +96,6 @@ def calculate_log_wage_systematic(model_params, states, covariates, is_expected)
 def calculate_non_consumption_utility(model_params, model_spec, states, covariates):
     """Calculate non-pecuniary utility contribution."""
 
-    # Old
-    # non_consumption_utility = np.full(
-    #    (states.shape[0], NUM_CHOICES), [0, model_params.const_p, model_params.const_f]
-    # )
-
-    # New:
-    # Since we plan to include all types of mutually exclusive combinations of presence
-    # of children and their ages, we can no longer accomodate a constant
     non_consumption_utility = np.full(
         (states.shape[0], NUM_CHOICES), [0.00, 0.00, 0.00]
     )
