@@ -110,8 +110,6 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
         ]
 
     # Children contribution
-    # TODO: Introduce as free parameters in model spec
-
     # No children
     non_consumption_utility[np.where(covariates[:, 1] == 0)] += [
         0,  # non-employed

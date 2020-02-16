@@ -131,9 +131,17 @@ def random_init(constr=None):
     ) = np.random.uniform(0.1, 0.9, 3).tolist()
 
     (
-        model_params_init_dict["const_p"],
-        model_params_init_dict["const_f"],
-    ) = np.random.uniform(0.5, 5, 2).tolist()
+        model_params_init_dict["no_kids_f"],
+        model_params_init_dict["no_kids_p"],
+        model_params_init_dict["yes_kids_f"],
+        model_params_init_dict["yes_kids_p"],
+        model_params_init_dict["child_02_f"],
+        model_params_init_dict["child_02_p"],
+        model_params_init_dict["child_35_f"],
+        model_params_init_dict["child_35_p"],
+        model_params_init_dict["child_610_f"],
+        model_params_init_dict["child_610_p"],
+    ) = np.random.uniform(0.5, 5, 10).tolist()
 
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
@@ -171,14 +179,14 @@ def random_init(constr=None):
             category.append("exp_accm")
         elif "delta" in key:
             category.append("exp_deprec")
-        elif "const" in key:
-            category.append("disutil_work")
         elif "theta" in key:
             category.append("hetrg_unobs")
         elif "share" in key:
             category.append("shares")
         elif "sigma" in key:
             category.append("sd_wage_shock")
+        elif "kids" or "child" in key:
+            category.append("disutil_work")
 
     # Create data frame
     columns = ["name", "value"]
