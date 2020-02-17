@@ -39,7 +39,7 @@ def construct_covariates(states, model_spec):
         labels=[0, 1, 2],
     ).to_numpy()
 
-    # Bins of age of younghest child based on kids age
+    # Bins of age of youngest child based on kids age
     # bin 0 corresponds to no kid, remaining bins as in Blundell
     # 0-2, 3-5, 6-10, 11+
     age_kid = pd.Series(states[:, 6])
@@ -53,7 +53,7 @@ def construct_covariates(states, model_spec):
 
 
 @numba.jit(nopython=True)
-def pyth_create_state_space(model_spec):
+def pyth_create_state_space(model_spec, LAST_CHILD_BEARING_PERIOD):
     """Create state space object.
 
     The state space consists of all admissible combinations of the following components:

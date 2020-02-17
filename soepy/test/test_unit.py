@@ -1,15 +1,20 @@
 import collections
 
 import numpy as np
+from random import randrange, randint
 
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.simulate.simulate_python import simulate
+from soepy.shared.shared_constants import LAST_CHILD_BEARING_PERIOD
+from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
 from soepy.test.random_init import init_dict_flat_to_init_dict
+from soepy.solve.solve_python import pyth_solve
+from soepy.simulate.simulate_auxiliary import pyth_simulate
 
 
 def test_unit_nan():
@@ -84,7 +89,7 @@ def test_unit_states_hard_code():
     )
     model_spec = model_spec(3, 3, 10, 2)
 
-    states, _ = pyth_create_state_space(model_spec)
+    states, _ = pyth_create_state_space(model_spec, LAST_CHILD_BEARING_PERIOD)
 
     states_true = [
         [0, 10, 0, 0, 0, 0, -1],
@@ -222,3 +227,97 @@ def test_unit_states_hard_code():
     ]
 
     np.testing.assert_array_equal(states_true, states)
+
+
+def test_unit_childbearing_age():
+    """This test verifies that the state space does not contain newly born children
+    after the last childbearing period"""
+    expected = 0
+
+    for i in range(10):
+        model_spec = collections.namedtuple(
+            "model_spec", "num_periods educ_range educ_min num_types"
+        )
+
+        num_periods = randint(1, 11)
+        model_spec = model_spec(num_periods, 3, 10, 2)
+
+        LAST_CHILD_BEARING_PERIOD_TEST = randrange(num_periods)
+
+        states, _ = pyth_create_state_space(model_spec, LAST_CHILD_BEARING_PERIOD_TEST)
+
+        np.testing.assert_equal(
+            sum(
+                states[np.where(states[:, 0] == LAST_CHILD_BEARING_PERIOD_TEST + 1)][
+                    :, 6
+                ]
+                == 0
+            ),
+            expected,
+        )
+
+
+def test_no_children_prob_0():
+    """This test ensures that child age equals -1 in the entire simulates sample,
+    equivalent to no kid is ever born, if the probability to get a child is zero
+    for all periods"""
+
+    for i in range(4):
+        expected = 0
+
+        is_expected = False
+
+        constr = {"AGENTS": 200, "PERIODS": 6}
+        random_init(constr)
+
+        model_params_df, model_params = read_model_params_init("test.soepy.pkl")
+        model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
+
+        # Set probability of having children to zero for all periods
+        prob_child = np.full(model_spec.num_periods, 0.00)
+
+        # Solve
+        states, indexer, covariates, emaxs, child_age_update_rule = pyth_solve(
+            model_params, model_spec, prob_child, is_expected
+        )
+
+        # Simulate
+        df = pyth_simulate(
+            model_params,
+            model_spec,
+            states,
+            indexer,
+            emaxs,
+            covariates,
+            child_age_update_rule,
+            prob_child,
+            is_expected=False,
+        )
+
+        np.testing.assert_equal(sum(df.dropna()["Age_Youngest_Child"] != -1), expected)
+
+
+def test_gen_probability_vector():
+    """This test ensures that the construction of the vector of probabilities
+    governing the child bearing process works for random number of periods and
+    random vector lengths for the vector of probabilities."""
+    for i in range(10):
+
+        model_spec = collections.namedtuple("model_spec", "num_periods")
+
+        num_periods = randint(1, 11)
+        model_spec = model_spec(num_periods)
+        PROB_CHILD_VALUES_TEST = np.random.uniform(0, 1, num_periods + randrange(20))
+        LAST_CHILD_BEARING_PERIOD_TEST = randint(0, num_periods + 20)
+
+        prob_child = gen_prob_child_vector(
+            model_spec, LAST_CHILD_BEARING_PERIOD_TEST, PROB_CHILD_VALUES_TEST,
+        )
+
+        # Assert length of array equals num periods
+        np.testing.assert_equal(len(prob_child), num_periods)
+
+        if num_periods > LAST_CHILD_BEARING_PERIOD_TEST:
+            np.testing.assert_equal(
+                prob_child[LAST_CHILD_BEARING_PERIOD_TEST + 1 : num_periods], 0
+            )

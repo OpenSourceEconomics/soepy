@@ -1,7 +1,8 @@
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.simulate.simulate_auxiliary import pyth_simulate
 from soepy.solve.solve_python import pyth_solve
+from soepy.exogenous_processes.children import gen_prob_child_vector
+from soepy.simulate.simulate_auxiliary import pyth_simulate
 
 
 def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected=True):
@@ -11,9 +12,12 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
     model_params_df, model_params = read_model_params_init(model_params_init_file_name)
     model_spec = read_model_spec_init(model_spec_init_file_name, model_params_df)
 
+    # Get information concerning exogenous processes
+    prob_child = gen_prob_child_vector(model_spec)
+
     # Obtain model solution
-    states, indexer, covariates, emaxs, prob_child, child_age_update_rule, = pyth_solve(
-        model_params, model_spec, is_expected
+    states, indexer, covariates, emaxs, child_age_update_rule = pyth_solve(
+        model_params, model_spec, prob_child, is_expected
     )
 
     # Simulate agents experiences according to parameters in the model specification

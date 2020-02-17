@@ -16,7 +16,7 @@ DATA_LABLES_SIM = [
     "Experience_Part_Time",
     "Experience_Full_Time",
     "Type",
-    "Age_Younghest_Child",
+    "Age_Youngest_Child",
     "Choice",
     "Log_Systematic_Wage",
     "Period_Wage_N",

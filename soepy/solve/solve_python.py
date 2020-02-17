@@ -2,14 +2,12 @@ from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.solve.solve_auxiliary import construct_covariates
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
-from soepy.exogenous_processes.children import (
-    define_child_age_update_rule,
-    gen_prob_child_vector,
-)
+from soepy.shared.shared_constants import LAST_CHILD_BEARING_PERIOD
+from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 
 
-def pyth_solve(model_params, model_spec, is_expected):
+def pyth_solve(model_params, model_spec, prob_child, is_expected):
     """Solve the model by backward induction.
 
     The solution routine performs four key operations:
@@ -53,7 +51,7 @@ def pyth_solve(model_params, model_spec, is_expected):
     """
 
     # Create all necessary grids and objects related to the state space
-    states, indexer = pyth_create_state_space(model_spec)
+    states, indexer = pyth_create_state_space(model_spec, LAST_CHILD_BEARING_PERIOD)
 
     # Create objects that depend only on the state space
     covariates = construct_covariates(states, model_spec)
@@ -67,8 +65,6 @@ def pyth_solve(model_params, model_spec, is_expected):
         model_params, model_spec, states, covariates, is_expected
     )
 
-    # Get information concerning exogenous processes
-    prob_child = gen_prob_child_vector(model_spec)
     child_age_update_rule = define_child_age_update_rule(states, covariates)
 
     # Solve the model in a backward induction procedure
@@ -86,4 +82,4 @@ def pyth_solve(model_params, model_spec, is_expected):
     )
 
     # Return function output
-    return states, indexer, covariates, emaxs, prob_child, child_age_update_rule
+    return states, indexer, covariates, emaxs, child_age_update_rule

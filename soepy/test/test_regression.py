@@ -39,7 +39,7 @@ def test1():
         random_model_params_df.loc[("disutil_work", "child_610_p"), "value"] = 0.00
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
-        print(sum(calculated_df["Age_Younghest_Child"] != -1))
+        print(sum(calculated_df["Age_Youngest_Child"] != -1))
 
         for col in expected_df.columns.tolist():
             np.testing.assert_array_almost_equal(

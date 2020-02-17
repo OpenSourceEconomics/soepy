@@ -26,7 +26,11 @@ def define_child_age_update_rule(states, covariates):
     return child_age_update_rule
 
 
-def gen_prob_child_vector(model_spec):
+def gen_prob_child_vector(
+    model_spec,
+    LAST_CHILD_BEARING_PERIOD=LAST_CHILD_BEARING_PERIOD,
+    PROB_CHILD_VALUES=PROB_CHILD_VALUES,
+):
     """ Generates a vector with length `num_periods` which contains
     the probability to get a child in the corresponding period."""
 
