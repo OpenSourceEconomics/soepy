@@ -234,7 +234,6 @@ def test_unit_childbearing_age():
     after the last childbearing period"""
     expected = 0
 
-
     model_spec = collections.namedtuple(
         "model_spec", "num_periods educ_range educ_min num_types"
     )
@@ -248,9 +247,7 @@ def test_unit_childbearing_age():
 
     np.testing.assert_equal(
         sum(
-            states[np.where(states[:, 0] == LAST_CHILD_BEARING_PERIOD_TEST + 1)][
-                :, 6
-            ]
+            states[np.where(states[:, 0] == LAST_CHILD_BEARING_PERIOD_TEST + 1)][:, 6]
             == 0
         ),
         expected,
