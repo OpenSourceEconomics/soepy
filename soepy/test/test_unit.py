@@ -91,9 +91,9 @@ def test_unit_states_hard_code():
 
     model_spec = collections.namedtuple(
         "model_spec",
-        "num_periods educ_range educ_min num_types last_child_bearing_period",
+        "num_periods educ_range educ_min num_types last_child_bearing_period, child_age_max",
     )
-    model_spec = model_spec(3, 3, 10, 2, 24)
+    model_spec = model_spec(3, 3, 10, 2, 24, 12)
 
     states, _ = pyth_create_state_space(model_spec)
 
@@ -242,12 +242,12 @@ def test_unit_childbearing_age():
 
     model_spec = collections.namedtuple(
         "model_spec",
-        "num_periods educ_range educ_min num_types last_child_bearing_period",
+        "num_periods educ_range educ_min num_types last_child_bearing_period child_age_max",
     )
 
     num_periods = randint(1, 11)
     last_child_bearing_period = randrange(num_periods)
-    model_spec = model_spec(num_periods, 3, 10, 2, last_child_bearing_period)
+    model_spec = model_spec(num_periods, 3, 10, 2, last_child_bearing_period, 12)
 
     states, _ = pyth_create_state_space(model_spec)
 

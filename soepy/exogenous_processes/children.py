@@ -1,11 +1,9 @@
 import numpy as np
 import pandas as pd
-
-from soepy.shared.shared_constants import KIDS_AGES
 from soepy.soepy_config import EXOG_PROC_RESOURCES_DIR
 
 
-def define_child_age_update_rule(states, covariates):
+def define_child_age_update_rule(model_spec, states, covariates):
     """ Defines a vector with the length of the number of states that contains the
     value the state space component `age_kid` should take depending on whether or not
      a child arrives in the period.
@@ -22,7 +20,7 @@ def define_child_age_update_rule(states, covariates):
         states[np.where(covariates[:, 1] != 0)][:, 6] + 1
     )
     # Age does not exceed 11.
-    child_age_update_rule[child_age_update_rule > max(KIDS_AGES)] = 11
+    child_age_update_rule[child_age_update_rule > model_spec.child_age_max - 1] = 11
 
     return child_age_update_rule
 

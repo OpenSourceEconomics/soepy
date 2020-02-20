@@ -7,7 +7,6 @@ from soepy.shared.shared_constants import (
     NUM_CHOICES,
     INVALID_FLOAT,
     HOURS,
-    KIDS_AGES,
 )
 
 
@@ -101,6 +100,7 @@ def pyth_create_state_space(model_spec):
     # (10, 3, 3, 10, 10, 2)
     """
     data = []
+    kids_ages = np.arange(-1, model_spec.child_age_max)
 
     # Array for mapping the state space points (states) to indices
     shape = (
@@ -110,7 +110,7 @@ def pyth_create_state_space(model_spec):
         model_spec.num_periods,
         model_spec.num_periods,
         model_spec.num_types,
-        KIDS_AGES.shape[0],
+        kids_ages.shape[0],
     )
 
     indexer = np.full(shape, MISSING_INT)
@@ -125,7 +125,7 @@ def pyth_create_state_space(model_spec):
         for type_ in range(model_spec.num_types):
 
             # Loop over all kids ages that are recorded
-            for age_kid in KIDS_AGES:
+            for age_kid in kids_ages:
                 # Assumption: 1st kid is born no earlier than in period zero,
                 # i.e., in the current setup, no earlier than age 17.
                 # Can be relaxed, e.g., we assume that 1st kid can arrive earliest when

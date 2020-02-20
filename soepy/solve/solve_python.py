@@ -64,7 +64,7 @@ def pyth_solve(model_params, model_spec, prob_child, is_expected):
         model_params, model_spec, states, covariates, is_expected
     )
 
-    child_age_update_rule = define_child_age_update_rule(states, covariates)
+    child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out

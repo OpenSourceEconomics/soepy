@@ -5,8 +5,6 @@ MISSING_INT = -99
 INVALID_FLOAT = -99.0
 NUM_CHOICES = 3
 HOURS = np.array([0, 18, 38])
-KIDS_AGES = np.arange(-1, 12)
-
 DATA_LABLES_SIM = [
     "Identifier",
     "Period",
