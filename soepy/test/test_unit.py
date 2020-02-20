@@ -7,7 +7,6 @@ from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.simulate.simulate_python import simulate
-from soepy.shared.shared_constants import LAST_CHILD_BEARING_PERIOD
 from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
@@ -91,11 +90,12 @@ def test_unit_states_hard_code():
     state space points for the first 4 periods."""
 
     model_spec = collections.namedtuple(
-        "model_spec", "num_periods educ_range educ_min num_types"
+        "model_spec",
+        "num_periods educ_range educ_min num_types last_child_bearing_period",
     )
-    model_spec = model_spec(3, 3, 10, 2)
+    model_spec = model_spec(3, 3, 10, 2, 24)
 
-    states, _ = pyth_create_state_space(model_spec, LAST_CHILD_BEARING_PERIOD)
+    states, _ = pyth_create_state_space(model_spec)
 
     states_true = [
         [0, 10, 0, 0, 0, 0, -1],
@@ -241,19 +241,21 @@ def test_unit_childbearing_age():
     expected = 0
 
     model_spec = collections.namedtuple(
-        "model_spec", "num_periods educ_range educ_min num_types"
+        "model_spec",
+        "num_periods educ_range educ_min num_types last_child_bearing_period",
     )
 
     num_periods = randint(1, 11)
-    model_spec = model_spec(num_periods, 3, 10, 2)
+    last_child_bearing_period = randrange(num_periods)
+    model_spec = model_spec(num_periods, 3, 10, 2, last_child_bearing_period)
 
-    LAST_CHILD_BEARING_PERIOD_TEST = randrange(num_periods)
-
-    states, _ = pyth_create_state_space(model_spec, LAST_CHILD_BEARING_PERIOD_TEST)
+    states, _ = pyth_create_state_space(model_spec)
 
     np.testing.assert_equal(
         sum(
-            states[np.where(states[:, 0] == LAST_CHILD_BEARING_PERIOD_TEST + 1)][:, 6]
+            states[np.where(states[:, 0] == model_spec.last_child_bearing_period + 1)][
+                :, 6
+            ]
             == 0
         ),
         expected,

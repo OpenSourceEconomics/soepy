@@ -20,3 +20,5 @@ SOLUTION:
     num_draws_emax: 500
 EXOG_PROC:
     kids_info_file_name: 'exog_child_info_zeros.pkl'
+    child_age_max: 12
+    last_child_bearing_period: 24

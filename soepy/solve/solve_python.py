@@ -2,7 +2,6 @@ from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.solve.solve_auxiliary import construct_covariates
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
-from soepy.shared.shared_constants import LAST_CHILD_BEARING_PERIOD
 from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 
@@ -51,7 +50,7 @@ def pyth_solve(model_params, model_spec, prob_child, is_expected):
     """
 
     # Create all necessary grids and objects related to the state space
-    states, indexer = pyth_create_state_space(model_spec, LAST_CHILD_BEARING_PERIOD)
+    states, indexer = pyth_create_state_space(model_spec)
 
     # Create objects that depend only on the state space
     covariates = construct_covariates(states, model_spec)

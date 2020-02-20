@@ -5,7 +5,6 @@ from soepy.shared.shared_constants import (
     HOURS,
     DATA_LABLES_SIM,
     DATA_FORMATS_SIM,
-    LAST_CHILD_BEARING_PERIOD,
 )
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
@@ -133,7 +132,7 @@ def pyth_simulate(
         if period == model_spec.num_periods - 1:
             child_current_age = current_states[:, 7]
         # Periods where the probability to have a child is still positive
-        elif period <= LAST_CHILD_BEARING_PERIOD:
+        elif period <= model_spec.last_child_bearing_period:
             # Update current states according to exogenous processes
             # Relate to child age updating
             kids_current_draw = np.random.binomial(

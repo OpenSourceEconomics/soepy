@@ -8,7 +8,6 @@ from soepy.shared.shared_constants import (
     INVALID_FLOAT,
     HOURS,
     KIDS_AGES,
-    LAST_CHILD_BEARING_PERIOD,
 )
 
 
@@ -53,7 +52,7 @@ def construct_covariates(states, model_spec):
 
 
 @numba.jit(nopython=True)
-def pyth_create_state_space(model_spec, LAST_CHILD_BEARING_PERIOD):
+def pyth_create_state_space(model_spec):
     """Create state space object.
 
     The state space consists of all admissible combinations of the following components:
@@ -139,8 +138,11 @@ def pyth_create_state_space(model_spec, LAST_CHILD_BEARING_PERIOD):
                 # state space component can only take values -1, for no child ever,
                 # 11, for a child above 11, and 0 - 10 in such a fashion that no
                 # birth after 40 years of age is possible.
-                if period > LAST_CHILD_BEARING_PERIOD and 0 <= age_kid <= min(
-                    period - (LAST_CHILD_BEARING_PERIOD + 1), 10
+                if (
+                    period > model_spec.last_child_bearing_period
+                    and 0
+                    <= age_kid
+                    <= min(period - (model_spec.last_child_bearing_period + 1), 10)
                 ):
                     continue
 
@@ -466,7 +468,7 @@ def get_continuation_values(
             child_age_update_rule_period[i],
         ]
 
-        if period <= LAST_CHILD_BEARING_PERIOD:
+        if period <= model_spec.last_child_bearing_period:
 
             # Child arrives
             # Choice: Non-employment

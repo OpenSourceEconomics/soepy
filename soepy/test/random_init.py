@@ -1,5 +1,6 @@
 """This function provides an random init file generating process."""
 import collections
+import random
 
 import numpy as np
 import pandas as pd
@@ -104,6 +105,11 @@ def random_init(constr=None):
     model_spec_init_dict["EXOG_PROC"][
         "kids_info_file_name"
     ] = "exog_child_info_zeros.pkl"
+    # TODO: Make flexible at some point in the future
+    model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
+    model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = random.randint(
+        0, periods
+    )
 
     print_dict(model_spec_init_dict)
 
@@ -270,6 +276,10 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["EXOG_PROC"] = dict()
     init_dict["EXOG_PROC"]["kids_info_file_name"] = init_dict_flat[
         "kids_info_file_name"
+    ]
+    init_dict["EXOG_PROC"]["child_age_max"] = init_dict_flat["child_age_max"]
+    init_dict["EXOG_PROC"]["last_child_bearing_period"] = init_dict_flat[
+        "last_child_bearing_period"
     ]
 
     return init_dict
