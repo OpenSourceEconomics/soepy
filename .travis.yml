@@ -33,7 +33,7 @@ script:
     - py.test
 
     # Test documentation.
-    - cd doc; make html; cd ../..
+    - cd doc; make html; cd ..
 
     # Test tutorial simulations.
     - cd doc/tutorial; python simulate.py; cd ../..
