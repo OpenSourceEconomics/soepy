@@ -1,7 +1,8 @@
 import numpy as np
+import pandas as pd
 
 from soepy.shared.shared_constants import LAST_CHILD_BEARING_PERIOD, KIDS_AGES
-from soepy.exogenous_processes.sample_data import PROB_CHILD_VALUES
+from soepy.soepy_config import EXOG_PROC_RESOURCES_DIR
 
 
 def define_child_age_update_rule(states, covariates):
@@ -27,18 +28,34 @@ def define_child_age_update_rule(states, covariates):
 
 
 def gen_prob_child_vector(
-    model_spec,
-    LAST_CHILD_BEARING_PERIOD=LAST_CHILD_BEARING_PERIOD,
-    PROB_CHILD_VALUES=PROB_CHILD_VALUES,
+    model_spec, LAST_CHILD_BEARING_PERIOD=LAST_CHILD_BEARING_PERIOD,
 ):
     """ Generates a vector with length `num_periods` which contains
     the probability to get a child in the corresponding period."""
 
+    # Read data frame with information on probability to get a child
+    # in every period
+
+    exog_child_info_df = pd.read_pickle(
+        str(EXOG_PROC_RESOURCES_DIR) + "/exog_child_info_zeros.pkl"
+    )
+    prob_child_values = exog_child_info_df["prob_child_values"].to_numpy()
+
     prob_child = np.full(model_spec.num_periods, 0.00)
     prob_child[
         0 : min(LAST_CHILD_BEARING_PERIOD + 1, model_spec.num_periods)
-    ] += PROB_CHILD_VALUES[
+    ] += prob_child_values[
         0 : min(LAST_CHILD_BEARING_PERIOD + 1, model_spec.num_periods)
     ]
+
+    # Assert length of array equals num periods
+    assert (
+        len(prob_child) == model_spec.num_periods
+    ), "Probability of childbirth and number of periods length mismatch"
+
+    if model_spec.num_periods > LAST_CHILD_BEARING_PERIOD:
+        assert (
+            prob_child[LAST_CHILD_BEARING_PERIOD + 1 : model_spec.num_periods] == 0
+        ), "Probability of childbirth after last childbearing period is not zero"
 
     return prob_child

@@ -291,28 +291,3 @@ def test_no_children_prob_0():
     )
 
     np.testing.assert_equal(sum(df.dropna()["Age_Youngest_Child"] != -1), expected)
-
-
-def test_gen_probability_vector():
-    """This test ensures that the construction of the vector of probabilities
-    governing the child bearing process works for random number of periods and
-    random vector lengths for the vector of probabilities."""
-
-    model_spec = collections.namedtuple("model_spec", "num_periods")
-
-    num_periods = randint(1, 11)
-    model_spec = model_spec(num_periods)
-    PROB_CHILD_VALUES_TEST = np.random.uniform(0, 1, num_periods + randrange(20))
-    LAST_CHILD_BEARING_PERIOD_TEST = randint(0, num_periods + 20)
-
-    prob_child = gen_prob_child_vector(
-        model_spec, LAST_CHILD_BEARING_PERIOD_TEST, PROB_CHILD_VALUES_TEST,
-    )
-
-    # Assert length of array equals num periods
-    np.testing.assert_equal(len(prob_child), num_periods)
-
-    if num_periods > LAST_CHILD_BEARING_PERIOD_TEST:
-        np.testing.assert_equal(
-            prob_child[LAST_CHILD_BEARING_PERIOD_TEST + 1 : num_periods], 0
-        )
