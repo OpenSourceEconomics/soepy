@@ -97,7 +97,7 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
     """Calculate non-pecuniary utility contribution."""
 
     non_consumption_utility = np.full(
-        (states.shape[0], NUM_CHOICES), [0.00, 0.00, 0.00]
+        (states.shape[0], NUM_CHOICES), [0.00] * NUM_CHOICES
     )
 
     # Type contribution
