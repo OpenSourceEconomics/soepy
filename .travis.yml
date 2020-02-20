@@ -48,4 +48,8 @@ notifications:
       on_success: never
       on_failure: never
 
-  email: false
+  email:
+    recipients:
+      - boryana.a.ilieva@gmail.com
+      on_success: never
+      on_failure: always
