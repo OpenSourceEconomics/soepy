@@ -51,9 +51,8 @@ def gen_prob_child_vector(model_spec):
 
     # if model_spec.num_periods > model_spec.last_child_bearing_period:
     #     assert (
-    #         prob_child[model_spec.last_child_bearing_period + 1 : model_spec.num_periods].all()
-    #         ==
-    #         0
+    #         prob_child[model_spec.last_child_bearing_period + 1 :\
+    #         model_spec.num_periods].all() == 0
     #     ), "Probability of childbirth after last childbearing period is not zero"
 
     return prob_child

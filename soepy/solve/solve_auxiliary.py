@@ -82,22 +82,6 @@ def pyth_create_state_space(model_spec):
     indexer : np.ndarray
         A matrix where each dimension represents a characteristic of the state space.
         Switching from one state is possible via incrementing appropriate indices by 1.
-
-    Examples
-    --------
-    >>> from collections import namedtuple
-    >>> model_spec = namedtuple(
-    ...     "model_specification", "num_periods educ_range educ_min num_types last_child_bearing_period child_age_max"
-    ... )
-    >>> model_spec = model_spec(10, 3, 10, 2, 4, 12)
-    >>> NUM_CHOICES = 3
-    >>> states, indexer = pyth_create_state_space(
-    ...     model_spec
-    ... )
-    >>> states.shape
-    (13176, 7)
-    >>> indexer.shape
-    (10, 3, 3, 10, 10, 2, 13)
     """
     data = []
     kids_ages = np.arange(-1, model_spec.child_age_max)

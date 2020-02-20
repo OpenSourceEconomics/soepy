@@ -83,6 +83,13 @@ def check_vault(num_test):
         random_model_params_df.loc[("disutil_work", "child_610_f"), "value"] = 0.00
         random_model_params_df.loc[("disutil_work", "child_610_p"), "value"] = 0.00
 
+        # Model spec modifications for testing
+        model_spec_init_dict["EXOG_PROC"] = {
+            "kids_info_file_name": "exog_child_info_zeros.pkl",
+            "child_age_max": 12,
+            "last_child_bearing_period": 24,
+        }
+
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
         for col in expected_df.columns.tolist():
