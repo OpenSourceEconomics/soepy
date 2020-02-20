@@ -22,6 +22,8 @@ def test1():
         model_spec_init_dict, random_model_params_df, expected_df = tests[i]
 
         # Remove after successful testing
+
+        # Model params specification modifications for testing
         const_p = random_model_params_df.loc[("disutil_work", "const_p")]["value"]
         const_f = random_model_params_df.loc[("disutil_work", "const_f")]["value"]
 
@@ -37,6 +39,11 @@ def test1():
         random_model_params_df.loc[("disutil_work", "child_35_p"), "value"] = 0.00
         random_model_params_df.loc[("disutil_work", "child_610_f"), "value"] = 0.00
         random_model_params_df.loc[("disutil_work", "child_610_p"), "value"] = 0.00
+
+        # Model spec modifications for testing
+        model_spec_init_dict["EXOG_PROC"] = {
+            "kids_info_file_name": "exog_child_info_zeros.pkl"
+        }
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
         print(sum(calculated_df["Age_Youngest_Child"] != -1))

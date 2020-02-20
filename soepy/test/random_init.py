@@ -78,6 +78,7 @@ def random_init(constr=None):
         "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
+        "EXOG_PROC",
     ]:
         model_spec_init_dict[key_] = {}
 
@@ -99,6 +100,10 @@ def random_init(constr=None):
 
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
+
+    model_spec_init_dict["EXOG_PROC"][
+        "kids_info_file_name"
+    ] = "exog_child_info_zeros.pkl"
 
     print_dict(model_spec_init_dict)
 
@@ -214,6 +219,7 @@ def print_dict(model_spec_init_dict, file_name="test"):
         "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
+        "EXOG_PROC",
     ]
     for key_ in order:
         ordered_dict[key_] = model_spec_init_dict[key_]
@@ -260,6 +266,11 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["SOLUTION"] = dict()
     init_dict["SOLUTION"]["seed_emax"] = init_dict_flat["seed_emax"]
     init_dict["SOLUTION"]["num_draws_emax"] = init_dict_flat["num_draws_emax"]
+
+    init_dict["EXOG_PROC"] = dict()
+    init_dict["EXOG_PROC"]["kids_info_file_name"] = init_dict_flat[
+        "kids_info_file_name"
+    ]
 
     return init_dict
 

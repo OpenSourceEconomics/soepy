@@ -18,3 +18,5 @@ SIMULATION:
 SOLUTION:
     seed_emax: 635
     num_draws_emax: 500
+EXOG_PROC:
+    kids_info_file_name: 'exog_child_info_zeros.pkl'

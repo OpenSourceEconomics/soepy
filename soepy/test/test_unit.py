@@ -8,7 +8,6 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.simulate.simulate_python import simulate
 from soepy.shared.shared_constants import LAST_CHILD_BEARING_PERIOD
-from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
 from soepy.test.random_init import namedtuple_to_dict
@@ -48,7 +47,14 @@ def test_unit_init_print():
      write the specifications to another init file, import it again and comparing both
       initialization dicts
       """
-    order = ["GENERAL", "CONSTANTS", "INITIAL_CONDITIONS", "SIMULATION", "SOLUTION"]
+    order = [
+        "GENERAL",
+        "CONSTANTS",
+        "INITIAL_CONDITIONS",
+        "SIMULATION",
+        "SOLUTION",
+        "EXOG_PROC",
+    ]
 
     for _ in range(5):
         random_init()
