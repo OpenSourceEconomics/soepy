@@ -326,7 +326,7 @@ def pyth_backward_induction(
             np.where(states[:, 0] == period)
         ]
 
-        # Probability that a child arives
+        # Probability that a child arrives
         prob_child_period = prob_child[period]
 
         log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]

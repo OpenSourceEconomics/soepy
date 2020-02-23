@@ -47,9 +47,8 @@ notifications:
         - oseconomics:Ft0TAdn9N8R38vMieCPxHV0a
       on_success: never
       on_failure: never
-
   email:
     recipients:
       - boryana.a.ilieva@gmail.com
-      on_success: never
+      on_success: always
       on_failure: always
