@@ -102,9 +102,7 @@ def random_init(constr=None):
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
 
-    model_spec_init_dict["EXOG_PROC"][
-        "kids_info_file_name"
-    ] = "exog_child_info_zeros.pkl"
+    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = "exog_child_info.pkl"
     # TODO: Make flexible at some point in the future
     model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
     model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = random.randint(
