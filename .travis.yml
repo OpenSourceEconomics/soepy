@@ -1,3 +1,4 @@
+---
 language: python
 
 python:
@@ -20,32 +21,30 @@ before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 script:
-    # Test code quality.
-    - pre-commit install -f --install-hooks
-    - pre-commit run -a
+  # Test code quality.
+  - pre-commit install -f --install-hooks
+  - pre-commit run -a
 
-    # Run test battery.
-    - ./development/tests/run_pr_testing.py
-    - python -c "import soepy; soepy.test()"
-    
-    # Monitoring code coverage, previous commands do not 
-    # create a proper coverage report.
-    - py.test
+  # Run test battery.
+  - ./development/tests/run_pr_testing.py
+  - python -c "import soepy; soepy.test()"
 
-    # Test documentation.
-    - cd doc; make html; cd ../..
+  # Monitoring code coverage, previous commands do not
+  # create a proper coverage report.
+  - py.test
 
-    # Test tutorial simulations.
-    - cd doc/tutorial; python simulate.py; cd ../..
+  # Test documentation.
+  - cd doc; make html; cd ..
+
+  # Test tutorial simulations.
+  - cd doc/tutorial; python simulate.py; cd ../..
 
 after_success:
-    - codecov
+  - codecov
 
 notifications:
-  slack:
-      rooms:
-        - oseconomics:Ft0TAdn9N8R38vMieCPxHV0a
-      on_success: never
-      on_failure: never
-
-  email: false
+  email:
+    recipients:
+      - boryana.a.ilieva@gmail.com
+    on_success: always
+    on_failure: always

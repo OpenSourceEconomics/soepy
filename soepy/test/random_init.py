@@ -1,5 +1,6 @@
 """This function provides an random init file generating process."""
 import collections
+import random
 
 import numpy as np
 import pandas as pd
@@ -78,6 +79,7 @@ def random_init(constr=None):
         "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
+        "EXOG_PROC",
     ]:
         model_spec_init_dict[key_] = {}
 
@@ -99,6 +101,13 @@ def random_init(constr=None):
 
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
+
+    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = "exog_child_info.pkl"
+    # TODO: Make flexible at some point in the future
+    model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
+    model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = random.randint(
+        0, periods
+    )
 
     print_dict(model_spec_init_dict)
 
@@ -131,9 +140,17 @@ def random_init(constr=None):
     ) = np.random.uniform(0.1, 0.9, 3).tolist()
 
     (
-        model_params_init_dict["const_p"],
-        model_params_init_dict["const_f"],
-    ) = np.random.uniform(0.5, 5, 2).tolist()
+        model_params_init_dict["no_kids_f"],
+        model_params_init_dict["no_kids_p"],
+        model_params_init_dict["yes_kids_f"],
+        model_params_init_dict["yes_kids_p"],
+        model_params_init_dict["child_02_f"],
+        model_params_init_dict["child_02_p"],
+        model_params_init_dict["child_35_f"],
+        model_params_init_dict["child_35_p"],
+        model_params_init_dict["child_610_f"],
+        model_params_init_dict["child_610_p"],
+    ) = np.random.uniform(0.5, 5, 10).tolist()
 
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
@@ -171,14 +188,14 @@ def random_init(constr=None):
             category.append("exp_accm")
         elif "delta" in key:
             category.append("exp_deprec")
-        elif "const" in key:
-            category.append("disutil_work")
         elif "theta" in key:
             category.append("hetrg_unobs")
         elif "share" in key:
             category.append("shares")
         elif "sigma" in key:
             category.append("sd_wage_shock")
+        elif "kids" or "child" in key:
+            category.append("disutil_work")
 
     # Create data frame
     columns = ["name", "value"]
@@ -206,6 +223,7 @@ def print_dict(model_spec_init_dict, file_name="test"):
         "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
+        "EXOG_PROC",
     ]
     for key_ in order:
         ordered_dict[key_] = model_spec_init_dict[key_]
@@ -253,6 +271,15 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["SOLUTION"]["seed_emax"] = init_dict_flat["seed_emax"]
     init_dict["SOLUTION"]["num_draws_emax"] = init_dict_flat["num_draws_emax"]
 
+    init_dict["EXOG_PROC"] = dict()
+    init_dict["EXOG_PROC"]["kids_info_file_name"] = init_dict_flat[
+        "kids_info_file_name"
+    ]
+    init_dict["EXOG_PROC"]["child_age_max"] = init_dict_flat["child_age_max"]
+    init_dict["EXOG_PROC"]["last_child_bearing_period"] = init_dict_flat[
+        "last_child_bearing_period"
+    ]
+
     return init_dict
 
 
@@ -262,6 +289,6 @@ def read_init_file2(init_file_name):
 
     # Import yaml initialization file as dictionary init_dict
     with open(init_file_name) as y:
-        init_dict = yaml.load(y, Loader=yaml.FullLoader)
+        init_dict = yaml.load(y, Loader=yaml.Loader)
 
     return init_dict

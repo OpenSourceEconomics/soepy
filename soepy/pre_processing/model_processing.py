@@ -125,13 +125,13 @@ def dict_to_namedtuple_params(dictionary):
 def read_model_spec_init(model_spec_init, model_params):
     """Reads in the model specification from yaml file.
     This initialisation component contains only information
-    that does not change dirung estimation. Inputs are made
+    that does not change during estimation. Inputs are made
     available as named tuple."""
 
     # Import yaml initialization file as dictionary init_dict
     if isinstance(model_spec_init, str):
         with open(model_spec_init) as y:
-            model_spec_init_dict = yaml.load(y, Loader=yaml.FullLoader)
+            model_spec_init_dict = yaml.load(y, Loader=yaml.Loader)
     else:
         model_spec_init_dict = model_spec_init
 
@@ -175,6 +175,7 @@ def flatten_model_spec_dict(model_spec_dict):
         "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
+        "EXOG_PROC",
         "DERIVED_ATTR",
     ]
 
