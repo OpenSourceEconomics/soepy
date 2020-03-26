@@ -103,13 +103,13 @@ def pyth_simulate(
             current_log_wage_systematic.reshape(-1, 1)
             + draws_sim[period, current_states[:, 0]]
         )
-        current_wages[:, 0] = model_spec.benefits
+        current_wages[:, 0] = model_params.benefits
 
         # Calculate total values for all choices
         flow_utilities = np.full((current_states.shape[0], 3), np.nan)
 
         flow_utilities[:, :1] = (
-            model_spec.benefits ** model_spec.mu
+            model_params.benefits ** model_spec.mu
             / model_spec.mu
             * current_non_consumption_utilities[:, :1]
         )

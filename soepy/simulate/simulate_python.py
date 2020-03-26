@@ -1,7 +1,7 @@
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.solve.solve_python import pyth_solve
 from soepy.exogenous_processes.children import gen_prob_child_vector
+from soepy.solve.solve_python import pyth_solve
 from soepy.simulate.simulate_auxiliary import pyth_simulate
 
 
