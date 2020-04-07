@@ -19,6 +19,7 @@ def pyth_simulate(
     covariates,
     child_age_update_rule,
     prob_child,
+    prob_educ_years,
     is_expected,
 ):
     """Simulate agent experiences."""
@@ -26,7 +27,9 @@ def pyth_simulate(
     # Draw random initial conditions
     educ_years = list(range(model_spec.educ_min, model_spec.educ_max + 1))
     np.random.seed(model_spec.seed_sim)
-    initial_educ_years = np.random.choice(educ_years, model_spec.num_agents_sim)
+    initial_educ_years = np.random.choice(
+        educ_years, model_spec.num_agents_sim, p=prob_educ_years
+    )
 
     # Draw random type
     type_ = np.random.choice(
