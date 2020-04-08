@@ -22,8 +22,8 @@ before_script:
 
 script:
   # Test code quality.
-  - pre-commit install -f --install-hooks
-  - pre-commit run -a
+  #- pre-commit install -f --install-hooks
+  #- pre-commit run -a
 
   # Run test battery.
   #- ./development/tests/run_pr_testing.py
