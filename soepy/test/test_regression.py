@@ -1,4 +1,3 @@
-import pytest
 import pickle
 import random
 
@@ -8,7 +7,6 @@ from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 
 
-@pytest.mark.skip(reason="tests are failing since prob of educ levels are now fixed")
 def test1():
     """This test runs a random selection of test regression tests from
     our regression test battery.
@@ -23,14 +21,9 @@ def test1():
 
         model_spec_init_dict, random_model_params_df, expected_df = tests[i]
 
-        random_model_params_df.loc[
-            ("nonemp_rew", "benefits"), "value"
-        ] = model_spec_init_dict["CONSTANTS"]["benefits"]
-
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
         for col in expected_df.columns.tolist():
             np.testing.assert_array_almost_equal(
-                expected_df[col][expected_df[col].notna()],
-                calculated_df[col][calculated_df[col].notna()],
+                expected_df[col], calculated_df[col],
             )

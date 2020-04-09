@@ -66,10 +66,6 @@ def check_vault(num_test):
 
         model_spec_init_dict, random_model_params_df, expected_df = test
 
-        random_model_params_df.loc[
-            ("nonemp_rew", "benefits"), "value"
-        ] = model_spec_init_dict["CONSTANTS"]["benefits"]
-
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
         for col in expected_df.columns.tolist():
