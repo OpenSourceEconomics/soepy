@@ -7,6 +7,7 @@ import numpy as np
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 
+
 @pytest.mark.skip(reason="tests are failing since prob of educ levels are now fixed")
 def test1():
     """This test runs a random selection of test regression tests from

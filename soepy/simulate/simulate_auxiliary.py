@@ -177,16 +177,7 @@ def pyth_simulate(
         )
         current_states[:, 7] = child_current_age
 
-    dataset = (
-        pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM)
-        .astype(DATA_FORMATS_SIM)
-        .set_index(["Identifier", "Period"], drop=False)
+    dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
+        DATA_FORMATS_SIM
     )
-
-    # Fill gaps in history with NaNs.
-    index = pd.MultiIndex.from_product(
-        [range(model_spec.num_agents_sim), range(model_spec.num_periods)]
-    )
-    dataset = dataset.reindex(index)
-
     return dataset

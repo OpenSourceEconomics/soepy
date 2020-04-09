@@ -16,28 +16,15 @@ from soepy.simulate.simulate_auxiliary import pyth_simulate
 
 
 def test_unit_nan():
-    """This test ensures that the data frame contain only nan values if individuals are
-     still a in education.
+    """This test ensures that the data frame only includes individuals that have
+     completed education.
     """
     constr = {"AGENTS": 200}
     random_init(constr)
     df = simulate("test.soepy.pkl", "test.soepy.yml")
 
-    for year in [11, 12]:
-
-        df2 = df[(df["Years_of_Education"] == year) & (df["Period"] < year - 10)]
-
-        df2 = df2[
-            [
-                col
-                for col in df2.columns.values
-                if col not in ["Identifier", "Period", "Years_of_Education"]
-            ]
-        ]
-        a = np.empty(df2.shape)
-        a[:] = np.nan
-
-        np.testing.assert_array_equal(df2.values, a)
+    np.testing.assert_equal(df[df["Years_of_Education"] == 11]["Period"].min(), 1)
+    np.testing.assert_equal(df[df["Years_of_Education"] == 12]["Period"].min(), 2)
 
 
 def test_unit_init_print():
@@ -112,7 +99,14 @@ def test_unit_data_frame_shape():
             is_expected=False,
         )
 
-        np.testing.assert_array_equal(df.shape[0], constr["AGENTS"] * constr["PERIODS"])
+        # Count individuals with each educ level
+        counts = []
+        for i in [10, 11, 12]:
+            counts.append(df[df["Years_of_Education"] == i]["Identifier"].nunique())
+
+        shape = constr["AGENTS"] * constr["PERIODS"] - counts[1] - counts[2] * 2
+
+        np.testing.assert_array_equal(df.shape[0], shape)
 
 
 def test_unit_states_hard_code():
