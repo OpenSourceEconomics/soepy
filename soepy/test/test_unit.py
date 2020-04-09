@@ -374,16 +374,9 @@ def test_educ_level_shares():
         is_expected=False,
     )
 
-    simulated = np.asarray(
-        [
-            df[df["Years_of_Education"] == 10.0]["Identifier"].nunique()
-            / constr["AGENTS"],
-            df[df["Years_of_Education"] == 11.0]["Identifier"].nunique()
-            / constr["AGENTS"],
-            df[df["Years_of_Education"] == 12.0]["Identifier"].nunique()
-            / constr["AGENTS"],
-        ],
-        dtype=np.float,
+    simulated = (
+        df.groupby("Years_of_Education")["Identifier"].nunique().to_numpy()
+        / constr["AGENTS"]
     )
 
     np.testing.assert_almost_equal(simulated, prob_educ_years, decimal=2)
