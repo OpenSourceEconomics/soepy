@@ -18,7 +18,7 @@ SOLUTION:
     seed_emax: 635
     num_draws_emax: 500
 EXOG_PROC:
-    educ_info_file_name: 'exog_educ_info_generic.pkl'
-    kids_info_file_name: 'exog_child_info.pkl'
+    educ_info_file_name: 'test/resources/exog_educ_info_generic.pkl'
+    kids_info_file_name: 'test/resources/exog_child_info.pkl'
     child_age_max: 12
     last_child_bearing_period: 24
