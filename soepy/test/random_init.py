@@ -104,7 +104,9 @@ def random_init(constr=None):
     model_spec_init_dict["EXOG_PROC"][
         "educ_info_file_name"
     ] = "test/resources/exog_educ_info_generic.pkl"
-    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = "test/resources/exog_child_info.pkl"
+    model_spec_init_dict["EXOG_PROC"][
+        "kids_info_file_name"
+    ] = "test/resources/exog_child_info.pkl"
     # TODO: Make flexible at some point in the future
     model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
     model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = random.randint(
@@ -154,7 +156,7 @@ def random_init(constr=None):
         model_params_init_dict["child_610_p"],
     ) = np.random.uniform(0.5, 5, 10).tolist()
 
-    model_params_init_dict["benefits"] = np.random.uniform(3.0, 7.0)
+    model_params_init_dict["benefits"] = 4.0
 
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
