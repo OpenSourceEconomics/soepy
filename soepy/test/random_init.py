@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import yaml
 
+from soepy.soepy_config import TEST_RESOURCES_DIR
+
 
 def random_init(constr=None):
     """The module provides a random dictionary generating process for test purposes.
@@ -101,12 +103,12 @@ def random_init(constr=None):
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
 
-    model_spec_init_dict["EXOG_PROC"][
-        "educ_info_file_name"
-    ] = "test/resources/exog_educ_info_generic.pkl"
-    model_spec_init_dict["EXOG_PROC"][
-        "kids_info_file_name"
-    ] = "test/resources/exog_child_info.pkl"
+    model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = (
+        str(TEST_RESOURCES_DIR) + "/" + "exog_educ_info_generic.pkl"
+    )
+    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = (
+        str(TEST_RESOURCES_DIR) + "/" + "exog_child_info.pkl"
+    )
     # TODO: Make flexible at some point in the future
     model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
     model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = random.randint(
