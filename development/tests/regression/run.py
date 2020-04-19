@@ -47,7 +47,7 @@ def create_vault(num_test=1000, seed=123456):
         model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = (
             str(TEST_RESOURCES_DIR) + "/" + "exog_child_info.pkl"
         )
-        model_spec_init_dict["EXOG_PROC"]["eud_info_file_name"] = (
+        model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = (
             str(TEST_RESOURCES_DIR) + "/" + "exog_educ_info_generic.pkl"
         )
 
