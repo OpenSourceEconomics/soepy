@@ -1,3 +1,5 @@
+"""This module reads in information on probabilities regarding the exogenous
+process of childbirth."""
 import numpy as np
 import pandas as pd
 

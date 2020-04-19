@@ -1,3 +1,5 @@
+"""This module reads in information on probabilities regarding the initial conditions
+on years of education"""
 import pandas as pd
 
 
