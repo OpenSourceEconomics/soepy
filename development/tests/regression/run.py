@@ -75,6 +75,13 @@ def check_vault(num_test):
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
+        model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = (
+            str(TEST_RESOURCES_DIR) + "/" + "exog_child_info.pkl"
+        )
+        model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = (
+            str(TEST_RESOURCES_DIR) + "/" + "exog_educ_info_generic.pkl"
+        )
+
         for col in expected_df.columns.tolist():
             expected_df[col].equals(calculated_df[col])
 
