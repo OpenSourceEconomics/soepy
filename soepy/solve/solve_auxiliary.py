@@ -496,8 +496,8 @@ def get_continuation_values(
 
         else:
             emaxs[k_parent, 0] = emaxs[k_0, 3]
-            emaxs[k_parent, 1] = emaxs[k_0, 3]
-            emaxs[k_parent, 2] = emaxs[k_0, 3]
+            emaxs[k_parent, 1] = emaxs[k_1, 3]
+            emaxs[k_parent, 2] = emaxs[k_2, 3]
 
     return emaxs
 

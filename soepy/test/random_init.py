@@ -111,9 +111,7 @@ def random_init(constr=None):
     )
     # TODO: Make flexible at some point in the future
     model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
-    model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = random.randint(
-        0, periods
-    )
+    model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = periods
 
     print_dict(model_spec_init_dict)
 
