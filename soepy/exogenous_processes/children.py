@@ -1,6 +1,7 @@
+"""This module reads in information on probabilities regarding the exogenous
+process of childbirth."""
 import numpy as np
 import pandas as pd
-from soepy.soepy_config import EXOG_PROC_RESOURCES_DIR
 
 
 def define_child_age_update_rule(model_spec, states, covariates):
@@ -31,10 +32,8 @@ def gen_prob_child_vector(model_spec):
 
     # Read data frame with information on probability to get a child
     # in every period
+    exog_child_info_df = pd.read_pickle(str(model_spec.kids_info_file_name))
 
-    exog_child_info_df = pd.read_pickle(
-        str(EXOG_PROC_RESOURCES_DIR) + "/" + str(model_spec.kids_info_file_name)
-    )
     prob_child_values = exog_child_info_df["prob_child_values"].to_numpy()
 
     prob_child = np.full(model_spec.num_periods, 0.00)
@@ -48,11 +47,5 @@ def gen_prob_child_vector(model_spec):
     assert (
         len(prob_child) == model_spec.num_periods
     ), "Probability of childbirth and number of periods length mismatch"
-
-    # if model_spec.num_periods > model_spec.last_child_bearing_period:
-    #     assert (
-    #         prob_child[model_spec.last_child_bearing_period + 1 :\
-    #         model_spec.num_periods].all() == 0
-    #     ), "Probability of childbirth after last childbearing period is not zero"
 
     return prob_child

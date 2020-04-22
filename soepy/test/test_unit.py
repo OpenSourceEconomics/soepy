@@ -16,28 +16,15 @@ from soepy.simulate.simulate_auxiliary import pyth_simulate
 
 
 def test_unit_nan():
-    """This test ensures that the data frame contain only nan values if individuals are
-     still a in education.
+    """This test ensures that the data frame only includes individuals that have
+     completed education.
     """
     constr = {"AGENTS": 200}
     random_init(constr)
     df = simulate("test.soepy.pkl", "test.soepy.yml")
 
-    for year in [11, 12]:
-
-        df2 = df[(df["Years_of_Education"] == year) & (df["Period"] < year - 10)]
-
-        df2 = df2[
-            [
-                col
-                for col in df2.columns.values
-                if col not in ["Identifier", "Period", "Years_of_Education"]
-            ]
-        ]
-        a = np.empty(df2.shape)
-        a[:] = np.nan
-
-        np.testing.assert_array_equal(df2.values, a)
+    np.testing.assert_equal(df[df["Years_of_Education"] == 11]["Period"].min(), 1)
+    np.testing.assert_equal(df[df["Years_of_Education"] == 12]["Period"].min(), 2)
 
 
 def test_unit_init_print():
@@ -78,11 +65,48 @@ def test_unit_data_frame_shape():
         constr["AGENTS"] = np.random.randint(10, 100)
         constr["PERIODS"] = np.random.randint(1, 6)
         constr["EDUC_MAX"] = np.random.randint(10, min(10 + constr["PERIODS"], 12))
+        num_educ_years = constr["EDUC_MAX"] - 9
 
         random_init(constr)
-        df = simulate("test.soepy.pkl", "test.soepy.yml")
 
-        np.testing.assert_array_equal(df.shape[0], constr["AGENTS"] * constr["PERIODS"])
+        model_params_df, model_params = read_model_params_init("test.soepy.pkl")
+        model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
+
+        # Set probability of having children to zero for all periods
+        prob_child = np.full(model_spec.num_periods, 0.00)
+
+        # Generate frequencies of different education levels
+        prob_educ_years = np.random.random(num_educ_years)
+        prob_educ_years /= prob_educ_years.sum()
+        prob_educ_years = list(prob_educ_years)
+
+        # Solve
+        states, indexer, covariates, emaxs, child_age_update_rule = pyth_solve(
+            model_params, model_spec, prob_child, is_expected=False,
+        )
+
+        # Simulate
+        df = pyth_simulate(
+            model_params,
+            model_spec,
+            states,
+            indexer,
+            emaxs,
+            covariates,
+            child_age_update_rule,
+            prob_child,
+            prob_educ_years,
+            is_expected=False,
+        )
+
+        # Count individuals with each educ level
+        counts = []
+        for i in [10, 11, 12]:
+            counts.append(df[df["Years_of_Education"] == i]["Identifier"].nunique())
+
+        shape = constr["AGENTS"] * constr["PERIODS"] - counts[1] - counts[2] * 2
+
+        np.testing.assert_array_equal(df.shape[0], shape)
 
 
 def test_unit_states_hard_code():
@@ -273,7 +297,10 @@ def test_no_children_prob_0():
 
     is_expected = False
 
-    constr = {"AGENTS": 200, "PERIODS": 6}
+    constr = {
+        "AGENTS": 200,
+        "PERIODS": 6,
+    }
     random_init(constr)
 
     model_params_df, model_params = read_model_params_init("test.soepy.pkl")
@@ -281,6 +308,7 @@ def test_no_children_prob_0():
 
     # Set probability of having children to zero for all periods
     prob_child = np.full(model_spec.num_periods, 0.00)
+    prob_educ_years = [0.3, 0.45, 0.25]
 
     # Solve
     states, indexer, covariates, emaxs, child_age_update_rule = pyth_solve(
@@ -297,7 +325,58 @@ def test_no_children_prob_0():
         covariates,
         child_age_update_rule,
         prob_child,
+        prob_educ_years,
         is_expected=False,
     )
 
     np.testing.assert_equal(sum(df.dropna()["Age_Youngest_Child"] != -1), expected)
+
+
+def test_educ_level_shares():
+    """This test ensures that the shares of individuals with low, middle and high
+    education level in the simulated data frame correspond to the probabilities
+    specified in the init file.
+    """
+
+    constr = dict()
+    constr["AGENTS"] = 10000
+    constr["PERIODS"] = 6
+
+    random_init(constr)
+
+    model_params_df, model_params = read_model_params_init("test.soepy.pkl")
+    model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
+
+    # Set probability of having children to zero for all periods
+    prob_child = np.full(model_spec.num_periods, 0.00)
+
+    # Generate frequencies of different education levels
+    prob_educ_years = np.random.random(3)
+    prob_educ_years /= prob_educ_years.sum()
+    prob_educ_years_list = list(prob_educ_years)
+
+    # Solve
+    states, indexer, covariates, emaxs, child_age_update_rule = pyth_solve(
+        model_params, model_spec, prob_child, is_expected=False,
+    )
+
+    # Simulate
+    df = pyth_simulate(
+        model_params,
+        model_spec,
+        states,
+        indexer,
+        emaxs,
+        covariates,
+        child_age_update_rule,
+        prob_child,
+        prob_educ_years_list,
+        is_expected=False,
+    )
+
+    simulated = (
+        df.groupby("Years_of_Education")["Identifier"].nunique().to_numpy()
+        / constr["AGENTS"]
+    )
+
+    np.testing.assert_almost_equal(simulated, prob_educ_years, decimal=2)

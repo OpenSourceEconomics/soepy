@@ -1,0 +1,24 @@
+---
+GENERAL:
+    num_periods: 40
+CONSTANTS:
+    delta: 0.98
+    mu: -0.56
+INITIAL_CONDITIONS:
+    educ_max: 12
+    educ_min: 10
+EDUC_LEVEL_BOUNDS:
+    low_bound: 10
+    middle_bound: 11
+    high_bound: 12
+SIMULATION:
+    seed_sim: 102
+    num_agents_sim: 9000
+SOLUTION:
+    seed_emax: 635
+    num_draws_emax: 500
+EXOG_PROC:
+    educ_info_file_name: 'exog_educ_info_generic.pkl'
+    kids_info_file_name: 'exog_child_info.pkl'
+    child_age_max: 12
+    last_child_bearing_period: 24

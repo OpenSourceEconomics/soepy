@@ -34,5 +34,5 @@ DATA_LABLES_SIM = [
 ]
 
 DATA_FORMATS_SIM = {
-    key: (np.int if key in DATA_LABLES_SIM[:8] else np.float) for key in DATA_LABLES_SIM
+    key: (np.int if key in DATA_LABLES_SIM[:9] else np.float) for key in DATA_LABLES_SIM
 }

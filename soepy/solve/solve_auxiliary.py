@@ -267,6 +267,7 @@ def pyth_create_state_space(model_spec):
 
 def pyth_backward_induction(
     model_spec,
+    model_params,
     states,
     indexer,
     log_wage_systematic,
@@ -363,7 +364,7 @@ def pyth_backward_induction(
             emaxs_period[:, :3],
             HOURS,
             model_spec.mu,
-            model_spec.benefits,
+            model_params.benefits,
         )
         emaxs_period[:, 3] = emax_period
         emaxs[np.where(states[:, 0] == period)] = emaxs_period
@@ -495,8 +496,8 @@ def get_continuation_values(
 
         else:
             emaxs[k_parent, 0] = emaxs[k_0, 3]
-            emaxs[k_parent, 1] = emaxs[k_0, 3]
-            emaxs[k_parent, 2] = emaxs[k_0, 3]
+            emaxs[k_parent, 1] = emaxs[k_1, 3]
+            emaxs[k_parent, 2] = emaxs[k_2, 3]
 
     return emaxs
 

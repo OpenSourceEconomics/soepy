@@ -19,6 +19,7 @@ def pyth_simulate(
     covariates,
     child_age_update_rule,
     prob_child,
+    prob_educ_years,
     is_expected,
 ):
     """Simulate agent experiences."""
@@ -26,7 +27,9 @@ def pyth_simulate(
     # Draw random initial conditions
     educ_years = list(range(model_spec.educ_min, model_spec.educ_max + 1))
     np.random.seed(model_spec.seed_sim)
-    initial_educ_years = np.random.choice(educ_years, model_spec.num_agents_sim)
+    initial_educ_years = np.random.choice(
+        educ_years, model_spec.num_agents_sim, p=prob_educ_years
+    )
 
     # Draw random type
     type_ = np.random.choice(
@@ -103,13 +106,13 @@ def pyth_simulate(
             current_log_wage_systematic.reshape(-1, 1)
             + draws_sim[period, current_states[:, 0]]
         )
-        current_wages[:, 0] = model_spec.benefits
+        current_wages[:, 0] = model_params.benefits
 
         # Calculate total values for all choices
         flow_utilities = np.full((current_states.shape[0], 3), np.nan)
 
         flow_utilities[:, :1] = (
-            model_spec.benefits ** model_spec.mu
+            model_params.benefits ** model_spec.mu
             / model_spec.mu
             * current_non_consumption_utilities[:, :1]
         )
@@ -174,16 +177,7 @@ def pyth_simulate(
         )
         current_states[:, 7] = child_current_age
 
-    dataset = (
-        pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM)
-        .astype(DATA_FORMATS_SIM)
-        .set_index(["Identifier", "Period"], drop=False)
+    dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
+        DATA_FORMATS_SIM
     )
-
-    # Fill gaps in history with NaNs.
-    index = pd.MultiIndex.from_product(
-        [range(model_spec.num_agents_sim), range(model_spec.num_periods)]
-    )
-    dataset = dataset.reindex(index)
-
     return dataset

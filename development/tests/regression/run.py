@@ -44,6 +44,13 @@ def create_vault(num_test=1000, seed=123456):
 
         model_spec_init_dict, random_model_params_df = random_init()
 
+        model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = (
+            str(TEST_RESOURCES_DIR) + "/" + "exog_child_info.pkl"
+        )
+        model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = (
+            str(TEST_RESOURCES_DIR) + "/" + "exog_educ_info_generic.pkl"
+        )
+
         df = simulate("test.soepy.pkl", "test.soepy.yml")
 
         tests += [(model_spec_init_dict, random_model_params_df, df)]
@@ -65,6 +72,13 @@ def check_vault(num_test):
     for test in tests[:num_test]:
 
         model_spec_init_dict, random_model_params_df, expected_df = test
+
+        model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = (
+            str(TEST_RESOURCES_DIR) + "/" + "exog_child_info.pkl"
+        )
+        model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = (
+            str(TEST_RESOURCES_DIR) + "/" + "exog_educ_info_generic.pkl"
+        )
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 

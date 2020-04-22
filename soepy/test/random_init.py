@@ -1,10 +1,11 @@
 """This function provides an random init file generating process."""
 import collections
-import random
 
 import numpy as np
 import pandas as pd
 import yaml
+
+from soepy.soepy_config import TEST_RESOURCES_DIR
 
 
 def random_init(constr=None):
@@ -87,7 +88,6 @@ def random_init(constr=None):
 
     model_spec_init_dict["CONSTANTS"]["delta"] = np.random.uniform(0.8, 0.99)
     model_spec_init_dict["CONSTANTS"]["mu"] = np.random.uniform(-0.7, -0.4)
-    model_spec_init_dict["CONSTANTS"]["benefits"] = np.random.uniform(4.0, 7.0)
 
     model_spec_init_dict["INITIAL_CONDITIONS"]["educ_max"] = educ_max
     model_spec_init_dict["INITIAL_CONDITIONS"]["educ_min"] = educ_min
@@ -102,12 +102,15 @@ def random_init(constr=None):
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
 
-    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = "exog_child_info.pkl"
+    model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = (
+        str(TEST_RESOURCES_DIR) + "/" + "exog_educ_info_generic.pkl"
+    )
+    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = (
+        str(TEST_RESOURCES_DIR) + "/" + "exog_child_info.pkl"
+    )
     # TODO: Make flexible at some point in the future
     model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
-    model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = random.randint(
-        0, periods
-    )
+    model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = periods
 
     print_dict(model_spec_init_dict)
 
@@ -152,6 +155,8 @@ def random_init(constr=None):
         model_params_init_dict["child_610_p"],
     ) = np.random.uniform(0.5, 5, 10).tolist()
 
+    model_params_init_dict["benefits"] = 4.0
+
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
     # Draw shares that sum up to one
@@ -194,6 +199,8 @@ def random_init(constr=None):
             category.append("shares")
         elif "sigma" in key:
             category.append("sd_wage_shock")
+        elif "benefits" in key:
+            category.append("nonemp_rew")
         elif "kids" or "child" in key:
             category.append("disutil_work")
 
@@ -252,7 +259,6 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["CONSTANTS"] = dict()
     init_dict["CONSTANTS"]["delta"] = init_dict_flat["delta"]
     init_dict["CONSTANTS"]["mu"] = init_dict_flat["mu"]
-    init_dict["CONSTANTS"]["benefits"] = init_dict_flat["benefits"]
 
     init_dict["INITIAL_CONDITIONS"] = dict()
     init_dict["INITIAL_CONDITIONS"]["educ_max"] = init_dict_flat["educ_max"]
