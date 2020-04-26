@@ -95,10 +95,6 @@ def group_parameters(model_params_dict_expanded):
     for key_ in list(model_params_dict_expanded["disutil_work"].keys()):
         model_params_dict_flat[key_] = model_params_dict_expanded["disutil_work"][key_]
 
-    model_params_dict_flat["benefits"] = model_params_dict_expanded["nonemp_rew"][
-        "benefits"
-    ]
-
     model_params_dict_flat["shocks_cov"] = model_params_dict_expanded["derived_attr"][
         "shocks_cov"
     ]

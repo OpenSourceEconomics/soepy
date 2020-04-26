@@ -155,9 +155,6 @@ def random_init(constr=None):
         model_params_init_dict["child_610_p"],
     ) = np.random.uniform(0.5, 5, 10).tolist()
 
-    # ToDo: Setup as discussed with Peter
-    model_params_init_dict["benefits"] = 4.0
-
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
     # Draw shares that sum up to one
@@ -200,8 +197,6 @@ def random_init(constr=None):
             category.append("shares")
         elif "sigma" in key:
             category.append("sd_wage_shock")
-        elif "benefits" in key:
-            category.append("nonemp_rew")
         elif "kids" or "child" in key:
             category.append("disutil_work")
 
