@@ -3,6 +3,7 @@ from soepy.solve.solve_auxiliary import construct_covariates
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.exogenous_processes.children import define_child_age_update_rule
+from soepy.shared.shared_auxiliary import calculate_non_employment_benefits
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 
 
@@ -64,6 +65,10 @@ def pyth_solve(model_params, model_spec, prob_child, is_expected):
         model_params, model_spec, states, covariates, is_expected
     )
 
+    non_employment_benefits = calculate_non_employment_benefits(
+        states, log_wage_systematic
+    )
+
     child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
 
     # Solve the model in a backward induction procedure
@@ -79,7 +84,15 @@ def pyth_solve(model_params, model_spec, prob_child, is_expected):
         draws_emax,
         child_age_update_rule,
         prob_child,
+        non_employment_benefits,
     )
 
     # Return function output
-    return states, indexer, covariates, emaxs, child_age_update_rule
+    return (
+        states,
+        indexer,
+        covariates,
+        non_employment_benefits,
+        emaxs,
+        child_age_update_rule,
+    )

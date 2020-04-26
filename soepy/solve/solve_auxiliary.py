@@ -275,6 +275,7 @@ def pyth_backward_induction(
     draws,
     child_age_update_rule,
     prob_child,
+    non_employment_benefits,
 ):
     """Get expected maximum value function at every state space point.
     Backward induction is performed all at once for all states in a given period.
@@ -330,10 +331,12 @@ def pyth_backward_induction(
         # Probability that a child arrives
         prob_child_period = prob_child[period]
 
+        # Period rewards
         log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
         non_consumption_utilities_period = non_consumption_utilities[
             states[:, 0] == period
         ]
+        non_employment_benefits_period = non_employment_benefits[states[:, 0] == period]
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
@@ -364,7 +367,7 @@ def pyth_backward_induction(
             emaxs_period[:, :3],
             HOURS,
             model_spec.mu,
-            model_params.benefits,
+            non_employment_benefits_period,
         )
         emaxs_period[:, 3] = emax_period
         emaxs[np.where(states[:, 0] == period)] = emaxs_period

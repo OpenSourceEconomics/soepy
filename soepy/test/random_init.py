@@ -155,7 +155,7 @@ def random_init(constr=None):
         model_params_init_dict["child_610_p"],
     ) = np.random.uniform(0.5, 5, 10).tolist()
 
-    #ToDo: Setup as discussed with Peter
+    # ToDo: Setup as discussed with Peter
     model_params_init_dict["benefits"] = 4.0
 
     # Random number of types: 1, 2, 3, or 4

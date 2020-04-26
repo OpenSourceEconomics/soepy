@@ -18,9 +18,14 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
     prob_educ_years = gen_prob_educ_years_vector(model_spec)
 
     # Obtain model solution
-    states, indexer, covariates, emaxs, child_age_update_rule = pyth_solve(
-        model_params, model_spec, prob_child, is_expected
-    )
+    (
+        states,
+        indexer,
+        covariates,
+        non_employment_benefits,
+        emaxs,
+        child_age_update_rule,
+    ) = pyth_solve(model_params, model_spec, prob_child, is_expected)
 
     # Simulate agents experiences according to parameters in the model specification
     df = pyth_simulate(
@@ -30,6 +35,7 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
         indexer,
         emaxs,
         covariates,
+        non_employment_benefits,
         child_age_update_rule,
         prob_child,
         prob_educ_years,
