@@ -155,7 +155,8 @@ def calculate_non_employment_benefits(states, log_wage_systematic):
     """This function calculates the benefits an individual would receive if they were
     to choose to be non-employed in the period"""
 
-    # 600 EUR per month for a person who did not work last period and does not have a child
+    # 600 EUR per month for a person who did not work last period
+    # and does not have a child
     non_employment_benefits = np.full(states.shape[0], 600.0, dtype=float)
     # 900 EUR for a person who did not work last period and has a child
     non_employment_benefits = np.where(states[:, 6] != -1, 900, non_employment_benefits)
