@@ -1,4 +1,4 @@
-import pytest
+# import pytest
 import pickle
 import random
 
@@ -8,9 +8,9 @@ from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 
 
-@pytest.mark.skip(
-    reason="will be failing, no way to match old dfs with the new specification"
-)
+# @pytest.mark.skip(
+#    reason="will be failing, no way to match old dfs with the new specification"
+# )
 def test1():
     """This test runs a random selection of test regression tests from
     our regression test battery.
