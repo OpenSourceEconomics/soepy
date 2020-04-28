@@ -177,6 +177,6 @@ def calculate_non_employment_benefits(states, log_wage_systematic):
 
     # Make sure that every state has been assigns a corresponding value
     # of non-employment benefits
-    assert np.isnan(non_employment_benefits).any() == False
+    assert np.isnan(non_employment_benefits).any() is not True
 
     return non_employment_benefits
