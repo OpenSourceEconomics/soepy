@@ -42,11 +42,24 @@ def create_vault(num_test=1000, seed=123456):
 
         np.random.seed(seed)
 
-        model_spec_init_dict, random_model_params_df = random_init()
+        (
+            model_spec_init_dict,
+            random_model_params_df,
+            exog_child_info,
+            exog_educ_info,
+        ) = random_init()
 
         df = simulate("test.soepy.pkl", "test.soepy.yml")
 
-        tests += [(model_spec_init_dict, random_model_params_df, df)]
+        tests += [
+            (
+                model_spec_init_dict,
+                random_model_params_df,
+                exog_child_info,
+                exog_educ_info,
+                df,
+            )
+        ]
 
     cleanup("regression")
 
@@ -64,7 +77,16 @@ def check_vault(num_test):
 
     for test in tests[:num_test]:
 
-        model_spec_init_dict, random_model_params_df, expected_df = test
+        (
+            model_spec_init_dict,
+            random_model_params_df,
+            exog_child_info,
+            exog_educ_info,
+            expected_df,
+        ) = test
+
+        exog_child_info.to_pickle("test.soepy.child.pkl")
+        exog_educ_info.to_pickle("test.soepy.educ.pkl")
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
