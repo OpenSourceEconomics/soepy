@@ -8,9 +8,6 @@ from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 
 
-@pytest.mark.skip(
-    reason="will be failing, no way to match old dfs with the new specification"
-)
 def test1():
     """This test runs a random selection of test regression tests from
     our regression test battery.
@@ -24,13 +21,6 @@ def test1():
     for i in random.sample(range(0, 100), 10):
 
         model_spec_init_dict, random_model_params_df, expected_df = tests[i]
-
-        model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = (
-            str(TEST_RESOURCES_DIR) + "/" + "exog_child_info.pkl"
-        )
-        model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = (
-            str(TEST_RESOURCES_DIR) + "/" + "exog_educ_info_generic.pkl"
-        )
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 

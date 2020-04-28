@@ -5,8 +5,6 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from soepy.soepy_config import TEST_RESOURCES_DIR
-
 
 def random_init(constr=None):
     """The module provides a random dictionary generating process for test purposes.
@@ -102,13 +100,8 @@ def random_init(constr=None):
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
 
-    model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = (
-        str(TEST_RESOURCES_DIR) + "/" + "exog_educ_info_generic.pkl"
-    )
-    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = (
-        str(TEST_RESOURCES_DIR) + "/" + "exog_child_info.pkl"
-    )
-    # TODO: Make flexible at some point in the future
+    model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = "test.soepy.educ.pkl"
+    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = "test.soepy.child.pkl"
     model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
     model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = periods
 
@@ -213,7 +206,25 @@ def random_init(constr=None):
 
     random_model_params_df.to_pickle("test.soepy.pkl")
 
-    return model_spec_init_dict, random_model_params_df
+    # Generate random probabilities of childbirth
+    exog_child_info_random = np.random.uniform(0, 1, size=periods).tolist()
+    exog_child_info_random_dict = {"prob_child_values": exog_child_info_random}
+    exog_child_info = pd.DataFrame(
+        exog_child_info_random_dict, index=list(range(0, periods))
+    )
+    exog_child_info.to_pickle("test.soepy.child.pkl")
+
+    # Generate random fractions for education levels
+    educ_shares = np.random.uniform(1, 10, size=(educ_max - educ_min + 1))
+    educ_shares /= educ_shares.sum()
+    educ_shares = educ_shares.tolist()
+    exog_educ_info_random_dict = {"Fraction": educ_shares}
+    exog_educ_info = pd.DataFrame(
+        exog_educ_info_random_dict, index=list(range(0, (educ_max - educ_min + 1)))
+    )
+    exog_educ_info.to_pickle("test.soepy.educ.pkl")
+
+    return model_spec_init_dict, random_model_params_df, exog_child_info, exog_educ_info
 
 
 def print_dict(model_spec_init_dict, file_name="test"):
