@@ -398,3 +398,26 @@ def test_educ_level_shares():
     )
 
     np.testing.assert_almost_equal(simulated, prob_educ_years, decimal=2)
+
+
+def test_non_employment_benefits():
+    """This test ensures that the benefits that do not depend on the
+    history of choices, correspond to the rewards simulated in the data frame."""
+
+    constr = dict()
+    constr["AGENTS"] = 200
+    constr["PERIODS"] = 6
+
+    random_init(constr)
+
+    df = simulate("test.soepy.pkl", "test.soepy.yml", is_expected=True)
+
+    simulated = df[(df["Lagged_Choice"] == 0) & (df["Age_Youngest_Child"] == -1)][
+        "Period_Wage_N"
+    ].to_numpy()
+    np.testing.assert_equal(simulated, 600)
+
+    simulated = df[(df["Lagged_Choice"] == 0) & (df["Age_Youngest_Child"] != -1)][
+        "Period_Wage_N"
+    ].to_numpy()
+    np.testing.assert_equal(simulated, 900)
