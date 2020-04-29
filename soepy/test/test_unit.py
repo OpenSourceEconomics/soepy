@@ -412,12 +412,16 @@ def test_non_employment_benefits():
 
     df = simulate("test.soepy.pkl", "test.soepy.yml", is_expected=True)
 
-    simulated = df[(df["Lagged_Choice"] == 0) & (df["Age_Youngest_Child"] == -1)][
-        "Period_Wage_N"
-    ].to_numpy()
-    np.testing.assert_equal(simulated, 600)
+    assert (
+        df[(df["Lagged_Choice"] == 0) & (df["Age_Youngest_Child"] == -1)][
+            "Period_Wage_N"
+        ]
+        == 600.0
+    ).all()
 
-    simulated = df[(df["Lagged_Choice"] == 0) & (df["Age_Youngest_Child"] != -1)][
-        "Period_Wage_N"
-    ].to_numpy()
-    np.testing.assert_equal(simulated, 900)
+    assert (
+        df[(df["Lagged_Choice"] == 0) & (df["Age_Youngest_Child"] != -1)][
+            "Period_Wage_N"
+        ]
+        == 900.0
+    ).all()
