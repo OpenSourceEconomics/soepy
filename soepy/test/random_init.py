@@ -207,20 +207,20 @@ def random_init(constr=None):
     random_model_params_df.to_pickle("test.soepy.pkl")
 
     # Generate random probabilities of childbirth
-    exog_child_info_random = np.random.uniform(0, 1, size=periods).tolist()
-    exog_child_info_random_dict = {"prob_child_values": exog_child_info_random}
     exog_child_info = pd.DataFrame(
-        exog_child_info_random_dict, index=list(range(0, periods))
+        np.random.uniform(0, 1, size=periods).tolist(),
+        index=list(range(0, periods)),
+        columns=["prob_child_values"],
     )
     exog_child_info.to_pickle("test.soepy.child.pkl")
 
     # Generate random fractions for education levels
     educ_shares = np.random.uniform(1, 10, size=(educ_max - educ_min + 1))
     educ_shares /= educ_shares.sum()
-    educ_shares = educ_shares.tolist()
-    exog_educ_info_random_dict = {"Fraction": educ_shares}
     exog_educ_info = pd.DataFrame(
-        exog_educ_info_random_dict, index=list(range(0, (educ_max - educ_min + 1)))
+        educ_shares.tolist(),
+        index=list(range(0, (educ_max - educ_min + 1))),
+        columns=["Fraction"],
     )
     exog_educ_info.to_pickle("test.soepy.educ.pkl")
 
