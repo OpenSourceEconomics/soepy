@@ -16,11 +16,7 @@ def func(maxrt):
             random_model_params_df,
             exog_child_info,
             exog_educ_info,
-            expected_df,
         ) = random_init()
-
-        exog_child_info.to_pickle("test.soepy.child.pkl")
-        exog_educ_info.to_pickle("test.soepy.educ.pkl")
 
         simulate(random_model_params_df, model_spec_init_dict)
 
