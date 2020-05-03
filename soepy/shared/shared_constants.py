@@ -4,7 +4,9 @@ import numpy as np
 MISSING_INT = -99
 INVALID_FLOAT = -99.0
 NUM_CHOICES = 3
-HOURS = np.array([0, 18, 38])
+# Hours worked per month
+# Assumption: weekly working hours times 4.5 weeks in a month
+HOURS = np.array([0, 18 * 4.5, 38 * 4.5])
 DATA_LABLES_SIM = [
     "Identifier",
     "Period",

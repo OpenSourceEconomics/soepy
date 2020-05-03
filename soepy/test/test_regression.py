@@ -5,6 +5,7 @@ import numpy as np
 
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
+from development.tests.auxiliary.auxiliary import cleanup
 
 
 def test1():
@@ -19,14 +20,16 @@ def test1():
 
     for i in random.sample(range(0, 100), 10):
 
-        model_spec_init_dict, random_model_params_df, expected_df = tests[i]
+        (
+            model_spec_init_dict,
+            random_model_params_df,
+            exog_child_info,
+            exog_educ_info,
+            expected_df,
+        ) = tests[i]
 
-        model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = (
-            str(TEST_RESOURCES_DIR) + "/" + "exog_child_info.pkl"
-        )
-        model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = (
-            str(TEST_RESOURCES_DIR) + "/" + "exog_educ_info_generic.pkl"
-        )
+        exog_child_info.to_pickle("test.soepy.child.pkl")
+        exog_educ_info.to_pickle("test.soepy.educ.pkl")
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
@@ -34,3 +37,5 @@ def test1():
             np.testing.assert_array_almost_equal(
                 expected_df[col], calculated_df[col],
             )
+
+    cleanup()

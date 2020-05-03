@@ -17,6 +17,7 @@ def pyth_simulate(
     indexer,
     emaxs,
     covariates,
+    non_employment_benefits,
     child_age_update_rule,
     prob_child,
     prob_educ_years,
@@ -101,21 +102,20 @@ def pyth_simulate(
         # Extract corresponding utilities
         current_log_wage_systematic = log_wage_systematic[idx]
         current_non_consumption_utilities = non_consumption_utilities[idx]
+        current_non_employment_benefits = non_employment_benefits[idx]
 
         current_wages = np.exp(
             current_log_wage_systematic.reshape(-1, 1)
             + draws_sim[period, current_states[:, 0]]
         )
-        current_wages[:, 0] = model_params.benefits
+        current_wages[:, 0] = current_non_employment_benefits
 
         # Calculate total values for all choices
         flow_utilities = np.full((current_states.shape[0], 3), np.nan)
 
         flow_utilities[:, :1] = (
-            model_params.benefits ** model_spec.mu
-            / model_spec.mu
-            * current_non_consumption_utilities[:, :1]
-        )
+            current_non_employment_benefits ** model_spec.mu / model_spec.mu
+        ).reshape(current_states.shape[0], 1) * current_non_consumption_utilities[:, :1]
         flow_utilities[:, 1:] = (
             (HOURS[1:] * current_wages[:, 1:]) ** model_spec.mu
             / model_spec.mu

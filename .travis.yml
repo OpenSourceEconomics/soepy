@@ -40,7 +40,7 @@ script:
   - cd doc/tutorial; python simulate.py; cd ../..
 
 after_success:
-  - codecov
+  # - codecov
 
 notifications:
   email:

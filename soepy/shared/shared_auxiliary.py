@@ -1,6 +1,6 @@
 import numpy as np
 
-from soepy.shared.shared_constants import NUM_CHOICES
+from soepy.shared.shared_constants import NUM_CHOICES, HOURS
 
 
 def draw_disturbances(seed, num_periods, num_draws, model_params):
@@ -149,3 +149,34 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
     non_consumption_utility = np.exp(non_consumption_utility)
 
     return non_consumption_utility
+
+
+def calculate_non_employment_benefits(states, log_wage_systematic):
+    """This function calculates the benefits an individual would receive if they were
+    to choose to be non-employed in the period"""
+
+    non_employment_benefits = np.full(states.shape[0], np.nan)
+
+    # 600 EUR per month for a person who did not work last period
+    non_employment_benefits = np.where(
+        states[:, 2] == 0, 600.0, non_employment_benefits
+    )
+
+    # Half the labor income the individual would have earned in the period
+    # excluding wage shock for a person who worked last period
+    non_employment_benefits = np.where(
+        states[:, 2] != 0,
+        0.5 * HOURS[states[:, 2]] * np.exp(log_wage_systematic),
+        non_employment_benefits,
+    )
+
+    # 300 EUR added if the person has a child
+    non_employment_benefits = np.where(
+        states[:, 6] != -1, non_employment_benefits + 300, non_employment_benefits
+    )
+
+    # Make sure that every state has been assigns a corresponding value
+    # of non-employment benefits
+    assert np.isfinite(non_employment_benefits).all()
+
+    return non_employment_benefits

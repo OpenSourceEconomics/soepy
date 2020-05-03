@@ -5,8 +5,6 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from soepy.soepy_config import TEST_RESOURCES_DIR
-
 
 def random_init(constr=None):
     """The module provides a random dictionary generating process for test purposes.
@@ -102,13 +100,8 @@ def random_init(constr=None):
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
 
-    model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = (
-        str(TEST_RESOURCES_DIR) + "/" + "exog_educ_info_generic.pkl"
-    )
-    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = (
-        str(TEST_RESOURCES_DIR) + "/" + "exog_child_info.pkl"
-    )
-    # TODO: Make flexible at some point in the future
+    model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = "test.soepy.educ.pkl"
+    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = "test.soepy.child.pkl"
     model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
     model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = periods
 
@@ -155,8 +148,6 @@ def random_init(constr=None):
         model_params_init_dict["child_610_p"],
     ) = np.random.uniform(0.5, 5, 10).tolist()
 
-    model_params_init_dict["benefits"] = 4.0
-
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
     # Draw shares that sum up to one
@@ -199,8 +190,6 @@ def random_init(constr=None):
             category.append("shares")
         elif "sigma" in key:
             category.append("sd_wage_shock")
-        elif "benefits" in key:
-            category.append("nonemp_rew")
         elif "kids" or "child" in key:
             category.append("disutil_work")
 
@@ -217,7 +206,25 @@ def random_init(constr=None):
 
     random_model_params_df.to_pickle("test.soepy.pkl")
 
-    return model_spec_init_dict, random_model_params_df
+    # Generate random probabilities of childbirth
+    exog_child_info = pd.DataFrame(
+        np.random.uniform(0, 1, size=periods).tolist(),
+        index=list(range(0, periods)),
+        columns=["prob_child_values"],
+    )
+    exog_child_info.to_pickle("test.soepy.child.pkl")
+
+    # Generate random fractions for education levels
+    educ_shares = np.random.uniform(1, 10, size=(educ_max - educ_min + 1))
+    educ_shares /= educ_shares.sum()
+    exog_educ_info = pd.DataFrame(
+        educ_shares.tolist(),
+        index=list(range(0, (educ_max - educ_min + 1))),
+        columns=["Fraction"],
+    )
+    exog_educ_info.to_pickle("test.soepy.educ.pkl")
+
+    return model_spec_init_dict, random_model_params_df, exog_child_info, exog_educ_info
 
 
 def print_dict(model_spec_init_dict, file_name="test"):

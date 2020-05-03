@@ -81,9 +81,14 @@ def test_unit_data_frame_shape():
         prob_educ_years = list(prob_educ_years)
 
         # Solve
-        states, indexer, covariates, emaxs, child_age_update_rule = pyth_solve(
-            model_params, model_spec, prob_child, is_expected=False,
-        )
+        (
+            states,
+            indexer,
+            covariates,
+            non_employment_benefits,
+            emaxs,
+            child_age_update_rule,
+        ) = pyth_solve(model_params, model_spec, prob_child, is_expected=False,)
 
         # Simulate
         df = pyth_simulate(
@@ -93,6 +98,7 @@ def test_unit_data_frame_shape():
             indexer,
             emaxs,
             covariates,
+            non_employment_benefits,
             child_age_update_rule,
             prob_child,
             prob_educ_years,
@@ -311,9 +317,14 @@ def test_no_children_prob_0():
     prob_educ_years = [0.3, 0.45, 0.25]
 
     # Solve
-    states, indexer, covariates, emaxs, child_age_update_rule = pyth_solve(
-        model_params, model_spec, prob_child, is_expected
-    )
+    (
+        states,
+        indexer,
+        covariates,
+        non_employment_benefits,
+        emaxs,
+        child_age_update_rule,
+    ) = pyth_solve(model_params, model_spec, prob_child, is_expected)
 
     # Simulate
     df = pyth_simulate(
@@ -323,6 +334,7 @@ def test_no_children_prob_0():
         indexer,
         emaxs,
         covariates,
+        non_employment_benefits,
         child_age_update_rule,
         prob_child,
         prob_educ_years,
@@ -356,9 +368,14 @@ def test_educ_level_shares():
     prob_educ_years_list = list(prob_educ_years)
 
     # Solve
-    states, indexer, covariates, emaxs, child_age_update_rule = pyth_solve(
-        model_params, model_spec, prob_child, is_expected=False,
-    )
+    (
+        states,
+        indexer,
+        covariates,
+        non_employment_benefits,
+        emaxs,
+        child_age_update_rule,
+    ) = pyth_solve(model_params, model_spec, prob_child, is_expected=False,)
 
     # Simulate
     df = pyth_simulate(
@@ -368,6 +385,7 @@ def test_educ_level_shares():
         indexer,
         emaxs,
         covariates,
+        non_employment_benefits,
         child_age_update_rule,
         prob_child,
         prob_educ_years_list,
@@ -380,3 +398,30 @@ def test_educ_level_shares():
     )
 
     np.testing.assert_almost_equal(simulated, prob_educ_years, decimal=2)
+
+
+def test_non_employment_benefits():
+    """This test ensures that the benefits that do not depend on the
+    history of choices, correspond to the rewards simulated in the data frame."""
+
+    constr = dict()
+    constr["AGENTS"] = 200
+    constr["PERIODS"] = 6
+
+    random_init(constr)
+
+    df = simulate("test.soepy.pkl", "test.soepy.yml", is_expected=True)
+
+    assert (
+        df[(df["Lagged_Choice"] == 0) & (df["Age_Youngest_Child"] == -1)][
+            "Period_Wage_N"
+        ]
+        == 600.0
+    ).all()
+
+    assert (
+        df[(df["Lagged_Choice"] == 0) & (df["Age_Youngest_Child"] != -1)][
+            "Period_Wage_N"
+        ]
+        == 900.0
+    ).all()
