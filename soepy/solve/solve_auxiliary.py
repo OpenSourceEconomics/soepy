@@ -739,14 +739,14 @@ def construct_emax(
         One dimensional array with length num_states containing the part of the wages
         at the respective state space point that do not depend on the agent's choice,
         nor on the random shock.
-    non_consumption_utilities : np.ndarray
-        Array of dimension (num_states, num_choices) containing the utility
-        contribution of non-pecuniary factors.
     budget_constraint_components : array
         One dimensional array with length num_states containing monetary components
         that influence the budget available for consumption spending above and beyond
         own labor and non-labor income. Currently containing partner earnings
         in the case that a partner is present.
+    non_consumption_utilities : np.ndarray
+        Array of dimension (num_states, num_choices) containing the utility
+        contribution of non-pecuniary factors.
     draws : np.ndarray
         Array of dimension (num_periods, num_choices, num_draws). Randomly drawn
         realisations of the error term used to integrate out the distribution of
