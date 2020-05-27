@@ -122,7 +122,7 @@ def pyth_create_state_space(model_spec):
         for type_ in range(model_spec.num_types):
 
             for partner_indicator in range(IND):
-                # Discuss: What this does is that is simply multiplies the state space by 2
+                # Discuss: What this does is that it simply multiplies the state space by 2
                 # Similar to type. I believe this is handled in a different way in respy
                 # that is potentially much faster.  Explore before proceeding?
 
@@ -178,7 +178,14 @@ def pyth_create_state_space(model_spec):
                                     # Assign an additional integer count i
                                     # for entry state
                                     indexer[
-                                        period, educ_years, 0, 0, 0, type_, age_kid
+                                        period,
+                                        educ_years,
+                                        0,
+                                        0,
+                                        0,
+                                        type_,
+                                        age_kid,
+                                        partner_indicator,
                                     ] = i
 
                                     # Record the values of the state space components
@@ -362,7 +369,7 @@ def pyth_backward_induction(
         # Period rewards
         log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
         budget_constraint_components_period = budget_constraint_components[
-           states[:, 0] == period
+            states[:, 0] == period
         ]
         non_consumption_utilities_period = non_consumption_utilities[
             states[:, 0] == period
@@ -546,7 +553,7 @@ def get_continuation_values(
                 exp_f,
                 type_,
                 0,
-                0, # No partner
+                0,  # No partner
             ]
 
             k_0_11 = indexer[
@@ -557,7 +564,7 @@ def get_continuation_values(
                 exp_f,
                 type_,
                 0,
-                1, # Partner
+                1,  # Partner
             ]
 
             # Choice: Part-time
@@ -569,7 +576,7 @@ def get_continuation_values(
                 exp_f,
                 type_,
                 0,
-                0, # No partner
+                0,  # No partner
             ]
 
             k_1_11 = indexer[
@@ -580,7 +587,7 @@ def get_continuation_values(
                 exp_f,
                 type_,
                 0,
-                1, # Partner
+                1,  # Partner
             ]
 
             # Choice: Full-time
@@ -592,7 +599,7 @@ def get_continuation_values(
                 exp_f + 1,
                 type_,
                 0,
-                0, # No partner
+                0,  # No partner
             ]
 
             k_2_11 = indexer[
@@ -603,47 +610,47 @@ def get_continuation_values(
                 exp_f + 1,
                 type_,
                 0,
-                1, # Partner
+                1,  # Partner
             ]
 
-            #Calculate E-Max
+            # Calculate E-Max
             # Child possible, integrate out partner and child probability
-            emaxs[k_parent, 0] = ( # non-employment
-                1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
+            emaxs[k_parent, 0] = (  # non-employment
+                1 - prob_partner_period[educ_years - model_spec.educ_min]  # no partner
             ) * (
-                (1 - prob_child_period) * emaxs[k_0_00, 3] # no child
-                + prob_child_period * emaxs[k_0_10, 3] # child
+                (1 - prob_child_period) * emaxs[k_0_00, 3]  # no child
+                + prob_child_period * emaxs[k_0_10, 3]  # child
             ) + (
-                prob_partner_period[educ_years - model_spec.educ_min] # partner
+                prob_partner_period[educ_years - model_spec.educ_min]  # partner
                 * (
-                    (1 - prob_child_period) * emaxs[k_0_01, 3] # no child
-                    + prob_child_period * emaxs[k_0_11, 3] #child
+                    (1 - prob_child_period) * emaxs[k_0_01, 3]  # no child
+                    + prob_child_period * emaxs[k_0_11, 3]  # child
                 )
             )
 
-            emaxs[k_parent, 1] = ( # part-time employment
-                1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
+            emaxs[k_parent, 1] = (  # part-time employment
+                1 - prob_partner_period[educ_years - model_spec.educ_min]  # no partner
             ) * (
-                (1 - prob_child_period) * emaxs[k_1_00, 3] # no child
-                + prob_child_period * emaxs[k_1_10, 3] # child
+                (1 - prob_child_period) * emaxs[k_1_00, 3]  # no child
+                + prob_child_period * emaxs[k_1_10, 3]  # child
             ) + (
-                prob_partner_period[educ_years - model_spec.educ_min] # partner
+                prob_partner_period[educ_years - model_spec.educ_min]  # partner
                 * (
                     (1 - prob_child_period) * emaxs[k_1_01, 3]  # no child
-                    + prob_child_period * emaxs[k_1_11, 3] # child
+                    + prob_child_period * emaxs[k_1_11, 3]  # child
                 )
             )
 
             emaxs[k_parent, 2] = (
-                1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
+                1 - prob_partner_period[educ_years - model_spec.educ_min]  # no partner
             ) * (
-                (1 - prob_child_period) * emaxs[k_2_00, 3] # no child
-                + prob_child_period * emaxs[k_2_10, 3] # child
+                (1 - prob_child_period) * emaxs[k_2_00, 3]  # no child
+                + prob_child_period * emaxs[k_2_10, 3]  # child
             ) + (
-                prob_partner_period[educ_years - model_spec.educ_min] # partner
+                prob_partner_period[educ_years - model_spec.educ_min]  # partner
                 * (
-                    (1 - prob_child_period) * emaxs[k_2_01, 3] # no child
-                    + prob_child_period * emaxs[k_2_11, 3] # child
+                    (1 - prob_child_period) * emaxs[k_2_01, 3]  # no child
+                    + prob_child_period * emaxs[k_2_11, 3]  # child
                 )
             )
 
@@ -651,21 +658,21 @@ def get_continuation_values(
             # Child not possible
             emaxs[k_parent, 0] = (
                 (1 - prob_partner_period[educ_years - model_spec.educ_min])
-                * emaxs[k_0_00, 3] # no partner
+                * emaxs[k_0_00, 3]  # no partner
                 + prob_partner_period[educ_years - model_spec.educ_min]
-                * emaxs[k_0_01, 3] # partner
+                * emaxs[k_0_01, 3]  # partner
             )
             emaxs[k_parent, 1] = (
                 (1 - prob_partner_period[educ_years - model_spec.educ_min])
-                * emaxs[k_1_00, 3] # no partner
+                * emaxs[k_1_00, 3]  # no partner
                 + prob_partner_period[educ_years - model_spec.educ_min]
-                * emaxs[k_1_01, 3] # partner
+                * emaxs[k_1_01, 3]  # partner
             )
             emaxs[k_parent, 2] = (
                 (1 - prob_partner_period[educ_years - model_spec.educ_min])
-                * emaxs[k_2_00, 3] # no partner
+                * emaxs[k_2_00, 3]  # no partner
                 + prob_partner_period[educ_years - model_spec.educ_min]
-                * emaxs[k_2_01, 3] # partner
+                * emaxs[k_2_01, 3]  # partner
             )
 
     return emaxs
