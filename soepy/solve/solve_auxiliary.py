@@ -294,7 +294,7 @@ def pyth_backward_induction(
     states,
     indexer,
     log_wage_systematic,
-    # budget_constraint_components,
+    budget_constraint_components,
     non_consumption_utilities,
     draws,
     child_age_update_rule,
@@ -361,9 +361,9 @@ def pyth_backward_induction(
 
         # Period rewards
         log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
-        # budget_constraint_components_period = budget_constraint_components[
-        #    states[:, 0] == period
-        # ]
+        budget_constraint_components_period = budget_constraint_components[
+           states[:, 0] == period
+        ]
         non_consumption_utilities_period = non_consumption_utilities[
             states[:, 0] == period
         ]
@@ -394,7 +394,7 @@ def pyth_backward_induction(
         emax_period = construct_emax(
             model_spec.delta,
             log_wage_systematic_period,
-            # budget_constraint_components_period,
+            budget_constraint_components_period,
             non_consumption_utilities_period,
             draws[period],
             emaxs_period[:, :3],
@@ -606,83 +606,67 @@ def get_continuation_values(
                 1, # Partner
             ]
 
-            # Calculate E-Max
-        #     # Child possible, integrate out partner and child probability
-        #     emaxs[k_parent, 0] = ( # non-employment
-        #         1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
-        #     ) * (
-        #         (1 - prob_child_period) * emaxs[k_0_00, 3] # no child
-        #         + prob_child_period * emaxs[k_0_10, 3] # child
-        #     ) + (
-        #         prob_partner_period[educ_years - model_spec.educ_min] # partner
-        #         * (
-        #             (1 - prob_child_period) * emaxs[k_0_01, 3] # no child
-        #             + prob_child_period * emaxs[k_0_11, 3] #child
-        #         )
-        #     )
-        #
-        #     emaxs[k_parent, 1] = ( # part-time employment
-        #         1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
-        #     ) * (
-        #         (1 - prob_child_period) * emaxs[k_1_00, 3] # no child
-        #         + prob_child_period * emaxs[k_1_10, 3] # child
-        #     ) + (
-        #         prob_partner_period[educ_years - model_spec.educ_min] # partner
-        #         * (
-        #             (1 - prob_child_period) * emaxs[k_1_01, 3]  # no child
-        #             + prob_child_period * emaxs[k_1_11, 3] # child
-        #         )
-        #     )
-        #
-        #     emaxs[k_parent, 2] = (
-        #         1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
-        #     ) * (
-        #         (1 - prob_child_period) * emaxs[k_2_00, 3] # no child
-        #         + prob_child_period * emaxs[k_2_10, 3] # child
-        #     ) + (
-        #         prob_partner_period[educ_years - model_spec.educ_min] # partner
-        #         * (
-        #             (1 - prob_child_period) * emaxs[k_2_01, 3] # no child
-        #             + prob_child_period * emaxs[k_2_11, 3] # child
-        #         )
-        #     )
-        #
-        # else:
-        #     # Child not possible
-        #     emaxs[k_parent, 0] = (
-        #         (1 - prob_partner_period[educ_years - model_spec.educ_min])
-        #         * emaxs[k_0_00, 3] # no partner
-        #         + prob_partner_period[educ_years - model_spec.educ_min]
-        #         * emaxs[k_0_01, 3] # partner
-        #     )
-        #     emaxs[k_parent, 1] = (
-        #         (1 - prob_partner_period[educ_years - model_spec.educ_min])
-        #         * emaxs[k_1_00, 3] # no partner
-        #         + prob_partner_period[educ_years - model_spec.educ_min]
-        #         * emaxs[k_1_01, 3] # partner
-        #     )
-        #     emaxs[k_parent, 2] = (
-        #         (1 - prob_partner_period[educ_years - model_spec.educ_min])
-        #         * emaxs[k_2_00, 3] # no partner
-        #         + prob_partner_period[educ_years - model_spec.educ_min]
-        #         * emaxs[k_2_01, 3] # partner
-        #     )
+            #Calculate E-Max
+            # Child possible, integrate out partner and child probability
+            emaxs[k_parent, 0] = ( # non-employment
+                1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
+            ) * (
+                (1 - prob_child_period) * emaxs[k_0_00, 3] # no child
+                + prob_child_period * emaxs[k_0_10, 3] # child
+            ) + (
+                prob_partner_period[educ_years - model_spec.educ_min] # partner
+                * (
+                    (1 - prob_child_period) * emaxs[k_0_01, 3] # no child
+                    + prob_child_period * emaxs[k_0_11, 3] #child
+                )
+            )
 
-            # Calculate E-Max
-            emaxs[k_parent, 0] = (1 - prob_child_period) * emaxs[
-                k_0_00, 3
-            ] + prob_child_period * emaxs[k_0_10, 3]
-            emaxs[k_parent, 1] = (1 - prob_child_period) * emaxs[
-                k_1_00, 3
-            ] + prob_child_period * emaxs[k_1_10, 3]
-            emaxs[k_parent, 2] = (1 - prob_child_period) * emaxs[
-                k_2_00, 3
-            ] + prob_child_period * emaxs[k_2_10, 3]
+            emaxs[k_parent, 1] = ( # part-time employment
+                1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
+            ) * (
+                (1 - prob_child_period) * emaxs[k_1_00, 3] # no child
+                + prob_child_period * emaxs[k_1_10, 3] # child
+            ) + (
+                prob_partner_period[educ_years - model_spec.educ_min] # partner
+                * (
+                    (1 - prob_child_period) * emaxs[k_1_01, 3]  # no child
+                    + prob_child_period * emaxs[k_1_11, 3] # child
+                )
+            )
+
+            emaxs[k_parent, 2] = (
+                1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
+            ) * (
+                (1 - prob_child_period) * emaxs[k_2_00, 3] # no child
+                + prob_child_period * emaxs[k_2_10, 3] # child
+            ) + (
+                prob_partner_period[educ_years - model_spec.educ_min] # partner
+                * (
+                    (1 - prob_child_period) * emaxs[k_2_01, 3] # no child
+                    + prob_child_period * emaxs[k_2_11, 3] # child
+                )
+            )
 
         else:
-            emaxs[k_parent, 0] = emaxs[k_0_00, 3]
-            emaxs[k_parent, 1] = emaxs[k_1_00, 3]
-            emaxs[k_parent, 2] = emaxs[k_2_00, 3]
+            # Child not possible
+            emaxs[k_parent, 0] = (
+                (1 - prob_partner_period[educ_years - model_spec.educ_min])
+                * emaxs[k_0_00, 3] # no partner
+                + prob_partner_period[educ_years - model_spec.educ_min]
+                * emaxs[k_0_01, 3] # partner
+            )
+            emaxs[k_parent, 1] = (
+                (1 - prob_partner_period[educ_years - model_spec.educ_min])
+                * emaxs[k_1_00, 3] # no partner
+                + prob_partner_period[educ_years - model_spec.educ_min]
+                * emaxs[k_1_01, 3] # partner
+            )
+            emaxs[k_parent, 2] = (
+                (1 - prob_partner_period[educ_years - model_spec.educ_min])
+                * emaxs[k_2_00, 3] # no partner
+                + prob_partner_period[educ_years - model_spec.educ_min]
+                * emaxs[k_2_01, 3] # partner
+            )
 
     return emaxs
 
@@ -691,7 +675,7 @@ def get_continuation_values(
 def _get_max_aggregated_utilities(
     delta,
     log_wage_systematic,
-    # budget_constraint_components,
+    budget_constraint_components,
     non_consumption_utilities,
     draws,
     emaxs,
@@ -703,7 +687,7 @@ def _get_max_aggregated_utilities(
 
     for j in range(NUM_CHOICES):
 
-        wage = np.exp(log_wage_systematic + draws[j]) # + budget_constraint_components
+        wage = np.exp(log_wage_systematic + draws[j]) + budget_constraint_components
 
         if j == 0:
             consumption_utility = benefits ** mu / mu
@@ -721,15 +705,15 @@ def _get_max_aggregated_utilities(
 
 
 @numba.guvectorize(
-    ["f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:]"],
-    "(), (), (n_choices), (n_draws, n_choices), (n_choices), (n_choices), (), () -> ()",
+    ["f8, f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:]"],
+    "(), (), (), (n_choices), (n_draws, n_choices), (n_choices), (n_choices), (), () -> ()",
     nopython=True,
     target="parallel",
 )
 def construct_emax(
     delta,
     log_wage_systematic,
-    # budget_constraint_components,
+    budget_constraint_components,
     non_consumption_utilities,
     draws,
     emaxs,
@@ -802,7 +786,7 @@ def construct_emax(
         max_total_utility = _get_max_aggregated_utilities(
             delta,
             log_wage_systematic,
-            # budget_constraint_components,
+            budget_constraint_components,
             non_consumption_utilities,
             draws[i],
             emaxs,

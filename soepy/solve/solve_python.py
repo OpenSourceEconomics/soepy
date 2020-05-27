@@ -83,7 +83,7 @@ def pyth_solve(model_params, model_spec, prob_child, prob_partner, is_expected):
         states,
         indexer,
         log_wage_systematic,
-        # budget_constraint_components,
+        budget_constraint_components,
         non_consumption_utilities,
         draws_emax,
         child_age_update_rule,
