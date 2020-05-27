@@ -607,66 +607,82 @@ def get_continuation_values(
             ]
 
             # Calculate E-Max
-            # Child possible, integrate out partner and child probability
-            emaxs[k_parent, 0] = ( # non-employment
-                1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
-            ) * (
-                (1 - prob_child_period) * emaxs[k_0_00, 3] # no child
-                + prob_child_period * emaxs[k_0_10, 3] # child
-            ) + (
-                prob_partner_period[educ_years - model_spec.educ_min] # partner
-                * (
-                    (1 - prob_child_period) * emaxs[k_0_01, 3] # no child
-                    + prob_child_period * emaxs[k_0_11, 3] #child
-                )
-            )
+        #     # Child possible, integrate out partner and child probability
+        #     emaxs[k_parent, 0] = ( # non-employment
+        #         1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
+        #     ) * (
+        #         (1 - prob_child_period) * emaxs[k_0_00, 3] # no child
+        #         + prob_child_period * emaxs[k_0_10, 3] # child
+        #     ) + (
+        #         prob_partner_period[educ_years - model_spec.educ_min] # partner
+        #         * (
+        #             (1 - prob_child_period) * emaxs[k_0_01, 3] # no child
+        #             + prob_child_period * emaxs[k_0_11, 3] #child
+        #         )
+        #     )
+        #
+        #     emaxs[k_parent, 1] = ( # part-time employment
+        #         1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
+        #     ) * (
+        #         (1 - prob_child_period) * emaxs[k_1_00, 3] # no child
+        #         + prob_child_period * emaxs[k_1_10, 3] # child
+        #     ) + (
+        #         prob_partner_period[educ_years - model_spec.educ_min] # partner
+        #         * (
+        #             (1 - prob_child_period) * emaxs[k_1_01, 3]  # no child
+        #             + prob_child_period * emaxs[k_1_11, 3] # child
+        #         )
+        #     )
+        #
+        #     emaxs[k_parent, 2] = (
+        #         1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
+        #     ) * (
+        #         (1 - prob_child_period) * emaxs[k_2_00, 3] # no child
+        #         + prob_child_period * emaxs[k_2_10, 3] # child
+        #     ) + (
+        #         prob_partner_period[educ_years - model_spec.educ_min] # partner
+        #         * (
+        #             (1 - prob_child_period) * emaxs[k_2_01, 3] # no child
+        #             + prob_child_period * emaxs[k_2_11, 3] # child
+        #         )
+        #     )
+        #
+        # else:
+        #     # Child not possible
+        #     emaxs[k_parent, 0] = (
+        #         (1 - prob_partner_period[educ_years - model_spec.educ_min])
+        #         * emaxs[k_0_00, 3] # no partner
+        #         + prob_partner_period[educ_years - model_spec.educ_min]
+        #         * emaxs[k_0_01, 3] # partner
+        #     )
+        #     emaxs[k_parent, 1] = (
+        #         (1 - prob_partner_period[educ_years - model_spec.educ_min])
+        #         * emaxs[k_1_00, 3] # no partner
+        #         + prob_partner_period[educ_years - model_spec.educ_min]
+        #         * emaxs[k_1_01, 3] # partner
+        #     )
+        #     emaxs[k_parent, 2] = (
+        #         (1 - prob_partner_period[educ_years - model_spec.educ_min])
+        #         * emaxs[k_2_00, 3] # no partner
+        #         + prob_partner_period[educ_years - model_spec.educ_min]
+        #         * emaxs[k_2_01, 3] # partner
+        #     )
 
-            emaxs[k_parent, 1] = ( # part-time employment
-                1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
-            ) * (
-                (1 - prob_child_period) * emaxs[k_1_00, 3] # no child
-                + prob_child_period * emaxs[k_1_10, 3] # child
-            ) + (
-                prob_partner_period[educ_years - model_spec.educ_min] # partner
-                * (
-                    (1 - prob_child_period) * emaxs[k_1_01, 3]  # no child
-                    + prob_child_period * emaxs[k_1_11, 3] # child
-                )
-            )
-
-            emaxs[k_parent, 2] = (
-                1 - prob_partner_period[educ_years - model_spec.educ_min] # no partner
-            ) * (
-                (1 - prob_child_period) * emaxs[k_2_00, 3] # no child
-                + prob_child_period * emaxs[k_2_10, 3] # child
-            ) + (
-                prob_partner_period[educ_years - model_spec.educ_min] # partner
-                * (
-                    (1 - prob_child_period) * emaxs[k_2_01, 3] # no child
-                    + prob_child_period * emaxs[k_2_11, 3] # child
-                )
-            )
+            # Calculate E-Max
+            emaxs[k_parent, 0] = (1 - prob_child_period) * emaxs[
+                k_0_00, 3
+            ] + prob_child_period * emaxs[k_0_10, 3]
+            emaxs[k_parent, 1] = (1 - prob_child_period) * emaxs[
+                k_1_00, 3
+            ] + prob_child_period * emaxs[k_1_10, 3]
+            emaxs[k_parent, 2] = (1 - prob_child_period) * emaxs[
+                k_2_00, 3
+            ] + prob_child_period * emaxs[k_2_10, 3]
 
         else:
-            # Child not possible
-            emaxs[k_parent, 0] = (
-                (1 - prob_partner_period[educ_years - model_spec.educ_min])
-                * emaxs[k_0_00, 3] # no partner
-                + prob_partner_period[educ_years - model_spec.educ_min]
-                * emaxs[k_0_01, 3] # partner
-            )
-            emaxs[k_parent, 1] = (
-                (1 - prob_partner_period[educ_years - model_spec.educ_min])
-                * emaxs[k_1_00, 3] # no partner
-                + prob_partner_period[educ_years - model_spec.educ_min]
-                * emaxs[k_1_01, 3] # partner
-            )
-            emaxs[k_parent, 2] = (
-                (1 - prob_partner_period[educ_years - model_spec.educ_min])
-                * emaxs[k_2_00, 3] # no partner
-                + prob_partner_period[educ_years - model_spec.educ_min]
-                * emaxs[k_2_01, 3] # partner
-            )
+            emaxs[k_parent, 0] = emaxs[k_0_00, 3]
+            emaxs[k_parent, 1] = emaxs[k_1_00, 3]
+            emaxs[k_parent, 2] = emaxs[k_2_00, 3]
 
     return emaxs
 
