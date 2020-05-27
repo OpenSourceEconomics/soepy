@@ -114,9 +114,9 @@ def pyth_simulate(
         # Extract corresponding utilities
         current_log_wage_systematic = log_wage_systematic[idx]
         current_budget_constraint_components = budget_constraint_components[idx]
-        current_budget_constraint_components = np.full(current_budget_constraint_components.shape, 0.00)
+        #current_budget_constraint_components = np.full(current_budget_constraint_components.shape, 0.00)
         # debugging
-        #print(current_budget_constraint_components)
+        # print(current_budget_constraint_components)
         # end debugging
         current_non_consumption_utilities = non_consumption_utilities[idx]
         current_non_employment_benefits = non_employment_benefits[idx]
@@ -147,17 +147,17 @@ def pyth_simulate(
         # Calculate total values for all choices
         flow_utilities = np.full((current_states.shape[0], 3), np.nan)
 
-        # # debugging
-        # flow_utilities_old = flow_utilities
-        # flow_utilities_old = (
-        #         current_non_employment_benefits ** model_spec.mu / model_spec.mu
-        # ).reshape(current_states.shape[0], 1) * current_non_consumption_utilities[:, :1]
-        # flow_utilities_old[:, 1:] = (
-        #     (HOURS[1:] * current_wages_old[:, 1:]) ** model_spec.mu
-        #     / model_spec.mu
-        #     * current_non_consumption_utilities[:, 1:]
-        # )
-        # # end debugging
+        # debugging
+        flow_utilities_old = flow_utilities
+        flow_utilities_old[:, :1] = (
+            current_non_employment_benefits ** model_spec.mu / model_spec.mu
+        ).reshape(current_states.shape[0], 1) * current_non_consumption_utilities[:, :1]
+        flow_utilities_old[:, 1:] = (
+            (HOURS[1:] * current_wages_old[:, 1:]) ** model_spec.mu
+            / model_spec.mu
+            * current_non_consumption_utilities[:, 1:]
+        )
+        # end debugging
 
         flow_utilities[:, :1] = (
             (current_non_employment_benefits + current_budget_constraint_components)
@@ -170,11 +170,11 @@ def pyth_simulate(
             * current_non_consumption_utilities[:, 1:]
         )
 
-        # # debugging
-        # print(flow_utilities_old)
-        # print(flow_utilities)
-        # np.testing.assert_equal(flow_utilities_old, flow_utilities)
-        # # end debugging
+        # debugging
+        #print("flow_utilities_old \n", flow_utilities_old)
+        #print("flow utilities \n", flow_utilities)
+        np.testing.assert_equal(flow_utilities_old, flow_utilities)
+        # end debugging
 
         # Extract continuation values for all choices
         continuation_values = emaxs[idx, :3]

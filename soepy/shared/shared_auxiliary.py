@@ -186,6 +186,6 @@ def calculate_budget_constraint_components(covariates):
     """This function calculates the resources available to the woman to spend on consumption.
     It adds the components from the budget constraint to the female wage."""
 
-    budget_constraint_components = covariates[:, 2]
+    budget_constraint_components = np.full(covariates[:, 2].shape, 0.00)
 
     return budget_constraint_components

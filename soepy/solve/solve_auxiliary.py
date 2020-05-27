@@ -294,7 +294,7 @@ def pyth_backward_induction(
     states,
     indexer,
     log_wage_systematic,
-    budget_constraint_components,
+    # budget_constraint_components,
     non_consumption_utilities,
     draws,
     child_age_update_rule,
@@ -361,9 +361,9 @@ def pyth_backward_induction(
 
         # Period rewards
         log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
-        budget_constraint_components_period = budget_constraint_components[
-            states[:, 0] == period
-        ]
+        # budget_constraint_components_period = budget_constraint_components[
+        #    states[:, 0] == period
+        # ]
         non_consumption_utilities_period = non_consumption_utilities[
             states[:, 0] == period
         ]
@@ -394,7 +394,7 @@ def pyth_backward_induction(
         emax_period = construct_emax(
             model_spec.delta,
             log_wage_systematic_period,
-            budget_constraint_components_period,
+            # budget_constraint_components_period,
             non_consumption_utilities_period,
             draws[period],
             emaxs_period[:, :3],
@@ -675,7 +675,7 @@ def get_continuation_values(
 def _get_max_aggregated_utilities(
     delta,
     log_wage_systematic,
-    budget_constraint_components,
+    # budget_constraint_components,
     non_consumption_utilities,
     draws,
     emaxs,
@@ -687,7 +687,7 @@ def _get_max_aggregated_utilities(
 
     for j in range(NUM_CHOICES):
 
-        wage = np.exp(log_wage_systematic + draws[j]) + budget_constraint_components
+        wage = np.exp(log_wage_systematic + draws[j]) # + budget_constraint_components
 
         if j == 0:
             consumption_utility = benefits ** mu / mu
@@ -705,15 +705,15 @@ def _get_max_aggregated_utilities(
 
 
 @numba.guvectorize(
-    ["f8, f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:]"],
-    "(), (), (), (n_choices), (n_draws, n_choices), (n_choices), (n_choices), (), () -> ()",
+    ["f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:]"],
+    "(), (), (n_choices), (n_draws, n_choices), (n_choices), (n_choices), (), () -> ()",
     nopython=True,
     target="parallel",
 )
 def construct_emax(
     delta,
     log_wage_systematic,
-    budget_constraint_components,
+    # budget_constraint_components,
     non_consumption_utilities,
     draws,
     emaxs,
@@ -786,7 +786,7 @@ def construct_emax(
         max_total_utility = _get_max_aggregated_utilities(
             delta,
             log_wage_systematic,
-            budget_constraint_components,
+            # budget_constraint_components,
             non_consumption_utilities,
             draws[i],
             emaxs,
