@@ -1,4 +1,3 @@
-import pytest
 import pickle
 import random
 
@@ -9,7 +8,6 @@ from soepy.soepy_config import TEST_RESOURCES_DIR
 from development.tests.auxiliary.auxiliary import cleanup
 
 
-@pytest.mark.skip(reason="not working, ideas why?")
 def test1():
     """This test runs a random selection of test regression tests from
     our regression test battery.
