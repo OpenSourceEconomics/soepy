@@ -85,9 +85,7 @@ def pyth_simulate(
 
         # Draw presence of partner in the first period
         # Discuss: Best way to implement random draws by education
-        partner_status_init_draw = np.random.binomial(
-            size=initial_states_in_period.shape[0], n=1, p=0,
-        )
+        partner_status_init_draw = np.full(initial_states_in_period.shape[0], 0)
 
         # Add columns to state space
         initial_states_in_period = np.c_[
@@ -171,9 +169,7 @@ def pyth_simulate(
         # Update partner status according to random draw
         # Discuss: Best way to implement random draws by education
         # Applies here as well
-        partner_current_draw = np.random.binomial(
-            size=current_states.shape[0], n=1, p=0,
-        )
+        partner_current_draw = np.full(current_states.shape[0], 0)
 
         # Record period experiences
         rows = np.column_stack(

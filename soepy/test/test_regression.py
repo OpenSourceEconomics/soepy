@@ -13,7 +13,7 @@ def test1():
     our regression test battery.
     """
 
-    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.zero.pkl"
+    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
 
     with open(vault, "rb") as file:
         tests = pickle.load(file)
@@ -36,7 +36,6 @@ def test1():
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
         for col in expected_df.columns.tolist():
-            print(col)
             np.testing.assert_array_almost_equal(
                 expected_df[col], calculated_df[col],
             )
