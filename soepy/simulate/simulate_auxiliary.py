@@ -84,7 +84,6 @@ def pyth_simulate(
         child_init_age = np.where(kids_init_draw == 0, -1, 0)
 
         # Draw presence of partner in the first period
-        # Discuss: Best way to implement random draws by education
         partner_status_init_draw = np.full(initial_states_in_period.shape[0], 0)
 
         # Add columns to state space
@@ -167,8 +166,6 @@ def pyth_simulate(
             child_current_age = child_age_update_rule[idx]
 
         # Update partner status according to random draw
-        # Discuss: Best way to implement random draws by education
-        # Applies here as well
         partner_current_draw = np.full(current_states.shape[0], 0)
 
         # Record period experiences

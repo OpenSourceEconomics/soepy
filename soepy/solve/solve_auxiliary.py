@@ -52,7 +52,7 @@ def construct_covariates(states, model_spec):
         - 1 * states[:, 0] ** 2
         + 100 * (states[:, 1] - model_spec.educ_min)
     )
-    # Discuss: coefficients (constant, age, age_sq, educ_level)
+    # TODO: coefficients (constant, age, age_sq, educ_level)
     # to be included in model_spec or elsewhere?
     male_wages = np.where(states[:, 7] == 1, wages, 0)
 
@@ -121,9 +121,6 @@ def pyth_create_state_space(model_spec):
         for type_ in range(model_spec.num_types):
 
             for partner_indicator in range(2):
-                # Discuss: What this does is that it simply multiplies the state space by 2
-                # Similar to type. I believe this is handled in a different way in respy
-                # that is potentially much faster.  Explore before proceeding?
 
                 # Loop over all kids ages that are recorded
                 for age_kid in kids_ages:
@@ -467,8 +464,6 @@ def get_continuation_values(
             age_kid,
             partner_indicator,
         ]
-
-        # Discuss: Can this be executed in a better and faster way?
 
         # Child: No arrival
         # Choice: Non-employment
