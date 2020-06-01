@@ -5,6 +5,9 @@ from random import randrange, randint
 
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.pre_processing.model_processing import read_model_params_init
+from soepy.exogenous_processes.children import gen_prob_child_vector
+from soepy.exogenous_processes.partner import gen_prob_partner
+from soepy.exogenous_processes.education import gen_prob_educ_years_vector
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
@@ -65,23 +68,15 @@ def test_unit_data_frame_shape():
         constr["AGENTS"] = np.random.randint(10, 100)
         constr["PERIODS"] = np.random.randint(1, 6)
         constr["EDUC_MAX"] = np.random.randint(10, min(10 + constr["PERIODS"], 12))
-        num_educ_years = constr["EDUC_MAX"] - 9
 
         random_init(constr)
 
         model_params_df, model_params = read_model_params_init("test.soepy.pkl")
         model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
-        # Set probability of having children
-        prob_child = np.random.uniform(0, 1, size=model_spec.num_periods)
-
-        # Set probability of partner
-        prob_partner = np.random.uniform(0, 1, size=(model_spec.num_periods, 3))
-
-        # Generate frequencies of different education levels
-        prob_educ_years = np.random.random(num_educ_years)
-        prob_educ_years /= prob_educ_years.sum()
-        prob_educ_years = list(prob_educ_years)
+        prob_child = gen_prob_child_vector(model_spec)
+        prob_partner = gen_prob_partner(model_spec)
+        prob_educ_years = gen_prob_educ_years_vector(model_spec)
 
         # Solve
         (
@@ -455,10 +450,8 @@ def test_no_children_prob_0():
     # Set probability of having children to zero for all periods
     prob_child = np.full(model_spec.num_periods, 0.00)
 
-    # Set probability of partner
-    prob_partner = np.random.uniform(0, 1, size=(model_spec.num_periods, 3))
-
-    prob_educ_years = [0.3, 0.45, 0.25]
+    prob_partner = gen_prob_partner(model_spec)
+    prob_educ_years = gen_prob_educ_years_vector(model_spec)
 
     # Solve
     (
@@ -506,16 +499,9 @@ def test_educ_level_shares():
     model_params_df, model_params = read_model_params_init("test.soepy.pkl")
     model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
-    # Set probability of having children to zero for all periods
-    prob_child = np.random.uniform(0, 1, size=model_spec.num_periods)
-
-    # Set probability of partner
-    prob_partner = np.random.uniform(0, 1, size=(model_spec.num_periods, 3))
-
-    # Generate frequencies of different education levels
-    prob_educ_years = np.random.random(3)
-    prob_educ_years /= prob_educ_years.sum()
-    prob_educ_years_list = list(prob_educ_years)
+    prob_child = gen_prob_child_vector(model_spec)
+    prob_partner = gen_prob_partner(model_spec)
+    prob_educ_years = gen_prob_educ_years_vector(model_spec)
 
     # Solve
     (
@@ -543,7 +529,7 @@ def test_educ_level_shares():
         child_age_update_rule,
         prob_child,
         prob_partner,
-        prob_educ_years_list,
+        prob_educ_years,
         is_expected=False,
     )
 
