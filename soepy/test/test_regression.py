@@ -25,17 +25,13 @@ def test1():
             random_model_params_df,
             exog_child_info,
             exog_educ_info,
+            exog_partner_info,
             expected_df,
         ) = tests[i]
 
-        model_spec_init_dict["EXOG_PROC"]["partner_info_file_name"] = "test"
-        model_spec_init_dict["EXOG_PROC"]["partner_cf_const"] = 1000
-        model_spec_init_dict["EXOG_PROC"]["partner_cf_age"] = 10
-        model_spec_init_dict["EXOG_PROC"]["partner_cf_age_sq"] = -1
-        model_spec_init_dict["EXOG_PROC"]["partner_cf_educ"] = 100
-
         exog_child_info.to_pickle("test.soepy.child.pkl")
         exog_educ_info.to_pickle("test.soepy.educ.pkl")
+        exog_partner_info.to_pickle("test.soepy.partner.pkl")
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 

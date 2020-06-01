@@ -251,7 +251,7 @@ def random_init(constr=None):
         )
     else:
         exog_partner_info = pd.DataFrame(
-            np.random.uniform(0, 1, size=periods*3).tolist(),
+            np.random.uniform(0, 1, size=periods * 3).tolist(),
             index=index,
             columns=["exog_partner_values"],
         )
