@@ -1,7 +1,6 @@
 """This module reads in information on probabilities regarding the exogenous
 process of marriage."""
 import pandas as pd
-import numpy as np
 
 
 def gen_prob_partner(model_spec):

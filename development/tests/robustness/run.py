@@ -16,6 +16,7 @@ def func(maxrt):
             random_model_params_df,
             exog_child_info,
             exog_educ_info,
+            exog_partner_info,
         ) = random_init()
 
         simulate(random_model_params_df, model_spec_init_dict)
