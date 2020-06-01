@@ -9,7 +9,6 @@ def gen_prob_partner(model_spec):
 
     # Read data frame with information on probability to get a partner
     # in every period
-
     exog_partner_info_df = pd.read_pickle(model_spec.partner_info_file_name)
 
     prob_partner = exog_partner_info_df.values.reshape(model_spec.num_periods, 3)

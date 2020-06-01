@@ -52,8 +52,7 @@ def construct_covariates(states, model_spec):
         + model_spec.partner_cf_age_sq * states[:, 0] ** 2
         + model_spec.partner_cf_educ * (states[:, 1] - model_spec.educ_min)
     )
-    # TODO: coefficients (constant, age, age_sq, educ_level)
-    # to be included in model_spec or elsewhere?
+
     male_wages = np.where(states[:, 7] == 1, wages, 0)
 
     covariates = np.column_stack((educ_level, bins, male_wages))

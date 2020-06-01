@@ -72,11 +72,11 @@ def test_unit_data_frame_shape():
         model_params_df, model_params = read_model_params_init("test.soepy.pkl")
         model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
-        # Set probability of partner to zero for all periods
-        prob_child = np.full(model_spec.num_periods, 0.00)
+        # Set probability of having children
+        prob_child = np.random.uniform(0, 1, size=model_spec.num_periods)
 
-        # Set probability of having children to zero for all periods
-        prob_partner = np.full((model_spec.num_periods, 3), 0.00)
+        # Set probability of partner
+        prob_partner = np.random.uniform(0, 1, size=(model_spec.num_periods, 3))
 
         # Generate frequencies of different education levels
         prob_educ_years = np.random.random(num_educ_years)
@@ -135,8 +135,6 @@ def test_unit_states_hard_code():
     model_spec = model_spec(3, 3, 10, 2, 24, 12)
 
     states, _ = pyth_create_state_space(model_spec)
-
-    print(states)
 
     states_true = [
         [0, 10, 0, 0, 0, 0, -1, 0],
@@ -457,8 +455,8 @@ def test_no_children_prob_0():
     # Set probability of having children to zero for all periods
     prob_child = np.full(model_spec.num_periods, 0.00)
 
-    # Set probability of having children to zero for all periods
-    prob_partner = np.full((model_spec.num_periods, 3), 0.00)
+    # Set probability of partner
+    prob_partner = np.random.uniform(0, 1, size=(model_spec.num_periods, 3))
 
     prob_educ_years = [0.3, 0.45, 0.25]
 
@@ -511,7 +509,7 @@ def test_educ_level_shares():
     # Set probability of having children to zero for all periods
     prob_child = np.random.uniform(0, 1, size=model_spec.num_periods)
 
-    # Set probability of having children to zero for all periods
+    # Set probability of partner
     prob_partner = np.random.uniform(0, 1, size=(model_spec.num_periods, 3))
 
     # Generate frequencies of different education levels
