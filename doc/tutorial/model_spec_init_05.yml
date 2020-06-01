@@ -23,3 +23,7 @@ EXOG_PROC:
     partner_info_file_name: 'exog_partner_info.pkl'
     child_age_max: 12
     last_child_bearing_period: 24
+    partner_cf_const: 1000
+    partner_cf_age: 10
+    partner_cf_age_sq: -1
+    partner_cf_educ: 100
