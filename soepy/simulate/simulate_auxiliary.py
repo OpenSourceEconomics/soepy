@@ -84,7 +84,13 @@ def pyth_simulate(
         child_init_age = np.where(kids_init_draw == 0, -1, 0)
 
         # Draw presence of partner in the first period
-        partner_status_init_draw = np.full(initial_states_in_period.shape[0], 0)
+        partner_status_init_draw = np.random.binomial(
+            size=initial_states_in_period.shape[0],
+            n=1,
+            p=prob_partner[
+                period, (initial_states_in_period[:, 2] - model_spec.educ_min)
+            ],
+        )
 
         # Add columns to state space
         initial_states_in_period = np.c_[
@@ -166,7 +172,11 @@ def pyth_simulate(
             child_current_age = child_age_update_rule[idx]
 
         # Update partner status according to random draw
-        partner_current_draw = np.full(current_states.shape[0], 0)
+        partner_current_draw = np.full(current_states.shape[0], np.nan)
+        for l in range(model_spec.educ_max - model_spec.educ_min + 1):
+            partner_current_draw[
+                current_states[:, 2] == model_spec.educ_min + l
+            ] = prob_partner[period, l]
 
         # Record period experiences
         rows = np.column_stack(
