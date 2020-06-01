@@ -47,10 +47,10 @@ def construct_covariates(states, model_spec):
 
     # Male wages based on age and education level of the woman
     wages = (
-        1000
-        + 10 * states[:, 0]
-        - 1 * states[:, 0] ** 2
-        + 100 * (states[:, 1] - model_spec.educ_min)
+        model_spec.partner_cf_const
+        + model_spec.partner_cf_age * states[:, 0]
+        + model_spec.partner_cf_age_sq * states[:, 0] ** 2
+        + model_spec.partner_cf_educ * (states[:, 1] - model_spec.educ_min)
     )
     # TODO: coefficients (constant, age, age_sq, educ_level)
     # to be included in model_spec or elsewhere?

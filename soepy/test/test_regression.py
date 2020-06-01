@@ -29,6 +29,10 @@ def test1():
         ) = tests[i]
 
         model_spec_init_dict["EXOG_PROC"]["partner_info_file_name"] = "test"
+        model_spec_init_dict["EXOG_PROC"]["partner_cf_const"] = 1000
+        model_spec_init_dict["EXOG_PROC"]["partner_cf_age"] = 10
+        model_spec_init_dict["EXOG_PROC"]["partner_cf_age_sq"] = -1
+        model_spec_init_dict["EXOG_PROC"]["partner_cf_educ"] = 100
 
         exog_child_info.to_pickle("test.soepy.child.pkl")
         exog_educ_info.to_pickle("test.soepy.educ.pkl")
