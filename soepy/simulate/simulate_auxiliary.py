@@ -26,7 +26,6 @@ def pyth_simulate(
     is_expected,
 ):
     """Simulate agent experiences."""
-    print(prob_partner)
 
     # Draw random initial conditions
     educ_years = list(range(model_spec.educ_min, model_spec.educ_max + 1))
