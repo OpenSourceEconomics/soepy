@@ -564,6 +564,7 @@ def test_non_employment_benefits():
     constr = dict()
     constr["AGENTS"] = 200
     constr["PERIODS"] = 6
+    constr["PARTNER"] = 0
 
     random_init(constr)
 

@@ -240,6 +240,24 @@ def random_init(constr=None):
     )
     exog_educ_info.to_pickle("test.soepy.educ.pkl")
 
+    # Generate random probabilities of partner arrival
+    index_levels = [list(range(0, periods)), [0, 1, 2]]
+    index = pd.MultiIndex.from_product(index_levels, names=["period", "educ_level"])
+    if "PARTNER" in constr.keys():
+        exog_partner_info = pd.DataFrame(
+            np.zeros(periods * 3).tolist(),
+            index=index,
+            columns=["exog_partner_values"],
+        )
+    else:
+        exog_partner_info = pd.DataFrame(
+            np.random.uniform(0, 1, size=periods*3).tolist(),
+            index=index,
+            columns=["exog_partner_values"],
+        )
+
+    exog_partner_info.to_pickle("test.soepy.partner.pkl")
+
     return (
         model_spec_init_dict,
         random_model_params_df,

@@ -15,7 +15,7 @@ def gen_prob_partner(model_spec):
 
         index = pd.MultiIndex.from_product(index_levels, names=["period", "educ_level"])
         exog_partner_info_df = pd.DataFrame(
-            np.zeros(model_spec.num_periods * 3).tolist(),
+            np.random.uniform(0, 1, size=model_spec.num_periods*3).tolist(),
             index=index,
             columns=["exog_partner_values"],
         )
