@@ -509,10 +509,10 @@ def test_educ_level_shares():
     model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
     # Set probability of having children to zero for all periods
-    prob_child = np.full(model_spec.num_periods, 0.00)
+    prob_child = np.random.uniform(0, 1, size=model_spec.num_periods)
 
     # Set probability of having children to zero for all periods
-    prob_partner = np.full((model_spec.num_periods, 3), 0.00)
+    prob_partner = np.random.uniform(0, 1, size=(model_spec.num_periods, 3))
 
     # Generate frequencies of different education levels
     prob_educ_years = np.random.random(3)
