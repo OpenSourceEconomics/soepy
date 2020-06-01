@@ -1,4 +1,3 @@
-import pytest
 import collections
 
 import numpy as np
@@ -558,7 +557,6 @@ def test_educ_level_shares():
     np.testing.assert_almost_equal(simulated, prob_educ_years, decimal=2)
 
 
-@pytest.mark.skip(reason="has to be adjusted to male income or executed differently")
 def test_non_employment_benefits():
     """This test ensures that the benefits that do not depend on the
     history of choices, correspond to the rewards simulated in the data frame."""
