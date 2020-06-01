@@ -7,7 +7,6 @@ from soepy.shared.shared_constants import (
     NUM_CHOICES,
     INVALID_FLOAT,
     HOURS,
-    IND,
 )
 
 
@@ -107,7 +106,7 @@ def pyth_create_state_space(model_spec):
         model_spec.num_periods,
         model_spec.num_types,
         kids_ages.shape[0],
-        IND,
+        2,
     )
 
     indexer = np.full(shape, MISSING_INT)
@@ -121,7 +120,7 @@ def pyth_create_state_space(model_spec):
         # Loop over all types
         for type_ in range(model_spec.num_types):
 
-            for partner_indicator in range(IND):
+            for partner_indicator in range(2):
                 # Discuss: What this does is that it simply multiplies the state space by 2
                 # Similar to type. I believe this is handled in a different way in respy
                 # that is potentially much faster.  Explore before proceeding?

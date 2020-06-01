@@ -20,7 +20,7 @@ def gen_prob_partner(model_spec):
             columns=["exog_partner_values"],
         )
     else:
-        exog_partner_info_df = pd.read_pickle(str(model_spec.partner_info_file_name))
+        exog_partner_info_df = pd.read_pickle(model_spec.partner_info_file_name)
 
     prob_partner = exog_partner_info_df.values.reshape(model_spec.num_periods, 3)
 

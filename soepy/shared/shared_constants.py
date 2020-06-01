@@ -4,7 +4,6 @@ import numpy as np
 MISSING_INT = -99
 INVALID_FLOAT = -99.0
 NUM_CHOICES = 3
-IND = 2  # Stands for indicator, i.e., an indicator variable takes 2 values, 0 or 1
 # Hours worked per month
 # Assumption: weekly working hours times 4.5 weeks in a month
 HOURS = np.array([0, 18 * 4.5, 38 * 4.5])
