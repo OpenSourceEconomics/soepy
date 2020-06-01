@@ -1,13 +1,14 @@
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.solve.solve_auxiliary import construct_covariates
 from soepy.shared.shared_auxiliary import draw_disturbances
+from soepy.shared.shared_auxiliary import calculate_budget_constraint_components
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.shared.shared_auxiliary import calculate_non_employment_benefits
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 
 
-def pyth_solve(model_params, model_spec, prob_child, is_expected):
+def pyth_solve(model_params, model_spec, prob_child, prob_partner, is_expected):
     """Solve the model by backward induction.
 
     The solution routine performs four key operations:
@@ -65,6 +66,8 @@ def pyth_solve(model_params, model_spec, prob_child, is_expected):
         model_params, model_spec, states, covariates, is_expected
     )
 
+    budget_constraint_components = calculate_budget_constraint_components(covariates)
+
     non_employment_benefits = calculate_non_employment_benefits(
         states, log_wage_systematic
     )
@@ -76,14 +79,15 @@ def pyth_solve(model_params, model_spec, prob_child, is_expected):
     # numerically in a Monte Carlo procedure
     emaxs = pyth_backward_induction(
         model_spec,
-        model_params,
         states,
         indexer,
         log_wage_systematic,
+        budget_constraint_components,
         non_consumption_utilities,
         draws_emax,
         child_age_update_rule,
         prob_child,
+        prob_partner,
         non_employment_benefits,
     )
 
@@ -92,6 +96,7 @@ def pyth_solve(model_params, model_spec, prob_child, is_expected):
         states,
         indexer,
         covariates,
+        budget_constraint_components,
         non_employment_benefits,
         emaxs,
         child_age_update_rule,

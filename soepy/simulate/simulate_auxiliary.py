@@ -17,9 +17,11 @@ def pyth_simulate(
     indexer,
     emaxs,
     covariates,
+    budget_constraint_components,
     non_employment_benefits,
     child_age_update_rule,
     prob_child,
+    prob_partner,
     prob_educ_years,
     is_expected,
 ):
@@ -80,8 +82,20 @@ def pyth_simulate(
 
         # Convert to init age of child
         child_init_age = np.where(kids_init_draw == 0, -1, 0)
-        # Add column to state space
-        initial_states_in_period = np.c_[initial_states_in_period, child_init_age]
+
+        # Draw presence of partner in the first period
+        partner_status_init_draw = np.random.binomial(
+            size=initial_states_in_period.shape[0],
+            n=1,
+            p=prob_partner[
+                period, (initial_states_in_period[:, 2] - model_spec.educ_min)
+            ],
+        )
+
+        # Add columns to state space
+        initial_states_in_period = np.c_[
+            initial_states_in_period, child_init_age, partner_status_init_draw
+        ]
 
         # Get all agents in the period.
         if period == 0:
@@ -97,24 +111,31 @@ def pyth_simulate(
             current_states[:, 5],
             current_states[:, 6],
             current_states[:, 7],
+            current_states[:, 8],
         ]
 
         # Extract corresponding utilities
         current_log_wage_systematic = log_wage_systematic[idx]
+        current_budget_constraint_components = budget_constraint_components[idx]
         current_non_consumption_utilities = non_consumption_utilities[idx]
         current_non_employment_benefits = non_employment_benefits[idx]
 
         current_wages = np.exp(
             current_log_wage_systematic.reshape(-1, 1)
             + draws_sim[period, current_states[:, 0]]
+        ) + current_budget_constraint_components.reshape(-1, 1)
+
+        current_wages[:, 0] = (
+            current_non_employment_benefits + current_budget_constraint_components
         )
-        current_wages[:, 0] = current_non_employment_benefits
 
         # Calculate total values for all choices
         flow_utilities = np.full((current_states.shape[0], 3), np.nan)
 
         flow_utilities[:, :1] = (
-            current_non_employment_benefits ** model_spec.mu / model_spec.mu
+            (current_non_employment_benefits + current_budget_constraint_components)
+            ** model_spec.mu
+            / model_spec.mu
         ).reshape(current_states.shape[0], 1) * current_non_consumption_utilities[:, :1]
         flow_utilities[:, 1:] = (
             (HOURS[1:] * current_wages[:, 1:]) ** model_spec.mu
@@ -150,6 +171,13 @@ def pyth_simulate(
         else:
             child_current_age = child_age_update_rule[idx]
 
+        # Update partner status according to random draw
+        partner_current_draw = np.full(current_states.shape[0], np.nan)
+        for l in range(model_spec.educ_max - model_spec.educ_min + 1):
+            partner_current_draw[
+                current_states[:, 2] == model_spec.educ_min + l
+            ] = prob_partner[period, l]
+
         # Record period experiences
         rows = np.column_stack(
             (
@@ -176,6 +204,7 @@ def pyth_simulate(
             choice == 2, current_states[:, 5] + 1, current_states[:, 5]
         )
         current_states[:, 7] = child_current_age
+        current_states[:, 8] = partner_current_draw
 
     dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
         DATA_FORMATS_SIM
