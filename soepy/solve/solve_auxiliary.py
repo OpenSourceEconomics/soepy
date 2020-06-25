@@ -50,7 +50,7 @@ def construct_covariates(states, model_spec):
         model_spec.partner_cf_const
         + model_spec.partner_cf_age * states[:, 0]
         + model_spec.partner_cf_age_sq * states[:, 0] ** 2
-        + model_spec.partner_cf_educ * (states[:, 1] - model_spec.educ_min)
+        + model_spec.partner_cf_educ * educ_level
     )
 
     male_wages = np.where(states[:, 7] == 1, wages, 0)
