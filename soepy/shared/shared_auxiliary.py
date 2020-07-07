@@ -72,7 +72,7 @@ def calculate_log_wage_systematic(model_params, states, covariates, is_expected)
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
     exp_p, exp_f = states[:, 3], states[:, 4]
-    educ_level = covariates[:, 0].astype(int)
+    educ_level = covariates[:, 0]
 
     # Construct wage components
     gamma_0s = np.array(model_params.gamma_0s)[educ_level]
