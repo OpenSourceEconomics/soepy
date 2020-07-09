@@ -1,6 +1,6 @@
 import numpy as np
 
-from soepy.shared.shared_constants import NUM_CHOICES, HOURS
+from soepy.shared.shared_constants import NUM_CHOICES
 
 
 def draw_disturbances(seed, num_periods, num_draws, model_params):
