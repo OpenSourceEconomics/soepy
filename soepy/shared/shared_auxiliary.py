@@ -165,9 +165,7 @@ def calculate_non_employment_benefits(states, log_wage_systematic):
     # Half the labor income the individual would have earned in the period
     # excluding wage shock for a person who worked last period
     non_employment_benefits = np.where(
-        states[:, 2] != 0,
-        0.5 * np.exp(log_wage_systematic),
-        non_employment_benefits,
+        states[:, 2] != 0, 0.5 * np.exp(log_wage_systematic), non_employment_benefits,
     )
 
     # 300 EUR added if the person has a child
