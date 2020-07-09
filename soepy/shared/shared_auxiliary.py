@@ -166,7 +166,7 @@ def calculate_non_employment_benefits(states, log_wage_systematic):
     # excluding wage shock for a person who worked last period
     non_employment_benefits = np.where(
         states[:, 2] != 0,
-        0.5 * HOURS[states[:, 2]] * np.exp(log_wage_systematic),
+        0.5 * np.exp(log_wage_systematic),
         non_employment_benefits,
     )
 
