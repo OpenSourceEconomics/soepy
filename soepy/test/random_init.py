@@ -69,6 +69,16 @@ def random_init(constr=None):
     else:
         num_draws_emax = np.random.randint(400, 600)
 
+    if "BENEFITS_BASE" in constr.keys():
+        benefits_base = constr["BENEFITS_BASE"]
+    else:
+        benefits_base = np.random.uniform(0, 500)
+
+    if "BENEFITS_KIDS" in constr.keys():
+        benefits_kids = constr["BENEFITS_KIDS"]
+    else:
+        benefits_kids = np.random.uniform(0, 100)
+
     model_spec_init_dict = dict()
 
     for key_ in [
@@ -78,6 +88,7 @@ def random_init(constr=None):
         "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
+        "TAXES_TRANSFERS",
         "EXOG_PROC",
     ]:
         model_spec_init_dict[key_] = {}
@@ -99,6 +110,9 @@ def random_init(constr=None):
 
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
+
+    model_spec_init_dict["TAXES_TRANSFERS"]["benefits_base"] = benefits_base
+    model_spec_init_dict["TAXES_TRANSFERS"]["benefits_kids"] = benefits_kids
 
     model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = "test.soepy.educ.pkl"
     model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = "test.soepy.child.pkl"

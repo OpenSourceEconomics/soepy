@@ -17,6 +17,9 @@ SIMULATION:
 SOLUTION:
     seed_emax: 635
     num_draws_emax: 500
+TAXES_TRANSFERS:
+    benefits_base: 200
+    benefits_kids: 70
 EXOG_PROC:
     educ_info_file_name: 'exog_educ_info_generic.pkl'
     kids_info_file_name: 'exog_child_info.pkl'
