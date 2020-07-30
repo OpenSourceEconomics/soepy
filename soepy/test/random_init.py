@@ -291,6 +291,7 @@ def print_dict(model_spec_init_dict, file_name="test"):
         "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
+        "TAXES_TRANSFERS",
         "EXOG_PROC",
     ]
     for key_ in order:
@@ -337,6 +338,10 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["SOLUTION"] = dict()
     init_dict["SOLUTION"]["seed_emax"] = init_dict_flat["seed_emax"]
     init_dict["SOLUTION"]["num_draws_emax"] = init_dict_flat["num_draws_emax"]
+
+    init_dict["TAXES_TRANSFERS"] = dict()
+    init_dict["TAXES_TRANSFERS"]["benefits_base"] = init_dict_flat["benefits_base"]
+    init_dict["TAXES_TRANSFERS"]["benefits_kids"] = init_dict_flat["benefits_kids"]
 
     init_dict["EXOG_PROC"] = dict()
     init_dict["EXOG_PROC"]["kids_info_file_name"] = init_dict_flat[
