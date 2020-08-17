@@ -175,6 +175,7 @@ def flatten_model_spec_dict(model_spec_dict):
         "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
+        "TAXES_TRANSFERS",
         "EXOG_PROC",
         "DERIVED_ATTR",
     ]

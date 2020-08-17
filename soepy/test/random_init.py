@@ -69,6 +69,16 @@ def random_init(constr=None):
     else:
         num_draws_emax = np.random.randint(400, 600)
 
+    if "BENEFITS_BASE" in constr.keys():
+        benefits_base = constr["BENEFITS_BASE"]
+    else:
+        benefits_base = np.random.uniform(0, 500)
+
+    if "BENEFITS_KIDS" in constr.keys():
+        benefits_kids = constr["BENEFITS_KIDS"]
+    else:
+        benefits_kids = np.random.uniform(0, 100)
+
     model_spec_init_dict = dict()
 
     for key_ in [
@@ -78,6 +88,7 @@ def random_init(constr=None):
         "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
+        "TAXES_TRANSFERS",
         "EXOG_PROC",
     ]:
         model_spec_init_dict[key_] = {}
@@ -100,6 +111,9 @@ def random_init(constr=None):
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
 
+    model_spec_init_dict["TAXES_TRANSFERS"]["benefits_base"] = benefits_base
+    model_spec_init_dict["TAXES_TRANSFERS"]["benefits_kids"] = benefits_kids
+
     model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = "test.soepy.educ.pkl"
     model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = "test.soepy.child.pkl"
     model_spec_init_dict["EXOG_PROC"][
@@ -107,10 +121,10 @@ def random_init(constr=None):
     ] = "test.soepy.partner.pkl"
     model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
     model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = periods
-    model_spec_init_dict["EXOG_PROC"]["partner_cf_const"] = 1000
-    model_spec_init_dict["EXOG_PROC"]["partner_cf_age"] = 10
-    model_spec_init_dict["EXOG_PROC"]["partner_cf_age_sq"] = -1
-    model_spec_init_dict["EXOG_PROC"]["partner_cf_educ"] = 100
+    model_spec_init_dict["EXOG_PROC"]["partner_cf_const"] = 3
+    model_spec_init_dict["EXOG_PROC"]["partner_cf_age"] = 0.3
+    model_spec_init_dict["EXOG_PROC"]["partner_cf_age_sq"] = -0.003
+    model_spec_init_dict["EXOG_PROC"]["partner_cf_educ"] = 0.03
 
     print_dict(model_spec_init_dict)
 
@@ -277,6 +291,7 @@ def print_dict(model_spec_init_dict, file_name="test"):
         "EDUC_LEVEL_BOUNDS",
         "SIMULATION",
         "SOLUTION",
+        "TAXES_TRANSFERS",
         "EXOG_PROC",
     ]
     for key_ in order:
@@ -323,6 +338,10 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["SOLUTION"] = dict()
     init_dict["SOLUTION"]["seed_emax"] = init_dict_flat["seed_emax"]
     init_dict["SOLUTION"]["num_draws_emax"] = init_dict_flat["num_draws_emax"]
+
+    init_dict["TAXES_TRANSFERS"] = dict()
+    init_dict["TAXES_TRANSFERS"]["benefits_base"] = init_dict_flat["benefits_base"]
+    init_dict["TAXES_TRANSFERS"]["benefits_kids"] = init_dict_flat["benefits_kids"]
 
     init_dict["EXOG_PROC"] = dict()
     init_dict["EXOG_PROC"]["kids_info_file_name"] = init_dict_flat[

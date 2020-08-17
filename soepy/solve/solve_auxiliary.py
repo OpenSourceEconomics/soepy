@@ -10,56 +10,6 @@ from soepy.shared.shared_constants import (
 )
 
 
-def construct_covariates(states, model_spec):
-    """Construct a matrix of all the covariates
-    that depend only on the state space.
-
-    Parameters
-    ---------
-    states : np.ndarray
-        Array with shape (num_states, 5) containing period, years of education,
-        the lagged choice, years of experience in part-time and in full-time
-         employment of the agent.
-
-    Returns
-    -------
-    covariates : np.ndarray
-        Array with shape (num_states, number of covariates) containing all additional
-        covariates, which depend only on the state space information.
-
-    """
-
-    # Level of education derived from years of education
-    educ_years = pd.Series(states[:, 1])
-    educ_level = pd.cut(
-        educ_years,
-        bins=[0, model_spec.low_bound, model_spec.middle_bound, model_spec.high_bound],
-        labels=[0, 1, 2],
-    ).to_numpy()
-
-    # Bins of age of youngest child based on kids age
-    # bin 0 corresponds to no kid, remaining bins as in Blundell
-    # 0-2, 3-5, 6-10, 11+
-    age_kid = pd.Series(states[:, 6])
-    bins = pd.cut(
-        age_kid, bins=[-2, -1, 2, 5, 10, 11], labels=[0, 1, 2, 3, 4],
-    ).to_numpy()
-
-    # Male wages based on age and education level of the woman
-    wages = (
-        model_spec.partner_cf_const
-        + model_spec.partner_cf_age * states[:, 0]
-        + model_spec.partner_cf_age_sq * states[:, 0] ** 2
-        + model_spec.partner_cf_educ * educ_level
-    )
-
-    male_wages = np.where(states[:, 7] == 1, wages, 0)
-
-    covariates = np.column_stack((educ_level, bins, male_wages))
-
-    return covariates
-
-
 @numba.jit(nopython=True)
 def pyth_create_state_space(model_spec):
     """Create state space object.
@@ -86,9 +36,10 @@ def pyth_create_state_space(model_spec):
     Returns
     -------
     states : np.ndarray
-        Array with shape (num_states, 5) containing period, years of schooling,
+        Array with shape (num_states, 8) containing period, years of schooling,
         the lagged choice, the years of experience in part-time, and the
-        years of experience in full-time employment.
+        years of experience in full-time employment, type, age of the youngest child,
+        indicator for the presence of a partner.
     indexer : np.ndarray
         A matrix where each dimension represents a characteristic of the state space.
         Switching from one state is possible via incrementing appropriate indices by 1.
@@ -289,6 +240,60 @@ def pyth_create_state_space(model_spec):
 
     # Return function output
     return states, indexer
+
+
+def construct_covariates(states, model_spec):
+    """Construct a matrix of all the covariates
+    that depend only on the state space.
+
+    Parameters
+    ---------
+    states : np.ndarray
+        Array with shape (num_states, 8) containing period, years of schooling,
+        the lagged choice, the years of experience in part-time, and the
+        years of experience in full-time employment, type, age of the youngest child,
+        indicator for the presence of a partner.
+
+    Returns
+    -------
+    covariates : np.ndarray
+        Array with shape (num_states, number of covariates) containing all additional
+        covariates, which depend only on the state space information.
+
+    """
+
+    # Level of education derived from years of education
+    educ_years = pd.Series(states[:, 1])
+    educ_level = pd.cut(
+        educ_years,
+        bins=[0, model_spec.low_bound, model_spec.middle_bound, model_spec.high_bound],
+        labels=[0, 1, 2],
+    ).to_numpy()
+
+    # Bins of age of youngest child based on kids age
+    # bin 0 corresponds to no kid, remaining bins as in Blundell
+    # 0-2, 3-5, 6-10, 11+
+    age_kid = pd.Series(states[:, 6])
+    bins = pd.cut(
+        age_kid, bins=[-2, -1, 2, 5, 10, 11], labels=[0, 1, 2, 3, 4],
+    ).to_numpy()
+
+    # Male wages based on age and education level of the woman
+    # Wages are first calculated as hourly wages
+    log_wages = (
+        model_spec.partner_cf_const
+        + model_spec.partner_cf_age * states[:, 0]
+        + model_spec.partner_cf_age_sq * states[:, 0] ** 2
+        + model_spec.partner_cf_educ * educ_level
+    )
+
+    # Final input of male wages / partner income is calculated on a weekly
+    # basis. Underlying assumption that all men work full time.
+    male_wages = np.where(states[:, 7] == 1, np.exp(log_wages) * HOURS[2], 0)
+
+    covariates = np.column_stack((educ_level, bins, male_wages))
+
+    return covariates
 
 
 def pyth_backward_induction(
