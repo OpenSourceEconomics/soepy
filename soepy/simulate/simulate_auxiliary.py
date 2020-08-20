@@ -134,10 +134,6 @@ def pyth_simulate(
         current_wages = np.exp(
             current_log_wage_systematic.reshape(-1, 1)
             + draws_sim[period, current_states[:, 0]]
-        ) + current_budget_constraint_components.reshape(-1, 1)
-
-        current_wages[:, 0] = (
-            current_non_employment_benefits + current_budget_constraint_components
         )
 
         # Calculate total values for all choices
@@ -148,8 +144,13 @@ def pyth_simulate(
             ** model_spec.mu
             / model_spec.mu
         ).reshape(current_states.shape[0], 1) * current_non_consumption_utilities[:, :1]
+
         flow_utilities[:, 1:] = (
-            (HOURS[1:] * current_wages[:, 1:]) ** model_spec.mu
+            (
+                HOURS[1:] * current_wages[:, 1:]
+                + current_budget_constraint_components.reshape(-1, 1)
+            )
+            ** model_spec.mu
             / model_spec.mu
             * current_non_consumption_utilities[:, 1:]
         )

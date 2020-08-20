@@ -692,12 +692,14 @@ def _get_max_aggregated_utilities(
 
     for j in range(NUM_CHOICES):
 
-        wage = np.exp(log_wage_systematic + draws[j]) + budget_constraint_components
+        wage = np.exp(log_wage_systematic + draws[j])
 
         if j == 0:
-            consumption_utility = benefits ** mu / mu
+            consumption_utility = (benefits + budget_constraint_components) ** mu / mu
         else:
-            consumption_utility = (hours[j] * wage) ** mu / mu
+            consumption_utility = (
+                hours[j] * wage + budget_constraint_components
+            ) ** mu / mu
 
         value_function_choice = (
             consumption_utility * non_consumption_utilities[j] + delta * emaxs[j]
