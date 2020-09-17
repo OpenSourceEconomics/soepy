@@ -77,7 +77,9 @@ def pyth_simulate(
 
         # Draw indicator of child appearing in the first period
         kids_init_draw = np.random.binomial(
-            size=initial_states_in_period.shape[0], n=1, p=prob_child[period],
+            size=initial_states_in_period.shape[0],
+            n=1,
+            p=prob_child[period],
         )
 
         # Convert to init age of child
@@ -172,7 +174,9 @@ def pyth_simulate(
             # Update current states according to exogenous processes
             # Relate to child age updating
             kids_current_draw = np.random.binomial(
-                size=current_states.shape[0], n=1, p=prob_child[period + 1],
+                size=current_states.shape[0],
+                n=1,
+                p=prob_child[period + 1],
             )
 
             # Convert to age of child according to age update rule

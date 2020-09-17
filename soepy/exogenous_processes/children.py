@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def define_child_age_update_rule(model_spec, states, covariates):
-    """ Defines a vector with the length of the number of states that contains the
+    """Defines a vector with the length of the number of states that contains the
     value the state space component `age_kid` should take depending on whether or not
      a child arrives in the period.
      The purpose of this object is to facilitate easy child-parent state look-up
@@ -27,7 +27,7 @@ def define_child_age_update_rule(model_spec, states, covariates):
 
 
 def gen_prob_child_vector(model_spec):
-    """ Generates a vector with length `num_periods` which contains
+    """Generates a vector with length `num_periods` which contains
     the probability to get a child in the corresponding period."""
 
     # Read data frame with information on probability to get a child

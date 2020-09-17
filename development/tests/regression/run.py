@@ -70,8 +70,7 @@ def create_vault(num_test=1000, seed=123456):
 
 
 def check_vault(num_test):
-    """This function runs another simulation for each init file in our regression vault.
-    """
+    """This function runs another simulation for each init file in our regression vault."""
     vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
 
     with open(vault, "rb") as file:

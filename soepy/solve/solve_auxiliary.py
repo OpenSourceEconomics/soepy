@@ -275,7 +275,9 @@ def construct_covariates(states, model_spec):
     # 0-2, 3-5, 6-10, 11+
     age_kid = pd.Series(states[:, 6])
     bins = pd.cut(
-        age_kid, bins=[-2, -1, 2, 5, 10, 11], labels=[0, 1, 2, 3, 4],
+        age_kid,
+        bins=[-2, -1, 2, 5, 10, 11],
+        labels=[0, 1, 2, 3, 4],
     ).to_numpy()
 
     # Male wages based on age and education level of the woman
@@ -652,19 +654,27 @@ def get_continuation_values(
 
         else:
             # Child not possible
-            emaxs[k_parent, 0] = (
-                (1 - prob_partner_period[1]) * emaxs[k_0_00, 3]  # no partner
-                + prob_partner_period[educ_years - model_spec.educ_min]
-                * emaxs[k_0_01, 3]  # partner
-            )
-            emaxs[k_parent, 1] = (
-                (1 - prob_partner_period[1]) * emaxs[k_1_00, 3]  # no partner
-                + prob_partner_period[1] * emaxs[k_1_01, 3]  # partner
-            )
-            emaxs[k_parent, 2] = (
-                (1 - prob_partner_period[1]) * emaxs[k_2_00, 3]  # no partner
-                + prob_partner_period[1] * emaxs[k_2_01, 3]  # partner
-            )
+            emaxs[k_parent, 0] = (1 - prob_partner_period[1]) * emaxs[
+                k_0_00, 3
+            ] + prob_partner_period[  # no partner
+                educ_years - model_spec.educ_min
+            ] * emaxs[
+                k_0_01, 3
+            ]  # partner
+            emaxs[k_parent, 1] = (1 - prob_partner_period[1]) * emaxs[
+                k_1_00, 3
+            ] + prob_partner_period[  # no partner
+                1
+            ] * emaxs[
+                k_1_01, 3
+            ]  # partner
+            emaxs[k_parent, 2] = (1 - prob_partner_period[1]) * emaxs[
+                k_2_00, 3
+            ] + prob_partner_period[  # no partner
+                1
+            ] * emaxs[
+                k_2_01, 3
+            ]  # partner
 
     return emaxs
 

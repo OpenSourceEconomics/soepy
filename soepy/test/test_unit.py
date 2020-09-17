@@ -22,7 +22,7 @@ from soepy.simulate.simulate_auxiliary import pyth_simulate
 
 def test_unit_nan():
     """This test ensures that the data frame only includes individuals that have
-     completed education.
+    completed education.
     """
     constr = {"AGENTS": 200}
     random_init(constr)
@@ -34,10 +34,10 @@ def test_unit_nan():
 
 def test_unit_init_print():
     """This test ensures that the init file printing process work as intended. For this
-     purpose we generate random init file specifications import the resulting files,
-     write the specifications to another init file, import it again and comparing both
-      initialization dicts
-      """
+    purpose we generate random init file specifications import the resulting files,
+    write the specifications to another init file, import it again and comparing both
+     initialization dicts
+    """
     order = [
         "GENERAL",
         "CONSTANTS",
@@ -90,7 +90,11 @@ def test_unit_data_frame_shape():
             emaxs,
             child_age_update_rule,
         ) = pyth_solve(
-            model_params, model_spec, prob_child, prob_partner, is_expected=False,
+            model_params,
+            model_spec,
+            prob_child,
+            prob_partner,
+            is_expected=False,
         )
 
         # Simulate
@@ -515,7 +519,11 @@ def test_educ_level_shares():
         emaxs,
         child_age_update_rule,
     ) = pyth_solve(
-        model_params, model_spec, prob_child, prob_partner, is_expected=False,
+        model_params,
+        model_spec,
+        prob_child,
+        prob_partner,
+        is_expected=False,
     )
 
     # Simulate
@@ -545,8 +553,8 @@ def test_educ_level_shares():
 
 def test_coef_educ_level_specificity():
     """This test ensures that when parameters for a specific
-        education group are changed, the simulated data for the remaining education
-        groups does not change."""
+    education group are changed, the simulated data for the remaining education
+    groups does not change."""
 
     constr = dict()
     constr["AGENTS"] = 10000
@@ -586,7 +594,11 @@ def test_coef_educ_level_specificity():
             emaxs,
             child_age_update_rule,
         ) = pyth_solve(
-            model_params, model_spec, prob_child, prob_partner, is_expected=False,
+            model_params,
+            model_spec,
+            prob_child,
+            prob_partner,
+            is_expected=False,
         )
 
         # Simulate

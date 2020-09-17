@@ -37,7 +37,8 @@ def test1():
 
         for col in expected_df.columns.tolist():
             np.testing.assert_array_almost_equal(
-                expected_df[col], calculated_df[col],
+                expected_df[col],
+                calculated_df[col],
             )
 
     cleanup()
