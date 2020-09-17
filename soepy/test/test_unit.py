@@ -1,6 +1,8 @@
 import collections
 
 import numpy as np
+import pandas as pd
+import random
 from random import randrange, randint
 
 from soepy.pre_processing.model_processing import read_model_spec_init
@@ -539,3 +541,82 @@ def test_educ_level_shares():
     )
 
     np.testing.assert_almost_equal(simulated, prob_educ_years, decimal=2)
+
+
+def test_coef_educ_level_specificity():
+    """This test ensures that when parameters for a specific
+        education group are changed, the simulated data for the remaining education
+        groups does not change."""
+
+    constr = dict()
+    constr["AGENTS"] = 10000
+    constr["PERIODS"] = 6
+
+    random_init(constr)
+
+    model_params_base = pd.read_pickle("test.soepy.pkl")
+
+    # Draw random education level to change
+    random_educ_level = random.choice([0, 1, 2])
+    param_to_change = "gamma_1s" + str(random_educ_level + 1)
+
+    model_params_changed = model_params_base
+    model_params_changed.loc[("exp_returns", param_to_change), "value"] = (
+        model_params_changed.loc[("exp_returns", param_to_change), "value"] * 2
+    )
+
+    data = []
+
+    for i in (model_params_base, model_params_changed):
+
+        model_params_df, model_params = read_model_params_init(i)
+        model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
+
+        prob_child = gen_prob_child_vector(model_spec)
+        prob_partner = gen_prob_partner(model_spec)
+        prob_educ_years = gen_prob_educ_years_vector(model_spec)
+
+        # Solve
+        (
+            states,
+            indexer,
+            covariates,
+            budget_constraint_components,
+            non_employment_benefits,
+            emaxs,
+            child_age_update_rule,
+        ) = pyth_solve(
+            model_params, model_spec, prob_child, prob_partner, is_expected=False,
+        )
+
+        # Simulate
+        df = pyth_simulate(
+            model_params,
+            model_spec,
+            states,
+            indexer,
+            emaxs,
+            covariates,
+            budget_constraint_components,
+            non_employment_benefits,
+            child_age_update_rule,
+            prob_child,
+            prob_partner,
+            prob_educ_years,
+            is_expected=False,
+        )
+
+        data.append(df)
+
+    data_base = data[0]
+    data_changed = data[1]
+
+    for level in (0, 1, 2):
+        if level == random_educ_level:
+            continue
+        data_base_educ_level = data_base[data_base["Years_of_Education"] == 10 + level]
+        data_changed_educ_level_ = data_changed[
+            data_changed["Years_of_Education"] == 10 + level
+        ]
+
+        pd.testing.assert_frame_equal(data_base_educ_level, data_changed_educ_level_)
