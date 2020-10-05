@@ -10,7 +10,7 @@ HOURS = np.array([0, 18, 38])
 DATA_LABLES_SIM = [
     "Identifier",
     "Period",
-    "Years_of_Education",
+    "Education_Level",
     "Lagged_Choice",
     "Experience_Part_Time",
     "Experience_Full_Time",

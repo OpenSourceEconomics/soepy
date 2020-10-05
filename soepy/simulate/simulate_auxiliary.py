@@ -22,16 +22,15 @@ def pyth_simulate(
     child_age_update_rule,
     prob_child,
     prob_partner,
-    prob_educ_years,
+    prob_educ_level,
     is_expected,
 ):
     """Simulate agent experiences."""
 
     # Draw random initial conditions
-    educ_years = list(range(model_spec.educ_min, model_spec.educ_max + 1))
     np.random.seed(model_spec.seed_sim)
-    initial_educ_years = np.random.choice(
-        educ_years, model_spec.num_agents_sim, p=prob_educ_years
+    initial_educ_level = np.random.choice(
+        model_spec.num_educ_levels, model_spec.num_agents_sim, p=prob_educ_level
     )
 
     # Draw random type
@@ -57,8 +56,8 @@ def pyth_simulate(
         np.column_stack(
             (
                 np.arange(model_spec.num_agents_sim),
-                initial_educ_years - model_spec.educ_min,
-                initial_educ_years,
+                np.array(model_spec.corresponding_educ_years)[initial_educ_level],
+                initial_educ_level,
                 np.zeros((model_spec.num_agents_sim, 3)),
                 type_,
             )
@@ -72,7 +71,7 @@ def pyth_simulate(
     for period in range(model_spec.num_periods):
 
         initial_states_in_period = initial_states.loc[
-            initial_states.Years_of_Education.eq(period + model_spec.educ_min)
+            initial_states.Period.eq(period)
         ].to_numpy()
 
         # Draw indicator of child appearing in the first period
@@ -86,23 +85,10 @@ def pyth_simulate(
         child_init_age = np.where(kids_init_draw == 0, -1, 0)
 
         # Draw presence of partner in the first period
-        # Determine level of education
-        educ_years_aux = pd.Series(initial_states_in_period[:, 2])
-        educ_level_aux = pd.cut(
-            educ_years_aux,
-            bins=[
-                0,
-                model_spec.low_bound,
-                model_spec.middle_bound,
-                model_spec.high_bound,
-            ],
-            labels=[0, 1, 2],
-        ).to_numpy()
-
         partner_status_init_draw = np.random.binomial(
             size=initial_states_in_period.shape[0],
             n=1,
-            p=prob_partner[period, educ_level_aux],
+            p=prob_partner[period, initial_states_in_period[:, 2]],
         )
 
         # Add columns to state space
@@ -118,7 +104,7 @@ def pyth_simulate(
 
         idx = indexer[
             current_states[:, 1],
-            current_states[:, 2] - model_spec.educ_min,
+            current_states[:, 2],
             current_states[:, 3],
             current_states[:, 4],
             current_states[:, 5],
@@ -190,7 +176,7 @@ def pyth_simulate(
         # Update partner status according to random draw
         partner_current_draw = np.full(current_states.shape[0], np.nan)
         for l in range(3):
-            partner_current_draw[covariates[:, 0][idx] == l] = prob_partner[period, l]
+            partner_current_draw[states[:, 2][idx] == l] = prob_partner[period, l]
 
         # Record period experiences
         rows = np.column_stack(
