@@ -1,0 +1,30 @@
+---
+GENERAL:
+    num_periods: 40
+CONSTANTS:
+    delta: 0.98
+    mu: -0.56
+EDUC:
+    num_educ_levels: 3
+    educ_years_educ_level_low: 0
+    educ_years_educ_level_middle: 2
+    educ_years_educ_level_high: 6
+SIMULATION:
+    seed_sim: 102
+    num_agents_sim: 10
+SOLUTION:
+    seed_emax: 635
+    num_draws_emax: 500
+TAXES_TRANSFERS:
+    benefits_base: 200
+    benefits_kids: 70
+EXOG_PROC:
+    educ_info_file_name: '/Users/boryanailieva/Projects/soepy/doc/tutorial/exog_educ_info_generic.pkl'
+    kids_info_file_name: '/Users/boryanailieva/Projects/soepy/doc/tutorial/exog_child_info.pkl'
+    partner_info_file_name: '/Users/boryanailieva/Projects/soepy/doc/tutorial/exog_partner_info.pkl'
+    child_age_max: 12
+    last_child_bearing_period: 24
+    partner_cf_const: 3
+    partner_cf_age: 0.3
+    partner_cf_age_sq: -0.003
+    partner_cf_educ: 0.03

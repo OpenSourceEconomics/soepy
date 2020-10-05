@@ -17,8 +17,8 @@ def define_child_age_update_rule(model_spec, states, covariates):
     # Age stays at -1 if no kids so far
     child_age_update_rule = np.full(states.shape[0], -1)
     # Age increases by one, if there is a kid
-    child_age_update_rule[np.where(covariates[:, 1] != 0)] = (
-        states[np.where(covariates[:, 1] != 0)][:, 6] + 1
+    child_age_update_rule[np.where(covariates[:, 0] != 0)] = (
+        states[np.where(covariates[:, 0] != 0)][:, 6] + 1
     )
     # Age does not exceed 11.
     child_age_update_rule[child_age_update_rule > model_spec.child_age_max - 1] = 11

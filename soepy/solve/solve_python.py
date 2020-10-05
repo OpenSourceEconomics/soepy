@@ -66,7 +66,9 @@ def pyth_solve(model_params, model_spec, prob_child, prob_partner, is_expected):
         model_params, model_spec, states, covariates, is_expected
     )
 
-    budget_constraint_components = calculate_budget_constraint_components(covariates)
+    budget_constraint_components = calculate_budget_constraint_components(
+        model_spec, states, covariates
+    )
 
     non_employment_benefits = calculate_non_employment_benefits(
         model_spec, states, log_wage_systematic
