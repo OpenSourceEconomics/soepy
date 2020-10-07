@@ -5,10 +5,7 @@ CONSTANTS:
     delta: 0.98
     mu: -0.56
 EDUC:
-    num_educ_levels: 3
-    educ_years_educ_level_low: 0
-    educ_years_educ_level_middle: 2
-    educ_years_educ_level_high: 6
+    educ_years: [0, 2, 6]
 SIMULATION:
     seed_sim: 102
     num_agents_sim: 1000

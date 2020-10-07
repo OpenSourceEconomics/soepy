@@ -99,7 +99,7 @@ def pyth_create_state_space(model_spec):
 
                         # Check if individual has already completed education
                         # and will make a labor supply choice in the period
-                        if model_spec.corresponding_educ_years[educ_level] > period:
+                        if model_spec.educ_years[educ_level] > period:
                             continue
 
                         # Loop over all admissible years of experience
@@ -114,8 +114,7 @@ def pyth_create_state_space(model_spec):
                                 # since individual entered the model
                                 if (
                                     exp_f + exp_p
-                                    > period
-                                    - model_spec.corresponding_educ_years[educ_level]
+                                    > period - model_spec.educ_years[educ_level]
                                 ):
                                     continue
 
@@ -123,10 +122,7 @@ def pyth_create_state_space(model_spec):
                                 # [educ_years + model_params.educ_min, 0, 0, 0]
                                 # for individuals who have just completed education
                                 # and still have no experience in any occupation.
-                                if (
-                                    period
-                                    == model_spec.corresponding_educ_years[educ_level]
-                                ):
+                                if period == model_spec.educ_years[educ_level]:
 
                                     # Assign an additional integer count i
                                     # for entry state
@@ -169,9 +165,7 @@ def pyth_create_state_space(model_spec):
                                         if (choice_lagged != 2) and (
                                             exp_f
                                             == period
-                                            - model_spec.corresponding_educ_years[
-                                                educ_level
-                                            ]
+                                            - model_spec.educ_years[educ_level]
                                         ):
                                             continue
 
@@ -180,9 +174,7 @@ def pyth_create_state_space(model_spec):
                                         if (choice_lagged != 1) and (
                                             exp_p
                                             == period
-                                            - model_spec.corresponding_educ_years[
-                                                educ_level
-                                            ]
+                                            - model_spec.educ_years[educ_level]
                                         ):
                                             continue
 
@@ -201,9 +193,7 @@ def pyth_create_state_space(model_spec):
                                         if (choice_lagged == 0) and (
                                             exp_f + exp_p
                                             == period
-                                            - model_spec.corresponding_educ_years[
-                                                educ_level
-                                            ]
+                                            - model_spec.educ_years[educ_level]
                                         ):
                                             continue
 

@@ -56,7 +56,7 @@ def pyth_simulate(
         np.column_stack(
             (
                 np.arange(model_spec.num_agents_sim),
-                np.array(model_spec.corresponding_educ_years)[initial_educ_level],
+                np.array(model_spec.educ_years)[initial_educ_level],
                 initial_educ_level,
                 np.zeros((model_spec.num_agents_sim, 3)),
                 type_,

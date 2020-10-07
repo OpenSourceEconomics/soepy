@@ -27,19 +27,18 @@ def test_unit_nan():
     constr = {
         "AGENTS": 200,
         "PERIODS": 7,
-        "EDUC_YEARS_EDUC_LEVEL_MIDDLE": np.random.randint(1, 3),
-        "EDUC_YEARS_EDUC_LEVEL_HIGH": np.random.randint(4, 6),
+        "EDUC_YEARS": [0, np.random.randint(1, 3), np.random.randint(4, 6)],
     }
     random_init(constr)
     df = simulate("test.soepy.pkl", "test.soepy.yml")
 
     np.testing.assert_equal(
         df[df["Education_Level"] == 1]["Period"].min(),
-        constr["EDUC_YEARS_EDUC_LEVEL_MIDDLE"],
+        constr["EDUC_YEARS"][1],
     )
     np.testing.assert_equal(
         df[df["Education_Level"] == 2]["Period"].min(),
-        constr["EDUC_YEARS_EDUC_LEVEL_HIGH"],
+        constr["EDUC_YEARS"][2],
     )
 
 
@@ -80,8 +79,7 @@ def test_unit_data_frame_shape():
         constr = dict()
         constr["AGENTS"] = np.random.randint(10, 100)
         constr["PERIODS"] = np.random.randint(7, 10)
-        constr["EDUC_YEARS_EDUC_LEVEL_MIDDLE"] = np.random.randint(1, 2)
-        constr["EDUC_YEARS_EDUC_LEVEL_HIGH"] = np.random.randint(3, 5)
+        constr["EDUC_YEARS"] = [0, np.random.randint(1, 2), np.random.randint(3, 5)]
 
         random_init(constr)
 
@@ -133,8 +131,8 @@ def test_unit_data_frame_shape():
 
         shape = (
             constr["AGENTS"] * constr["PERIODS"]
-            - counts[1] * constr["EDUC_YEARS_EDUC_LEVEL_MIDDLE"]
-            - counts[2] * constr["EDUC_YEARS_EDUC_LEVEL_HIGH"]
+            - counts[1] * constr["EDUC_YEARS"][1]
+            - counts[2] * constr["EDUC_YEARS"][2]
         )
 
         np.testing.assert_array_equal(df.shape[0], shape)
@@ -148,7 +146,7 @@ def test_unit_states_hard_code():
         "model_spec",
         "num_periods num_educ_levels num_types \
          last_child_bearing_period, child_age_max \
-         corresponding_educ_years ",
+         educ_years ",
     )
     model_spec = model_spec(3, 3, 2, 24, 12, [0, 1, 2])
 
@@ -433,7 +431,7 @@ def test_unit_childbearing_age():
         "model_spec",
         "num_periods num_educ_levels num_types \
         last_child_bearing_period child_age_max \
-        corresponding_educ_years",
+        educ_years",
     )
 
     num_periods = randint(1, 11)

@@ -146,11 +146,7 @@ def read_model_spec_init(model_spec_init, model_params):
 
 def expand_model_spec_dict(model_spec_init_dict, model_params_df):
     # Gather education years in list object
-    corresponding_educ_years = [
-        model_spec_init_dict["EDUC"]["educ_years_educ_level_low"],
-        model_spec_init_dict["EDUC"]["educ_years_educ_level_middle"],
-        model_spec_init_dict["EDUC"]["educ_years_educ_level_high"],
-    ]
+    num_educ_levels = len(model_spec_init_dict["EDUC"]["educ_years"])
 
     # Determine number of types
     try:
@@ -160,7 +156,7 @@ def expand_model_spec_dict(model_spec_init_dict, model_params_df):
 
     # Append derived attributes to init_dict
     model_spec_init_dict["DERIVED_ATTR"] = {
-        "corresponding_educ_years": corresponding_educ_years,
+        "num_educ_levels": num_educ_levels,
         "num_types": num_types,
     }
 
