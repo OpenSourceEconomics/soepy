@@ -26,8 +26,8 @@ script:
   - pre-commit run -a
 
   # Run test battery.
-  #- ./development/tests/run_pr_testing.py
-  #- python -c "import soepy; soepy.test()"
+  - ./development/tests/run_pr_testing.py
+  - python -c "import soepy; soepy.test()"
 
   # Monitoring code coverage, previous commands do not
   # create a proper coverage report.

@@ -1,6 +1,5 @@
 import pickle
 import random
-import pytest
 
 import numpy as np
 
@@ -9,7 +8,6 @@ from soepy.soepy_config import TEST_RESOURCES_DIR
 from development.tests.auxiliary.auxiliary import cleanup
 
 
-@pytest.mark.skip(reason="regression vault not adjusted yet")
 def test1():
     """This test runs a random selection of test regression tests from
     our regression test battery.

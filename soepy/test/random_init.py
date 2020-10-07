@@ -32,7 +32,7 @@ def random_init(constr=None):
     if "PERIODS" in constr.keys():
         periods = constr["PERIODS"]
     else:
-        periods = np.random.randint(3, 6)
+        periods = np.random.randint(3, 8)
 
     if "SEED_SIM" in constr.keys():
         seed_sim = constr["SEED_SIM"]
