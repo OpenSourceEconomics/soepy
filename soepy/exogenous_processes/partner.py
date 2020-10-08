@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def gen_prob_partner(model_spec):
-    """ Generates a vector with length `num_periods` which contains
+    """Generates a vector with length `num_periods` which contains
     the probability to get a partner in the corresponding period."""
 
     # Read data frame with information on probability to get a partner

@@ -1,13 +1,15 @@
 import collections
 
 import numpy as np
+import pandas as pd
+import random
 from random import randrange, randint
 
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
-from soepy.exogenous_processes.education import gen_prob_educ_years_vector
+from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
@@ -20,26 +22,36 @@ from soepy.simulate.simulate_auxiliary import pyth_simulate
 
 def test_unit_nan():
     """This test ensures that the data frame only includes individuals that have
-     completed education.
+    completed education.
     """
-    constr = {"AGENTS": 200}
+    constr = {
+        "AGENTS": 200,
+        "PERIODS": 7,
+        "EDUC_YEARS": [0, np.random.randint(1, 3), np.random.randint(4, 6)],
+    }
     random_init(constr)
     df = simulate("test.soepy.pkl", "test.soepy.yml")
 
-    np.testing.assert_equal(df[df["Years_of_Education"] == 11]["Period"].min(), 1)
-    np.testing.assert_equal(df[df["Years_of_Education"] == 12]["Period"].min(), 2)
+    np.testing.assert_equal(
+        df[df["Education_Level"] == 1]["Period"].min(),
+        constr["EDUC_YEARS"][1],
+    )
+    np.testing.assert_equal(
+        df[df["Education_Level"] == 2]["Period"].min(),
+        constr["EDUC_YEARS"][2],
+    )
 
 
 def test_unit_init_print():
     """This test ensures that the init file printing process work as intended. For this
-     purpose we generate random init file specifications import the resulting files,
-     write the specifications to another init file, import it again and comparing both
-      initialization dicts
-      """
+    purpose we generate random init file specifications import the resulting files,
+    write the specifications to another init file, import it again and comparing both
+     initialization dicts
+    """
     order = [
         "GENERAL",
         "CONSTANTS",
-        "INITIAL_CONDITIONS",
+        "EDUC",
         "SIMULATION",
         "SOLUTION",
         "EXOG_PROC",
@@ -60,14 +72,14 @@ def test_unit_init_print():
 
 
 def test_unit_data_frame_shape():
-    """This test ensures that the shape of the simulated data frame corresponds to the
+    """This test ensures that the shape of the simulated data frame corresponds
     to the random specifications of our initialization file.
     """
     for _ in range(5):
         constr = dict()
         constr["AGENTS"] = np.random.randint(10, 100)
-        constr["PERIODS"] = np.random.randint(1, 6)
-        constr["EDUC_MAX"] = np.random.randint(10, min(10 + constr["PERIODS"], 12))
+        constr["PERIODS"] = np.random.randint(7, 10)
+        constr["EDUC_YEARS"] = [0, np.random.randint(1, 2), np.random.randint(3, 5)]
 
         random_init(constr)
 
@@ -76,7 +88,7 @@ def test_unit_data_frame_shape():
 
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner = gen_prob_partner(model_spec)
-        prob_educ_years = gen_prob_educ_years_vector(model_spec)
+        prob_educ_years = gen_prob_educ_level_vector(model_spec)
 
         # Solve
         (
@@ -88,7 +100,11 @@ def test_unit_data_frame_shape():
             emaxs,
             child_age_update_rule,
         ) = pyth_solve(
-            model_params, model_spec, prob_child, prob_partner, is_expected=False,
+            model_params,
+            model_spec,
+            prob_child,
+            prob_partner,
+            is_expected=False,
         )
 
         # Simulate
@@ -110,10 +126,14 @@ def test_unit_data_frame_shape():
 
         # Count individuals with each educ level
         counts = []
-        for i in [10, 11, 12]:
-            counts.append(df[df["Years_of_Education"] == i]["Identifier"].nunique())
+        for i in [0, 1, 2]:
+            counts.append(df[df["Education_Level"] == i]["Identifier"].nunique())
 
-        shape = constr["AGENTS"] * constr["PERIODS"] - counts[1] - counts[2] * 2
+        shape = (
+            constr["AGENTS"] * constr["PERIODS"]
+            - counts[1] * constr["EDUC_YEARS"][1]
+            - counts[2] * constr["EDUC_YEARS"][2]
+        )
 
         np.testing.assert_array_equal(df.shape[0], shape)
 
@@ -124,278 +144,279 @@ def test_unit_states_hard_code():
 
     model_spec = collections.namedtuple(
         "model_spec",
-        "num_periods educ_range educ_min num_types \
-         last_child_bearing_period, child_age_max",
+        "num_periods num_educ_levels num_types \
+         last_child_bearing_period, child_age_max \
+         educ_years ",
     )
-    model_spec = model_spec(3, 3, 10, 2, 24, 12)
+    model_spec = model_spec(3, 3, 2, 24, 12, [0, 1, 2])
 
     states, _ = pyth_create_state_space(model_spec)
 
     states_true = [
-        [0, 10, 0, 0, 0, 0, -1, 0],
-        [0, 10, 0, 0, 0, 0, 0, 0],
-        [0, 10, 0, 0, 0, 0, -1, 1],
-        [0, 10, 0, 0, 0, 0, 0, 1],
-        [0, 10, 0, 0, 0, 1, -1, 0],
-        [0, 10, 0, 0, 0, 1, 0, 0],
-        [0, 10, 0, 0, 0, 1, -1, 1],
-        [0, 10, 0, 0, 0, 1, 0, 1],
-        [1, 10, 0, 0, 0, 0, -1, 0],
-        [1, 10, 1, 1, 0, 0, -1, 0],
-        [1, 10, 2, 0, 1, 0, -1, 0],
-        [1, 11, 0, 0, 0, 0, -1, 0],
-        [1, 10, 0, 0, 0, 0, 0, 0],
-        [1, 10, 1, 1, 0, 0, 0, 0],
-        [1, 10, 2, 0, 1, 0, 0, 0],
-        [1, 11, 0, 0, 0, 0, 0, 0],
-        [1, 10, 0, 0, 0, 0, 1, 0],
-        [1, 10, 1, 1, 0, 0, 1, 0],
-        [1, 10, 2, 0, 1, 0, 1, 0],
-        [1, 11, 0, 0, 0, 0, 1, 0],
-        [1, 10, 0, 0, 0, 0, -1, 1],
-        [1, 10, 1, 1, 0, 0, -1, 1],
-        [1, 10, 2, 0, 1, 0, -1, 1],
-        [1, 11, 0, 0, 0, 0, -1, 1],
-        [1, 10, 0, 0, 0, 0, 0, 1],
-        [1, 10, 1, 1, 0, 0, 0, 1],
-        [1, 10, 2, 0, 1, 0, 0, 1],
-        [1, 11, 0, 0, 0, 0, 0, 1],
-        [1, 10, 0, 0, 0, 0, 1, 1],
-        [1, 10, 1, 1, 0, 0, 1, 1],
-        [1, 10, 2, 0, 1, 0, 1, 1],
-        [1, 11, 0, 0, 0, 0, 1, 1],
-        [1, 10, 0, 0, 0, 1, -1, 0],
-        [1, 10, 1, 1, 0, 1, -1, 0],
-        [1, 10, 2, 0, 1, 1, -1, 0],
-        [1, 11, 0, 0, 0, 1, -1, 0],
-        [1, 10, 0, 0, 0, 1, 0, 0],
-        [1, 10, 1, 1, 0, 1, 0, 0],
-        [1, 10, 2, 0, 1, 1, 0, 0],
-        [1, 11, 0, 0, 0, 1, 0, 0],
-        [1, 10, 0, 0, 0, 1, 1, 0],
-        [1, 10, 1, 1, 0, 1, 1, 0],
-        [1, 10, 2, 0, 1, 1, 1, 0],
-        [1, 11, 0, 0, 0, 1, 1, 0],
-        [1, 10, 0, 0, 0, 1, -1, 1],
-        [1, 10, 1, 1, 0, 1, -1, 1],
-        [1, 10, 2, 0, 1, 1, -1, 1],
-        [1, 11, 0, 0, 0, 1, -1, 1],
-        [1, 10, 0, 0, 0, 1, 0, 1],
-        [1, 10, 1, 1, 0, 1, 0, 1],
-        [1, 10, 2, 0, 1, 1, 0, 1],
-        [1, 11, 0, 0, 0, 1, 0, 1],
-        [1, 10, 0, 0, 0, 1, 1, 1],
-        [1, 10, 1, 1, 0, 1, 1, 1],
-        [1, 10, 2, 0, 1, 1, 1, 1],
-        [1, 11, 0, 0, 0, 1, 1, 1],
-        [2, 10, 0, 0, 0, 0, -1, 0],
-        [2, 10, 0, 1, 0, 0, -1, 0],
-        [2, 10, 1, 1, 0, 0, -1, 0],
-        [2, 10, 1, 2, 0, 0, -1, 0],
-        [2, 10, 0, 0, 1, 0, -1, 0],
-        [2, 10, 2, 0, 1, 0, -1, 0],
-        [2, 10, 1, 1, 1, 0, -1, 0],
-        [2, 10, 2, 1, 1, 0, -1, 0],
-        [2, 10, 2, 0, 2, 0, -1, 0],
-        [2, 11, 0, 0, 0, 0, -1, 0],
-        [2, 11, 1, 1, 0, 0, -1, 0],
-        [2, 11, 2, 0, 1, 0, -1, 0],
-        [2, 12, 0, 0, 0, 0, -1, 0],
-        [2, 10, 0, 0, 0, 0, 0, 0],
-        [2, 10, 0, 1, 0, 0, 0, 0],
-        [2, 10, 1, 1, 0, 0, 0, 0],
-        [2, 10, 1, 2, 0, 0, 0, 0],
-        [2, 10, 0, 0, 1, 0, 0, 0],
-        [2, 10, 2, 0, 1, 0, 0, 0],
-        [2, 10, 1, 1, 1, 0, 0, 0],
-        [2, 10, 2, 1, 1, 0, 0, 0],
-        [2, 10, 2, 0, 2, 0, 0, 0],
-        [2, 11, 0, 0, 0, 0, 0, 0],
-        [2, 11, 1, 1, 0, 0, 0, 0],
-        [2, 11, 2, 0, 1, 0, 0, 0],
-        [2, 12, 0, 0, 0, 0, 0, 0],
-        [2, 10, 0, 0, 0, 0, 1, 0],
-        [2, 10, 0, 1, 0, 0, 1, 0],
-        [2, 10, 1, 1, 0, 0, 1, 0],
-        [2, 10, 1, 2, 0, 0, 1, 0],
-        [2, 10, 0, 0, 1, 0, 1, 0],
-        [2, 10, 2, 0, 1, 0, 1, 0],
-        [2, 10, 1, 1, 1, 0, 1, 0],
-        [2, 10, 2, 1, 1, 0, 1, 0],
-        [2, 10, 2, 0, 2, 0, 1, 0],
-        [2, 11, 0, 0, 0, 0, 1, 0],
-        [2, 11, 1, 1, 0, 0, 1, 0],
-        [2, 11, 2, 0, 1, 0, 1, 0],
-        [2, 12, 0, 0, 0, 0, 1, 0],
-        [2, 10, 0, 0, 0, 0, 2, 0],
-        [2, 10, 0, 1, 0, 0, 2, 0],
-        [2, 10, 1, 1, 0, 0, 2, 0],
-        [2, 10, 1, 2, 0, 0, 2, 0],
-        [2, 10, 0, 0, 1, 0, 2, 0],
-        [2, 10, 2, 0, 1, 0, 2, 0],
-        [2, 10, 1, 1, 1, 0, 2, 0],
-        [2, 10, 2, 1, 1, 0, 2, 0],
-        [2, 10, 2, 0, 2, 0, 2, 0],
-        [2, 11, 0, 0, 0, 0, 2, 0],
-        [2, 11, 1, 1, 0, 0, 2, 0],
-        [2, 11, 2, 0, 1, 0, 2, 0],
-        [2, 12, 0, 0, 0, 0, 2, 0],
-        [2, 10, 0, 0, 0, 0, -1, 1],
-        [2, 10, 0, 1, 0, 0, -1, 1],
-        [2, 10, 1, 1, 0, 0, -1, 1],
-        [2, 10, 1, 2, 0, 0, -1, 1],
-        [2, 10, 0, 0, 1, 0, -1, 1],
-        [2, 10, 2, 0, 1, 0, -1, 1],
-        [2, 10, 1, 1, 1, 0, -1, 1],
-        [2, 10, 2, 1, 1, 0, -1, 1],
-        [2, 10, 2, 0, 2, 0, -1, 1],
-        [2, 11, 0, 0, 0, 0, -1, 1],
-        [2, 11, 1, 1, 0, 0, -1, 1],
-        [2, 11, 2, 0, 1, 0, -1, 1],
-        [2, 12, 0, 0, 0, 0, -1, 1],
-        [2, 10, 0, 0, 0, 0, 0, 1],
-        [2, 10, 0, 1, 0, 0, 0, 1],
-        [2, 10, 1, 1, 0, 0, 0, 1],
-        [2, 10, 1, 2, 0, 0, 0, 1],
-        [2, 10, 0, 0, 1, 0, 0, 1],
-        [2, 10, 2, 0, 1, 0, 0, 1],
-        [2, 10, 1, 1, 1, 0, 0, 1],
-        [2, 10, 2, 1, 1, 0, 0, 1],
-        [2, 10, 2, 0, 2, 0, 0, 1],
-        [2, 11, 0, 0, 0, 0, 0, 1],
-        [2, 11, 1, 1, 0, 0, 0, 1],
-        [2, 11, 2, 0, 1, 0, 0, 1],
-        [2, 12, 0, 0, 0, 0, 0, 1],
-        [2, 10, 0, 0, 0, 0, 1, 1],
-        [2, 10, 0, 1, 0, 0, 1, 1],
-        [2, 10, 1, 1, 0, 0, 1, 1],
-        [2, 10, 1, 2, 0, 0, 1, 1],
-        [2, 10, 0, 0, 1, 0, 1, 1],
-        [2, 10, 2, 0, 1, 0, 1, 1],
-        [2, 10, 1, 1, 1, 0, 1, 1],
-        [2, 10, 2, 1, 1, 0, 1, 1],
-        [2, 10, 2, 0, 2, 0, 1, 1],
-        [2, 11, 0, 0, 0, 0, 1, 1],
-        [2, 11, 1, 1, 0, 0, 1, 1],
-        [2, 11, 2, 0, 1, 0, 1, 1],
-        [2, 12, 0, 0, 0, 0, 1, 1],
-        [2, 10, 0, 0, 0, 0, 2, 1],
-        [2, 10, 0, 1, 0, 0, 2, 1],
-        [2, 10, 1, 1, 0, 0, 2, 1],
-        [2, 10, 1, 2, 0, 0, 2, 1],
-        [2, 10, 0, 0, 1, 0, 2, 1],
-        [2, 10, 2, 0, 1, 0, 2, 1],
-        [2, 10, 1, 1, 1, 0, 2, 1],
-        [2, 10, 2, 1, 1, 0, 2, 1],
-        [2, 10, 2, 0, 2, 0, 2, 1],
-        [2, 11, 0, 0, 0, 0, 2, 1],
-        [2, 11, 1, 1, 0, 0, 2, 1],
-        [2, 11, 2, 0, 1, 0, 2, 1],
-        [2, 12, 0, 0, 0, 0, 2, 1],
-        [2, 10, 0, 0, 0, 1, -1, 0],
-        [2, 10, 0, 1, 0, 1, -1, 0],
-        [2, 10, 1, 1, 0, 1, -1, 0],
-        [2, 10, 1, 2, 0, 1, -1, 0],
-        [2, 10, 0, 0, 1, 1, -1, 0],
-        [2, 10, 2, 0, 1, 1, -1, 0],
-        [2, 10, 1, 1, 1, 1, -1, 0],
-        [2, 10, 2, 1, 1, 1, -1, 0],
-        [2, 10, 2, 0, 2, 1, -1, 0],
-        [2, 11, 0, 0, 0, 1, -1, 0],
-        [2, 11, 1, 1, 0, 1, -1, 0],
-        [2, 11, 2, 0, 1, 1, -1, 0],
-        [2, 12, 0, 0, 0, 1, -1, 0],
-        [2, 10, 0, 0, 0, 1, 0, 0],
-        [2, 10, 0, 1, 0, 1, 0, 0],
-        [2, 10, 1, 1, 0, 1, 0, 0],
-        [2, 10, 1, 2, 0, 1, 0, 0],
-        [2, 10, 0, 0, 1, 1, 0, 0],
-        [2, 10, 2, 0, 1, 1, 0, 0],
-        [2, 10, 1, 1, 1, 1, 0, 0],
-        [2, 10, 2, 1, 1, 1, 0, 0],
-        [2, 10, 2, 0, 2, 1, 0, 0],
-        [2, 11, 0, 0, 0, 1, 0, 0],
-        [2, 11, 1, 1, 0, 1, 0, 0],
-        [2, 11, 2, 0, 1, 1, 0, 0],
-        [2, 12, 0, 0, 0, 1, 0, 0],
-        [2, 10, 0, 0, 0, 1, 1, 0],
-        [2, 10, 0, 1, 0, 1, 1, 0],
-        [2, 10, 1, 1, 0, 1, 1, 0],
-        [2, 10, 1, 2, 0, 1, 1, 0],
-        [2, 10, 0, 0, 1, 1, 1, 0],
-        [2, 10, 2, 0, 1, 1, 1, 0],
-        [2, 10, 1, 1, 1, 1, 1, 0],
-        [2, 10, 2, 1, 1, 1, 1, 0],
-        [2, 10, 2, 0, 2, 1, 1, 0],
-        [2, 11, 0, 0, 0, 1, 1, 0],
-        [2, 11, 1, 1, 0, 1, 1, 0],
-        [2, 11, 2, 0, 1, 1, 1, 0],
-        [2, 12, 0, 0, 0, 1, 1, 0],
-        [2, 10, 0, 0, 0, 1, 2, 0],
-        [2, 10, 0, 1, 0, 1, 2, 0],
-        [2, 10, 1, 1, 0, 1, 2, 0],
-        [2, 10, 1, 2, 0, 1, 2, 0],
-        [2, 10, 0, 0, 1, 1, 2, 0],
-        [2, 10, 2, 0, 1, 1, 2, 0],
-        [2, 10, 1, 1, 1, 1, 2, 0],
-        [2, 10, 2, 1, 1, 1, 2, 0],
-        [2, 10, 2, 0, 2, 1, 2, 0],
-        [2, 11, 0, 0, 0, 1, 2, 0],
-        [2, 11, 1, 1, 0, 1, 2, 0],
-        [2, 11, 2, 0, 1, 1, 2, 0],
-        [2, 12, 0, 0, 0, 1, 2, 0],
-        [2, 10, 0, 0, 0, 1, -1, 1],
-        [2, 10, 0, 1, 0, 1, -1, 1],
-        [2, 10, 1, 1, 0, 1, -1, 1],
-        [2, 10, 1, 2, 0, 1, -1, 1],
-        [2, 10, 0, 0, 1, 1, -1, 1],
-        [2, 10, 2, 0, 1, 1, -1, 1],
-        [2, 10, 1, 1, 1, 1, -1, 1],
-        [2, 10, 2, 1, 1, 1, -1, 1],
-        [2, 10, 2, 0, 2, 1, -1, 1],
-        [2, 11, 0, 0, 0, 1, -1, 1],
-        [2, 11, 1, 1, 0, 1, -1, 1],
-        [2, 11, 2, 0, 1, 1, -1, 1],
-        [2, 12, 0, 0, 0, 1, -1, 1],
-        [2, 10, 0, 0, 0, 1, 0, 1],
-        [2, 10, 0, 1, 0, 1, 0, 1],
-        [2, 10, 1, 1, 0, 1, 0, 1],
-        [2, 10, 1, 2, 0, 1, 0, 1],
-        [2, 10, 0, 0, 1, 1, 0, 1],
-        [2, 10, 2, 0, 1, 1, 0, 1],
-        [2, 10, 1, 1, 1, 1, 0, 1],
-        [2, 10, 2, 1, 1, 1, 0, 1],
-        [2, 10, 2, 0, 2, 1, 0, 1],
-        [2, 11, 0, 0, 0, 1, 0, 1],
-        [2, 11, 1, 1, 0, 1, 0, 1],
-        [2, 11, 2, 0, 1, 1, 0, 1],
-        [2, 12, 0, 0, 0, 1, 0, 1],
-        [2, 10, 0, 0, 0, 1, 1, 1],
-        [2, 10, 0, 1, 0, 1, 1, 1],
-        [2, 10, 1, 1, 0, 1, 1, 1],
-        [2, 10, 1, 2, 0, 1, 1, 1],
-        [2, 10, 0, 0, 1, 1, 1, 1],
-        [2, 10, 2, 0, 1, 1, 1, 1],
-        [2, 10, 1, 1, 1, 1, 1, 1],
-        [2, 10, 2, 1, 1, 1, 1, 1],
-        [2, 10, 2, 0, 2, 1, 1, 1],
-        [2, 11, 0, 0, 0, 1, 1, 1],
-        [2, 11, 1, 1, 0, 1, 1, 1],
-        [2, 11, 2, 0, 1, 1, 1, 1],
-        [2, 12, 0, 0, 0, 1, 1, 1],
-        [2, 10, 0, 0, 0, 1, 2, 1],
-        [2, 10, 0, 1, 0, 1, 2, 1],
-        [2, 10, 1, 1, 0, 1, 2, 1],
-        [2, 10, 1, 2, 0, 1, 2, 1],
-        [2, 10, 0, 0, 1, 1, 2, 1],
-        [2, 10, 2, 0, 1, 1, 2, 1],
-        [2, 10, 1, 1, 1, 1, 2, 1],
-        [2, 10, 2, 1, 1, 1, 2, 1],
-        [2, 10, 2, 0, 2, 1, 2, 1],
-        [2, 11, 0, 0, 0, 1, 2, 1],
-        [2, 11, 1, 1, 0, 1, 2, 1],
-        [2, 11, 2, 0, 1, 1, 2, 1],
-        [2, 12, 0, 0, 0, 1, 2, 1],
+        [0, 0, 0, 0, 0, 0, -1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, -1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 1, -1, 0],
+        [0, 0, 0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0, 1, -1, 1],
+        [0, 0, 0, 0, 0, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, -1, 0],
+        [1, 0, 1, 1, 0, 0, -1, 0],
+        [1, 0, 2, 0, 1, 0, -1, 0],
+        [1, 1, 0, 0, 0, 0, -1, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 1, 1, 0, 0, 0, 0],
+        [1, 0, 2, 0, 1, 0, 0, 0],
+        [1, 1, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 1, 0],
+        [1, 0, 1, 1, 0, 0, 1, 0],
+        [1, 0, 2, 0, 1, 0, 1, 0],
+        [1, 1, 0, 0, 0, 0, 1, 0],
+        [1, 0, 0, 0, 0, 0, -1, 1],
+        [1, 0, 1, 1, 0, 0, -1, 1],
+        [1, 0, 2, 0, 1, 0, -1, 1],
+        [1, 1, 0, 0, 0, 0, -1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 1, 1, 0, 0, 0, 1],
+        [1, 0, 2, 0, 1, 0, 0, 1],
+        [1, 1, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1, 1],
+        [1, 0, 1, 1, 0, 0, 1, 1],
+        [1, 0, 2, 0, 1, 0, 1, 1],
+        [1, 1, 0, 0, 0, 0, 1, 1],
+        [1, 0, 0, 0, 0, 1, -1, 0],
+        [1, 0, 1, 1, 0, 1, -1, 0],
+        [1, 0, 2, 0, 1, 1, -1, 0],
+        [1, 1, 0, 0, 0, 1, -1, 0],
+        [1, 0, 0, 0, 0, 1, 0, 0],
+        [1, 0, 1, 1, 0, 1, 0, 0],
+        [1, 0, 2, 0, 1, 1, 0, 0],
+        [1, 1, 0, 0, 0, 1, 0, 0],
+        [1, 0, 0, 0, 0, 1, 1, 0],
+        [1, 0, 1, 1, 0, 1, 1, 0],
+        [1, 0, 2, 0, 1, 1, 1, 0],
+        [1, 1, 0, 0, 0, 1, 1, 0],
+        [1, 0, 0, 0, 0, 1, -1, 1],
+        [1, 0, 1, 1, 0, 1, -1, 1],
+        [1, 0, 2, 0, 1, 1, -1, 1],
+        [1, 1, 0, 0, 0, 1, -1, 1],
+        [1, 0, 0, 0, 0, 1, 0, 1],
+        [1, 0, 1, 1, 0, 1, 0, 1],
+        [1, 0, 2, 0, 1, 1, 0, 1],
+        [1, 1, 0, 0, 0, 1, 0, 1],
+        [1, 0, 0, 0, 0, 1, 1, 1],
+        [1, 0, 1, 1, 0, 1, 1, 1],
+        [1, 0, 2, 0, 1, 1, 1, 1],
+        [1, 1, 0, 0, 0, 1, 1, 1],
+        [2, 0, 0, 0, 0, 0, -1, 0],
+        [2, 0, 0, 1, 0, 0, -1, 0],
+        [2, 0, 1, 1, 0, 0, -1, 0],
+        [2, 0, 1, 2, 0, 0, -1, 0],
+        [2, 0, 0, 0, 1, 0, -1, 0],
+        [2, 0, 2, 0, 1, 0, -1, 0],
+        [2, 0, 1, 1, 1, 0, -1, 0],
+        [2, 0, 2, 1, 1, 0, -1, 0],
+        [2, 0, 2, 0, 2, 0, -1, 0],
+        [2, 1, 0, 0, 0, 0, -1, 0],
+        [2, 1, 1, 1, 0, 0, -1, 0],
+        [2, 1, 2, 0, 1, 0, -1, 0],
+        [2, 2, 0, 0, 0, 0, -1, 0],
+        [2, 0, 0, 0, 0, 0, 0, 0],
+        [2, 0, 0, 1, 0, 0, 0, 0],
+        [2, 0, 1, 1, 0, 0, 0, 0],
+        [2, 0, 1, 2, 0, 0, 0, 0],
+        [2, 0, 0, 0, 1, 0, 0, 0],
+        [2, 0, 2, 0, 1, 0, 0, 0],
+        [2, 0, 1, 1, 1, 0, 0, 0],
+        [2, 0, 2, 1, 1, 0, 0, 0],
+        [2, 0, 2, 0, 2, 0, 0, 0],
+        [2, 1, 0, 0, 0, 0, 0, 0],
+        [2, 1, 1, 1, 0, 0, 0, 0],
+        [2, 1, 2, 0, 1, 0, 0, 0],
+        [2, 2, 0, 0, 0, 0, 0, 0],
+        [2, 0, 0, 0, 0, 0, 1, 0],
+        [2, 0, 0, 1, 0, 0, 1, 0],
+        [2, 0, 1, 1, 0, 0, 1, 0],
+        [2, 0, 1, 2, 0, 0, 1, 0],
+        [2, 0, 0, 0, 1, 0, 1, 0],
+        [2, 0, 2, 0, 1, 0, 1, 0],
+        [2, 0, 1, 1, 1, 0, 1, 0],
+        [2, 0, 2, 1, 1, 0, 1, 0],
+        [2, 0, 2, 0, 2, 0, 1, 0],
+        [2, 1, 0, 0, 0, 0, 1, 0],
+        [2, 1, 1, 1, 0, 0, 1, 0],
+        [2, 1, 2, 0, 1, 0, 1, 0],
+        [2, 2, 0, 0, 0, 0, 1, 0],
+        [2, 0, 0, 0, 0, 0, 2, 0],
+        [2, 0, 0, 1, 0, 0, 2, 0],
+        [2, 0, 1, 1, 0, 0, 2, 0],
+        [2, 0, 1, 2, 0, 0, 2, 0],
+        [2, 0, 0, 0, 1, 0, 2, 0],
+        [2, 0, 2, 0, 1, 0, 2, 0],
+        [2, 0, 1, 1, 1, 0, 2, 0],
+        [2, 0, 2, 1, 1, 0, 2, 0],
+        [2, 0, 2, 0, 2, 0, 2, 0],
+        [2, 1, 0, 0, 0, 0, 2, 0],
+        [2, 1, 1, 1, 0, 0, 2, 0],
+        [2, 1, 2, 0, 1, 0, 2, 0],
+        [2, 2, 0, 0, 0, 0, 2, 0],
+        [2, 0, 0, 0, 0, 0, -1, 1],
+        [2, 0, 0, 1, 0, 0, -1, 1],
+        [2, 0, 1, 1, 0, 0, -1, 1],
+        [2, 0, 1, 2, 0, 0, -1, 1],
+        [2, 0, 0, 0, 1, 0, -1, 1],
+        [2, 0, 2, 0, 1, 0, -1, 1],
+        [2, 0, 1, 1, 1, 0, -1, 1],
+        [2, 0, 2, 1, 1, 0, -1, 1],
+        [2, 0, 2, 0, 2, 0, -1, 1],
+        [2, 1, 0, 0, 0, 0, -1, 1],
+        [2, 1, 1, 1, 0, 0, -1, 1],
+        [2, 1, 2, 0, 1, 0, -1, 1],
+        [2, 2, 0, 0, 0, 0, -1, 1],
+        [2, 0, 0, 0, 0, 0, 0, 1],
+        [2, 0, 0, 1, 0, 0, 0, 1],
+        [2, 0, 1, 1, 0, 0, 0, 1],
+        [2, 0, 1, 2, 0, 0, 0, 1],
+        [2, 0, 0, 0, 1, 0, 0, 1],
+        [2, 0, 2, 0, 1, 0, 0, 1],
+        [2, 0, 1, 1, 1, 0, 0, 1],
+        [2, 0, 2, 1, 1, 0, 0, 1],
+        [2, 0, 2, 0, 2, 0, 0, 1],
+        [2, 1, 0, 0, 0, 0, 0, 1],
+        [2, 1, 1, 1, 0, 0, 0, 1],
+        [2, 1, 2, 0, 1, 0, 0, 1],
+        [2, 2, 0, 0, 0, 0, 0, 1],
+        [2, 0, 0, 0, 0, 0, 1, 1],
+        [2, 0, 0, 1, 0, 0, 1, 1],
+        [2, 0, 1, 1, 0, 0, 1, 1],
+        [2, 0, 1, 2, 0, 0, 1, 1],
+        [2, 0, 0, 0, 1, 0, 1, 1],
+        [2, 0, 2, 0, 1, 0, 1, 1],
+        [2, 0, 1, 1, 1, 0, 1, 1],
+        [2, 0, 2, 1, 1, 0, 1, 1],
+        [2, 0, 2, 0, 2, 0, 1, 1],
+        [2, 1, 0, 0, 0, 0, 1, 1],
+        [2, 1, 1, 1, 0, 0, 1, 1],
+        [2, 1, 2, 0, 1, 0, 1, 1],
+        [2, 2, 0, 0, 0, 0, 1, 1],
+        [2, 0, 0, 0, 0, 0, 2, 1],
+        [2, 0, 0, 1, 0, 0, 2, 1],
+        [2, 0, 1, 1, 0, 0, 2, 1],
+        [2, 0, 1, 2, 0, 0, 2, 1],
+        [2, 0, 0, 0, 1, 0, 2, 1],
+        [2, 0, 2, 0, 1, 0, 2, 1],
+        [2, 0, 1, 1, 1, 0, 2, 1],
+        [2, 0, 2, 1, 1, 0, 2, 1],
+        [2, 0, 2, 0, 2, 0, 2, 1],
+        [2, 1, 0, 0, 0, 0, 2, 1],
+        [2, 1, 1, 1, 0, 0, 2, 1],
+        [2, 1, 2, 0, 1, 0, 2, 1],
+        [2, 2, 0, 0, 0, 0, 2, 1],
+        [2, 0, 0, 0, 0, 1, -1, 0],
+        [2, 0, 0, 1, 0, 1, -1, 0],
+        [2, 0, 1, 1, 0, 1, -1, 0],
+        [2, 0, 1, 2, 0, 1, -1, 0],
+        [2, 0, 0, 0, 1, 1, -1, 0],
+        [2, 0, 2, 0, 1, 1, -1, 0],
+        [2, 0, 1, 1, 1, 1, -1, 0],
+        [2, 0, 2, 1, 1, 1, -1, 0],
+        [2, 0, 2, 0, 2, 1, -1, 0],
+        [2, 1, 0, 0, 0, 1, -1, 0],
+        [2, 1, 1, 1, 0, 1, -1, 0],
+        [2, 1, 2, 0, 1, 1, -1, 0],
+        [2, 2, 0, 0, 0, 1, -1, 0],
+        [2, 0, 0, 0, 0, 1, 0, 0],
+        [2, 0, 0, 1, 0, 1, 0, 0],
+        [2, 0, 1, 1, 0, 1, 0, 0],
+        [2, 0, 1, 2, 0, 1, 0, 0],
+        [2, 0, 0, 0, 1, 1, 0, 0],
+        [2, 0, 2, 0, 1, 1, 0, 0],
+        [2, 0, 1, 1, 1, 1, 0, 0],
+        [2, 0, 2, 1, 1, 1, 0, 0],
+        [2, 0, 2, 0, 2, 1, 0, 0],
+        [2, 1, 0, 0, 0, 1, 0, 0],
+        [2, 1, 1, 1, 0, 1, 0, 0],
+        [2, 1, 2, 0, 1, 1, 0, 0],
+        [2, 2, 0, 0, 0, 1, 0, 0],
+        [2, 0, 0, 0, 0, 1, 1, 0],
+        [2, 0, 0, 1, 0, 1, 1, 0],
+        [2, 0, 1, 1, 0, 1, 1, 0],
+        [2, 0, 1, 2, 0, 1, 1, 0],
+        [2, 0, 0, 0, 1, 1, 1, 0],
+        [2, 0, 2, 0, 1, 1, 1, 0],
+        [2, 0, 1, 1, 1, 1, 1, 0],
+        [2, 0, 2, 1, 1, 1, 1, 0],
+        [2, 0, 2, 0, 2, 1, 1, 0],
+        [2, 1, 0, 0, 0, 1, 1, 0],
+        [2, 1, 1, 1, 0, 1, 1, 0],
+        [2, 1, 2, 0, 1, 1, 1, 0],
+        [2, 2, 0, 0, 0, 1, 1, 0],
+        [2, 0, 0, 0, 0, 1, 2, 0],
+        [2, 0, 0, 1, 0, 1, 2, 0],
+        [2, 0, 1, 1, 0, 1, 2, 0],
+        [2, 0, 1, 2, 0, 1, 2, 0],
+        [2, 0, 0, 0, 1, 1, 2, 0],
+        [2, 0, 2, 0, 1, 1, 2, 0],
+        [2, 0, 1, 1, 1, 1, 2, 0],
+        [2, 0, 2, 1, 1, 1, 2, 0],
+        [2, 0, 2, 0, 2, 1, 2, 0],
+        [2, 1, 0, 0, 0, 1, 2, 0],
+        [2, 1, 1, 1, 0, 1, 2, 0],
+        [2, 1, 2, 0, 1, 1, 2, 0],
+        [2, 2, 0, 0, 0, 1, 2, 0],
+        [2, 0, 0, 0, 0, 1, -1, 1],
+        [2, 0, 0, 1, 0, 1, -1, 1],
+        [2, 0, 1, 1, 0, 1, -1, 1],
+        [2, 0, 1, 2, 0, 1, -1, 1],
+        [2, 0, 0, 0, 1, 1, -1, 1],
+        [2, 0, 2, 0, 1, 1, -1, 1],
+        [2, 0, 1, 1, 1, 1, -1, 1],
+        [2, 0, 2, 1, 1, 1, -1, 1],
+        [2, 0, 2, 0, 2, 1, -1, 1],
+        [2, 1, 0, 0, 0, 1, -1, 1],
+        [2, 1, 1, 1, 0, 1, -1, 1],
+        [2, 1, 2, 0, 1, 1, -1, 1],
+        [2, 2, 0, 0, 0, 1, -1, 1],
+        [2, 0, 0, 0, 0, 1, 0, 1],
+        [2, 0, 0, 1, 0, 1, 0, 1],
+        [2, 0, 1, 1, 0, 1, 0, 1],
+        [2, 0, 1, 2, 0, 1, 0, 1],
+        [2, 0, 0, 0, 1, 1, 0, 1],
+        [2, 0, 2, 0, 1, 1, 0, 1],
+        [2, 0, 1, 1, 1, 1, 0, 1],
+        [2, 0, 2, 1, 1, 1, 0, 1],
+        [2, 0, 2, 0, 2, 1, 0, 1],
+        [2, 1, 0, 0, 0, 1, 0, 1],
+        [2, 1, 1, 1, 0, 1, 0, 1],
+        [2, 1, 2, 0, 1, 1, 0, 1],
+        [2, 2, 0, 0, 0, 1, 0, 1],
+        [2, 0, 0, 0, 0, 1, 1, 1],
+        [2, 0, 0, 1, 0, 1, 1, 1],
+        [2, 0, 1, 1, 0, 1, 1, 1],
+        [2, 0, 1, 2, 0, 1, 1, 1],
+        [2, 0, 0, 0, 1, 1, 1, 1],
+        [2, 0, 2, 0, 1, 1, 1, 1],
+        [2, 0, 1, 1, 1, 1, 1, 1],
+        [2, 0, 2, 1, 1, 1, 1, 1],
+        [2, 0, 2, 0, 2, 1, 1, 1],
+        [2, 1, 0, 0, 0, 1, 1, 1],
+        [2, 1, 1, 1, 0, 1, 1, 1],
+        [2, 1, 2, 0, 1, 1, 1, 1],
+        [2, 2, 0, 0, 0, 1, 1, 1],
+        [2, 0, 0, 0, 0, 1, 2, 1],
+        [2, 0, 0, 1, 0, 1, 2, 1],
+        [2, 0, 1, 1, 0, 1, 2, 1],
+        [2, 0, 1, 2, 0, 1, 2, 1],
+        [2, 0, 0, 0, 1, 1, 2, 1],
+        [2, 0, 2, 0, 1, 1, 2, 1],
+        [2, 0, 1, 1, 1, 1, 2, 1],
+        [2, 0, 2, 1, 1, 1, 2, 1],
+        [2, 0, 2, 0, 2, 1, 2, 1],
+        [2, 1, 0, 0, 0, 1, 2, 1],
+        [2, 1, 1, 1, 0, 1, 2, 1],
+        [2, 1, 2, 0, 1, 1, 2, 1],
+        [2, 2, 0, 0, 0, 1, 2, 1],
     ]
 
     np.testing.assert_array_equal(states_true, states)
@@ -408,13 +429,14 @@ def test_unit_childbearing_age():
 
     model_spec = collections.namedtuple(
         "model_spec",
-        "num_periods educ_range educ_min num_types \
-        last_child_bearing_period child_age_max",
+        "num_periods num_educ_levels num_types \
+        last_child_bearing_period child_age_max \
+        educ_years",
     )
 
     num_periods = randint(1, 11)
     last_child_bearing_period = randrange(num_periods)
-    model_spec = model_spec(num_periods, 3, 10, 2, last_child_bearing_period, 12)
+    model_spec = model_spec(num_periods, 3, 2, last_child_bearing_period, 12, [0, 1, 2])
 
     states, _ = pyth_create_state_space(model_spec)
 
@@ -440,7 +462,7 @@ def test_no_children_prob_0():
 
     constr = {
         "AGENTS": 200,
-        "PERIODS": 6,
+        "PERIODS": 10,
     }
     random_init(constr)
 
@@ -451,7 +473,7 @@ def test_no_children_prob_0():
     prob_child = np.full(model_spec.num_periods, 0.00)
 
     prob_partner = gen_prob_partner(model_spec)
-    prob_educ_years = gen_prob_educ_years_vector(model_spec)
+    prob_educ_years = gen_prob_educ_level_vector(model_spec)
 
     # Solve
     (
@@ -492,7 +514,7 @@ def test_educ_level_shares():
 
     constr = dict()
     constr["AGENTS"] = 10000
-    constr["PERIODS"] = 6
+    constr["PERIODS"] = 7
 
     random_init(constr)
 
@@ -501,7 +523,7 @@ def test_educ_level_shares():
 
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner = gen_prob_partner(model_spec)
-    prob_educ_years = gen_prob_educ_years_vector(model_spec)
+    prob_educ_years = gen_prob_educ_level_vector(model_spec)
 
     # Solve
     (
@@ -513,7 +535,11 @@ def test_educ_level_shares():
         emaxs,
         child_age_update_rule,
     ) = pyth_solve(
-        model_params, model_spec, prob_child, prob_partner, is_expected=False,
+        model_params,
+        model_spec,
+        prob_child,
+        prob_partner,
+        is_expected=False,
     )
 
     # Simulate
@@ -534,8 +560,89 @@ def test_educ_level_shares():
     )
 
     simulated = (
-        df.groupby("Years_of_Education")["Identifier"].nunique().to_numpy()
+        df.groupby("Education_Level")["Identifier"].nunique().to_numpy()
         / constr["AGENTS"]
     )
 
     np.testing.assert_almost_equal(simulated, prob_educ_years, decimal=2)
+
+
+def test_coef_educ_level_specificity():
+    """This test ensures that when parameters for a specific
+    education group are changed, the simulated data for the remaining education
+    groups does not change."""
+
+    constr = dict()
+    constr["AGENTS"] = 10000
+    constr["PERIODS"] = 10
+
+    random_init(constr)
+
+    model_params_base = pd.read_pickle("test.soepy.pkl")
+
+    # Draw random education level to change
+    random_educ_level = random.choice([0, 1, 2])
+    param_to_change = "gamma_1s" + str(random_educ_level + 1)
+
+    model_params_changed = model_params_base
+    model_params_changed.loc[("exp_returns", param_to_change), "value"] = (
+        model_params_changed.loc[("exp_returns", param_to_change), "value"] * 2
+    )
+
+    data = []
+
+    for i in (model_params_base, model_params_changed):
+
+        model_params_df, model_params = read_model_params_init(i)
+        model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
+
+        prob_child = gen_prob_child_vector(model_spec)
+        prob_partner = gen_prob_partner(model_spec)
+        prob_educ_level = gen_prob_educ_level_vector(model_spec)
+
+        # Solve
+        (
+            states,
+            indexer,
+            covariates,
+            budget_constraint_components,
+            non_employment_benefits,
+            emaxs,
+            child_age_update_rule,
+        ) = pyth_solve(
+            model_params,
+            model_spec,
+            prob_child,
+            prob_partner,
+            is_expected=False,
+        )
+
+        # Simulate
+        df = pyth_simulate(
+            model_params,
+            model_spec,
+            states,
+            indexer,
+            emaxs,
+            covariates,
+            budget_constraint_components,
+            non_employment_benefits,
+            child_age_update_rule,
+            prob_child,
+            prob_partner,
+            prob_educ_level,
+            is_expected=False,
+        )
+
+        data.append(df)
+
+    data_base = data[0]
+    data_changed = data[1]
+
+    for level in (0, 1, 2):
+        if level == random_educ_level:
+            continue
+        data_base_educ_level = data_base[data_base["Education_Level"] == level]
+        data_changed_educ_level = data_changed[data_changed["Education_Level"] == level]
+
+        pd.testing.assert_frame_equal(data_base_educ_level, data_changed_educ_level)

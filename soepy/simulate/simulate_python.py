@@ -2,7 +2,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
-from soepy.exogenous_processes.education import gen_prob_educ_years_vector
+from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.solve.solve_python import pyth_solve
 from soepy.simulate.simulate_auxiliary import pyth_simulate
 
@@ -17,7 +17,7 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
     # Get information concerning exogenous processes
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner = gen_prob_partner(model_spec)
-    prob_educ_years = gen_prob_educ_years_vector(model_spec)
+    prob_educ_level = gen_prob_educ_level_vector(model_spec)
 
     # Obtain model solution
     (
@@ -43,7 +43,7 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
         child_age_update_rule,
         prob_child,
         prob_partner,
-        prob_educ_years,
+        prob_educ_level,
         is_expected=False,
     )
 

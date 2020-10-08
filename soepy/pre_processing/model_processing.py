@@ -145,10 +145,8 @@ def read_model_spec_init(model_spec_init, model_params):
 
 
 def expand_model_spec_dict(model_spec_init_dict, model_params_df):
-    # Calculate range of years of education in the (simulated) sample
-    educ_min = model_spec_init_dict["INITIAL_CONDITIONS"]["educ_min"]
-    educ_max = model_spec_init_dict["INITIAL_CONDITIONS"]["educ_max"]
-    educ_range = educ_max - educ_min + 1
+    # Gather education years in list object
+    num_educ_levels = len(model_spec_init_dict["EDUC"]["educ_years"])
 
     # Determine number of types
     try:
@@ -158,7 +156,7 @@ def expand_model_spec_dict(model_spec_init_dict, model_params_df):
 
     # Append derived attributes to init_dict
     model_spec_init_dict["DERIVED_ATTR"] = {
-        "educ_range": educ_range,
+        "num_educ_levels": num_educ_levels,
         "num_types": num_types,
     }
 
@@ -171,8 +169,7 @@ def flatten_model_spec_dict(model_spec_dict):
     groups = [
         "GENERAL",
         "CONSTANTS",
-        "INITIAL_CONDITIONS",
-        "EDUC_LEVEL_BOUNDS",
+        "EDUC",
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",

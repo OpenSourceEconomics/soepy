@@ -19,30 +19,10 @@ def random_init(constr=None):
     else:
         constr = {}
 
-    if "EDUC_MAX" in constr.keys():
-        educ_max = constr["EDUC_MAX"]
+    if "EDUC_YEARS" in constr.keys():
+        educ_years = constr["EDUC_YEARS"]
     else:
-        educ_max = 12
-
-    if "EDUC_MIN" in constr.keys():
-        educ_min = constr["EDUC_MIN"]
-    else:
-        educ_min = 10
-
-    if "LOW_BOUND" in constr.keys():
-        low_bound = constr["LOW_BOUND"]
-    else:
-        low_bound = 10
-
-    if "MIDDLE_BOUND" in constr.keys():
-        middle_bound = constr["MIDDLE_BOUND"]
-    else:
-        middle_bound = 11
-
-    if "HIGH_BOUND" in constr.keys():
-        high_bound = constr["HIGH_BOUND"]
-    else:
-        high_bound = 12
+        educ_years = [0, 2, 6]
 
     if "AGENTS" in constr.keys():
         agents = constr["AGENTS"]
@@ -52,7 +32,7 @@ def random_init(constr=None):
     if "PERIODS" in constr.keys():
         periods = constr["PERIODS"]
     else:
-        periods = np.random.randint(3, 6)
+        periods = np.random.randint(3, 8)
 
     if "SEED_SIM" in constr.keys():
         seed_sim = constr["SEED_SIM"]
@@ -84,8 +64,7 @@ def random_init(constr=None):
     for key_ in [
         "GENERAL",
         "CONSTANTS",
-        "INITIAL_CONDITIONS",
-        "EDUC_LEVEL_BOUNDS",
+        "EDUC",
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",
@@ -98,12 +77,7 @@ def random_init(constr=None):
     model_spec_init_dict["CONSTANTS"]["delta"] = np.random.uniform(0.8, 0.99)
     model_spec_init_dict["CONSTANTS"]["mu"] = np.random.uniform(-0.7, -0.4)
 
-    model_spec_init_dict["INITIAL_CONDITIONS"]["educ_max"] = educ_max
-    model_spec_init_dict["INITIAL_CONDITIONS"]["educ_min"] = educ_min
-
-    model_spec_init_dict["EDUC_LEVEL_BOUNDS"]["low_bound"] = low_bound
-    model_spec_init_dict["EDUC_LEVEL_BOUNDS"]["middle_bound"] = middle_bound
-    model_spec_init_dict["EDUC_LEVEL_BOUNDS"]["high_bound"] = high_bound
+    model_spec_init_dict["EDUC"]["educ_years"] = educ_years
 
     model_spec_init_dict["SIMULATION"]["seed_sim"] = seed_sim
     model_spec_init_dict["SIMULATION"]["num_agents_sim"] = agents
@@ -245,11 +219,11 @@ def random_init(constr=None):
     exog_partner_info.to_pickle("test.soepy.partner.pkl")
 
     # Generate random fractions for education levels
-    educ_shares = np.random.uniform(1, 10, size=(educ_max - educ_min + 1))
+    educ_shares = np.random.uniform(1, 10, size=len(educ_years))
     educ_shares /= educ_shares.sum()
     exog_educ_info = pd.DataFrame(
         educ_shares.tolist(),
-        index=list(range(0, (educ_max - educ_min + 1))),
+        index=list(range(0, len(educ_years))),
         columns=["Fraction"],
     )
     exog_educ_info.to_pickle("test.soepy.educ.pkl")
@@ -287,8 +261,7 @@ def print_dict(model_spec_init_dict, file_name="test"):
     order = [
         "GENERAL",
         "CONSTANTS",
-        "INITIAL_CONDITIONS",
-        "EDUC_LEVEL_BOUNDS",
+        "EDUC",
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",
@@ -322,14 +295,8 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["CONSTANTS"]["delta"] = init_dict_flat["delta"]
     init_dict["CONSTANTS"]["mu"] = init_dict_flat["mu"]
 
-    init_dict["INITIAL_CONDITIONS"] = dict()
-    init_dict["INITIAL_CONDITIONS"]["educ_max"] = init_dict_flat["educ_max"]
-    init_dict["INITIAL_CONDITIONS"]["educ_min"] = init_dict_flat["educ_min"]
-
-    init_dict["EDUC_LEVEL_BOUNDS"] = dict()
-    init_dict["EDUC_LEVEL_BOUNDS"]["low_bound"] = init_dict_flat["low_bound"]
-    init_dict["EDUC_LEVEL_BOUNDS"]["middle_bound"] = init_dict_flat["middle_bound"]
-    init_dict["EDUC_LEVEL_BOUNDS"]["high_bound"] = init_dict_flat["high_bound"]
+    init_dict["EDUC"] = dict()
+    init_dict["EDUC"]["educ_years"] = init_dict_flat["educ_years"]
 
     init_dict["SIMULATION"] = dict()
     init_dict["SIMULATION"]["seed_sim"] = init_dict_flat["seed_sim"]

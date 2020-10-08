@@ -72,18 +72,17 @@ def calculate_log_wage_systematic(model_params, states, covariates, is_expected)
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
     exp_p, exp_f = states[:, 3], states[:, 4]
-    educ_level = covariates[:, 0].astype(int)
 
     # Construct wage components
-    gamma_0s = np.array(model_params.gamma_0s)[educ_level]
-    gamma_1s = np.array(model_params.gamma_1s)[educ_level]
+    gamma_0s = np.array(model_params.gamma_0s)[states[:, 1]]
+    gamma_1s = np.array(model_params.gamma_1s)[states[:, 1]]
 
     if is_expected:
         period_exp_sum = 0.5 * exp_p + exp_f
     else:
-        period_exp_sum = exp_p * np.array(model_params.g_s)[educ_level] + exp_f
+        period_exp_sum = exp_p * np.array(model_params.g_s)[states[:, 1]] + exp_f
 
-    depreciation = 1 - np.array(model_params.delta_s)[educ_level]
+    depreciation = 1 - np.array(model_params.delta_s)[states[:, 1]]
 
     # Calculate wage in the given state
     period_exp_total = period_exp_sum * depreciation + 1
@@ -111,7 +110,7 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
 
     # Children contribution
     # No children
-    non_consumption_utility[np.where(covariates[:, 1] == 0)] += [
+    non_consumption_utility[np.where(covariates[:, 0] == 0)] += [
         0,  # non-employed
         model_params.no_kids_f
         + model_params.no_kids_p,  # part-time alpha_f_no_kids + alpha_p_no_kids
@@ -119,28 +118,28 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
     ]
 
     # Children present:
-    non_consumption_utility[np.where(covariates[:, 1] != 0)] += [
+    non_consumption_utility[np.where(covariates[:, 0] != 0)] += [
         0,
         model_params.yes_kids_f + model_params.yes_kids_p,
         model_params.yes_kids_f,
     ]
 
     # Contribution child aged 0-2:
-    non_consumption_utility[np.where(covariates[:, 1] == 1)] += [
+    non_consumption_utility[np.where(covariates[:, 0] == 1)] += [
         0,
         model_params.child_02_f + model_params.child_02_p,
         model_params.child_02_f,
     ]
 
     # Contribution child aged 3-5:
-    non_consumption_utility[np.where(covariates[:, 1] == 2)] += [
+    non_consumption_utility[np.where(covariates[:, 0] == 2)] += [
         0,
         model_params.child_35_f + model_params.child_35_p,
         model_params.child_35_f,
     ]
 
     # Contribution child aged 6-10:
-    non_consumption_utility[np.where(covariates[:, 1] == 3)] += [
+    non_consumption_utility[np.where(covariates[:, 0] == 3)] += [
         0,
         model_params.child_610_f + model_params.child_610_p,
         model_params.child_610_f,
@@ -157,7 +156,7 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
 
     non_employment_benefits = np.full(states.shape[0], np.nan)
 
-    # 600 EUR per month for a person who did not work last period
+    # benefits base per week for a person who did not work last period
     non_employment_benefits = np.where(
         states[:, 2] == 0, model_spec.benefits_base, non_employment_benefits
     )
@@ -171,13 +170,6 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
         non_employment_benefits,
     )
 
-    # 300 EUR added if the person has a child
-    non_employment_benefits = np.where(
-        states[:, 6] != -1,
-        non_employment_benefits + model_spec.benefits_kids,
-        non_employment_benefits,
-    )
-
     # Make sure that every state has been assigns a corresponding value
     # of non-employment benefits
     assert np.isfinite(non_employment_benefits).all()
@@ -185,10 +177,19 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
     return non_employment_benefits
 
 
-def calculate_budget_constraint_components(covariates):
+def calculate_budget_constraint_components(model_spec, states, covariates):
     """This function calculates the resources available to the woman to spend on consumption.
     It adds the components from the budget constraint to the female wage."""
 
-    budget_constraint_components = covariates[:, 2]
+    # Male wages
+    budget_constraint_components = covariates[:, 1]
+
+    # Childcare benefits
+    # Benefits kids added if the person has a child
+    budget_constraint_components = np.where(
+        states[:, 6] != -1,
+        budget_constraint_components + model_spec.benefits_kids,
+        budget_constraint_components,
+    )
 
     return budget_constraint_components

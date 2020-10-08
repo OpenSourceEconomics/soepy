@@ -50,7 +50,7 @@ def pyth_create_state_space(model_spec):
     # Array for mapping the state space points (states) to indices
     shape = (
         model_spec.num_periods,
-        model_spec.educ_range,
+        model_spec.num_educ_levels,
         NUM_CHOICES,
         model_spec.num_periods,
         model_spec.num_periods,
@@ -95,11 +95,11 @@ def pyth_create_state_space(model_spec):
                         continue
 
                     # Loop over all possible initial conditions for education
-                    for educ_years in range(model_spec.educ_range):
+                    for educ_level in range(model_spec.num_educ_levels):
 
                         # Check if individual has already completed education
                         # and will make a labor supply choice in the period
-                        if educ_years > period:
+                        if model_spec.educ_years[educ_level] > period:
                             continue
 
                         # Loop over all admissible years of experience
@@ -112,20 +112,23 @@ def pyth_create_state_space(model_spec):
 
                                 # The accumulation of experience cannot exceed time elapsed
                                 # since individual entered the model
-                                if exp_f + exp_p > period - educ_years:
+                                if (
+                                    exp_f + exp_p
+                                    > period - model_spec.educ_years[educ_level]
+                                ):
                                     continue
 
                                 # Add an additional entry state
                                 # [educ_years + model_params.educ_min, 0, 0, 0]
                                 # for individuals who have just completed education
                                 # and still have no experience in any occupation.
-                                if period == educ_years:
+                                if period == model_spec.educ_years[educ_level]:
 
                                     # Assign an additional integer count i
                                     # for entry state
                                     indexer[
                                         period,
-                                        educ_years,
+                                        educ_level,
                                         0,
                                         0,
                                         0,
@@ -138,7 +141,7 @@ def pyth_create_state_space(model_spec):
                                     # for the currently reached entry state
                                     row = [
                                         period,
-                                        educ_years + model_spec.educ_min,
+                                        educ_level,
                                         0,
                                         0,
                                         0,
@@ -160,14 +163,18 @@ def pyth_create_state_space(model_spec):
                                         # If individual has only worked full-time in the past,
                                         # she can only have full-time (2) as lagged choice
                                         if (choice_lagged != 2) and (
-                                            exp_f == period - educ_years
+                                            exp_f
+                                            == period
+                                            - model_spec.educ_years[educ_level]
                                         ):
                                             continue
 
                                         # If individual has only worked part-time in the past,
                                         # she can only have part-time (1) as lagged choice
                                         if (choice_lagged != 1) and (
-                                            exp_p == period - educ_years
+                                            exp_p
+                                            == period
+                                            - model_spec.educ_years[educ_level]
                                         ):
                                             continue
 
@@ -184,7 +191,9 @@ def pyth_create_state_space(model_spec):
                                         # If an individual has always been employed,
                                         # she cannot have non-employment (0) as lagged choice
                                         if (choice_lagged == 0) and (
-                                            exp_f + exp_p == period - educ_years
+                                            exp_f + exp_p
+                                            == period
+                                            - model_spec.educ_years[educ_level]
                                         ):
                                             continue
 
@@ -192,7 +201,7 @@ def pyth_create_state_space(model_spec):
                                         if (
                                             indexer[
                                                 period,
-                                                educ_years,
+                                                educ_level,
                                                 choice_lagged,
                                                 exp_p,
                                                 exp_f,
@@ -208,7 +217,7 @@ def pyth_create_state_space(model_spec):
                                         # currently reached admissible state space point
                                         indexer[
                                             period,
-                                            educ_years,
+                                            educ_level,
                                             choice_lagged,
                                             exp_p,
                                             exp_f,
@@ -225,7 +234,7 @@ def pyth_create_state_space(model_spec):
                                         # state space point
                                         row = [
                                             period,
-                                            educ_years + model_spec.educ_min,
+                                            educ_level,
                                             choice_lagged,
                                             exp_p,
                                             exp_f,
@@ -262,20 +271,14 @@ def construct_covariates(states, model_spec):
 
     """
 
-    # Level of education derived from years of education
-    educ_years = pd.Series(states[:, 1])
-    educ_level = pd.cut(
-        educ_years,
-        bins=[0, model_spec.low_bound, model_spec.middle_bound, model_spec.high_bound],
-        labels=[0, 1, 2],
-    ).to_numpy()
-
     # Bins of age of youngest child based on kids age
     # bin 0 corresponds to no kid, remaining bins as in Blundell
     # 0-2, 3-5, 6-10, 11+
     age_kid = pd.Series(states[:, 6])
     bins = pd.cut(
-        age_kid, bins=[-2, -1, 2, 5, 10, 11], labels=[0, 1, 2, 3, 4],
+        age_kid,
+        bins=[-2, -1, 2, 5, 10, 11],
+        labels=[0, 1, 2, 3, 4],
     ).to_numpy()
 
     # Male wages based on age and education level of the woman
@@ -284,14 +287,14 @@ def construct_covariates(states, model_spec):
         model_spec.partner_cf_const
         + model_spec.partner_cf_age * states[:, 0]
         + model_spec.partner_cf_age_sq * states[:, 0] ** 2
-        + model_spec.partner_cf_educ * educ_level
+        + model_spec.partner_cf_educ * states[:, 1]
     )
 
     # Final input of male wages / partner income is calculated on a weekly
     # basis. Underlying assumption that all men work full time.
     male_wages = np.where(states[:, 7] == 1, np.exp(log_wages) * HOURS[2], 0)
 
-    covariates = np.column_stack((educ_level, bins, male_wages))
+    covariates = np.column_stack((bins, male_wages))
 
     return covariates
 
@@ -449,7 +452,7 @@ def get_continuation_values(
         # Unpack parent state and get index
         (
             period,
-            educ_years,
+            educ_level,
             choice_lagged,
             exp_p,
             exp_f,
@@ -460,7 +463,7 @@ def get_continuation_values(
 
         k_parent = indexer[
             period,
-            educ_years - model_spec.educ_min,
+            educ_level,
             choice_lagged,
             exp_p,
             exp_f,
@@ -473,7 +476,7 @@ def get_continuation_values(
         # Choice: Non-employment
         k_0_00 = indexer[
             period + 1,
-            educ_years - model_spec.educ_min,
+            educ_level,
             0,
             exp_p,
             exp_f,
@@ -484,7 +487,7 @@ def get_continuation_values(
 
         k_0_01 = indexer[
             period + 1,
-            educ_years - model_spec.educ_min,
+            educ_level,
             0,
             exp_p,
             exp_f,
@@ -496,7 +499,7 @@ def get_continuation_values(
         # Choice: Part-time
         k_1_00 = indexer[
             period + 1,
-            educ_years - model_spec.educ_min,
+            educ_level,
             1,
             exp_p + 1,
             exp_f,
@@ -507,7 +510,7 @@ def get_continuation_values(
 
         k_1_01 = indexer[
             period + 1,
-            educ_years - model_spec.educ_min,
+            educ_level,
             1,
             exp_p + 1,
             exp_f,
@@ -519,7 +522,7 @@ def get_continuation_values(
         # Choice: Full-time
         k_2_00 = indexer[
             period + 1,
-            educ_years - model_spec.educ_min,
+            educ_level,
             2,
             exp_p,
             exp_f + 1,
@@ -530,7 +533,7 @@ def get_continuation_values(
 
         k_2_01 = indexer[
             period + 1,
-            educ_years - model_spec.educ_min,
+            educ_level,
             2,
             exp_p,
             exp_f + 1,
@@ -545,7 +548,7 @@ def get_continuation_values(
             # Choice: Non-employment
             k_0_10 = indexer[
                 period + 1,
-                educ_years - model_spec.educ_min,
+                educ_level,
                 0,
                 exp_p,
                 exp_f,
@@ -556,7 +559,7 @@ def get_continuation_values(
 
             k_0_11 = indexer[
                 period + 1,
-                educ_years - model_spec.educ_min,
+                educ_level,
                 0,
                 exp_p,
                 exp_f,
@@ -568,7 +571,7 @@ def get_continuation_values(
             # Choice: Part-time
             k_1_10 = indexer[
                 period + 1,
-                educ_years - model_spec.educ_min,
+                educ_level,
                 1,
                 exp_p + 1,
                 exp_f,
@@ -579,7 +582,7 @@ def get_continuation_values(
 
             k_1_11 = indexer[
                 period + 1,
-                educ_years - model_spec.educ_min,
+                educ_level,
                 1,
                 exp_p + 1,
                 exp_f,
@@ -591,7 +594,7 @@ def get_continuation_values(
             # Choice: Full-time
             k_2_10 = indexer[
                 period + 1,
-                educ_years - model_spec.educ_min,
+                educ_level,
                 2,
                 exp_p,
                 exp_f + 1,
@@ -602,7 +605,7 @@ def get_continuation_values(
 
             k_2_11 = indexer[
                 period + 1,
-                educ_years - model_spec.educ_min,
+                educ_level,
                 2,
                 exp_p,
                 exp_f + 1,
@@ -614,12 +617,12 @@ def get_continuation_values(
             # Calculate E-Max
             # Child possible, integrate out partner and child probability
             emaxs[k_parent, 0] = (  # non-employment
-                1 - prob_partner_period[educ_years - model_spec.educ_min]  # no partner
+                1 - prob_partner_period[educ_level]  # no partner
             ) * (
                 (1 - prob_child_period) * emaxs[k_0_00, 3]  # no child
                 + prob_child_period * emaxs[k_0_10, 3]  # child
             ) + (
-                prob_partner_period[educ_years - model_spec.educ_min]  # partner
+                prob_partner_period[educ_level]  # partner
                 * (
                     (1 - prob_child_period) * emaxs[k_0_01, 3]  # no child
                     + prob_child_period * emaxs[k_0_11, 3]  # child
@@ -627,25 +630,23 @@ def get_continuation_values(
             )
 
             emaxs[k_parent, 1] = (  # part-time employment
-                1 - prob_partner_period[educ_years - model_spec.educ_min]  # no partner
+                1 - prob_partner_period[educ_level]  # no partner
             ) * (
                 (1 - prob_child_period) * emaxs[k_1_00, 3]  # no child
                 + prob_child_period * emaxs[k_1_10, 3]  # child
             ) + (
-                prob_partner_period[educ_years - model_spec.educ_min]  # partner
+                prob_partner_period[educ_level]  # partner
                 * (
                     (1 - prob_child_period) * emaxs[k_1_01, 3]  # no child
                     + prob_child_period * emaxs[k_1_11, 3]  # child
                 )
             )
 
-            emaxs[k_parent, 2] = (
-                1 - prob_partner_period[educ_years - model_spec.educ_min]  # no partner
-            ) * (
+            emaxs[k_parent, 2] = (1 - prob_partner_period[educ_level]) * (  # no partner
                 (1 - prob_child_period) * emaxs[k_2_00, 3]  # no child
                 + prob_child_period * emaxs[k_2_10, 3]  # child
             ) + (
-                prob_partner_period[educ_years - model_spec.educ_min]  # partner
+                prob_partner_period[educ_level]  # partner
                 * (
                     (1 - prob_child_period) * emaxs[k_2_01, 3]  # no child
                     + prob_child_period * emaxs[k_2_11, 3]  # child
@@ -654,24 +655,27 @@ def get_continuation_values(
 
         else:
             # Child not possible
-            emaxs[k_parent, 0] = (
-                (1 - prob_partner_period[educ_years - model_spec.educ_min])
-                * emaxs[k_0_00, 3]  # no partner
-                + prob_partner_period[educ_years - model_spec.educ_min]
-                * emaxs[k_0_01, 3]  # partner
-            )
-            emaxs[k_parent, 1] = (
-                (1 - prob_partner_period[educ_years - model_spec.educ_min])
-                * emaxs[k_1_00, 3]  # no partner
-                + prob_partner_period[educ_years - model_spec.educ_min]
-                * emaxs[k_1_01, 3]  # partner
-            )
-            emaxs[k_parent, 2] = (
-                (1 - prob_partner_period[educ_years - model_spec.educ_min])
-                * emaxs[k_2_00, 3]  # no partner
-                + prob_partner_period[educ_years - model_spec.educ_min]
-                * emaxs[k_2_01, 3]  # partner
-            )
+            emaxs[k_parent, 0] = (1 - prob_partner_period[educ_level]) * emaxs[
+                k_0_00, 3
+            ] + prob_partner_period[  # no partner
+                educ_level
+            ] * emaxs[
+                k_0_01, 3
+            ]  # partner
+            emaxs[k_parent, 1] = (1 - prob_partner_period[educ_level]) * emaxs[
+                k_1_00, 3
+            ] + prob_partner_period[  # no partner
+                educ_level
+            ] * emaxs[
+                k_1_01, 3
+            ]  # partner
+            emaxs[k_parent, 2] = (1 - prob_partner_period[educ_level]) * emaxs[
+                k_2_00, 3
+            ] + prob_partner_period[  # no partner
+                educ_level
+            ] * emaxs[
+                k_2_01, 3
+            ]  # partner
 
     return emaxs
 
