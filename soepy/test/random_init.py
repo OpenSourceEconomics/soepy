@@ -163,8 +163,7 @@ def random_init(constr=None):
     (
         model_params_init_dict["sigma_1"],
         model_params_init_dict["sigma_2"],
-        model_params_init_dict["sigma_3"],
-    ) = np.random.uniform(0.002, 2.0, 3).tolist()
+    ) = np.random.uniform(0.002, 2.0, 2).tolist()
 
     # Determine categories
     category = []

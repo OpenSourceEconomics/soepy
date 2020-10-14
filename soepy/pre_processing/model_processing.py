@@ -39,9 +39,8 @@ def expand_model_params_dict(model_params_dict):
     shocks_cov = [
         model_params_dict["sd_wage_shock"]["sigma_1"],
         model_params_dict["sd_wage_shock"]["sigma_2"],
-        model_params_dict["sd_wage_shock"]["sigma_3"],
     ]
-    shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2, shocks_cov[2] ** 2]
+    shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2]
 
     # Extract the values of the type shares
     try:
