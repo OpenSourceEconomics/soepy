@@ -696,13 +696,12 @@ def _get_max_aggregated_utilities(
 
     for j in range(NUM_CHOICES):
 
-        wage = np.exp(log_wage_systematic + draws[j])
-
         if j == 0:
             consumption_utility = (benefits + budget_constraint_components) ** mu / mu
         else:
             consumption_utility = (
-                hours[j] * wage + budget_constraint_components
+                hours[j] * np.exp(log_wage_systematic + draws[j - 1])
+                + budget_constraint_components
             ) ** mu / mu
 
         value_function_choice = (
@@ -717,7 +716,7 @@ def _get_max_aggregated_utilities(
 
 @numba.guvectorize(
     ["f8, f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:]"],
-    "(), (), (), (n_choices), (n_draws, n_choices), (n_choices), (n_choices), (), () -> ()",
+    "(), (), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), () -> ()",
     nopython=True,
     target="parallel",
 )

@@ -20,6 +20,8 @@ def draw_disturbances(seed, num_periods, num_draws, model_params):
         mean, shocks_cov_matrix, (num_periods, num_draws)
     )
 
+    draws = draws[:, :, 1:]
+
     return draws
 
 

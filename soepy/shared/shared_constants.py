@@ -19,7 +19,6 @@ DATA_LABLES_SIM = [
     "Partner_Indicator",
     "Choice",
     "Log_Systematic_Wage",
-    "Period_Wage_N",
     "Period_Wage_P",
     "Period_Wage_F",
     "Non_Consumption_Utility_N",

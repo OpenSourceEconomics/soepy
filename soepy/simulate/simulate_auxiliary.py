@@ -135,7 +135,7 @@ def pyth_simulate(
 
         flow_utilities[:, 1:] = (
             (
-                HOURS[1:] * current_wages[:, 1:]
+                HOURS[1:] * current_wages
                 + current_budget_constraint_components.reshape(-1, 1)
             )
             ** model_spec.mu
