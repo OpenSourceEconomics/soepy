@@ -271,6 +271,7 @@ def construct_covariates(states, model_spec):
 
     """
 
+    # Age youngest child
     # Bins of age of youngest child based on kids age
     # bin 0 corresponds to no kid, remaining bins as in Blundell
     # 0-2, 3-5, 6-10, 11+
@@ -290,11 +291,37 @@ def construct_covariates(states, model_spec):
         + model_spec.partner_cf_educ * states[:, 1]
     )
 
+    # Male wages
     # Final input of male wages / partner income is calculated on a weekly
     # basis. Underlying assumption that all men work full time.
     male_wages = np.where(states[:, 7] == 1, np.exp(log_wages) * HOURS[2], 0)
 
-    covariates = np.column_stack((bins, male_wages))
+    # Equivalence scale
+    # Depending on the presence of a partner and a child each state is
+    # assigned an equivalence scale value following the modernized OECD
+    # scale: 1 for a single woman HH, 1.5 for a woman with a partner,
+    # 1.8 for a woman with a partner and a child and 1.3 for a woman with
+    # a child and no partner
+    equivalence_scale = np.full(states.shape[0], np.nan)
+    equivalence_scale = np.where(
+        (states[:, 6] == -1) & (states[:, 7] == 0), 1.0, equivalence_scale
+    )
+    equivalence_scale = np.where(
+        (states[:, 6] == -1) & (states[:, 7] == 1), 1.0, equivalence_scale
+    )
+    equivalence_scale = np.where(
+        (states[:, 6] != -1) & (states[:, 7] == 1), 1.0, equivalence_scale
+    )
+    equivalence_scale = np.where(
+        (states[:, 6] != -1) & (states[:, 7] == 0), 1.0, equivalence_scale
+    )
+
+    assert (
+        np.isnan(equivalence_scale).any() == 0
+    ), "Some HH were not assigned an equivalence scale"
+
+    # Collect in covariates vector
+    covariates = np.column_stack((bins, male_wages, equivalence_scale))
 
     return covariates
 
@@ -307,6 +334,7 @@ def pyth_backward_induction(
     budget_constraint_components,
     non_consumption_utilities,
     draws,
+    covariates,
     child_age_update_rule,
     prob_child,
     prob_partner,
@@ -379,6 +407,9 @@ def pyth_backward_induction(
         ]
         non_employment_benefits_period = non_employment_benefits[states[:, 0] == period]
 
+        # Corresponding equivalence scale for period states
+        equivalence_scale_period = covariates[np.where(states[:, 0] == period)][:, 2]
+
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
         if period == model_spec.num_periods - 1:
@@ -411,6 +442,7 @@ def pyth_backward_induction(
             HOURS,
             model_spec.mu,
             non_employment_benefits_period,
+            equivalence_scale_period,
         )
         emaxs_period[:, 3] = emax_period
         emaxs[np.where(states[:, 0] == period)] = emaxs_period
@@ -691,18 +723,21 @@ def _get_max_aggregated_utilities(
     hours,
     mu,
     benefits,
+    equivalence,
 ):
     current_max_value_function = INVALID_FLOAT
 
     for j in range(NUM_CHOICES):
 
         if j == 0:
-            consumption_utility = (benefits + budget_constraint_components) ** mu / mu
+            consumption = (benefits + budget_constraint_components) / equivalence
         else:
-            consumption_utility = (
+            consumption = (
                 hours[j] * np.exp(log_wage_systematic + draws[j - 1])
                 + budget_constraint_components
-            ) ** mu / mu
+            ) / equivalence
+
+        consumption_utility = consumption ** mu / mu
 
         value_function_choice = (
             consumption_utility * non_consumption_utilities[j] + delta * emaxs[j]
@@ -715,8 +750,8 @@ def _get_max_aggregated_utilities(
 
 
 @numba.guvectorize(
-    ["f8, f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:]"],
-    "(), (), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), () -> ()",
+    ["f8, f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8, f8[:]"],
+    "(), (), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), () -> ()",
     nopython=True,
     target="parallel",
 )
@@ -730,6 +765,7 @@ def construct_emax(
     hours,
     mu,
     benefits,
+    equivalence,
     emax,
 ):
     """Simulate expected maximum utility for a given distribution of the unobservables.
@@ -803,6 +839,7 @@ def construct_emax(
             hours,
             mu,
             benefits,
+            equivalence,
         )
 
         emax[0] += max_total_utility
