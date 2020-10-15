@@ -307,13 +307,13 @@ def construct_covariates(states, model_spec):
         (states[:, 6] == -1) & (states[:, 7] == 0), 1.0, equivalence_scale
     )
     equivalence_scale = np.where(
-        (states[:, 6] == -1) & (states[:, 7] == 1), 1.0, equivalence_scale
+        (states[:, 6] == -1) & (states[:, 7] == 1), 1.5, equivalence_scale
     )
     equivalence_scale = np.where(
-        (states[:, 6] != -1) & (states[:, 7] == 1), 1.0, equivalence_scale
+        (states[:, 6] != -1) & (states[:, 7] == 1), 1.8, equivalence_scale
     )
     equivalence_scale = np.where(
-        (states[:, 6] != -1) & (states[:, 7] == 0), 1.0, equivalence_scale
+        (states[:, 6] != -1) & (states[:, 7] == 0), 1.3, equivalence_scale
     )
 
     assert (
