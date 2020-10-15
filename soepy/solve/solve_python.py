@@ -87,6 +87,7 @@ def pyth_solve(model_params, model_spec, prob_child, prob_partner, is_expected):
         budget_constraint_components,
         non_consumption_utilities,
         draws_emax,
+        covariates,
         child_age_update_rule,
         prob_child,
         prob_partner,

@@ -118,6 +118,7 @@ def pyth_simulate(
         current_budget_constraint_components = budget_constraint_components[idx]
         current_non_consumption_utilities = non_consumption_utilities[idx]
         current_non_employment_benefits = non_employment_benefits[idx]
+        current_equivalence_scale = covariates[idx][:, 2]
 
         current_wages = np.exp(
             current_log_wage_systematic.reshape(-1, 1)
@@ -128,15 +129,21 @@ def pyth_simulate(
         flow_utilities = np.full((current_states.shape[0], 3), np.nan)
 
         flow_utilities[:, :1] = (
-            (current_non_employment_benefits + current_budget_constraint_components)
+            (
+                (current_non_employment_benefits + current_budget_constraint_components)
+                / current_equivalence_scale
+            )
             ** model_spec.mu
             / model_spec.mu
         ).reshape(current_states.shape[0], 1) * current_non_consumption_utilities[:, :1]
 
         flow_utilities[:, 1:] = (
             (
-                HOURS[1:] * current_wages[:, 1:]
-                + current_budget_constraint_components.reshape(-1, 1)
+                (
+                    HOURS[1:] * current_wages
+                    + current_budget_constraint_components.reshape(-1, 1)
+                )
+                / current_equivalence_scale.reshape(current_states.shape[0], 1)
             )
             ** model_spec.mu
             / model_spec.mu
