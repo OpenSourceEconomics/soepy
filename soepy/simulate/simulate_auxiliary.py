@@ -181,9 +181,17 @@ def pyth_simulate(
             child_current_age = child_age_update_rule[idx]
 
         # Update partner status according to random draw
-        partner_current_draw = np.full(current_states.shape[0], np.nan)
-        for l in range(3):
-            partner_current_draw[states[:, 2][idx] == l] = prob_partner[period, l]
+        # Get individuals without partner
+        current_states_no_partner = current_states[np.where(current_states[:, 8] == 0)]
+        partner_current_draw = np.random.binomial(
+            size=current_states_no_partner.shape[0],
+            n=1,
+            p=prob_partner[period, current_states_no_partner[:, 2]],
+        )
+        current_partner_status = current_states[:, 8]
+        current_partner_status[
+            np.where(current_states[:, 8] == 0)
+        ] = partner_current_draw
 
         # Record period experiences
         rows = np.column_stack(
@@ -211,7 +219,7 @@ def pyth_simulate(
             choice == 2, current_states[:, 5] + 1, current_states[:, 5]
         )
         current_states[:, 7] = child_current_age
-        current_states[:, 8] = partner_current_draw
+        current_states[:, 8] = current_partner_status
 
     dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
         DATA_FORMATS_SIM
