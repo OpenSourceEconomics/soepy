@@ -206,6 +206,7 @@ def random_init(constr=None):
         index=list(range(0, periods)),
         columns=["prob_child_values"],
     )
+    exog_child_info.index.name = "period"
     exog_child_info.to_pickle("test.soepy.child.pkl")
 
     # Generate random probabilities of marriage

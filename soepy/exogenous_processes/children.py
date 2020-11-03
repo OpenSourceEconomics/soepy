@@ -34,6 +34,10 @@ def gen_prob_child_vector(model_spec):
     # in every period
     exog_child_info_df = pd.read_pickle(model_spec.kids_info_file_name)
 
+    exog_child_info_df = exog_child_info_df.iloc[
+        exog_child_info_df.index.get_level_values("period") < model_spec.num_periods
+    ]
+
     prob_child_values = exog_child_info_df["prob_child_values"].to_numpy()
 
     prob_child = np.full(model_spec.num_periods, 0.00)
