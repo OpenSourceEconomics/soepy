@@ -88,7 +88,9 @@ def random_init(constr=None):
     model_spec_init_dict["TAXES_TRANSFERS"]["benefits_base"] = benefits_base
     model_spec_init_dict["TAXES_TRANSFERS"]["benefits_kids"] = benefits_kids
 
-    model_spec_init_dict["EXOG_PROC"]["educ_shares_file_name"] = "test.soepy.educ.pkl"
+    model_spec_init_dict["EXOG_PROC"][
+        "educ_shares_file_name"
+    ] = "test.soepy.educ.shares.pkl"
     model_spec_init_dict["EXOG_PROC"]["child_info_file_name"] = "test.soepy.child.pkl"
     model_spec_init_dict["EXOG_PROC"][
         "partner_info_file_name"
@@ -226,7 +228,7 @@ def random_init(constr=None):
         index=list(range(0, len(educ_years))),
         columns=["educ_shares"],
     )
-    exog_educ_shares.to_pickle("test.soepy.educ.pkl")
+    exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
 
     # Generate random probabilities of partner arrival
     index_levels = [list(range(0, periods)), [0, 1, 2]]
@@ -249,8 +251,8 @@ def random_init(constr=None):
     return (
         model_spec_init_dict,
         random_model_params_df,
-        exog_child_info,
         exog_educ_shares,
+        exog_child_info,
         exog_partner_info,
     )
 
