@@ -32,7 +32,7 @@ def gen_prob_child_vector(model_spec):
 
     # Read data frame with information on probability to get a child
     # in every period
-    exog_child_info_df = pd.read_pickle(model_spec.kids_info_file_name)
+    exog_child_info_df = pd.read_pickle(model_spec.child_info_file_name)
 
     exog_child_info_df = exog_child_info_df.iloc[
         exog_child_info_df.index.get_level_values("period") < model_spec.num_periods

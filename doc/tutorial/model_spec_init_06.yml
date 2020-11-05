@@ -15,9 +15,11 @@ SOLUTION:
 TAXES_TRANSFERS:
     benefits_base: 200
     benefits_kids: 70
+INITIAL_CONDITIONS:
+    educ_shares_file_name: 'exog_educ_shares.pkl'
+    child_age_shares_file_name: 'exog_child_age_shares.pkl'
 EXOG_PROC:
-    educ_info_file_name: 'exog_educ_info_generic.pkl'
-    kids_info_file_name: 'exog_child_info.pkl'
+    child_info_file_name: 'exog_child_info.pkl'
     partner_info_file_name: 'exog_partner_info.pkl'
     child_age_max: 12
     last_child_bearing_period: 24

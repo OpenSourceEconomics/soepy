@@ -88,8 +88,8 @@ def random_init(constr=None):
     model_spec_init_dict["TAXES_TRANSFERS"]["benefits_base"] = benefits_base
     model_spec_init_dict["TAXES_TRANSFERS"]["benefits_kids"] = benefits_kids
 
-    model_spec_init_dict["EXOG_PROC"]["educ_info_file_name"] = "test.soepy.educ.pkl"
-    model_spec_init_dict["EXOG_PROC"]["kids_info_file_name"] = "test.soepy.child.pkl"
+    model_spec_init_dict["EXOG_PROC"]["educ_shares_file_name"] = "test.soepy.educ.pkl"
+    model_spec_init_dict["EXOG_PROC"]["child_info_file_name"] = "test.soepy.child.pkl"
     model_spec_init_dict["EXOG_PROC"][
         "partner_info_file_name"
     ] = "test.soepy.partner.pkl"
@@ -214,19 +214,19 @@ def random_init(constr=None):
 
     index = pd.MultiIndex.from_product(index_levels, names=["period", "educ_level"])
     exog_partner_info = pd.DataFrame(
-        np.zeros(periods * 3).tolist(), index=index, columns=["exog_partner_values"]
+        np.zeros(periods * 3).tolist(), index=index, columns=["prob_partner_values"]
     )
     exog_partner_info.to_pickle("test.soepy.partner.pkl")
 
     # Generate random fractions for education levels
     educ_shares = np.random.uniform(1, 10, size=len(educ_years))
     educ_shares /= educ_shares.sum()
-    exog_educ_info = pd.DataFrame(
+    exog_educ_shares = pd.DataFrame(
         educ_shares.tolist(),
         index=list(range(0, len(educ_years))),
-        columns=["Fraction"],
+        columns=["educ_shares"],
     )
-    exog_educ_info.to_pickle("test.soepy.educ.pkl")
+    exog_educ_shares.to_pickle("test.soepy.educ.pkl")
 
     # Generate random probabilities of partner arrival
     index_levels = [list(range(0, periods)), [0, 1, 2]]
@@ -235,13 +235,13 @@ def random_init(constr=None):
         exog_partner_info = pd.DataFrame(
             np.zeros(periods * 3).tolist(),
             index=index,
-            columns=["exog_partner_values"],
+            columns=["prob_partner_values"],
         )
     else:
         exog_partner_info = pd.DataFrame(
             np.random.uniform(0, 1, size=periods * 3).tolist(),
             index=index,
-            columns=["exog_partner_values"],
+            columns=["prob_partner_values"],
         )
 
     exog_partner_info.to_pickle("test.soepy.partner.pkl")
@@ -250,7 +250,7 @@ def random_init(constr=None):
         model_spec_init_dict,
         random_model_params_df,
         exog_child_info,
-        exog_educ_info,
+        exog_educ_shares,
         exog_partner_info,
     )
 
@@ -311,8 +311,8 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["TAXES_TRANSFERS"]["benefits_kids"] = init_dict_flat["benefits_kids"]
 
     init_dict["EXOG_PROC"] = dict()
-    init_dict["EXOG_PROC"]["kids_info_file_name"] = init_dict_flat[
-        "kids_info_file_name"
+    init_dict["EXOG_PROC"]["child_info_file_name"] = init_dict_flat[
+        "child_info_file_name"
     ]
     init_dict["EXOG_PROC"]["child_age_max"] = init_dict_flat["child_age_max"]
     init_dict["EXOG_PROC"]["last_child_bearing_period"] = init_dict_flat[
