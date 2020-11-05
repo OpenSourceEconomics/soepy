@@ -59,6 +59,11 @@ def random_init(constr=None):
     else:
         benefits_kids = np.random.uniform(0, 100)
 
+    if "CHILD_AGE_INIT_MAX" in constr.keys():
+        child_age_init_max = constr["CHILD_AGE_INIT_MAX"]
+    else:
+        child_age_init_max = np.random.randint(0, 4)
+
     model_spec_init_dict = dict()
 
     for key_ in [
@@ -92,6 +97,10 @@ def random_init(constr=None):
     model_spec_init_dict["INITIAL_CONDITIONS"][
         "educ_shares_file_name"
     ] = "test.soepy.educ.shares.pkl"
+    model_spec_init_dict["INITIAL_CONDITIONS"][
+        "child_age_init_max"
+    ] = child_age_init_max
+
     model_spec_init_dict["EXOG_PROC"]["child_info_file_name"] = "test.soepy.child.pkl"
     model_spec_init_dict["EXOG_PROC"][
         "partner_info_file_name"
@@ -313,6 +322,11 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["TAXES_TRANSFERS"] = dict()
     init_dict["TAXES_TRANSFERS"]["benefits_base"] = init_dict_flat["benefits_base"]
     init_dict["TAXES_TRANSFERS"]["benefits_kids"] = init_dict_flat["benefits_kids"]
+
+    init_dict["INITIAL_CONDITIONS"] = dict()
+    init_dict["INITIAL_CONDITIONS"]["child_age_init_max"] = init_dict_flat[
+        "child_age_init_max"
+    ]
 
     init_dict["EXOG_PROC"] = dict()
     init_dict["EXOG_PROC"]["child_age_max"] = init_dict_flat["child_age_max"]

@@ -63,7 +63,7 @@ def gen_prob_child_init_age_vector(model_spec):
     child_age_shares = pd.read_pickle(model_spec.child_age_shares_file_name)
 
     prob_child_age = []
-    for educ_level in range(3):
+    for educ_level in range(model_spec.num_educ_levels):
         child_age_shares_list = child_age_shares[
             child_age_shares.index.get_level_values("educ_level") == educ_level
         ]["child_age_shares"].to_list()

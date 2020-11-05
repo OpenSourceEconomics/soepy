@@ -18,6 +18,7 @@ TAXES_TRANSFERS:
 INITIAL_CONDITIONS:
     educ_shares_file_name: 'exog_educ_shares.pkl'
     child_age_shares_file_name: 'exog_child_age_shares.pkl'
+    child_age_init_max: 4
 EXOG_PROC:
     child_info_file_name: 'exog_child_info.pkl'
     partner_info_file_name: 'exog_partner_info.pkl'

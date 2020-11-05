@@ -48,7 +48,7 @@ def pyth_simulate(
         )
         # Partner
         initial_partner_status[initial_educ_level == educ_level] = np.random.binomial(
-            size=model_spec.num_agents_sim,
+            size=sum(initial_educ_level == educ_level),
             n=1,
             p=prob_partner[0, educ_level],
         )
@@ -84,7 +84,7 @@ def pyth_simulate(
                 initial_partner_status,
             )
         ),
-        columns=DATA_LABLES_SIM[:7],
+        columns=DATA_LABLES_SIM[:9],
     ).astype(np.int)
 
     data = []
