@@ -53,3 +53,21 @@ def gen_prob_child_vector(model_spec):
     ), "Probability of childbirth and number of periods length mismatch"
 
     return prob_child
+
+
+def gen_prob_child_init_age_vector(model_spec):
+    """Generates a list of lists containing the shares of individuals with
+    kids aged -1 (no kids), 0, 1, 2, 3, and 4 in the model's first period.
+    Shares differ by the level of education of the individuals."""
+
+    child_age_shares = pd.read_pickle(model_spec.child_age_shares_file_name)
+
+    prob_child_age = []
+    for educ_level in range(3):
+        child_age_shares_list = child_age_shares[
+            child_age_shares.index.get_level_values("educ_level") == educ_level
+        ]["child_age_shares"].to_list()
+        child_age_shares_list[0] = 1 - sum(child_age_shares_list[1:])
+        prob_child_age.append(child_age_shares_list)
+
+    return prob_child_age

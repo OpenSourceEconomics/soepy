@@ -1,6 +1,7 @@
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.exogenous_processes.children import gen_prob_child_vector
+from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.solve.solve_python import pyth_solve
@@ -18,6 +19,7 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner = gen_prob_partner(model_spec)
     prob_educ_level = gen_prob_educ_level_vector(model_spec)
+    prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
     # Obtain model solution
     (
@@ -44,6 +46,7 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
         prob_child,
         prob_partner,
         prob_educ_level,
+        prob_child_age,
         is_expected=False,
     )
 

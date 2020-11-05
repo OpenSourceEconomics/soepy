@@ -23,15 +23,35 @@ def pyth_simulate(
     prob_child,
     prob_partner,
     prob_educ_level,
+    prob_child_age,
     is_expected,
 ):
     """Simulate agent experiences."""
 
-    # Draw random initial conditions
     np.random.seed(model_spec.seed_sim)
+
+    # Draw initial condition: education level
     initial_educ_level = np.random.choice(
         model_spec.num_educ_levels, model_spec.num_agents_sim, p=prob_educ_level
     )
+
+    # Draw initial conditions: age of youngest child and partner status
+    initial_child_age = np.full(model_spec.num_agents_sim, np.nan)
+    initial_partner_status = np.full(model_spec.num_agents_sim, np.nan)
+
+    for educ_level in range(model_spec.num_educ_levels):
+        # child
+        initial_child_age[initial_educ_level == educ_level] = np.random.choice(
+            [-1, 0, 1, 2, 3, 4],
+            sum(initial_educ_level == educ_level),
+            p=prob_child_age[educ_level],
+        )
+        # Partner
+        initial_partner_status[initial_educ_level == educ_level] = np.random.binomial(
+            size=model_spec.num_agents_sim,
+            n=1,
+            p=prob_partner[0, educ_level],
+        )
 
     # Draw random type
     type_ = np.random.choice(
@@ -60,6 +80,8 @@ def pyth_simulate(
                 initial_educ_level,
                 np.zeros((model_spec.num_agents_sim, 3)),
                 type_,
+                initial_child_age,
+                initial_partner_status,
             )
         ),
         columns=DATA_LABLES_SIM[:7],
@@ -73,28 +95,6 @@ def pyth_simulate(
         initial_states_in_period = initial_states.loc[
             initial_states.Period.eq(period)
         ].to_numpy()
-
-        # Draw indicator of child appearing in the first period
-        kids_init_draw = np.random.binomial(
-            size=initial_states_in_period.shape[0],
-            n=1,
-            p=prob_child[period],
-        )
-
-        # Convert to init age of child
-        child_init_age = np.where(kids_init_draw == 0, -1, 0)
-
-        # Draw presence of partner in the first period
-        partner_status_init_draw = np.random.binomial(
-            size=initial_states_in_period.shape[0],
-            n=1,
-            p=prob_partner[period, initial_states_in_period[:, 2]],
-        )
-
-        # Add columns to state space
-        initial_states_in_period = np.c_[
-            initial_states_in_period, child_init_age, partner_status_init_draw
-        ]
 
         # Get all agents in the period.
         if period == 0:
