@@ -68,6 +68,7 @@ def random_init(constr=None):
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",
+        "INITIAL_CONDITIONS",
         "EXOG_PROC",
     ]:
         model_spec_init_dict[key_] = {}
@@ -88,7 +89,7 @@ def random_init(constr=None):
     model_spec_init_dict["TAXES_TRANSFERS"]["benefits_base"] = benefits_base
     model_spec_init_dict["TAXES_TRANSFERS"]["benefits_kids"] = benefits_kids
 
-    model_spec_init_dict["EXOG_PROC"][
+    model_spec_init_dict["INITIAL_CONDITIONS"][
         "educ_shares_file_name"
     ] = "test.soepy.educ.shares.pkl"
     model_spec_init_dict["EXOG_PROC"]["child_info_file_name"] = "test.soepy.child.pkl"
@@ -267,6 +268,7 @@ def print_dict(model_spec_init_dict, file_name="test"):
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",
+        "INITIAL_CONDITIONS",
         "EXOG_PROC",
     ]
     for key_ in order:
@@ -313,9 +315,6 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["TAXES_TRANSFERS"]["benefits_kids"] = init_dict_flat["benefits_kids"]
 
     init_dict["EXOG_PROC"] = dict()
-    init_dict["EXOG_PROC"]["child_info_file_name"] = init_dict_flat[
-        "child_info_file_name"
-    ]
     init_dict["EXOG_PROC"]["child_age_max"] = init_dict_flat["child_age_max"]
     init_dict["EXOG_PROC"]["last_child_bearing_period"] = init_dict_flat[
         "last_child_bearing_period"
