@@ -98,6 +98,9 @@ def random_init(constr=None):
         "educ_shares_file_name"
     ] = "test.soepy.educ.shares.pkl"
     model_spec_init_dict["INITIAL_CONDITIONS"][
+        "child_age_shares_file_name"
+    ] = "test.soepy.child.age.shares.pkl"
+    model_spec_init_dict["INITIAL_CONDITIONS"][
         "child_age_init_max"
     ] = child_age_init_max
 
@@ -240,6 +243,25 @@ def random_init(constr=None):
     )
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
 
+    # Generate random fractions for initial child ages
+    # Constrained model without kids
+    if child_age_init_max == -1:
+        child_age_shares = np.repeat(0.00, len(educ_years))
+        index_levels = [list(range(len(educ_years))), [child_age_init_max]]
+    else:
+        child_age_shares = np.random.uniform(
+            1, 10, size=(child_age_init_max + 2) * len(educ_years)
+        )
+        child_age_shares /= child_age_shares.sum()
+        index_levels = [[0, 1, 2], list(range(-1, child_age_init_max + 1))]
+    index = pd.MultiIndex.from_product(index_levels, names=["educ_level", "child_age"])
+    exog_child_age_shares = pd.DataFrame(
+        child_age_shares.tolist(),
+        index=index,
+        columns=["child_age_shares"],
+    )
+    exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
+
     # Generate random probabilities of partner arrival
     index_levels = [list(range(0, periods)), [0, 1, 2]]
     index = pd.MultiIndex.from_product(index_levels, names=["period", "educ_level"])
@@ -262,6 +284,7 @@ def random_init(constr=None):
         model_spec_init_dict,
         random_model_params_df,
         exog_educ_shares,
+        exog_child_age_shares,
         exog_child_info,
         exog_partner_info,
     )

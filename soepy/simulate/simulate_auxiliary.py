@@ -42,7 +42,7 @@ def pyth_simulate(
     for educ_level in range(model_spec.num_educ_levels):
         # child
         initial_child_age[initial_educ_level == educ_level] = np.random.choice(
-            [-1, 0, 1, 2, 3, 4],
+            list(range(-1, model_spec.child_age_init_max + 1)),
             sum(initial_educ_level == educ_level),
             p=prob_child_age[educ_level],
         )
