@@ -224,4 +224,14 @@ def pyth_simulate(
     dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
         DATA_FORMATS_SIM
     )
+
+    # Determine the period wage given choice in the period
+    dataset["Wage_Observed"] = 0
+    dataset.loc[dataset["Choice"] == 1, "Wage_Observed"] = dataset.loc[
+        dataset["Choice"] == 1, "Period_Wage_P"
+    ]
+    dataset.loc[dataset["Choice"] == 2, "Wage_Observed"] = dataset.loc[
+        dataset["Choice"] == 2, "Period_Wage_F"
+    ]
+
     return dataset
