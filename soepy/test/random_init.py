@@ -266,7 +266,7 @@ def random_init(constr=None):
     index_levels = [list(range(0, periods)), [0, 1, 2]]
     index = pd.MultiIndex.from_product(index_levels, names=["period", "educ_level"])
     if "PARTNER" in constr.keys():
-        exog_partner_info = pd.DataFrame(
+        exog_partner_arrival_info = pd.DataFrame(
             np.zeros(periods * 3).tolist(),
             index=index,
             columns=["prob_partner_values"],

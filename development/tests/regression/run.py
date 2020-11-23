@@ -48,7 +48,7 @@ def create_vault(num_test=1000, seed=123456):
             exog_educ_shares,
             exog_child_age_shares,
             exog_child_info,
-            exog_partner_info,
+            exog_partner_arrival_info,
         ) = random_init()
 
         df = simulate("test.soepy.pkl", "test.soepy.yml")
@@ -60,7 +60,7 @@ def create_vault(num_test=1000, seed=123456):
                 exog_educ_shares,
                 exog_child_age_shares,
                 exog_child_info,
-                exog_partner_info,
+                exog_partner_arrival_info,
                 df,
             )
         ]
@@ -86,14 +86,14 @@ def check_vault(num_test):
             exog_educ_shares,
             exog_child_age_shares,
             exog_child_info,
-            exog_partner_info,
+            exog_partner_arrival_info,
             expected_df,
         ) = test
 
         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
         exog_child_info.to_pickle("test.soepy.child.pkl")
-        exog_partner_info.to_pickle("test.soepy.partner.pkl")
+        exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
