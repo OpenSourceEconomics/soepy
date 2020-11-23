@@ -10,6 +10,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_arrival
+from soepy.exogenous_processes.partner import gen_prob_partner_separation
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.simulate.simulate_python import simulate
@@ -89,6 +90,7 @@ def test_unit_data_frame_shape():
 
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner_arrival = gen_prob_partner_arrival(model_spec)
+        prob_partner_separation = gen_prob_partner_separation(model_spec)
         prob_educ_years = gen_prob_educ_level_vector(model_spec)
         prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
@@ -106,6 +108,7 @@ def test_unit_data_frame_shape():
             model_spec,
             prob_child,
             prob_partner_arrival,
+            prob_partner_separation,
             is_expected=False,
         )
 
@@ -122,6 +125,7 @@ def test_unit_data_frame_shape():
             child_age_update_rule,
             prob_child,
             prob_partner_arrival,
+            prob_partner_separation,
             prob_educ_years,
             prob_child_age,
             is_expected=False,
@@ -539,6 +543,7 @@ def test_no_children_prob_0():
     prob_child = np.full(model_spec.num_periods, 0.00)
 
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
+    prob_partner_separation = gen_prob_partner_separation(model_spec)
     prob_educ_years = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
@@ -552,7 +557,12 @@ def test_no_children_prob_0():
         emaxs,
         child_age_update_rule,
     ) = pyth_solve(
-        model_params, model_spec, prob_child, prob_partner_arrival, is_expected
+        model_params,
+        model_spec,
+        prob_child,
+        prob_partner_arrival,
+        prob_partner_separation,
+        is_expected,
     )
 
     # Simulate
@@ -568,6 +578,7 @@ def test_no_children_prob_0():
         child_age_update_rule,
         prob_child,
         prob_partner_arrival,
+        prob_partner_separation,
         prob_educ_years,
         prob_child_age,
         is_expected=False,
@@ -593,6 +604,7 @@ def test_educ_level_shares():
 
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
+    prob_partner_separation = gen_prob_partner_separation(model_spec)
     prob_educ_years = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
@@ -610,6 +622,7 @@ def test_educ_level_shares():
         model_spec,
         prob_child,
         prob_partner_arrival,
+        prob_partner_separation,
         is_expected=False,
     )
 
@@ -626,6 +639,7 @@ def test_educ_level_shares():
         child_age_update_rule,
         prob_child,
         prob_partner_arrival,
+        prob_partner_separation,
         prob_educ_years,
         prob_child_age,
         is_expected=False,
@@ -670,6 +684,7 @@ def test_coef_educ_level_specificity():
 
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner_arrival = gen_prob_partner_arrival(model_spec)
+        prob_partner_separation = gen_prob_partner_separation(model_spec)
         prob_educ_level = gen_prob_educ_level_vector(model_spec)
         prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
@@ -687,6 +702,7 @@ def test_coef_educ_level_specificity():
             model_spec,
             prob_child,
             prob_partner_arrival,
+            prob_partner_separation,
             is_expected=False,
         )
 
@@ -703,6 +719,7 @@ def test_coef_educ_level_specificity():
             child_age_update_rule,
             prob_child,
             prob_partner_arrival,
+            prob_partner_separation,
             prob_educ_level,
             prob_child_age,
             is_expected=False,

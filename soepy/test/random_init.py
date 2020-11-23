@@ -108,6 +108,9 @@ def random_init(constr=None):
     model_spec_init_dict["EXOG_PROC"][
         "partner_arrival_info_file_name"
     ] = "test.soepy.partner.arrival.pkl"
+    model_spec_init_dict["EXOG_PROC"][
+        "partner_separation_info_file_name"
+    ] = "test.soepy.partner.separation.pkl"
     model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
     model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = periods
     model_spec_init_dict["EXOG_PROC"]["partner_cf_const"] = 3
@@ -224,15 +227,6 @@ def random_init(constr=None):
     exog_child_info.index.name = "period"
     exog_child_info.to_pickle("test.soepy.child.pkl")
 
-    # Generate random probabilities of marriage
-    index_levels = [list(range(0, periods)), [0, 1, 2]]
-
-    index = pd.MultiIndex.from_product(index_levels, names=["period", "educ_level"])
-    exog_partner_arrival_info = pd.DataFrame(
-        np.zeros(periods * 3).tolist(), index=index, columns=["prob_partner_values"]
-    )
-    exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
-
     # Generate random fractions for education levels
     educ_shares = np.random.uniform(1, 10, size=len(educ_years))
     educ_shares /= educ_shares.sum()
@@ -265,7 +259,7 @@ def random_init(constr=None):
     # Generate random probabilities of partner arrival
     index_levels = [list(range(0, periods)), [0, 1, 2]]
     index = pd.MultiIndex.from_product(index_levels, names=["period", "educ_level"])
-    if "PARTNER" in constr.keys():
+    if "PARTNER_ARRIVAL" in constr.keys():
         exog_partner_arrival_info = pd.DataFrame(
             np.zeros(periods * 3).tolist(),
             index=index,
@@ -278,7 +272,23 @@ def random_init(constr=None):
             columns=["prob_partner_values"],
         )
 
-    exog_partner_arrival_info.to_pickle("test.soepy.partner.pkl")
+    exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
+
+    # Generate random probabilities of partner separation
+    if "PARTNER_SEPARATION" in constr.keys():
+        exog_partner_separation_info = pd.DataFrame(
+            np.zeros(periods * 3).tolist(),
+            index=index,
+            columns=["prob_partner_values"],
+        )
+    else:
+        exog_partner_separation_info = pd.DataFrame(
+            np.random.uniform(0, 1, size=periods * 3).tolist(),
+            index=index,
+            columns=["prob_partner_values"],
+        )
+
+    exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
     return (
         model_spec_init_dict,
@@ -287,6 +297,7 @@ def random_init(constr=None):
         exog_child_age_shares,
         exog_child_info,
         exog_partner_arrival_info,
+        exog_partner_separation_info,
     )
 
 

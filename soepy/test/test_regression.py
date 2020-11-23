@@ -34,6 +34,10 @@ def test1():
             "partner_arrival_info_file_name"
         ] = model_spec_init_dict["EXOG_PROC"].pop("partner_info_file_name")
 
+        model_spec_init_dict["EXOG_PROC"][
+            "partner_separation_info_file_name"
+        ] = "test.soepy.partner.pkl"
+
         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
         exog_child_info.to_pickle("test.soepy.child.pkl")
