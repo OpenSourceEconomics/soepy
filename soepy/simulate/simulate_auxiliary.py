@@ -21,7 +21,7 @@ def pyth_simulate(
     non_employment_benefits,
     child_age_update_rule,
     prob_child,
-    prob_partner,
+    prob_partner_arrival,
     prob_educ_level,
     prob_child_age,
     is_expected,
@@ -50,7 +50,7 @@ def pyth_simulate(
         initial_partner_status[initial_educ_level == educ_level] = np.random.binomial(
             size=sum(initial_educ_level == educ_level),
             n=1,
-            p=prob_partner[0, educ_level],
+            p=prob_partner_arrival[0, educ_level],
         )
 
     # Draw random type
@@ -186,7 +186,7 @@ def pyth_simulate(
         partner_current_draw = np.random.binomial(
             size=current_states_no_partner.shape[0],
             n=1,
-            p=prob_partner[period, current_states_no_partner[:, 2]],
+            p=prob_partner_arrival[period, current_states_no_partner[:, 2]],
         )
         current_partner_status = current_states[:, 8]
         current_partner_status[

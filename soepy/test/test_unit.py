@@ -9,7 +9,7 @@ from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
-from soepy.exogenous_processes.partner import gen_prob_partner
+from soepy.exogenous_processes.partner import gen_prob_partner_arrival
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.simulate.simulate_python import simulate
@@ -88,7 +88,7 @@ def test_unit_data_frame_shape():
         model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
         prob_child = gen_prob_child_vector(model_spec)
-        prob_partner = gen_prob_partner(model_spec)
+        prob_partner_arrival = gen_prob_partner_arrival(model_spec)
         prob_educ_years = gen_prob_educ_level_vector(model_spec)
         prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
@@ -105,7 +105,7 @@ def test_unit_data_frame_shape():
             model_params,
             model_spec,
             prob_child,
-            prob_partner,
+            prob_partner_arrival,
             is_expected=False,
         )
 
@@ -121,7 +121,7 @@ def test_unit_data_frame_shape():
             non_employment_benefits,
             child_age_update_rule,
             prob_child,
-            prob_partner,
+            prob_partner_arrival,
             prob_educ_years,
             prob_child_age,
             is_expected=False,
@@ -538,7 +538,7 @@ def test_no_children_prob_0():
     # Set probability of having children to zero for all periods
     prob_child = np.full(model_spec.num_periods, 0.00)
 
-    prob_partner = gen_prob_partner(model_spec)
+    prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_educ_years = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
@@ -551,7 +551,9 @@ def test_no_children_prob_0():
         non_employment_benefits,
         emaxs,
         child_age_update_rule,
-    ) = pyth_solve(model_params, model_spec, prob_child, prob_partner, is_expected)
+    ) = pyth_solve(
+        model_params, model_spec, prob_child, prob_partner_arrival, is_expected
+    )
 
     # Simulate
     df = pyth_simulate(
@@ -565,7 +567,7 @@ def test_no_children_prob_0():
         non_employment_benefits,
         child_age_update_rule,
         prob_child,
-        prob_partner,
+        prob_partner_arrival,
         prob_educ_years,
         prob_child_age,
         is_expected=False,
@@ -590,7 +592,7 @@ def test_educ_level_shares():
     model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
     prob_child = gen_prob_child_vector(model_spec)
-    prob_partner = gen_prob_partner(model_spec)
+    prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_educ_years = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
@@ -607,7 +609,7 @@ def test_educ_level_shares():
         model_params,
         model_spec,
         prob_child,
-        prob_partner,
+        prob_partner_arrival,
         is_expected=False,
     )
 
@@ -623,7 +625,7 @@ def test_educ_level_shares():
         non_employment_benefits,
         child_age_update_rule,
         prob_child,
-        prob_partner,
+        prob_partner_arrival,
         prob_educ_years,
         prob_child_age,
         is_expected=False,
@@ -667,7 +669,7 @@ def test_coef_educ_level_specificity():
         model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
         prob_child = gen_prob_child_vector(model_spec)
-        prob_partner = gen_prob_partner(model_spec)
+        prob_partner_arrival = gen_prob_partner_arrival(model_spec)
         prob_educ_level = gen_prob_educ_level_vector(model_spec)
         prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
@@ -684,7 +686,7 @@ def test_coef_educ_level_specificity():
             model_params,
             model_spec,
             prob_child,
-            prob_partner,
+            prob_partner_arrival,
             is_expected=False,
         )
 
@@ -700,7 +702,7 @@ def test_coef_educ_level_specificity():
             non_employment_benefits,
             child_age_update_rule,
             prob_child,
-            prob_partner,
+            prob_partner_arrival,
             prob_educ_level,
             prob_child_age,
             is_expected=False,

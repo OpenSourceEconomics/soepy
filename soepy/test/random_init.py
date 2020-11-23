@@ -106,7 +106,7 @@ def random_init(constr=None):
 
     model_spec_init_dict["EXOG_PROC"]["child_info_file_name"] = "test.soepy.child.pkl"
     model_spec_init_dict["EXOG_PROC"][
-        "partner_info_file_name"
+        "partner_arrival_info_file_name"
     ] = "test.soepy.partner.pkl"
     model_spec_init_dict["EXOG_PROC"]["child_age_max"] = 12
     model_spec_init_dict["EXOG_PROC"]["last_child_bearing_period"] = periods

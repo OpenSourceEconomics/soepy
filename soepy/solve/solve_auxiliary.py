@@ -337,7 +337,7 @@ def pyth_backward_induction(
     covariates,
     child_age_update_rule,
     prob_child,
-    prob_partner,
+    prob_partner_arrival,
     non_employment_benefits,
 ):
     """Get expected maximum value function at every state space point.
@@ -395,7 +395,7 @@ def pyth_backward_induction(
         prob_child_period = prob_child[period]
 
         # Probability that a partner arrives
-        prob_partner_period = prob_partner[period]
+        prob_partner_period = prob_partner_arrival[period]
 
         # Period rewards
         log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
