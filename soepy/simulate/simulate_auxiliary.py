@@ -23,15 +23,35 @@ def pyth_simulate(
     prob_child,
     prob_partner,
     prob_educ_level,
+    prob_child_age,
     is_expected,
 ):
     """Simulate agent experiences."""
 
-    # Draw random initial conditions
     np.random.seed(model_spec.seed_sim)
+
+    # Draw initial condition: education level
     initial_educ_level = np.random.choice(
         model_spec.num_educ_levels, model_spec.num_agents_sim, p=prob_educ_level
     )
+
+    # Draw initial conditions: age of youngest child and partner status
+    initial_child_age = np.full(model_spec.num_agents_sim, np.nan)
+    initial_partner_status = np.full(model_spec.num_agents_sim, np.nan)
+
+    for educ_level in range(model_spec.num_educ_levels):
+        # child
+        initial_child_age[initial_educ_level == educ_level] = np.random.choice(
+            list(range(-1, model_spec.child_age_init_max + 1)),
+            sum(initial_educ_level == educ_level),
+            p=prob_child_age[educ_level],
+        )
+        # Partner
+        initial_partner_status[initial_educ_level == educ_level] = np.random.binomial(
+            size=sum(initial_educ_level == educ_level),
+            n=1,
+            p=prob_partner[0, educ_level],
+        )
 
     # Draw random type
     type_ = np.random.choice(
@@ -60,9 +80,11 @@ def pyth_simulate(
                 initial_educ_level,
                 np.zeros((model_spec.num_agents_sim, 3)),
                 type_,
+                initial_child_age,
+                initial_partner_status,
             )
         ),
-        columns=DATA_LABLES_SIM[:7],
+        columns=DATA_LABLES_SIM[:9],
     ).astype(np.int)
 
     data = []
@@ -73,28 +95,6 @@ def pyth_simulate(
         initial_states_in_period = initial_states.loc[
             initial_states.Period.eq(period)
         ].to_numpy()
-
-        # Draw indicator of child appearing in the first period
-        kids_init_draw = np.random.binomial(
-            size=initial_states_in_period.shape[0],
-            n=1,
-            p=prob_child[period],
-        )
-
-        # Convert to init age of child
-        child_init_age = np.where(kids_init_draw == 0, -1, 0)
-
-        # Draw presence of partner in the first period
-        partner_status_init_draw = np.random.binomial(
-            size=initial_states_in_period.shape[0],
-            n=1,
-            p=prob_partner[period, initial_states_in_period[:, 2]],
-        )
-
-        # Add columns to state space
-        initial_states_in_period = np.c_[
-            initial_states_in_period, child_init_age, partner_status_init_draw
-        ]
 
         # Get all agents in the period.
         if period == 0:
@@ -181,9 +181,17 @@ def pyth_simulate(
             child_current_age = child_age_update_rule[idx]
 
         # Update partner status according to random draw
-        partner_current_draw = np.full(current_states.shape[0], np.nan)
-        for l in range(3):
-            partner_current_draw[states[:, 2][idx] == l] = prob_partner[period, l]
+        # Get individuals without partner
+        current_states_no_partner = current_states[np.where(current_states[:, 8] == 0)]
+        partner_current_draw = np.random.binomial(
+            size=current_states_no_partner.shape[0],
+            n=1,
+            p=prob_partner[period, current_states_no_partner[:, 2]],
+        )
+        current_partner_status = current_states[:, 8]
+        current_partner_status[
+            np.where(current_states[:, 8] == 0)
+        ] = partner_current_draw
 
         # Record period experiences
         rows = np.column_stack(
@@ -211,9 +219,19 @@ def pyth_simulate(
             choice == 2, current_states[:, 5] + 1, current_states[:, 5]
         )
         current_states[:, 7] = child_current_age
-        current_states[:, 8] = partner_current_draw
+        current_states[:, 8] = current_partner_status
 
     dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
         DATA_FORMATS_SIM
     )
+
+    # Determine the period wage given choice in the period
+    dataset["Wage_Observed"] = 0
+    dataset.loc[dataset["Choice"] == 1, "Wage_Observed"] = dataset.loc[
+        dataset["Choice"] == 1, "Period_Wage_P"
+    ]
+    dataset.loc[dataset["Choice"] == 2, "Wage_Observed"] = dataset.loc[
+        dataset["Choice"] == 2, "Period_Wage_F"
+    ]
+
     return dataset

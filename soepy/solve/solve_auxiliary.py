@@ -79,7 +79,7 @@ def pyth_create_state_space(model_spec):
                     # Can be relaxed, e.g., we assume that 1st kid can arrive earliest when
                     # a woman is 16 years old, the condition becomes:
                     # if age_kid > period + 1.
-                    if age_kid > period:
+                    if age_kid - model_spec.child_age_init_max > period:
                         continue
                     # Make sure that women above 42 do not get kids
                     # For periods corresponding to ages > 40, the `age_kid`

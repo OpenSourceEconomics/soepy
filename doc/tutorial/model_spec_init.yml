@@ -1,0 +1,30 @@
+---
+GENERAL:
+    num_periods: 39
+CONSTANTS:
+    delta: 0.98
+    mu: -0.56
+EDUC:
+    educ_years: [0, 0, 0]
+SIMULATION:
+    seed_sim: 102
+    num_agents_sim: 1000
+SOLUTION:
+    seed_emax: 635
+    num_draws_emax: 500
+TAXES_TRANSFERS:
+    benefits_base: 200
+    benefits_kids: 70
+INITIAL_CONDITIONS:
+    educ_shares_file_name: 'exog_educ_shares.pkl'
+    child_age_shares_file_name: 'exog_child_age_shares.pkl'
+    child_age_init_max: 4
+EXOG_PROC:
+    child_info_file_name: 'exog_child_info.pkl'
+    partner_info_file_name: 'exog_partner_info.pkl'
+    child_age_max: 12
+    last_child_bearing_period: 24
+    partner_cf_const: 2.424498
+    partner_cf_age: 0.036223
+    partner_cf_age_sq: -0.000689
+    partner_cf_educ: 0.153372

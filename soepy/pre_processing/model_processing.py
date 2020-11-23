@@ -173,6 +173,7 @@ def flatten_model_spec_dict(model_spec_dict):
         "SOLUTION",
         "TAXES_TRANSFERS",
         "EXOG_PROC",
+        "INITIAL_CONDITIONS",
         "DERIVED_ATTR",
     ]
 

@@ -14,10 +14,16 @@ def func(maxrt):
         (
             model_spec_init_dict,
             random_model_params_df,
+            exog_educ_shares,
+            exog_child_age_shares,
             exog_child_info,
-            exog_educ_info,
             exog_partner_info,
         ) = random_init()
+
+        exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
+        exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
+        exog_child_info.to_pickle("test.soepy.child.pkl")
+        exog_partner_info.to_pickle("test.soepy.partner.pkl")
 
         simulate(random_model_params_df, model_spec_init_dict)
 
