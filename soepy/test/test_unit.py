@@ -155,7 +155,7 @@ def test_unit_states_hard_code():
          last_child_bearing_period, child_age_max \
          educ_years child_age_init_max",
     )
-    model_spec = model_spec(2, 3, 2, 24, 12, [0, 0, 0], 4)
+    model_spec = model_spec(2, 3, 2, 24, 10, [0, 0, 0], 4)
 
     states, _ = pyth_create_state_space(model_spec)
 
@@ -504,7 +504,7 @@ def test_unit_childbearing_age():
     num_periods = randint(1, 11)
     last_child_bearing_period = randrange(num_periods)
     model_spec = model_spec(
-        num_periods, 3, 2, last_child_bearing_period, 12, [0, 1, 2], 4
+        num_periods, 3, 2, last_child_bearing_period, 10, [0, 1, 2], 4
     )
 
     states, _ = pyth_create_state_space(model_spec)

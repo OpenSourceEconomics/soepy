@@ -45,7 +45,7 @@ def pyth_create_state_space(model_spec):
         Switching from one state is possible via incrementing appropriate indices by 1.
     """
     data = []
-    kids_ages = np.arange(-1, model_spec.child_age_max)
+    kids_ages = np.arange(-1, model_spec.child_age_max + 1)
 
     # Array for mapping the state space points (states) to indices
     shape = (

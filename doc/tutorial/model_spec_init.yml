@@ -23,7 +23,7 @@ EXOG_PROC:
     child_info_file_name: 'exog_child_info.pkl'
     partner_arrival_info_file_name: 'exog_partner_arrival_info.pkl'
     partner_separation_info_file_name: 'exog_partner_separation_info.pkl'
-    child_age_max: 12
+    child_age_max: 10
     last_child_bearing_period: 24
     partner_cf_const: 2.424498
     partner_cf_age: 0.036223
