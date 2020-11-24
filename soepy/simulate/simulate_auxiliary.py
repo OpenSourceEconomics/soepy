@@ -206,7 +206,7 @@ def pyth_simulate(
         )
         current_partner_status[
             np.where(current_states[:, 8] == 1)
-        ] = partner_separation_current_draw
+        ] -= partner_separation_current_draw
 
         # Record period experiences
         rows = np.column_stack(
