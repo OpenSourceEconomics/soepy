@@ -20,11 +20,12 @@ def pyth_simulate(
     budget_constraint_components,
     non_employment_benefits,
     child_age_update_rule,
+    prob_educ_level,
+    prob_child_age,
+    prob_partner_present,
     prob_child,
     prob_partner_arrival,
     prob_partner_separation,
-    prob_educ_level,
-    prob_child_age,
     is_expected,
 ):
     """Simulate agent experiences."""
@@ -41,7 +42,7 @@ def pyth_simulate(
     initial_partner_status = np.full(model_spec.num_agents_sim, np.nan)
 
     for educ_level in range(model_spec.num_educ_levels):
-        # child
+        # Child
         initial_child_age[initial_educ_level == educ_level] = np.random.choice(
             list(range(-1, model_spec.child_age_init_max + 1)),
             sum(initial_educ_level == educ_level),
@@ -51,9 +52,8 @@ def pyth_simulate(
         initial_partner_status[initial_educ_level == educ_level] = np.random.binomial(
             size=sum(initial_educ_level == educ_level),
             n=1,
-            p=prob_partner_arrival[0, educ_level],
+            p=prob_partner_present[educ_level],
         )
-
     # Draw random type
     type_ = np.random.choice(
         list(np.arange(model_spec.num_types)),
@@ -159,10 +159,11 @@ def pyth_simulate(
         # Determine choice as option with highest choice specific value function
         choice = np.argmax(value_functions, axis=1)
 
+        child_current_age = current_states[:, 7]
         # Modification for simulations with very few periods
         # where maximum childbearing age is not reached by the end of the model
         if period == model_spec.num_periods - 1:
-            child_current_age = current_states[:, 7]
+            child_new_age = child_current_age
         # Periods where the probability to have a child is still positive
         elif period <= model_spec.last_child_bearing_period:
             # Update current states according to exogenous processes
@@ -174,39 +175,37 @@ def pyth_simulate(
             )
 
             # Convert to age of child according to age update rule
-            child_current_age = np.where(
+            child_new_age = np.where(
                 kids_current_draw == 0, child_age_update_rule[idx], 0
             )
             # Periods where no new child can arrive
         else:
-            child_current_age = child_age_update_rule[idx]
+            child_new_age = child_age_update_rule[idx]
 
         # Update partner status according to random draw
         current_partner_status = current_states[:, 8]
+        new_partner_status = np.full(current_states.shape[0], np.nan)
 
         # Get individuals without partner
-        current_states_no_partner = current_states[np.where(current_states[:, 8] == 0)]
+        current_states_no_partner = current_states[current_states[:, 8] == 0]
         partner_arrival_current_draw = np.random.binomial(
             size=current_states_no_partner.shape[0],
             n=1,
             p=prob_partner_arrival[period, current_states_no_partner[:, 2]],
         )
-        current_partner_status[
-            np.where(current_states[:, 8] == 0)
-        ] = partner_arrival_current_draw
+        new_partner_status[current_states[:, 8] == 0] = partner_arrival_current_draw
 
         # Get individuals with partner
-        current_states_with_partner = current_states[
-            np.where(current_states[:, 8] == 1)
-        ]
+        current_states_with_partner = current_states[current_states[:, 8] == 1]
         partner_separation_current_draw = np.random.binomial(
             size=current_states_with_partner.shape[0],
             n=1,
             p=prob_partner_separation[period, current_states_with_partner[:, 2]],
         )
-        current_partner_status[
-            np.where(current_states[:, 8] == 1)
-        ] -= partner_separation_current_draw
+        new_partner_status[current_states[:, 8] == 1] = (
+            current_partner_status[current_states[:, 8] == 1]
+            - partner_separation_current_draw
+        )
 
         # Record period experiences
         rows = np.column_stack(
@@ -233,8 +232,8 @@ def pyth_simulate(
         current_states[:, 5] = np.where(
             choice == 2, current_states[:, 5] + 1, current_states[:, 5]
         )
-        current_states[:, 7] = child_current_age
-        current_states[:, 8] = current_partner_status
+        current_states[:, 7] = child_new_age
+        current_states[:, 8] = new_partner_status
 
     dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
         DATA_FORMATS_SIM

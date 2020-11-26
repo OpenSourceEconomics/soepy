@@ -55,3 +55,15 @@ def gen_prob_partner_separation(model_spec):
     ), "Probability of marriage and number of periods length mismatch"
 
     return prob_partner_separation
+
+
+def gen_prob_partner_present_vector(model_spec):
+    """Generates a list containing the shares of individuals with
+    a partner present in the household in the model's first period.
+    Shares differ by the level of education of the individuals."""
+
+    partner_shares = pd.read_pickle(model_spec.partner_shares_file_name)
+
+    prob_partner_present = list(partner_shares["partner_shares"])
+
+    return prob_partner_present

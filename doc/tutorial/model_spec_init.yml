@@ -8,7 +8,7 @@ EDUC:
     educ_years: [0, 0, 0]
 SIMULATION:
     seed_sim: 102
-    num_agents_sim: 1000
+    num_agents_sim: 10000
 SOLUTION:
     seed_emax: 635
     num_draws_emax: 500
@@ -19,6 +19,7 @@ INITIAL_CONDITIONS:
     educ_shares_file_name: 'exog_educ_shares.pkl'
     child_age_shares_file_name: 'exog_child_age_shares.pkl'
     child_age_init_max: 4
+    partner_shares_file_name: 'exog_partner_shares_info.pkl'
 EXOG_PROC:
     child_info_file_name: 'exog_child_info.pkl'
     partner_arrival_info_file_name: 'exog_partner_arrival_info.pkl'

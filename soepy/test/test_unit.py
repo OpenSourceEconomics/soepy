@@ -7,11 +7,12 @@ from random import randrange, randint
 
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.pre_processing.model_processing import read_model_params_init
-from soepy.exogenous_processes.children import gen_prob_child_vector
+from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
+from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
+from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_arrival
 from soepy.exogenous_processes.partner import gen_prob_partner_separation
-from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
@@ -88,11 +89,12 @@ def test_unit_data_frame_shape():
         model_params_df, model_params = read_model_params_init("test.soepy.pkl")
         model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
+        prob_educ_level = gen_prob_educ_level_vector(model_spec)
+        prob_child_age = gen_prob_child_init_age_vector(model_spec)
+        prob_partner_present = gen_prob_partner_present_vector(model_spec)
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner_arrival = gen_prob_partner_arrival(model_spec)
         prob_partner_separation = gen_prob_partner_separation(model_spec)
-        prob_educ_years = gen_prob_educ_level_vector(model_spec)
-        prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
         # Solve
         (
@@ -123,11 +125,12 @@ def test_unit_data_frame_shape():
             budget_constraint_components,
             non_employment_benefits,
             child_age_update_rule,
+            prob_educ_level,
+            prob_child_age,
+            prob_partner_present,
             prob_child,
             prob_partner_arrival,
             prob_partner_separation,
-            prob_educ_years,
-            prob_child_age,
             is_expected=False,
         )
 
@@ -542,10 +545,11 @@ def test_no_children_prob_0():
     # Set probability of having children to zero for all periods
     prob_child = np.full(model_spec.num_periods, 0.00)
 
+    prob_educ_level = gen_prob_educ_level_vector(model_spec)
+    prob_child_age = gen_prob_child_init_age_vector(model_spec)
+    prob_partner_present = gen_prob_partner_present_vector(model_spec)
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_partner_separation = gen_prob_partner_separation(model_spec)
-    prob_educ_years = gen_prob_educ_level_vector(model_spec)
-    prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
     # Solve
     (
@@ -576,11 +580,12 @@ def test_no_children_prob_0():
         budget_constraint_components,
         non_employment_benefits,
         child_age_update_rule,
+        prob_educ_level,
+        prob_child_age,
+        prob_partner_present,
         prob_child,
         prob_partner_arrival,
         prob_partner_separation,
-        prob_educ_years,
-        prob_child_age,
         is_expected=False,
     )
 
@@ -588,25 +593,28 @@ def test_no_children_prob_0():
 
 
 def test_educ_level_shares():
-    """This test ensures that the shares of individuals with low, middle and high
-    education level in the simulated data frame correspond to the probabilities
+    """This test ensures that the shares of individuals with particular characteristics
+    in the simulated data frame as determined by initial conditions correspond to the probabilities
     specified in the init file.
     """
 
     constr = dict()
-    constr["AGENTS"] = 10000
-    constr["PERIODS"] = 7
+    constr["AGENTS"] = 500000
+    constr["EDUC_YEARS"] = [0, 0, 0]
+    constr["PERIODS"] = 2
+    constr["CHILD_AGE_INIT_MAX"] = 1
 
     random_init(constr)
 
     model_params_df, model_params = read_model_params_init("test.soepy.pkl")
     model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
+    prob_educ_level = gen_prob_educ_level_vector(model_spec)
+    prob_child_age = gen_prob_child_init_age_vector(model_spec)
+    prob_partner_present = gen_prob_partner_present_vector(model_spec)
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_partner_separation = gen_prob_partner_separation(model_spec)
-    prob_educ_years = gen_prob_educ_level_vector(model_spec)
-    prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
     # Solve
     (
@@ -637,20 +645,40 @@ def test_educ_level_shares():
         budget_constraint_components,
         non_employment_benefits,
         child_age_update_rule,
+        prob_educ_level,
+        prob_child_age,
+        prob_partner_present,
         prob_child,
         prob_partner_arrival,
         prob_partner_separation,
-        prob_educ_years,
-        prob_child_age,
         is_expected=False,
     )
 
+    # Education level shares
     simulated = (
-        df.groupby("Education_Level")["Identifier"].nunique().to_numpy()
+        df.groupby(["Education_Level"])["Identifier"].nunique().to_numpy()
         / constr["AGENTS"]
     )
+    np.testing.assert_almost_equal(simulated, prob_educ_level, decimal=2)
 
-    np.testing.assert_almost_equal(simulated, prob_educ_years, decimal=2)
+    # Partner status in initial period
+    simulated = (
+        df[df["Period"] == 0]
+        .groupby(["Education_Level"])["Partner_Indicator"]
+        .mean()
+        .to_numpy()
+    )
+    np.testing.assert_almost_equal(simulated, prob_partner_present, decimal=2)
+
+    # Child ages in initial period
+    simulated = (
+        df[df["Period"] == 0]
+        .groupby(["Education_Level"])["Age_Youngest_Child"]
+        .value_counts(normalize=True)
+        .to_numpy()
+    )
+    prob_child_age_flat = [item for sublist in prob_child_age for item in sublist]
+    np.testing.assert_almost_equal(simulated, prob_child_age_flat, decimal=2)
 
 
 def test_coef_educ_level_specificity():
@@ -682,11 +710,12 @@ def test_coef_educ_level_specificity():
         model_params_df, model_params = read_model_params_init(i)
         model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
+        prob_educ_level = gen_prob_educ_level_vector(model_spec)
+        prob_child_age = gen_prob_child_init_age_vector(model_spec)
+        prob_partner_present = gen_prob_partner_present_vector(model_spec)
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner_arrival = gen_prob_partner_arrival(model_spec)
         prob_partner_separation = gen_prob_partner_separation(model_spec)
-        prob_educ_level = gen_prob_educ_level_vector(model_spec)
-        prob_child_age = gen_prob_child_init_age_vector(model_spec)
 
         # Solve
         (
@@ -717,11 +746,12 @@ def test_coef_educ_level_specificity():
             budget_constraint_components,
             non_employment_benefits,
             child_age_update_rule,
+            prob_educ_level,
+            prob_child_age,
+            prob_partner_present,
             prob_child,
             prob_partner_arrival,
             prob_partner_separation,
-            prob_educ_level,
-            prob_child_age,
             is_expected=False,
         )
 

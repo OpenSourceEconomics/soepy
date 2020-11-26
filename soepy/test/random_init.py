@@ -103,6 +103,9 @@ def random_init(constr=None):
     model_spec_init_dict["INITIAL_CONDITIONS"][
         "child_age_init_max"
     ] = child_age_init_max
+    model_spec_init_dict["INITIAL_CONDITIONS"][
+        "partner_shares_file_name"
+    ] = "test.soepy.partner.shares.pkl"
 
     model_spec_init_dict["EXOG_PROC"]["child_info_file_name"] = "test.soepy.child.pkl"
     model_spec_init_dict["EXOG_PROC"][
@@ -218,15 +221,7 @@ def random_init(constr=None):
 
     random_model_params_df.to_pickle("test.soepy.pkl")
 
-    # Generate random probabilities of childbirth
-    exog_child_info = pd.DataFrame(
-        np.random.uniform(0, 1, size=periods).tolist(),
-        index=list(range(0, periods)),
-        columns=["prob_child_values"],
-    )
-    exog_child_info.index.name = "period"
-    exog_child_info.to_pickle("test.soepy.child.pkl")
-
+    # Random initial conditions
     # Generate random fractions for education levels
     educ_shares = np.random.uniform(1, 10, size=len(educ_years))
     educ_shares /= educ_shares.sum()
@@ -235,6 +230,7 @@ def random_init(constr=None):
         index=list(range(0, len(educ_years))),
         columns=["educ_shares"],
     )
+    exog_educ_shares.index.name = "educ_level"
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
 
     # Generate random fractions for initial child ages
@@ -242,6 +238,7 @@ def random_init(constr=None):
     if child_age_init_max == -1:
         child_age_shares = np.repeat(0.00, len(educ_years))
         index_levels = [list(range(len(educ_years))), [child_age_init_max]]
+    # Kids are part of the model
     else:
         child_age_shares = np.random.uniform(
             1, 10, size=(child_age_init_max + 2) * len(educ_years)
@@ -255,6 +252,25 @@ def random_init(constr=None):
         columns=["child_age_shares"],
     )
     exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
+
+    # Generate random fractions for partner present in initial period
+    exog_partner_shares = pd.DataFrame(
+        np.random.uniform(0, 1, size=len(educ_years)).tolist(),
+        index=[0, 1, 2],
+        columns=["partner_shares"],
+    )
+    exog_partner_shares.index.name = "educ_level"
+    exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
+
+    # Random process evolution throughout the model
+    # Generate random probabilities of childbirth
+    exog_child_info = pd.DataFrame(
+        np.random.uniform(0, 1, size=periods).tolist(),
+        index=list(range(0, periods)),
+        columns=["prob_child_values"],
+    )
+    exog_child_info.index.name = "period"
+    exog_child_info.to_pickle("test.soepy.child.pkl")
 
     # Generate random probabilities of partner arrival
     index_levels = [list(range(0, periods)), [0, 1, 2]]
@@ -295,6 +311,7 @@ def random_init(constr=None):
         random_model_params_df,
         exog_educ_shares,
         exog_child_age_shares,
+        exog_partner_shares,
         exog_child_info,
         exog_partner_arrival_info,
         exog_partner_separation_info,
