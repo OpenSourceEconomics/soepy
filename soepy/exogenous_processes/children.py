@@ -22,9 +22,7 @@ def define_child_age_update_rule(model_spec, states, covariates):
     )
     # Age does not exceed 10. We assume that the moment the youngest child reaches age 10
     # individuals behave as if they do not have children
-    child_age_update_rule[
-        child_age_update_rule > model_spec.child_age_max
-    ] = model_spec.child_age_max
+    child_age_update_rule[child_age_update_rule > model_spec.child_age_max] = -1
 
     return child_age_update_rule
 
