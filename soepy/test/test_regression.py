@@ -25,15 +25,19 @@ def test1():
             random_model_params_df,
             exog_educ_shares,
             exog_child_age_shares,
+            exog_partner_shares,
             exog_child_info,
-            exog_partner_info,
+            exog_partner_arrival_info,
+            exog_partner_separation_info,
             expected_df,
         ) = tests[i]
 
         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
         exog_child_info.to_pickle("test.soepy.child.pkl")
-        exog_partner_info.to_pickle("test.soepy.partner.pkl")
+        exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
+        exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
+        exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 

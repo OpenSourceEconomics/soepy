@@ -8,7 +8,14 @@ from soepy.shared.shared_auxiliary import calculate_non_employment_benefits
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 
 
-def pyth_solve(model_params, model_spec, prob_child, prob_partner, is_expected):
+def pyth_solve(
+    model_params,
+    model_spec,
+    prob_child,
+    prob_partner_arrival,
+    prob_partner_separation,
+    is_expected,
+):
     """Solve the model by backward induction.
 
     The solution routine performs four key operations:
@@ -90,7 +97,8 @@ def pyth_solve(model_params, model_spec, prob_child, prob_partner, is_expected):
         covariates,
         child_age_update_rule,
         prob_child,
-        prob_partner,
+        prob_partner_arrival,
+        prob_partner_separation,
         non_employment_benefits,
     )
 
