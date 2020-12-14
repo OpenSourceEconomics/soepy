@@ -1,6 +1,5 @@
 import pickle
 import random
-import pytest
 
 import numpy as np
 
@@ -9,7 +8,6 @@ from soepy.soepy_config import TEST_RESOURCES_DIR
 from development.tests.auxiliary.auxiliary import cleanup
 
 
-@pytest.mark.skip(reason="no way of currently testing this")
 def test1():
     """This test runs a random selection of test regression tests from
     our regression test battery.
@@ -27,23 +25,19 @@ def test1():
             random_model_params_df,
             exog_educ_shares,
             exog_child_age_shares,
+            exog_partner_shares,
             exog_child_info,
             exog_partner_arrival_info,
+            exog_partner_separation_info,
             expected_df,
         ) = tests[i]
-
-        model_spec_init_dict["EXOG_PROC"][
-            "partner_arrival_info_file_name"
-        ] = model_spec_init_dict["EXOG_PROC"].pop("partner_info_file_name")
-
-        model_spec_init_dict["EXOG_PROC"][
-            "partner_separation_info_file_name"
-        ] = "test.soepy.partner.pkl"
 
         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
         exog_child_info.to_pickle("test.soepy.child.pkl")
-        exog_partner_arrival_info.to_pickle("test.soepy.partner.pkl")
+        exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
+        exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
+        exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
