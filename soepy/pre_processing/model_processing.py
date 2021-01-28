@@ -169,6 +169,7 @@ def flatten_model_spec_dict(model_spec_dict):
         "GENERAL",
         "CONSTANTS",
         "EDUC",
+        "EXPERIENCE",
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",

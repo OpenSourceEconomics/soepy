@@ -24,6 +24,11 @@ def random_init(constr=None):
     else:
         educ_years = [0, 2, 6]
 
+    if "EXPERIENCE" in constr.keys():
+        exp_cap = constr["EXPERIENCE"]
+    else:
+        exp_cap = 15
+
     if "AGENTS" in constr.keys():
         agents = constr["AGENTS"]
     else:
@@ -70,6 +75,7 @@ def random_init(constr=None):
         "GENERAL",
         "CONSTANTS",
         "EDUC",
+        "EXPERIENCE",
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",
@@ -84,6 +90,7 @@ def random_init(constr=None):
     model_spec_init_dict["CONSTANTS"]["mu"] = np.random.uniform(-0.7, -0.4)
 
     model_spec_init_dict["EDUC"]["educ_years"] = educ_years
+    model_spec_init_dict["EXPERIENCE"]["exp_cap"] = exp_cap
 
     model_spec_init_dict["SIMULATION"]["seed_sim"] = seed_sim
     model_spec_init_dict["SIMULATION"]["num_agents_sim"] = agents
@@ -325,6 +332,7 @@ def print_dict(model_spec_init_dict, file_name="test"):
         "GENERAL",
         "CONSTANTS",
         "EDUC",
+        "EXPERIENCE",
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",
@@ -361,6 +369,8 @@ def init_dict_flat_to_init_dict(init_dict_flat):
 
     init_dict["EDUC"] = dict()
     init_dict["EDUC"]["educ_years"] = init_dict_flat["educ_years"]
+    init_dict["EXPERIENCE"] = dict()
+    init_dict["EXPERIENCE"]["exp_cap"] = init_dict_flat["exp_cap"]
 
     init_dict["SIMULATION"] = dict()
     init_dict["SIMULATION"]["seed_sim"] = init_dict_flat["seed_sim"]

@@ -6,6 +6,8 @@ CONSTANTS:
     mu: -0.56
 EDUC:
     educ_years: [0, 0, 0]
+EXPERIENCE:
+    exp_cap: 15
 SIMULATION:
     seed_sim: 102
     num_agents_sim: 10000
