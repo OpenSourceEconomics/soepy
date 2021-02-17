@@ -240,7 +240,7 @@ def pyth_simulate(
     )
 
     # Determine the period wage given choice in the period
-    dataset["Wage_Observed"] = 0
+    dataset["Wage_Observed"] = np.nan
     dataset.loc[dataset["Choice"] == 1, "Wage_Observed"] = dataset.loc[
         dataset["Choice"] == 1, "Period_Wage_P"
     ]
