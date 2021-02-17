@@ -71,7 +71,19 @@ def calculate_utility_components(
 def calculate_log_wage_systematic(model_params, model_spec, states, is_expected):
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
-    exp_p, exp_f = states[:, 3], states[:, 4]
+    exp_p_state, exp_f_state = states[:, 3], states[:, 4]
+
+    exp_p = np.where(
+        exp_p_state + exp_f_state > model_spec.exp_cap,
+        np.around(exp_p_state / (exp_p_state + exp_f_state + 0.5)) * model_spec.exp_cap,
+        exp_p_state,
+    )
+
+    exp_f = np.where(
+        exp_p_state + exp_f_state > model_spec.exp_cap,
+        np.around(exp_f_state / (exp_p_state + exp_f_state + 0.5)) * model_spec.exp_cap,
+        exp_f_state,
+    )
 
     # Construct wage components
     gamma_0s = np.array(model_params.gamma_0s)[states[:, 1]]
@@ -86,9 +98,6 @@ def calculate_log_wage_systematic(model_params, model_spec, states, is_expected)
 
     # Calculate wage in the given state
     period_exp_total = period_exp_sum * depreciation + 1
-    period_exp_total = np.where(
-        period_exp_total > model_spec.exp_cap, model_spec.exp_cap, period_exp_total
-    )
     returns_to_exp = gamma_1s * np.log(period_exp_total)
     log_wage_systematic = gamma_0s + returns_to_exp
 
