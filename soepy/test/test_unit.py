@@ -659,7 +659,9 @@ def test_educ_level_shares():
         df.groupby(["Education_Level"])["Identifier"].nunique().to_numpy()
         / constr["AGENTS"]
     )
-    np.testing.assert_almost_equal(simulated, prob_educ_level, decimal=2)
+    np.testing.assert_almost_equal(
+        simulated, prob_educ_level, decimal=2, err_msg="Education level shares mismatch"
+    )
 
     # Partner status in initial period
     simulated = (
@@ -668,7 +670,9 @@ def test_educ_level_shares():
         .mean()
         .to_numpy()
     )
-    np.testing.assert_almost_equal(simulated, prob_partner_present, decimal=2)
+    np.testing.assert_almost_equal(
+        simulated, prob_partner_present, decimal=2, err_msg="Partner shares mismatch"
+    )
 
     # Child ages in initial period
     simulated = (
@@ -678,7 +682,9 @@ def test_educ_level_shares():
         .to_numpy()
     )
     prob_child_age_flat = [item for sublist in prob_child_age for item in sublist]
-    np.testing.assert_almost_equal(simulated, prob_child_age_flat, decimal=2)
+    np.testing.assert_almost_equal(
+        simulated, prob_child_age_flat, decimal=2, err_msg="Child age shares mismatch"
+    )
 
 
 def test_coef_educ_level_specificity():
