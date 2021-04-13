@@ -122,64 +122,27 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
 
     # Children contribution
     # No children:
+    for educ_level in [0, 1, 2]:
 
-    # Low educ
-    non_consumption_utility[
-        np.where((covariates[:, 0] == 0) & (states[:, 1] == 0))
-    ] += [
-        0,  # non-employed
-        model_params.no_kids_f_educ_low
-        + model_params.no_kids_p_educ_low,  # part-time alpha_f_no_kids + alpha_p_no_kids
-        model_params.no_kids_f_educ_low,  # full-time alpha_f_no_kids
-    ]
+        non_consumption_utility[
+            np.where((covariates[:, 0] == 0) & (states[:, 1] == educ_level))
+        ] += [
+            0,  # non-employed
+            model_params.no_kids_f[educ_level]
+            + model_params.no_kids_p[
+                educ_level
+            ],  # part-time alpha_f_no_kids + alpha_p_no_kids
+            model_params.no_kids_f[educ_level],  # full-time alpha_f_no_kids
+        ]
 
-    # Middle educ
-    non_consumption_utility[
-        np.where((covariates[:, 0] == 0) & (states[:, 1] == 1))
-    ] += [
-        0,  # non-employed
-        model_params.no_kids_f_educ_middle
-        + model_params.no_kids_p_educ_middle,  # part-time alpha_f_no_kids + alpha_p_no_kids
-        model_params.no_kids_f_educ_middle,  # full-time alpha_f_no_kids
-    ]
-
-    # High educ
-    non_consumption_utility[
-        np.where((covariates[:, 0] == 0) & (states[:, 1] == 2))
-    ] += [
-        0,  # non-employed
-        model_params.no_kids_f_educ_high
-        + model_params.no_kids_p_educ_high,  # part-time alpha_f_no_kids + alpha_p_no_kids
-        model_params.no_kids_f_educ_high,  # full-time alpha_f_no_kids
-    ]
-
-    # Children present:
-    # Low educ
-    non_consumption_utility[
-        np.where((covariates[:, 0] != 0) & (states[:, 1] == 0))
-    ] += [
-        0,
-        model_params.yes_kids_f_educ_low + model_params.yes_kids_p_educ_low,
-        model_params.yes_kids_f_educ_low,
-    ]
-
-    # Middle educ
-    non_consumption_utility[
-        np.where((covariates[:, 0] != 0) & (states[:, 1] == 1))
-    ] += [
-        0,
-        model_params.yes_kids_f_educ_middle + model_params.yes_kids_p_educ_middle,
-        model_params.yes_kids_f_educ_middle,
-    ]
-
-    # High educ
-    non_consumption_utility[
-        np.where((covariates[:, 0] != 0) & (states[:, 1] == 2))
-    ] += [
-        0,
-        model_params.yes_kids_f_educ_high + model_params.yes_kids_p_educ_high,
-        model_params.yes_kids_f_educ_high,
-    ]
+        # Children present:
+        non_consumption_utility[
+            np.where((covariates[:, 0] != 0) & (states[:, 1] == educ_level))
+        ] += [
+            0,
+            model_params.yes_kids_f[educ_level] + model_params.yes_kids_p[educ_level],
+            model_params.yes_kids_f[educ_level],
+        ]
 
     # Contribution child aged 0-2:
     non_consumption_utility[np.where(covariates[:, 0] == 1)] += [

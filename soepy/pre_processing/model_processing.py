@@ -92,7 +92,25 @@ def group_parameters(model_params_dict_expanded):
     )
 
     for key_ in list(model_params_dict_expanded["disutil_work"].keys()):
-        model_params_dict_flat[key_] = model_params_dict_expanded["disutil_work"][key_]
+        if "child" in key_:
+            model_params_dict_flat[key_] = model_params_dict_expanded["disutil_work"][
+                key_
+            ]
+
+    for i in ["no", "yes"]:
+        for j in ["f", "p"]:
+
+            model_params_dict_flat[i + "_kids_" + j] = [
+                model_params_dict_expanded["disutil_work"][
+                    i + "_kids_" + j + "_educ_low"
+                ],
+                model_params_dict_expanded["disutil_work"][
+                    i + "_kids_" + j + "_educ_middle"
+                ],
+                model_params_dict_expanded["disutil_work"][
+                    i + "_kids_" + j + "_educ_high"
+                ],
+            ]
 
     model_params_dict_flat["shocks_cov"] = model_params_dict_expanded["derived_attr"][
         "shocks_cov"
