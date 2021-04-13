@@ -592,7 +592,7 @@ def test_no_children_prob_0():
     np.testing.assert_equal(sum(df.dropna()["Age_Youngest_Child"] != -1), expected)
 
 
-def test_educ_level_shares():
+def test_shares_according_to_initial_conditions():
     """This test ensures that the shares of individuals with particular characteristics
     in the simulated data frame as determined by initial conditions correspond to the probabilities
     specified in the init file.
@@ -659,7 +659,9 @@ def test_educ_level_shares():
         df.groupby(["Education_Level"])["Identifier"].nunique().to_numpy()
         / constr["AGENTS"]
     )
-    np.testing.assert_almost_equal(simulated, prob_educ_level, decimal=2)
+    np.testing.assert_almost_equal(
+        simulated, prob_educ_level, decimal=2, err_msg="Education level shares mismatch"
+    )
 
     # Partner status in initial period
     simulated = (
@@ -668,17 +670,22 @@ def test_educ_level_shares():
         .mean()
         .to_numpy()
     )
-    np.testing.assert_almost_equal(simulated, prob_partner_present, decimal=2)
+    np.testing.assert_almost_equal(
+        simulated, prob_partner_present, decimal=2, err_msg="Partner shares mismatch"
+    )
 
     # Child ages in initial period
     simulated = (
         df[df["Period"] == 0]
         .groupby(["Education_Level"])["Age_Youngest_Child"]
         .value_counts(normalize=True)
+        .sort_index(ascending=True)
         .to_numpy()
     )
     prob_child_age_flat = [item for sublist in prob_child_age for item in sublist]
-    np.testing.assert_almost_equal(simulated, prob_child_age_flat, decimal=2)
+    np.testing.assert_almost_equal(
+        simulated, prob_child_age_flat, decimal=2, err_msg="Child age shares mismatch"
+    )
 
 
 def test_coef_educ_level_specificity():

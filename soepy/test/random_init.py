@@ -144,32 +144,43 @@ def random_init(constr=None):
         model_params_init_dict["gamma_1s1"],
         model_params_init_dict["gamma_1s2"],
         model_params_init_dict["gamma_1s3"],
-    ) = np.random.uniform(0.08, 0.3, 3).tolist()
+    ) = np.random.uniform(0.001, 0.5, 3).tolist()
 
     (
         model_params_init_dict["g_s1"],
         model_params_init_dict["g_s2"],
         model_params_init_dict["g_s3"],
-    ) = np.random.uniform(0.02, 0.5, 3).tolist()
+    ) = np.random.uniform(0.001, 0.5, 3).tolist()
 
     (
         model_params_init_dict["delta_s1"],
         model_params_init_dict["delta_s2"],
         model_params_init_dict["delta_s3"],
-    ) = np.random.uniform(0.1, 0.9, 3).tolist()
+    ) = np.random.uniform(0.001, 0.2, 3).tolist()
 
     (
-        model_params_init_dict["no_kids_f"],
-        model_params_init_dict["no_kids_p"],
-        model_params_init_dict["yes_kids_f"],
-        model_params_init_dict["yes_kids_p"],
+        model_params_init_dict["no_kids_f_educ_low"],
+        model_params_init_dict["no_kids_f_educ_middle"],
+        model_params_init_dict["no_kids_f_educ_high"],
+        model_params_init_dict["yes_kids_f_educ_low"],
+        model_params_init_dict["yes_kids_f_educ_middle"],
+        model_params_init_dict["yes_kids_f_educ_high"],
         model_params_init_dict["child_02_f"],
-        model_params_init_dict["child_02_p"],
         model_params_init_dict["child_35_f"],
-        model_params_init_dict["child_35_p"],
         model_params_init_dict["child_610_f"],
+    ) = np.random.uniform(0.001, 0.2, 9).tolist()
+
+    (
+        model_params_init_dict["no_kids_p_educ_low"],
+        model_params_init_dict["no_kids_p_educ_middle"],
+        model_params_init_dict["no_kids_p_educ_high"],
+        model_params_init_dict["yes_kids_p_educ_low"],
+        model_params_init_dict["yes_kids_p_educ_middle"],
+        model_params_init_dict["yes_kids_p_educ_high"],
+        model_params_init_dict["child_02_p"],
+        model_params_init_dict["child_35_p"],
         model_params_init_dict["child_610_p"],
-    ) = np.random.uniform(0.5, 5, 10).tolist()
+    ) = np.random.uniform(-1.5, -0.001, 9).tolist()
 
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
@@ -183,7 +194,7 @@ def random_init(constr=None):
         (
             model_params_init_dict["theta_p" + "{}".format(i)],
             model_params_init_dict["theta_f" + "{}".format(i)],
-        ) = np.random.uniform(-0.05, -4, 2).tolist()
+        ) = np.random.uniform(-0.1, -1, 2).tolist()
 
         # Assign shares
         model_params_init_dict["share_" + "{}".format(i)] = shares[i]
@@ -191,7 +202,7 @@ def random_init(constr=None):
     (
         model_params_init_dict["sigma_1"],
         model_params_init_dict["sigma_2"],
-    ) = np.random.uniform(0.002, 2.0, 2).tolist()
+    ) = np.random.uniform(0.001, 1.0, 2).tolist()
 
     # Determine categories
     category = []
