@@ -32,46 +32,6 @@ def test1():
             expected_df,
         ) = tests[i]
 
-        random_model_params_df.loc[
-            ("disutil_work", "no_kids_f_educ_low"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "no_kids_f"), "value"]
-        random_model_params_df.loc[
-            ("disutil_work", "no_kids_f_educ_middle"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "no_kids_f"), "value"]
-        random_model_params_df.loc[
-            ("disutil_work", "no_kids_f_educ_high"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "no_kids_f"), "value"]
-
-        random_model_params_df.loc[
-            ("disutil_work", "no_kids_p_educ_low"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "no_kids_p"), "value"]
-        random_model_params_df.loc[
-            ("disutil_work", "no_kids_p_educ_middle"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "no_kids_p"), "value"]
-        random_model_params_df.loc[
-            ("disutil_work", "no_kids_p_educ_high"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "no_kids_p"), "value"]
-
-        random_model_params_df.loc[
-            ("disutil_work", "yes_kids_f_educ_low"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "yes_kids_f"), "value"]
-        random_model_params_df.loc[
-            ("disutil_work", "yes_kids_f_educ_middle"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "yes_kids_f"), "value"]
-        random_model_params_df.loc[
-            ("disutil_work", "yes_kids_f_educ_high"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "yes_kids_f"), "value"]
-
-        random_model_params_df.loc[
-            ("disutil_work", "yes_kids_p_educ_low"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "yes_kids_p"), "value"]
-        random_model_params_df.loc[
-            ("disutil_work", "yes_kids_p_educ_middle"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "yes_kids_p"), "value"]
-        random_model_params_df.loc[
-            ("disutil_work", "yes_kids_p_educ_high"), "value"
-        ] = random_model_params_df.loc[("disutil_work", "yes_kids_p"), "value"]
-
         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
         exog_child_info.to_pickle("test.soepy.child.pkl")

@@ -592,7 +592,7 @@ def test_no_children_prob_0():
     np.testing.assert_equal(sum(df.dropna()["Age_Youngest_Child"] != -1), expected)
 
 
-def test_educ_level_shares():
+def test_shares_according_to_initial_conditions():
     """This test ensures that the shares of individuals with particular characteristics
     in the simulated data frame as determined by initial conditions correspond to the probabilities
     specified in the init file.
@@ -679,6 +679,7 @@ def test_educ_level_shares():
         df[df["Period"] == 0]
         .groupby(["Education_Level"])["Age_Youngest_Child"]
         .value_counts(normalize=True)
+        .sort_index(ascending=True)
         .to_numpy()
     )
     prob_child_age_flat = [item for sublist in prob_child_age for item in sublist]
