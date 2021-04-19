@@ -156,7 +156,7 @@ def random_init(constr=None):
         model_params_init_dict["g_bar_s1"],
         model_params_init_dict["g_bar_s2"],
         model_params_init_dict["g_bar_s3"],
-    ) = [0.5, 0.5, 0.5]
+    ) = [0.570, 0.533, 0.625]
 
     (
         model_params_init_dict["delta_s1"],
