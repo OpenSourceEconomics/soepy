@@ -32,6 +32,10 @@ def test1():
             expected_df,
         ) = tests[i]
 
+        random_model_params_df.loc[("exp_accm_expected", "g_bar_s1"), "value"] = 0.5
+        random_model_params_df.loc[("exp_accm_expected", "g_bar_s2"), "value"] = 0.5
+        random_model_params_df.loc[("exp_accm_expected", "g_bar_s3"), "value"] = 0.5
+
         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
         exog_child_info.to_pickle("test.soepy.child.pkl")

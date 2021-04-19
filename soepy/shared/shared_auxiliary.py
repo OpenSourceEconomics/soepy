@@ -90,7 +90,7 @@ def calculate_log_wage_systematic(model_params, model_spec, states, is_expected)
     gamma_1s = np.array(model_params.gamma_1s)[states[:, 1]]
 
     if is_expected:
-        period_exp_sum = 0.5 * exp_p + exp_f
+        period_exp_sum = np.array(model_params.g_bar_s)[states[:, 1]] * exp_p + exp_f
     else:
         period_exp_sum = exp_p * np.array(model_params.g_s)[states[:, 1]] + exp_f
 

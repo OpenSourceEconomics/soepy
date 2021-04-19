@@ -87,6 +87,10 @@ def group_parameters(model_params_dict_expanded):
         model_params_dict_expanded["exp_accm"].values()
     )
 
+    model_params_dict_flat["g_bar_s"] = list(
+        model_params_dict_expanded["exp_accm_expected"].values()
+    )
+
     model_params_dict_flat["delta_s"] = list(
         model_params_dict_expanded["exp_deprec"].values()
     )

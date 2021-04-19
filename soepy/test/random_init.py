@@ -153,6 +153,12 @@ def random_init(constr=None):
     ) = np.random.uniform(0.001, 0.5, 3).tolist()
 
     (
+        model_params_init_dict["g_bar_s1"],
+        model_params_init_dict["g_bar_s2"],
+        model_params_init_dict["g_bar_s3"],
+    ) = [0.5, 0.5, 0.5]
+
+    (
         model_params_init_dict["delta_s1"],
         model_params_init_dict["delta_s2"],
         model_params_init_dict["delta_s3"],
@@ -215,6 +221,8 @@ def random_init(constr=None):
             category.append("exp_returns")
         elif "g_s" in key:
             category.append("exp_accm")
+        elif "g_bar_s" in key:
+            category.append("exp_accm_expected")
         elif "delta" in key:
             category.append("exp_deprec")
         elif "theta" in key:
