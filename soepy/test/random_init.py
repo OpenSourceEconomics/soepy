@@ -54,16 +54,6 @@ def random_init(constr=None):
     else:
         num_draws_emax = np.random.randint(400, 600)
 
-    if "BENEFITS_BASE" in constr.keys():
-        benefits_base = constr["BENEFITS_BASE"]
-    else:
-        benefits_base = np.random.uniform(0, 500)
-
-    if "BENEFITS_KIDS" in constr.keys():
-        benefits_kids = constr["BENEFITS_KIDS"]
-    else:
-        benefits_kids = np.random.uniform(0, 100)
-
     if "CHILD_AGE_INIT_MAX" in constr.keys():
         child_age_init_max = constr["CHILD_AGE_INIT_MAX"]
     else:
@@ -98,8 +88,29 @@ def random_init(constr=None):
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
 
-    model_spec_init_dict["TAXES_TRANSFERS"]["benefits_base"] = benefits_base
-    model_spec_init_dict["TAXES_TRANSFERS"]["benefits_kids"] = benefits_kids
+    model_spec_init_dict["TAXES_TRANSFERS"]["alg1_replacement_no_child"] = 0.6
+    model_spec_init_dict["TAXES_TRANSFERS"]["alg1_replacement_child"] = 0.67
+    model_spec_init_dict["TAXES_TRANSFERS"]["child_benefits"] = 43
+    model_spec_init_dict["TAXES_TRANSFERS"]["regelsatz_single"] = 91
+    model_spec_init_dict["TAXES_TRANSFERS"]["regelsatz_partner"] = 82
+    model_spec_init_dict["TAXES_TRANSFERS"]["regelsatz_child"] = 59
+    model_spec_init_dict["TAXES_TRANSFERS"]["motherhood_replacement"] = 0.67
+    model_spec_init_dict["TAXES_TRANSFERS"]["addition_child_single"] = 33
+    model_spec_init_dict["TAXES_TRANSFERS"]["housing"] = 62
+    model_spec_init_dict["TAXES_TRANSFERS"]["deductions"] = [
+        0.085,
+        0.0975,
+        0.0325,
+        1411.00,
+        445.00,
+    ]
+    model_spec_init_dict["TAXES_TRANSFERS"]["income_tax"] = [
+        163.00,
+        1001.00,
+        0.14,
+        0.42,
+        0.055,
+    ]
 
     model_spec_init_dict["INITIAL_CONDITIONS"][
         "educ_shares_file_name"
@@ -400,8 +411,29 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["SOLUTION"]["num_draws_emax"] = init_dict_flat["num_draws_emax"]
 
     init_dict["TAXES_TRANSFERS"] = dict()
-    init_dict["TAXES_TRANSFERS"]["benefits_base"] = init_dict_flat["benefits_base"]
-    init_dict["TAXES_TRANSFERS"]["benefits_kids"] = init_dict_flat["benefits_kids"]
+    init_dict["TAXES_TRANSFERS"]["alg1_replacement_no_child"] = init_dict_flat[
+        "alg1_replacement_no_child"
+    ]
+    init_dict["TAXES_TRANSFERS"]["alg1_replacement_child"] = init_dict_flat[
+        "alg1_replacement_child"
+    ]
+    init_dict["TAXES_TRANSFERS"]["child_benefits"] = init_dict_flat["child_benefits"]
+    init_dict["TAXES_TRANSFERS"]["regelsatz_single"] = init_dict_flat[
+        "regelsatz_single"
+    ]
+    init_dict["TAXES_TRANSFERS"]["regelsatz_partner"] = init_dict_flat[
+        "regelsatz_partner"
+    ]
+    init_dict["TAXES_TRANSFERS"]["regelsatz_child"] = init_dict_flat["regelsatz_child"]
+    init_dict["TAXES_TRANSFERS"]["motherhood_replacement"] = init_dict_flat[
+        "motherhood_replacement"
+    ]
+    init_dict["TAXES_TRANSFERS"]["addition_child_single"] = init_dict_flat[
+        "addition_child_single"
+    ]
+    init_dict["TAXES_TRANSFERS"]["housing"] = init_dict_flat["housing"]
+    init_dict["TAXES_TRANSFERS"]["deductions"] = init_dict_flat["deductions"]
+    init_dict["TAXES_TRANSFERS"]["income_tax"] = init_dict_flat["income_tax"]
 
     init_dict["INITIAL_CONDITIONS"] = dict()
     init_dict["INITIAL_CONDITIONS"]["child_age_init_max"] = init_dict_flat[
