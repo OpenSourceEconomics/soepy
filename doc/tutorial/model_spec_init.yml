@@ -15,8 +15,17 @@ SOLUTION:
     seed_emax: 635
     num_draws_emax: 500
 TAXES_TRANSFERS:
-    benefits_base: 200
-    benefits_kids: 70
+    alg1_replacement_no_child: 0.6
+    alg1_replacement_child: 0.67
+    child_benefits: 43
+    regelsatz_single: 91
+    regelsatz_partner: 82
+    regelsatz_child: 59
+    motherhood_replacement: 0.67
+    addition_child_single: 33
+    housing: 62
+    deductions: [0.085, 0.0975, 0.0325, 1411.00, 445.00]
+    income_tax: [163.00, 1001.00, 0.14, 0.42, 0.055]
 INITIAL_CONDITIONS:
     educ_shares_file_name: 'exog_educ_shares.pkl'
     child_age_shares_file_name: 'exog_child_age_shares.pkl'

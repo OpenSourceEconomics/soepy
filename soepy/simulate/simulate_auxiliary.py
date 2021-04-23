@@ -8,6 +8,7 @@ from soepy.shared.shared_constants import (
 )
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
+from soepy.shared.shared_auxiliary import calculate_employment_consumption_ressources
 
 
 def pyth_simulate(
@@ -17,8 +18,9 @@ def pyth_simulate(
     indexer,
     emaxs,
     covariates,
-    budget_constraint_components,
-    non_employment_benefits,
+    non_employment_consumption_ressources,
+    deductions_spec,
+    income_tax_spec,
     child_age_update_rule,
     prob_educ_level,
     prob_child_age,
@@ -116,39 +118,48 @@ def pyth_simulate(
 
         # Extract corresponding utilities
         current_log_wage_systematic = log_wage_systematic[idx]
-        current_budget_constraint_components = budget_constraint_components[idx]
         current_non_consumption_utilities = non_consumption_utilities[idx]
-        current_non_employment_benefits = non_employment_benefits[idx]
+        current_non_employment_consumption_ressources = (
+            non_employment_consumption_ressources[idx]
+        )
         current_equivalence_scale = covariates[idx][:, 2]
+        current_male_wages = covariates[idx][:, 1]
+        current_child_benefits = covariates[idx][:, 3]
 
         current_wages = np.exp(
             current_log_wage_systematic.reshape(-1, 1)
             + draws_sim[period, current_states[:, 0]]
         )
 
+        current_hh_income = HOURS[1:] * current_wages + current_male_wages.reshape(
+            -1, 1
+        )
+
+        current_hh_income = current_hh_income.reshape(2 * current_wages.shape[0], order="F")
+
+        current_employment_consumption_ressources = (
+            calculate_employment_consumption_ressources(
+                deductions_spec,
+                income_tax_spec,
+                current_hh_income,
+            )
+        )
+
+        current_employment_consumption_ressources = current_employment_consumption_ressources.reshape(
+            current_wages.shape[0], 2, order="F") + current_child_benefits.reshape(-1, 1)
+
+        current_consumption_ressources = np.hstack(
+            (current_non_employment_consumption_ressources.reshape(-1, 1), current_employment_consumption_ressources))
+
         # Calculate total values for all choices
-        flow_utilities = np.full((current_states.shape[0], 3), np.nan)
-
-        flow_utilities[:, :1] = (
+        flow_utilities = (
             (
-                (current_non_employment_benefits + current_budget_constraint_components)
-                / current_equivalence_scale
+                (current_consumption_ressources)
+                / current_equivalence_scale.reshape(-1, 1)
             )
             ** model_spec.mu
             / model_spec.mu
-        ).reshape(current_states.shape[0], 1) * current_non_consumption_utilities[:, :1]
-
-        flow_utilities[:, 1:] = (
-            (
-                (
-                    HOURS[1:] * current_wages
-                    + current_budget_constraint_components.reshape(-1, 1)
-                )
-                / current_equivalence_scale.reshape(current_states.shape[0], 1)
-            )
-            ** model_spec.mu
-            / model_spec.mu
-            * current_non_consumption_utilities[:, 1:]
+            * current_non_consumption_utilities
         )
 
         # Extract continuation values for all choices
