@@ -178,7 +178,7 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
 
     non_employment_benefits = np.full((states.shape[0], 3), 0)
 
-    # ALG I
+    # Individual worked last period: ALG I
     # Based on labor income the individual would have earned
     # working full-time in the period (excluding wage shock)
     # for a person who worked last period
@@ -195,17 +195,20 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
         non_employment_benefits[:, 0],
     )
 
-    # Social assistance
+    # Individual did not work last period: Social assistance
+    # No partner, No child
     non_employment_benefits[:, 1] = np.where(
         ((states[:, 2] == 0) & (states[:, 6] == -1) & (states[:, 7] == 0)),
         model_spec.regelsatz_single + model_spec.housing + model_spec.housing * 0.25,
         non_employment_benefits[:, 1],
     )
+    # Yes partner, No child
     non_employment_benefits[:, 1] = np.where(
         ((states[:, 2] == 0) & (states[:, 6] == -1) & (states[:, 7] == 1)),
         2 * model_spec.regelsatz_partner + model_spec.housing * 1.5,
         non_employment_benefits[:, 1],
     )
+    # Yes partner, Yes child
     non_employment_benefits[:, 1] = np.where(
         ((states[:, 2] == 0) & (states[:, 6] != -1) & (states[:, 7] == 1)),
         2 * model_spec.regelsatz_partner
@@ -213,6 +216,7 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
         + model_spec.housing * 1.5,
         non_employment_benefits[:, 1],
     )
+    # No partner, Yes child
     non_employment_benefits[:, 1] = np.where(
         ((states[:, 2] == 0) & (states[:, 6] != -1) & (states[:, 7] == 0)),
         model_spec.regelsatz_single
@@ -278,14 +282,14 @@ def calculate_tax(income_tax_spec, taxable_income):
 
 
 @numba.jit(nopython=True)
-def calculate_non_employment_consumption_ressources(
+def calculate_non_employment_consumption_resources(
     deductions_spec, income_tax_spec, male_wage, non_employment_benefits
 ):
-    """This function calculates the resources available to the woman
+    """This function calculates the resources available to the individual
     to spend on consumption were she to choose to not be employed.
     It adds the components from the budget constraint to the female wage."""
 
-    non_employment_consumption_ressources = np.full(male_wage.shape[0], INVALID_FLOAT)
+    non_employment_consumption_resources = np.full(male_wage.shape[0], INVALID_FLOAT)
 
     for i in range(male_wage.shape[0]):
         deductions_i = calculate_deductions(deductions_spec, male_wage[i])
@@ -293,25 +297,25 @@ def calculate_non_employment_consumption_ressources(
 
         tax_i = calculate_tax(income_tax_spec, taxable_income_i)
 
-        non_employment_consumption_ressources[i] = (
+        non_employment_consumption_resources[i] = (
             taxable_income_i
             - tax_i
             + non_employment_benefits[i, 1]
             + non_employment_benefits[i, 2]
         )
 
-    return non_employment_consumption_ressources
+    return non_employment_consumption_resources
 
 
 @numba.jit(nopython=True)
-def calculate_employment_consumption_ressources(
+def calculate_employment_consumption_resources(
     deductions_spec, income_tax_spec, current_hh_income
 ):
-    """This function calculates the resources available to the woman
+    """This function calculates the resources available to the individual
     to spend on consumption were she to choose to be employed.
     It adds the components from the budget constraint to the female wage."""
 
-    employment_consumption_ressources = np.full(
+    employment_consumption_resources = np.full(
         current_hh_income.shape[0], INVALID_FLOAT
     )
 
@@ -321,6 +325,6 @@ def calculate_employment_consumption_ressources(
 
         tax_i = calculate_tax(income_tax_spec, taxable_income_i)
 
-        employment_consumption_ressources[i] = taxable_income_i - tax_i
+        employment_consumption_resources[i] = taxable_income_i - tax_i
 
-    return employment_consumption_ressources
+    return employment_consumption_resources

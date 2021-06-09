@@ -7,7 +7,7 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.shared.shared_auxiliary import calculate_non_employment_benefits
 from soepy.shared.shared_auxiliary import (
-    calculate_non_employment_consumption_ressources,
+    calculate_non_employment_consumption_resources,
 )
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 
@@ -84,8 +84,8 @@ def pyth_solve(
     deductions_spec = np.array(model_spec.deductions)
     income_tax_spec = np.array(model_spec.income_tax)
 
-    non_employment_consumption_ressources = (
-        calculate_non_employment_consumption_ressources(
+    non_employment_consumption_resources = (
+        calculate_non_employment_consumption_resources(
             deductions_spec, income_tax_spec, covariates[:, 1], non_employment_benefits
         )
     )
@@ -107,7 +107,7 @@ def pyth_solve(
         prob_child,
         prob_partner_arrival,
         prob_partner_separation,
-        non_employment_consumption_ressources,
+        non_employment_consumption_resources,
         deductions_spec,
         income_tax_spec,
     )
@@ -117,7 +117,7 @@ def pyth_solve(
         states,
         indexer,
         covariates,
-        non_employment_consumption_ressources,
+        non_employment_consumption_resources,
         emaxs,
         child_age_update_rule,
         deductions_spec,

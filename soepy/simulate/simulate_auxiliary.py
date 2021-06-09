@@ -8,7 +8,7 @@ from soepy.shared.shared_constants import (
 )
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_auxiliary import calculate_utility_components
-from soepy.shared.shared_auxiliary import calculate_employment_consumption_ressources
+from soepy.shared.shared_auxiliary import calculate_employment_consumption_resources
 
 
 def pyth_simulate(
@@ -18,7 +18,7 @@ def pyth_simulate(
     indexer,
     emaxs,
     covariates,
-    non_employment_consumption_ressources,
+    non_employment_consumption_resources,
     deductions_spec,
     income_tax_spec,
     child_age_update_rule,
@@ -119,8 +119,8 @@ def pyth_simulate(
         # Extract corresponding utilities
         current_log_wage_systematic = log_wage_systematic[idx]
         current_non_consumption_utilities = non_consumption_utilities[idx]
-        current_non_employment_consumption_ressources = (
-            non_employment_consumption_ressources[idx]
+        current_non_employment_consumption_resources = (
+            non_employment_consumption_resources[idx]
         )
         current_equivalence_scale = covariates[idx][:, 2]
         current_male_wages = covariates[idx][:, 1]
@@ -139,16 +139,16 @@ def pyth_simulate(
             2 * current_wages.shape[0], order="F"
         )
 
-        current_employment_consumption_ressources = (
-            calculate_employment_consumption_ressources(
+        current_employment_consumption_resources = (
+            calculate_employment_consumption_resources(
                 deductions_spec,
                 income_tax_spec,
                 current_hh_income,
             )
         )
 
-        current_employment_consumption_ressources = (
-            current_employment_consumption_ressources.reshape(
+        current_employment_consumption_resources = (
+            current_employment_consumption_resources.reshape(
                 current_wages.shape[0], 2, order="F"
             )
             + current_child_benefits.reshape(-1, 1)
@@ -156,8 +156,8 @@ def pyth_simulate(
 
         current_consumption_ressources = np.hstack(
             (
-                current_non_employment_consumption_ressources.reshape(-1, 1),
-                current_employment_consumption_ressources,
+                current_non_employment_consumption_resources.reshape(-1, 1),
+                current_employment_consumption_resources,
             )
         )
 

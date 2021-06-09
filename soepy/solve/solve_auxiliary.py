@@ -344,7 +344,7 @@ def pyth_backward_induction(
     prob_child,
     prob_partner_arrival,
     prob_partner_separation,
-    non_employment_consumption_ressources,
+    non_employment_consumption_resources,
     deductions_spec,
     income_tax_spec,
 ):
@@ -411,8 +411,8 @@ def pyth_backward_induction(
         non_consumption_utilities_period = non_consumption_utilities[
             states[:, 0] == period
         ]
-        non_employment_consumption_ressources_period = (
-            non_employment_consumption_ressources[states[:, 0] == period]
+        non_employment_consumption_resources_period = (
+            non_employment_consumption_resources[states[:, 0] == period]
         )
 
         # Corresponding equivalence scale for period states
@@ -451,7 +451,7 @@ def pyth_backward_induction(
             emaxs_period[:, :3],
             HOURS,
             model_spec.mu,
-            non_employment_consumption_ressources_period,
+            non_employment_consumption_resources_period,
             deductions_spec,
             income_tax_spec,
             male_wage_period,
@@ -823,7 +823,7 @@ def _get_max_aggregated_utilities(
     emaxs,
     hours,
     mu,
-    non_employment_consumption_ressources,
+    non_employment_consumption_resources,
     deductions_spec,
     income_tax_spec,
     male_wage,
@@ -835,7 +835,7 @@ def _get_max_aggregated_utilities(
     for j in range(NUM_CHOICES):
 
         if j == 0:
-            consumption = non_employment_consumption_ressources / equivalence
+            consumption = non_employment_consumption_resources / equivalence
         else:
             household_income = (
                 hours[j] * np.exp(log_wage_systematic + draws[j - 1]) + male_wage
@@ -873,7 +873,7 @@ def construct_emax(
     emaxs,
     hours,
     mu,
-    non_employment_consumption_ressources,
+    non_employment_consumption_resources,
     deductions_spec,
     income_tax_spec,
     male_wage,
@@ -950,7 +950,7 @@ def construct_emax(
             emaxs,
             hours,
             mu,
-            non_employment_consumption_ressources,
+            non_employment_consumption_resources,
             deductions_spec,
             income_tax_spec,
             male_wage,
