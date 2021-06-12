@@ -176,7 +176,7 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
     """This function calculates the benefits an individual would receive if they were
     to choose to be non-employed in the period"""
 
-    non_employment_benefits = np.full((states.shape[0], 3), 0)
+    non_employment_benefits = np.full((states.shape[0], 3), np.nan)
 
     # Individual worked last period: ALG I
     # Based on labor income the individual would have earned
@@ -186,7 +186,7 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
     non_employment_benefits[:, 0] = np.where(
         ((states[:, 2] != 0) & (states[:, 6] == -1)),
         model_spec.alg1_replacement_no_child * np.exp(log_wage_systematic) * HOURS[2],
-        non_employment_benefits[:, 0],
+        0.00,
     )
     # 67% if child
     non_employment_benefits[:, 0] = np.where(
@@ -200,7 +200,7 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
     non_employment_benefits[:, 1] = np.where(
         ((states[:, 2] == 0) & (states[:, 6] == -1) & (states[:, 7] == 0)),
         model_spec.regelsatz_single + model_spec.housing + model_spec.housing * 0.25,
-        non_employment_benefits[:, 1],
+        0.00,
     )
     # Yes partner, No child
     non_employment_benefits[:, 1] = np.where(
@@ -231,7 +231,7 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
     non_employment_benefits[:, 2] = np.where(
         ((states[:, 2] != 0) & (states[:, 6] == 0)),
         model_spec.motherhood_replacement * np.exp(log_wage_systematic) * HOURS[2],
-        non_employment_benefits[:, 2],
+        0.00,
     )
 
     return non_employment_benefits
@@ -294,7 +294,6 @@ def calculate_non_employment_consumption_resources(
     for i in range(male_wage.shape[0]):
         deductions_i = calculate_deductions(deductions_spec, male_wage[i])
         taxable_income_i = male_wage[i] + non_employment_benefits[i, 0] - deductions_i
-
         tax_i = calculate_tax(income_tax_spec, taxable_income_i)
 
         non_employment_consumption_resources[i] = (
@@ -322,7 +321,6 @@ def calculate_employment_consumption_resources(
     for i in range(current_hh_income.shape[0]):
         deductions_i = calculate_deductions(deductions_spec, current_hh_income[i])
         taxable_income_i = current_hh_income[i] - deductions_i
-
         tax_i = calculate_tax(income_tax_spec, taxable_income_i)
 
         employment_consumption_resources[i] = taxable_income_i - tax_i

@@ -13,7 +13,7 @@ def test1():
     our regression test battery.
     """
 
-    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
+    vault = TEST_RESOURCES_DIR / "regression_vault.soepy_.pkl"
 
     with open(vault, "rb") as file:
         tests = pickle.load(file)
@@ -46,5 +46,4 @@ def test1():
                 expected_df[col],
                 calculated_df[col],
             )
-
     cleanup()
