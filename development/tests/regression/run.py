@@ -34,7 +34,7 @@ def create_vault(num_test=1000, seed=123456):
     """This function creates our regression vault."""
     np.random.seed(seed)
     seeds = np.random.randint(0, 1000, size=num_test)
-    vault = TEST_RESOURCES_DIR / "regression_vault.soepy_.pkl"
+    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
 
     tests = []
 
@@ -77,7 +77,7 @@ def create_vault(num_test=1000, seed=123456):
 
 def check_vault(num_test):
     """This function runs another simulation for each init file in our regression vault."""
-    vault = TEST_RESOURCES_DIR / "regression_vault.soepy_.pkl"
+    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
 
     with open(vault, "rb") as file:
         tests = pickle.load(file)

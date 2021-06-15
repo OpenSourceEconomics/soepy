@@ -154,7 +154,7 @@ def pyth_simulate(
             + current_child_benefits.reshape(-1, 1)
         )
 
-        current_consumption_ressources = np.hstack(
+        current_consumption_resources = np.hstack(
             (
                 current_non_employment_consumption_resources.reshape(-1, 1),
                 current_employment_consumption_resources,
@@ -163,10 +163,7 @@ def pyth_simulate(
 
         # Calculate total values for all choices
         flow_utilities = (
-            (
-                (current_consumption_ressources)
-                / current_equivalence_scale.reshape(-1, 1)
-            )
+            ((current_consumption_resources) / current_equivalence_scale.reshape(-1, 1))
             ** model_spec.mu
             / model_spec.mu
             * current_non_consumption_utilities
