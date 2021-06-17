@@ -160,10 +160,13 @@ def pyth_simulate(
         choice = np.argmax(value_functions, axis=1)
 
         child_current_age = current_states[:, 7]
+
+        # Update child age
         # Modification for simulations with very few periods
         # where maximum childbearing age is not reached by the end of the model
         if period == model_spec.num_periods - 1:
             child_new_age = child_current_age
+
         # Periods where the probability to have a child is still positive
         elif period <= model_spec.last_child_bearing_period:
             # Update current states according to exogenous processes
@@ -171,7 +174,7 @@ def pyth_simulate(
             kids_current_draw = np.random.binomial(
                 size=current_states.shape[0],
                 n=1,
-                p=prob_child[period + 1],
+                p=prob_child[period + 1, current_states[:, 2]],
             )
 
             # Convert to age of child according to age update rule

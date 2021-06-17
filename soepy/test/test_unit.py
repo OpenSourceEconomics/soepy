@@ -543,7 +543,7 @@ def test_no_children_prob_0():
     model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
 
     # Set probability of having children to zero for all periods
-    prob_child = np.full(model_spec.num_periods, 0.00)
+    prob_child = np.full((model_spec.num_periods, 3), 0.00)
 
     prob_educ_level = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
