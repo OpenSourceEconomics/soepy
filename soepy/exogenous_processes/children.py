@@ -39,9 +39,9 @@ def gen_prob_child_vector(model_spec):
         exog_child_info_df.index.get_level_values("period") < model_spec.num_periods
     ]
 
-    prob_child_values = exog_child_info_df["prob_child_values"].to_numpy()
+    prob_child_values = exog_child_info_df.values.reshape(model_spec.num_periods, 3)
 
-    prob_child = np.full(model_spec.num_periods, 0.00)
+    prob_child = np.full((model_spec.num_periods, 3), 0.00)
     prob_child[
         0 : min(model_spec.last_child_bearing_period + 1, model_spec.num_periods)
     ] += prob_child_values[

@@ -173,7 +173,7 @@ def random_init(constr=None):
         model_params_init_dict["yes_kids_f_educ_high"],
         model_params_init_dict["child_02_f"],
         model_params_init_dict["child_35_f"],
-        model_params_init_dict["child_610_f"],
+        model_params_init_dict["child_6orolder_f"],
     ) = np.random.uniform(0.001, 0.2, 9).tolist()
 
     (
@@ -185,7 +185,7 @@ def random_init(constr=None):
         model_params_init_dict["yes_kids_p_educ_high"],
         model_params_init_dict["child_02_p"],
         model_params_init_dict["child_35_p"],
-        model_params_init_dict["child_610_p"],
+        model_params_init_dict["child_6orolder_p"],
     ) = np.random.uniform(-1.5, -0.001, 9).tolist()
 
     # Random number of types: 1, 2, 3, or 4
@@ -290,17 +290,17 @@ def random_init(constr=None):
 
     # Random process evolution throughout the model
     # Generate random probabilities of childbirth
+    index_levels = [list(range(0, periods)), [0, 1, 2]]
+    index = pd.MultiIndex.from_product(index_levels, names=["period", "educ_level"])
+
     exog_child_info = pd.DataFrame(
-        np.random.uniform(0, 1, size=periods).tolist(),
-        index=list(range(0, periods)),
+        np.random.uniform(0, 1, size=periods * 3).tolist(),
+        index=index,
         columns=["prob_child_values"],
     )
-    exog_child_info.index.name = "period"
     exog_child_info.to_pickle("test.soepy.child.pkl")
 
     # Generate random probabilities of partner arrival
-    index_levels = [list(range(0, periods)), [0, 1, 2]]
-    index = pd.MultiIndex.from_product(index_levels, names=["period", "educ_level"])
     if "PARTNER_ARRIVAL" in constr.keys():
         exog_partner_arrival_info = pd.DataFrame(
             np.zeros(periods * 3).tolist(),

@@ -658,39 +658,42 @@ def get_continuation_values(
                 emaxs[k_parent, 0] = (  # non-employment
                     1 - prob_partner_separation_period[educ_level]  # no partner
                 ) * (
-                    (1 - prob_child_period) * emaxs[k_0_00, 3]  # no child
-                    + prob_child_period * emaxs[k_0_10, 3]  # child
+                    (1 - prob_child_period[educ_level]) * emaxs[k_0_00, 3]  # no child
+                    + prob_child_period[educ_level] * emaxs[k_0_10, 3]  # child
                 ) + (
                     prob_partner_separation_period[educ_level]  # partner
                     * (
-                        (1 - prob_child_period) * emaxs[k_0_01, 3]  # no child
-                        + prob_child_period * emaxs[k_0_11, 3]  # child
+                        (1 - prob_child_period[educ_level])
+                        * emaxs[k_0_01, 3]  # no child
+                        + prob_child_period[educ_level] * emaxs[k_0_11, 3]  # child
                     )
                 )
 
                 emaxs[k_parent, 1] = (  # part-time employment
                     1 - prob_partner_separation_period[educ_level]  # no partner
                 ) * (
-                    (1 - prob_child_period) * emaxs[k_1_00, 3]  # no child
-                    + prob_child_period * emaxs[k_1_10, 3]  # child
+                    (1 - prob_child_period[educ_level]) * emaxs[k_1_00, 3]  # no child
+                    + prob_child_period[educ_level] * emaxs[k_1_10, 3]  # child
                 ) + (
                     prob_partner_separation_period[educ_level]  # partner
                     * (
-                        (1 - prob_child_period) * emaxs[k_1_01, 3]  # no child
-                        + prob_child_period * emaxs[k_1_11, 3]  # child
+                        (1 - prob_child_period[educ_level])
+                        * emaxs[k_1_01, 3]  # no child
+                        + prob_child_period[educ_level] * emaxs[k_1_11, 3]  # child
                     )
                 )
 
                 emaxs[k_parent, 2] = (
                     1 - prob_partner_separation_period[educ_level]
                 ) * (  # no partner
-                    (1 - prob_child_period) * emaxs[k_2_00, 3]  # no child
-                    + prob_child_period * emaxs[k_2_10, 3]  # child
+                    (1 - prob_child_period[educ_level]) * emaxs[k_2_00, 3]  # no child
+                    + prob_child_period[educ_level] * emaxs[k_2_10, 3]  # child
                 ) + (
                     prob_partner_separation_period[educ_level]  # partner
                     * (
-                        (1 - prob_child_period) * emaxs[k_2_01, 3]  # no child
-                        + prob_child_period * emaxs[k_2_11, 3]  # child
+                        (1 - prob_child_period[educ_level])
+                        * emaxs[k_2_01, 3]  # no child
+                        + prob_child_period[educ_level] * emaxs[k_2_11, 3]  # child
                     )
                 )
 
@@ -700,39 +703,42 @@ def get_continuation_values(
                 emaxs[k_parent, 0] = (  # non-employment
                     1 - prob_partner_arrival_period[educ_level]  # no partner
                 ) * (
-                    (1 - prob_child_period) * emaxs[k_0_00, 3]  # no child
-                    + prob_child_period * emaxs[k_0_10, 3]  # child
+                    (1 - prob_child_period[educ_level]) * emaxs[k_0_00, 3]  # no child
+                    + prob_child_period[educ_level] * emaxs[k_0_10, 3]  # child
                 ) + (
                     prob_partner_arrival_period[educ_level]  # partner
                     * (
-                        (1 - prob_child_period) * emaxs[k_0_01, 3]  # no child
-                        + prob_child_period * emaxs[k_0_11, 3]  # child
+                        (1 - prob_child_period[educ_level])
+                        * emaxs[k_0_01, 3]  # no child
+                        + prob_child_period[educ_level] * emaxs[k_0_11, 3]  # child
                     )
                 )
 
                 emaxs[k_parent, 1] = (  # part-time employment
                     1 - prob_partner_arrival_period[educ_level]  # no partner
                 ) * (
-                    (1 - prob_child_period) * emaxs[k_1_00, 3]  # no child
-                    + prob_child_period * emaxs[k_1_10, 3]  # child
+                    (1 - prob_child_period[educ_level]) * emaxs[k_1_00, 3]  # no child
+                    + prob_child_period[educ_level] * emaxs[k_1_10, 3]  # child
                 ) + (
                     prob_partner_arrival_period[educ_level]  # partner
                     * (
-                        (1 - prob_child_period) * emaxs[k_1_01, 3]  # no child
-                        + prob_child_period * emaxs[k_1_11, 3]  # child
+                        (1 - prob_child_period[educ_level])
+                        * emaxs[k_1_01, 3]  # no child
+                        + prob_child_period[educ_level] * emaxs[k_1_11, 3]  # child
                     )
                 )
 
                 emaxs[k_parent, 2] = (
                     1 - prob_partner_arrival_period[educ_level]
                 ) * (  # no partner
-                    (1 - prob_child_period) * emaxs[k_2_00, 3]  # no child
-                    + prob_child_period * emaxs[k_2_10, 3]  # child
+                    (1 - prob_child_period[educ_level]) * emaxs[k_2_00, 3]  # no child
+                    + prob_child_period[educ_level] * emaxs[k_2_10, 3]  # child
                 ) + (
                     prob_partner_arrival_period[educ_level]  # partner
                     * (
-                        (1 - prob_child_period) * emaxs[k_2_01, 3]  # no child
-                        + prob_child_period * emaxs[k_2_11, 3]  # child
+                        (1 - prob_child_period[educ_level])
+                        * emaxs[k_2_01, 3]  # no child
+                        + prob_child_period[educ_level] * emaxs[k_2_11, 3]  # child
                     )
                 )
 
