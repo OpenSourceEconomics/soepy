@@ -1,10 +1,14 @@
+import numpy as np
+
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 from soepy.solve.solve_auxiliary import construct_covariates
 from soepy.shared.shared_auxiliary import draw_disturbances
-from soepy.shared.shared_auxiliary import calculate_budget_constraint_components
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.shared.shared_auxiliary import calculate_non_employment_benefits
+from soepy.shared.shared_auxiliary import (
+    calculate_non_employment_consumption_resources,
+)
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 
 
@@ -73,12 +77,17 @@ def pyth_solve(
         model_params, model_spec, states, covariates, is_expected
     )
 
-    budget_constraint_components = calculate_budget_constraint_components(
-        model_spec, states, covariates
-    )
-
     non_employment_benefits = calculate_non_employment_benefits(
         model_spec, states, log_wage_systematic
+    )
+
+    deductions_spec = np.array(model_spec.deductions)
+    income_tax_spec = np.array(model_spec.income_tax)
+
+    non_employment_consumption_resources = (
+        calculate_non_employment_consumption_resources(
+            deductions_spec, income_tax_spec, covariates[:, 1], non_employment_benefits
+        )
     )
 
     child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
@@ -91,7 +100,6 @@ def pyth_solve(
         states,
         indexer,
         log_wage_systematic,
-        budget_constraint_components,
         non_consumption_utilities,
         draws_emax,
         covariates,
@@ -99,7 +107,9 @@ def pyth_solve(
         prob_child,
         prob_partner_arrival,
         prob_partner_separation,
-        non_employment_benefits,
+        non_employment_consumption_resources,
+        deductions_spec,
+        income_tax_spec,
     )
 
     # Return function output
@@ -107,8 +117,9 @@ def pyth_solve(
         states,
         indexer,
         covariates,
-        budget_constraint_components,
-        non_employment_benefits,
+        non_employment_consumption_resources,
         emaxs,
         child_age_update_rule,
+        deductions_spec,
+        income_tax_spec,
     )

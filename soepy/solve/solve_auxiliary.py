@@ -8,6 +8,8 @@ from soepy.shared.shared_constants import (
     INVALID_FLOAT,
     HOURS,
 )
+from soepy.shared.shared_auxiliary import calculate_deductions
+from soepy.shared.shared_auxiliary import calculate_tax
 
 
 @numba.jit(nopython=True)
@@ -320,8 +322,12 @@ def construct_covariates(states, model_spec):
         np.isnan(equivalence_scale).any() == 0
     ), "Some HH were not assigned an equivalence scale"
 
+    # Child benefits
+    # If a woman has a child she receives child benefits
+    child_benefits = np.where(states[:, 6] == -1, 0, model_spec.child_benefits)
+
     # Collect in covariates vector
-    covariates = np.column_stack((bins, male_wages, equivalence_scale))
+    covariates = np.column_stack((bins, male_wages, equivalence_scale, child_benefits))
 
     return covariates
 
@@ -331,7 +337,6 @@ def pyth_backward_induction(
     states,
     indexer,
     log_wage_systematic,
-    budget_constraint_components,
     non_consumption_utilities,
     draws,
     covariates,
@@ -339,7 +344,9 @@ def pyth_backward_induction(
     prob_child,
     prob_partner_arrival,
     prob_partner_separation,
-    non_employment_benefits,
+    non_employment_consumption_resources,
+    deductions_spec,
+    income_tax_spec,
 ):
     """Get expected maximum value function at every state space point.
     Backward induction is performed all at once for all states in a given period.
@@ -401,16 +408,17 @@ def pyth_backward_induction(
 
         # Period rewards
         log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
-        budget_constraint_components_period = budget_constraint_components[
-            states[:, 0] == period
-        ]
         non_consumption_utilities_period = non_consumption_utilities[
             states[:, 0] == period
         ]
-        non_employment_benefits_period = non_employment_benefits[states[:, 0] == period]
+        non_employment_consumption_resources_period = (
+            non_employment_consumption_resources[states[:, 0] == period]
+        )
 
         # Corresponding equivalence scale for period states
+        male_wage_period = covariates[np.where(states[:, 0] == period)][:, 1]
         equivalence_scale_period = covariates[np.where(states[:, 0] == period)][:, 2]
+        child_benefits_period = covariates[np.where(states[:, 0] == period)][:, 3]
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
@@ -438,13 +446,16 @@ def pyth_backward_induction(
         emax_period = construct_emax(
             model_spec.delta,
             log_wage_systematic_period,
-            budget_constraint_components_period,
             non_consumption_utilities_period,
             draws[period],
             emaxs_period[:, :3],
             HOURS,
             model_spec.mu,
-            non_employment_benefits_period,
+            non_employment_consumption_resources_period,
+            deductions_spec,
+            income_tax_spec,
+            male_wage_period,
+            child_benefits_period,
             equivalence_scale_period,
         )
         emaxs_period[:, 3] = emax_period
@@ -813,13 +824,16 @@ def get_continuation_values(
 def _get_max_aggregated_utilities(
     delta,
     log_wage_systematic,
-    budget_constraint_components,
     non_consumption_utilities,
     draws,
     emaxs,
     hours,
     mu,
-    benefits,
+    non_employment_consumption_resources,
+    deductions_spec,
+    income_tax_spec,
+    male_wage,
+    child_benefits,
     equivalence,
 ):
     current_max_value_function = INVALID_FLOAT
@@ -827,12 +841,17 @@ def _get_max_aggregated_utilities(
     for j in range(NUM_CHOICES):
 
         if j == 0:
-            consumption = (benefits + budget_constraint_components) / equivalence
+            consumption = non_employment_consumption_resources / equivalence
         else:
-            consumption = (
-                hours[j] * np.exp(log_wage_systematic + draws[j - 1])
-                + budget_constraint_components
-            ) / equivalence
+            household_income = (
+                hours[j] * np.exp(log_wage_systematic + draws[j - 1]) + male_wage
+            )
+            deductions = calculate_deductions(deductions_spec, household_income)
+            taxable_income = household_income - deductions
+
+            tax = calculate_tax(income_tax_spec, taxable_income)
+
+            consumption = (taxable_income - tax + child_benefits) / equivalence
 
         consumption_utility = consumption ** mu / mu
 
@@ -847,21 +866,24 @@ def _get_max_aggregated_utilities(
 
 
 @numba.guvectorize(
-    ["f8, f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8, f8[:]"],
-    "(), (), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), () -> ()",
+    ["f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:], f8[:], f8, f8, f8, f8[:]"],
+    "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), (n_spec_params), (n_spec_params), (), (), () -> ()",
     nopython=True,
     target="parallel",
 )
 def construct_emax(
     delta,
     log_wage_systematic,
-    budget_constraint_components,
     non_consumption_utilities,
     draws,
     emaxs,
     hours,
     mu,
-    benefits,
+    non_employment_consumption_resources,
+    deductions_spec,
+    income_tax_spec,
+    male_wage,
+    child_benefits,
     equivalence,
     emax,
 ):
@@ -929,13 +951,16 @@ def construct_emax(
         max_total_utility = _get_max_aggregated_utilities(
             delta,
             log_wage_systematic,
-            budget_constraint_components,
             non_consumption_utilities,
             draws[i],
             emaxs,
             hours,
             mu,
-            benefits,
+            non_employment_consumption_resources,
+            deductions_spec,
+            income_tax_spec,
+            male_wage,
+            child_benefits,
             equivalence,
         )
 

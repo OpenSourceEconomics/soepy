@@ -1,6 +1,8 @@
 import numpy as np
 
-from soepy.shared.shared_constants import NUM_CHOICES, HOURS
+import numba
+
+from soepy.shared.shared_constants import NUM_CHOICES, HOURS, INVALID_FLOAT
 
 
 def draw_disturbances(seed, num_periods, num_draws, model_params):
@@ -174,42 +176,153 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
     """This function calculates the benefits an individual would receive if they were
     to choose to be non-employed in the period"""
 
-    non_employment_benefits = np.full(states.shape[0], np.nan)
+    non_employment_benefits = np.full((states.shape[0], 3), np.nan)
 
-    # benefits base per week for a person who did not work last period
-    non_employment_benefits = np.where(
-        states[:, 2] == 0, model_spec.benefits_base, non_employment_benefits
-    )
-
-    # Half the labor income the individual would have earned
+    # Individual worked last period: ALG I
+    # Based on labor income the individual would have earned
     # working full-time in the period (excluding wage shock)
     # for a person who worked last period
-    non_employment_benefits = np.where(
-        states[:, 2] != 0,
-        0.5 * np.exp(log_wage_systematic) * HOURS[2],
-        non_employment_benefits,
+    # 60% if no child
+    non_employment_benefits[:, 0] = np.where(
+        ((states[:, 2] != 0) & (states[:, 6] == -1)),
+        model_spec.alg1_replacement_no_child * np.exp(log_wage_systematic) * HOURS[2],
+        0.00,
+    )
+    # 67% if child
+    non_employment_benefits[:, 0] = np.where(
+        ((states[:, 2] != 0) & (states[:, 6] != -1) & (states[:, 6] != 0)),
+        model_spec.alg1_replacement_child * np.exp(log_wage_systematic) * HOURS[2],
+        non_employment_benefits[:, 0],
     )
 
-    # Make sure that every state has been assigns a corresponding value
-    # of non-employment benefits
-    assert np.isfinite(non_employment_benefits).all()
+    # Individual did not work last period: Social assistance
+    # No partner, No child
+    non_employment_benefits[:, 1] = np.where(
+        ((states[:, 2] == 0) & (states[:, 6] == -1) & (states[:, 7] == 0)),
+        model_spec.regelsatz_single + model_spec.housing + model_spec.housing * 0.25,
+        0.00,
+    )
+    # Yes partner, No child
+    non_employment_benefits[:, 1] = np.where(
+        ((states[:, 2] == 0) & (states[:, 6] == -1) & (states[:, 7] == 1)),
+        2 * model_spec.regelsatz_partner + model_spec.housing * 1.5,
+        non_employment_benefits[:, 1],
+    )
+    # Yes partner, Yes child
+    non_employment_benefits[:, 1] = np.where(
+        ((states[:, 2] == 0) & (states[:, 6] != -1) & (states[:, 7] == 1)),
+        2 * model_spec.regelsatz_partner
+        + model_spec.regelsatz_child
+        + model_spec.housing * 1.5,
+        non_employment_benefits[:, 1],
+    )
+    # No partner, Yes child
+    non_employment_benefits[:, 1] = np.where(
+        ((states[:, 2] == 0) & (states[:, 6] != -1) & (states[:, 7] == 0)),
+        model_spec.regelsatz_single
+        + model_spec.regelsatz_child
+        + model_spec.addition_child_single
+        + model_spec.housing * 0.25,
+        non_employment_benefits[:, 1],
+    )
+
+    # Motherhood
+    # System 2007
+    non_employment_benefits[:, 2] = np.where(
+        ((states[:, 2] != 0) & (states[:, 6] == 0)),
+        model_spec.motherhood_replacement * np.exp(log_wage_systematic) * HOURS[2],
+        0.00,
+    )
 
     return non_employment_benefits
 
 
-def calculate_budget_constraint_components(model_spec, states, covariates):
-    """This function calculates the resources available to the woman to spend on consumption.
+@numba.jit(nopython=True)
+def calculate_deductions(deductions_spec, gross_labor_income):
+    """Determines the social security contribution amount
+    to be deduced from the individuals gross labor income"""
+
+    health_contr = deductions_spec[0] * min(
+        gross_labor_income, 0.75 * deductions_spec[3]
+    )
+    pension_contr = deductions_spec[1] * min(gross_labor_income, deductions_spec[3])
+    unempl_contr = deductions_spec[2] * min(gross_labor_income, deductions_spec[3])
+    ssc = health_contr + pension_contr + unempl_contr
+    deduction_ssc = min(ssc, deductions_spec[4])
+
+    return deduction_ssc
+
+
+@numba.jit(nopython=True)
+def calculate_tax(income_tax_spec, taxable_income):
+    """Calculate household tax payments based on total household taxable income weekly"""
+
+    tax_base = taxable_income - income_tax_spec[0]
+
+    if taxable_income < income_tax_spec[0]:
+        tax_rate = 0
+    elif (taxable_income >= income_tax_spec[0]) and (
+        taxable_income < income_tax_spec[1]
+    ):
+        tax_rate = (
+            (income_tax_spec[3] - income_tax_spec[2])
+            / (income_tax_spec[1] - income_tax_spec[0])
+            / 2
+        ) * tax_base ** 2 + income_tax_spec[2] * tax_base
+    else:
+        tax_rate = (
+            (income_tax_spec[3] + income_tax_spec[2])
+            * (income_tax_spec[1] - income_tax_spec[0])
+            / 2
+        ) + income_tax_spec[3] * (taxable_income - income_tax_spec[1])
+
+    tax = (tax_rate * taxable_income / (tax_base + 0.0001)) * (1 + income_tax_spec[4])
+
+    return tax
+
+
+@numba.jit(nopython=True)
+def calculate_non_employment_consumption_resources(
+    deductions_spec, income_tax_spec, male_wage, non_employment_benefits
+):
+    """This function calculates the resources available to the individual
+    to spend on consumption were she to choose to not be employed.
     It adds the components from the budget constraint to the female wage."""
 
-    # Male wages
-    budget_constraint_components = covariates[:, 1]
+    non_employment_consumption_resources = np.full(male_wage.shape[0], INVALID_FLOAT)
 
-    # Childcare benefits
-    # Benefits kids added if the person has a child
-    budget_constraint_components = np.where(
-        states[:, 6] != -1,
-        budget_constraint_components + model_spec.benefits_kids,
-        budget_constraint_components,
+    for i in range(male_wage.shape[0]):
+        deductions_i = calculate_deductions(deductions_spec, male_wage[i])
+        taxable_income_i = male_wage[i] + non_employment_benefits[i, 0] - deductions_i
+        tax_i = calculate_tax(income_tax_spec, taxable_income_i)
+
+        non_employment_consumption_resources[i] = (
+            taxable_income_i
+            - tax_i
+            + non_employment_benefits[i, 1]
+            + non_employment_benefits[i, 2]
+        )
+
+    return non_employment_consumption_resources
+
+
+@numba.jit(nopython=True)
+def calculate_employment_consumption_resources(
+    deductions_spec, income_tax_spec, current_hh_income
+):
+    """This function calculates the resources available to the individual
+    to spend on consumption were she to choose to be employed.
+    It adds the components from the budget constraint to the female wage."""
+
+    employment_consumption_resources = np.full(
+        current_hh_income.shape[0], INVALID_FLOAT
     )
 
-    return budget_constraint_components
+    for i in range(current_hh_income.shape[0]):
+        deductions_i = calculate_deductions(deductions_spec, current_hh_income[i])
+        taxable_income_i = current_hh_income[i] - deductions_i
+        tax_i = calculate_tax(income_tax_spec, taxable_income_i)
+
+        employment_consumption_resources[i] = taxable_income_i - tax_i
+
+    return employment_consumption_resources

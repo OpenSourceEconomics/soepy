@@ -46,5 +46,4 @@ def test1():
                 expected_df[col],
                 calculated_df[col],
             )
-
     cleanup()
