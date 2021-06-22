@@ -163,8 +163,8 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
     # Contribution child aged 6-10:
     non_consumption_utility[np.where(covariates[:, 0] == 3)] += [
         0,
-        model_params.child_610_f + model_params.child_610_p,
-        model_params.child_610_f,
+        model_params.child_6orolder_f + model_params.child_6orolder_p,
+        model_params.child_6orolder_f,
     ]
 
     non_consumption_utility = np.exp(non_consumption_utility)
