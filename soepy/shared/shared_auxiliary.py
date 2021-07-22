@@ -77,13 +77,13 @@ def calculate_log_wage_systematic(model_params, model_spec, states, is_expected)
 
     exp_p = np.where(
         exp_p_state + exp_f_state > model_spec.exp_cap,
-        np.around(exp_p_state / (exp_p_state + exp_f_state + 0.5)) * model_spec.exp_cap,
+        np.around(exp_p_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap),
         exp_p_state,
     )
 
     exp_f = np.where(
         exp_p_state + exp_f_state > model_spec.exp_cap,
-        np.around(exp_f_state / (exp_p_state + exp_f_state + 0.5)) * model_spec.exp_cap,
+        np.around(exp_f_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap),
         exp_f_state,
     )
 
