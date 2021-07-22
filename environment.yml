@@ -5,7 +5,7 @@ channels:
 dependencies:
 - numpy
 - numba
-- pandas
+- pandas == 1.2.5
 - flake8
 - pytest
 - pytest-cov
