@@ -867,7 +867,8 @@ def _get_max_aggregated_utilities(
 
 @numba.guvectorize(
     ["f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:], f8[:], f8, f8, f8, f8[:]"],
-    "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), (n_spec_params), (n_spec_params),"
+    "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), "
+    "(n_spec_params), (n_spec_params),"
     " (), (), () -> ()",
     nopython=True,
     target="parallel",
