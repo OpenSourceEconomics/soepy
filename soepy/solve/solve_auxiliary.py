@@ -116,7 +116,7 @@ def pyth_create_state_space(model_spec):
                                 # since individual entered the model
                                 if (
                                     exp_f + exp_p
-                                    > period + 2*model_spec.init_exp_max - model_spec.educ_years[educ_level]
+                                    > period - model_spec.educ_years[educ_level]
                                 ):
                                     continue
 
