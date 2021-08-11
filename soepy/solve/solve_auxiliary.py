@@ -106,17 +106,17 @@ def pyth_create_state_space(model_spec):
 
                         # Loop over all admissible years of experience
                         # accumulated in full-time
-                        for exp_f in range(model_spec.num_periods):
+                        for exp_f in range(model_spec.num_periods + model_spec.init_exp_max + 1):
 
                             # Loop over all admissible years of experience accumulated
                             # in part-time
-                            for exp_p in range(model_spec.num_periods):
+                            for exp_p in range(model_spec.num_periods + model_spec.init_exp_max + 1):
 
                                 # The accumulation of experience cannot exceed time elapsed
                                 # since individual entered the model
                                 if (
                                     exp_f + exp_p
-                                    > period - model_spec.educ_years[educ_level]
+                                    > period + 2*model_spec.init_exp_max - model_spec.educ_years[educ_level]
                                 ):
                                     continue
 
@@ -166,7 +166,7 @@ def pyth_create_state_space(model_spec):
                                         # she can only have full-time (2) as lagged choice
                                         if (choice_lagged != 2) and (
                                             exp_f
-                                            == period
+                                            == period + model_spec.init_exp_max
                                             - model_spec.educ_years[educ_level]
                                         ):
                                             continue
@@ -175,7 +175,7 @@ def pyth_create_state_space(model_spec):
                                         # she can only have part-time (1) as lagged choice
                                         if (choice_lagged != 1) and (
                                             exp_p
-                                            == period
+                                            == period + model_spec.init_exp_max
                                             - model_spec.educ_years[educ_level]
                                         ):
                                             continue
@@ -194,7 +194,7 @@ def pyth_create_state_space(model_spec):
                                         # she cannot have non-employment (0) as lagged choice
                                         if (choice_lagged == 0) and (
                                             exp_f + exp_p
-                                            == period
+                                            == period + model_spec.init_exp_max
                                             - model_spec.educ_years[educ_level]
                                         ):
                                             continue
@@ -867,7 +867,8 @@ def _get_max_aggregated_utilities(
 
 @numba.guvectorize(
     ["f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:], f8[:], f8, f8, f8, f8[:]"],
-    "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), (n_spec_params), (n_spec_params), (), (), () -> ()",
+    "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), "
+    "(n_spec_params), (n_spec_params), (), (), () -> ()",
     nopython=True,
     target="parallel",
 )
