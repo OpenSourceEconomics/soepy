@@ -10,6 +10,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
+from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_arrival
 from soepy.exogenous_processes.partner import gen_prob_partner_separation
@@ -92,6 +93,12 @@ def test_unit_data_frame_shape():
         prob_educ_level = gen_prob_educ_level_vector(model_spec)
         prob_child_age = gen_prob_child_init_age_vector(model_spec)
         prob_partner_present = gen_prob_partner_present_vector(model_spec)
+        prob_exp_ft = gen_prob_init_exp_vector(
+            model_spec, model_spec.ft_exp_shares_file_name
+        )
+        prob_exp_pt = gen_prob_init_exp_vector(
+            model_spec, model_spec.pt_exp_shares_file_name
+        )
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner_arrival = gen_prob_partner_arrival(model_spec)
         prob_partner_separation = gen_prob_partner_separation(model_spec)
@@ -130,6 +137,8 @@ def test_unit_data_frame_shape():
             prob_educ_level,
             prob_child_age,
             prob_partner_present,
+            prob_exp_ft,
+            prob_exp_pt,
             prob_child,
             prob_partner_arrival,
             prob_partner_separation,
@@ -503,13 +512,13 @@ def test_unit_childbearing_age():
         "model_spec",
         "num_periods num_educ_levels num_types \
         last_child_bearing_period child_age_max \
-        educ_years child_age_init_max",
+        educ_years child_age_init_max init_exp_max",
     )
 
     num_periods = randint(1, 11)
     last_child_bearing_period = randrange(num_periods)
     model_spec = model_spec(
-        num_periods, 3, 2, last_child_bearing_period, 10, [0, 1, 2], 4
+        num_periods, 3, 2, last_child_bearing_period, 10, [0, 1, 2], 4, 4
     )
 
     states, _ = pyth_create_state_space(model_spec)
@@ -550,6 +559,12 @@ def test_no_children_prob_0():
     prob_educ_level = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
     prob_partner_present = gen_prob_partner_present_vector(model_spec)
+    prob_exp_ft = gen_prob_init_exp_vector(
+        model_spec, model_spec.ft_exp_shares_file_name
+    )
+    prob_exp_pt = gen_prob_init_exp_vector(
+        model_spec, model_spec.pt_exp_shares_file_name
+    )
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_partner_separation = gen_prob_partner_separation(model_spec)
 
@@ -587,6 +602,8 @@ def test_no_children_prob_0():
         prob_educ_level,
         prob_child_age,
         prob_partner_present,
+        prob_exp_ft,
+        prob_exp_pt,
         prob_child,
         prob_partner_arrival,
         prob_partner_separation,
@@ -616,6 +633,12 @@ def test_shares_according_to_initial_conditions():
     prob_educ_level = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
     prob_partner_present = gen_prob_partner_present_vector(model_spec)
+    prob_exp_ft = gen_prob_init_exp_vector(
+        model_spec, model_spec.ft_exp_shares_file_name
+    )
+    prob_exp_pt = gen_prob_init_exp_vector(
+        model_spec, model_spec.pt_exp_shares_file_name
+    )
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_partner_separation = gen_prob_partner_separation(model_spec)
@@ -654,6 +677,8 @@ def test_shares_according_to_initial_conditions():
         prob_educ_level,
         prob_child_age,
         prob_partner_present,
+        prob_exp_ft,
+        prob_exp_pt,
         prob_child,
         prob_partner_arrival,
         prob_partner_separation,
@@ -726,6 +751,12 @@ def test_coef_educ_level_specificity():
         prob_educ_level = gen_prob_educ_level_vector(model_spec)
         prob_child_age = gen_prob_child_init_age_vector(model_spec)
         prob_partner_present = gen_prob_partner_present_vector(model_spec)
+        prob_exp_ft = gen_prob_init_exp_vector(
+            model_spec, model_spec.ft_exp_shares_file_name
+        )
+        prob_exp_pt = gen_prob_init_exp_vector(
+            model_spec, model_spec.pt_exp_shares_file_name
+        )
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner_arrival = gen_prob_partner_arrival(model_spec)
         prob_partner_separation = gen_prob_partner_separation(model_spec)
@@ -764,6 +795,8 @@ def test_coef_educ_level_specificity():
             prob_educ_level,
             prob_child_age,
             prob_partner_present,
+            prob_exp_ft,
+            prob_exp_pt,
             prob_child,
             prob_partner_arrival,
             prob_partner_separation,

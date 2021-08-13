@@ -106,28 +106,30 @@ def pyth_create_state_space(model_spec):
 
                         # Loop over all admissible years of experience
                         # accumulated in full-time
-                        for exp_f in range(model_spec.num_periods + model_spec.init_exp_max + 1):
+                        for exp_f in range(
+                            model_spec.num_periods + model_spec.init_exp_max + 1
+                        ):
 
                             # Loop over all admissible years of experience accumulated
                             # in part-time
-                            for exp_p in range(model_spec.num_periods + model_spec.init_exp_max + 1):
+                            for exp_p in range(
+                                model_spec.num_periods + model_spec.init_exp_max + 1
+                            ):
 
                                 # The accumulation of experience cannot exceed time elapsed
                                 # since individual entered the model
                                 if (
                                     exp_f + exp_p
-                                    > period + model_spec.init_exp_max*2 - model_spec.educ_years[educ_level]
+                                    > period
+                                    + model_spec.init_exp_max * 2
+                                    - model_spec.educ_years[educ_level]
                                 ):
                                     continue
 
-                                if (
-                                        exp_f > period + model_spec.init_exp_max
-                                ):
+                                if exp_f > period + model_spec.init_exp_max:
                                     continue
 
-                                if (
-                                        exp_p > period + model_spec.init_exp_max
-                                ):
+                                if exp_p > period + model_spec.init_exp_max:
                                     continue
 
                                 # Add an additional entry state
@@ -135,7 +137,6 @@ def pyth_create_state_space(model_spec):
                                 # for individuals who have just completed education
                                 # and still have no experience in any occupation.
                                 if period == model_spec.educ_years[educ_level]:
-
 
                                     # Assign an additional integer count i
                                     # for entry state
@@ -177,7 +178,8 @@ def pyth_create_state_space(model_spec):
                                         # she can only have full-time (2) as lagged choice
                                         if (choice_lagged != 2) and (
                                             exp_f
-                                            == period + model_spec.init_exp_max
+                                            == period
+                                            + model_spec.init_exp_max
                                             - model_spec.educ_years[educ_level]
                                         ):
                                             continue
@@ -186,7 +188,8 @@ def pyth_create_state_space(model_spec):
                                         # she can only have part-time (1) as lagged choice
                                         if (choice_lagged != 1) and (
                                             exp_p
-                                            == period + model_spec.init_exp_max
+                                            == period
+                                            + model_spec.init_exp_max
                                             - model_spec.educ_years[educ_level]
                                         ):
                                             continue
@@ -205,7 +208,8 @@ def pyth_create_state_space(model_spec):
                                         # she cannot have non-employment (0) as lagged choice
                                         if (choice_lagged == 0) and (
                                             exp_f + exp_p
-                                            == period + model_spec.init_exp_max
+                                            == period
+                                            + model_spec.init_exp_max
                                             - model_spec.educ_years[educ_level]
                                         ):
                                             continue

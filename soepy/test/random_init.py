@@ -59,6 +59,11 @@ def random_init(constr=None):
     else:
         child_age_init_max = np.random.randint(0, 4)
 
+    if "INIT_EXP_MAX" in constr.keys():
+        init_exp_max = constr["INIT_EXP_MAX"]
+    else:
+        init_exp_max = np.random.randint(0, 4)
+
     model_spec_init_dict = dict()
 
     for key_ in [
@@ -124,6 +129,13 @@ def random_init(constr=None):
     model_spec_init_dict["INITIAL_CONDITIONS"][
         "partner_shares_file_name"
     ] = "test.soepy.partner.shares.pkl"
+    model_spec_init_dict["INITIAL_CONDITIONS"][
+        "ft_exp_shares_file_name"
+    ] = "test.soepy.ft.exp.shares.pkl"
+    model_spec_init_dict["INITIAL_CONDITIONS"][
+        "pt_exp_shares_file_name"
+    ] = "test.soepy.pt.exp.shares.pkl"
+    model_spec_init_dict["INITIAL_CONDITIONS"]["init_exp_max"] = init_exp_max
 
     model_spec_init_dict["EXOG_PROC"]["child_info_file_name"] = "test.soepy.child.pkl"
     model_spec_init_dict["EXOG_PROC"][
@@ -299,6 +311,33 @@ def random_init(constr=None):
     exog_partner_shares.index.name = "educ_level"
     exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
 
+    # Generate random fractions for initial exp levels
+    for label in ["pt", "ft"]:
+        # Constrained model with initial experience 0
+        if init_exp_max == 0:
+            exper_shares = np.repeat(0.00, len(educ_years))
+            index_levels = [list(range(len(educ_years))), [init_exp_max]]
+        # Individuals may have worked before entering the model
+        else:
+            exper_shares = np.random.uniform(
+                1, 10, size=(init_exp_max + 1) * len(educ_years)
+            )
+            exper_shares /= exper_shares.sum()
+            index_levels = [[0, 1, 2], list(range(0, init_exp_max + 1))]
+        index = pd.MultiIndex.from_product(
+            index_levels, names=["educ_level", label + "_exp"]
+        )
+        exog_exper_shares = pd.DataFrame(
+            exper_shares.tolist(),
+            index=index,
+            columns=["exper_shares"],
+        )
+        exog_exper_shares.to_pickle("test.soepy." + label + ".exp.shares.pkl")
+        if label == "pt":
+            exog_exper_shares_pt = exog_exper_shares
+        else:
+            exog_exper_shares_ft = exog_exper_shares
+
     # Random process evolution throughout the model
     # Generate random probabilities of childbirth
     index_levels = [list(range(0, periods)), [0, 1, 2]]
@@ -349,6 +388,8 @@ def random_init(constr=None):
         exog_educ_shares,
         exog_child_age_shares,
         exog_partner_shares,
+        exog_exper_shares_pt,
+        exog_exper_shares_ft,
         exog_child_info,
         exog_partner_arrival_info,
         exog_partner_separation_info,
@@ -439,6 +480,7 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["INITIAL_CONDITIONS"]["child_age_init_max"] = init_dict_flat[
         "child_age_init_max"
     ]
+    init_dict["INITIAL_CONDITIONS"]["init_exp_max"] = init_dict_flat["init_exp_max"]
 
     init_dict["EXOG_PROC"] = dict()
     init_dict["EXOG_PROC"]["child_age_max"] = init_dict_flat["child_age_max"]

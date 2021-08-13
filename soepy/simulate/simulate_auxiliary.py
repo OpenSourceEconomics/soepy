@@ -43,8 +43,10 @@ def pyth_simulate(
 
     # Draw initial conditions: age of youngest child, partner status,
     # experience full-time and experience part-time
-    initial_child_age =  initial_partner_status = np.full(model_spec.num_agents_sim, np.nan)
-    initial_pt_exp = initial_ft_exp = np.full(model_spec.num_agents_sim, np.nan)
+    initial_child_age = np.full(model_spec.num_agents_sim, np.nan)
+    initial_partner_status = np.full(model_spec.num_agents_sim, np.nan)
+    initial_pt_exp = np.full(model_spec.num_agents_sim, np.nan)
+    initial_ft_exp = np.full(model_spec.num_agents_sim, np.nan)
 
     for educ_level in range(model_spec.num_educ_levels):
         # Child
@@ -123,14 +125,14 @@ def pyth_simulate(
             current_states = np.vstack((current_states, initial_states_in_period))
 
         idx = indexer[
-            current_states[:, 1], # 0 period
-            current_states[:, 2], # 1 educ_level
-            current_states[:, 3], # 2 lagged_choice
-            current_states[:, 4], # 3 exp_pt
-            current_states[:, 5], # 4 exp_ft
-            current_states[:, 6], # 5 type
-            current_states[:, 7], # 6 age_youngest_child
-            current_states[:, 8], # 7 partner_indicator
+            current_states[:, 1],  # 0 period
+            current_states[:, 2],  # 1 educ_level
+            current_states[:, 3],  # 2 lagged_choice
+            current_states[:, 4],  # 3 exp_pt
+            current_states[:, 5],  # 4 exp_ft
+            current_states[:, 6],  # 5 type
+            current_states[:, 7],  # 6 age_youngest_child
+            current_states[:, 8],  # 7 partner_indicator
         ]
 
         # Extract corresponding utilities
