@@ -1,6 +1,6 @@
 ---
 GENERAL:
-    num_periods: 39
+    num_periods: 10
 CONSTANTS:
     delta: 0.98
     mu: -0.56
@@ -31,6 +31,9 @@ INITIAL_CONDITIONS:
     child_age_shares_file_name: 'exog_child_age_shares.pkl'
     child_age_init_max: 4
     partner_shares_file_name: 'exog_partner_shares.pkl'
+    ft_exp_shares_file_name: 'exog_ft_exp_shares.pkl'
+    pt_exp_shares_file_name: 'exog_pt_exp_shares.pkl'
+    init_exp_max: 4
 EXOG_PROC:
     child_info_file_name: 'exog_child_info.pkl'
     partner_arrival_info_file_name: 'exog_partner_arrival_info.pkl'

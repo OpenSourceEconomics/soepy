@@ -48,6 +48,8 @@ def create_vault(num_test=1000, seed=123456):
             exog_educ_shares,
             exog_child_age_shares,
             exog_partner_shares,
+            exog_exper_shares_pt,
+            exog_exper_shares_ft,
             exog_child_info,
             exog_partner_arrival_info,
             exog_partner_separation_info,
@@ -62,6 +64,8 @@ def create_vault(num_test=1000, seed=123456):
                 exog_educ_shares,
                 exog_child_age_shares,
                 exog_partner_shares,
+                exog_exper_shares_pt,
+                exog_exper_shares_ft,
                 exog_child_info,
                 exog_partner_arrival_info,
                 exog_partner_separation_info,
@@ -90,6 +94,8 @@ def check_vault(num_test):
             exog_educ_shares,
             exog_child_age_shares,
             exog_partner_shares,
+            exog_exper_shares_pt,
+            exog_exper_shares_ft,
             exog_child_info,
             exog_partner_arrival_info,
             exog_partner_separation_info,
@@ -100,6 +106,8 @@ def check_vault(num_test):
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
         exog_child_info.to_pickle("test.soepy.child.pkl")
         exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
+        exog_exper_shares_pt.to_pickle("test.soepy.pt.exp.shares.pkl")
+        exog_exper_shares_ft.to_pickle("test.soepy.ft.exp.shares.pkl")
         exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
         exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 

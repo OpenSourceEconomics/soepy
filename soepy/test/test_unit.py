@@ -10,6 +10,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
+from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_arrival
 from soepy.exogenous_processes.partner import gen_prob_partner_separation
@@ -92,6 +93,12 @@ def test_unit_data_frame_shape():
         prob_educ_level = gen_prob_educ_level_vector(model_spec)
         prob_child_age = gen_prob_child_init_age_vector(model_spec)
         prob_partner_present = gen_prob_partner_present_vector(model_spec)
+        prob_exp_ft = gen_prob_init_exp_vector(
+            model_spec, model_spec.ft_exp_shares_file_name
+        )
+        prob_exp_pt = gen_prob_init_exp_vector(
+            model_spec, model_spec.pt_exp_shares_file_name
+        )
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner_arrival = gen_prob_partner_arrival(model_spec)
         prob_partner_separation = gen_prob_partner_separation(model_spec)
@@ -130,6 +137,8 @@ def test_unit_data_frame_shape():
             prob_educ_level,
             prob_child_age,
             prob_partner_present,
+            prob_exp_ft,
+            prob_exp_pt,
             prob_child,
             prob_partner_arrival,
             prob_partner_separation,
@@ -158,340 +167,117 @@ def test_unit_states_hard_code():
         "model_spec",
         "num_periods num_educ_levels num_types \
          last_child_bearing_period, child_age_max \
-         educ_years child_age_init_max",
+         educ_years child_age_init_max init_exp_max",
     )
-    model_spec = model_spec(2, 3, 2, 24, 10, [0, 0, 0], 4)
+    model_spec = model_spec(2, 3, 2, 24, 10, [0, 0, 0], 4, 2)
 
     states, _ = pyth_create_state_space(model_spec)
 
-    states_true = [
+    states_shape_true = (2748, 8)
+
+    states_batch_1_true = [
         [0, 0, 0, 0, 0, 0, -1, 0],
+        [0, 0, 0, 1, 0, 0, -1, 0],
+        [0, 0, 0, 2, 0, 0, -1, 0],
+        [0, 0, 0, 0, 1, 0, -1, 0],
+        [0, 0, 0, 1, 1, 0, -1, 0],
+        [0, 0, 0, 2, 1, 0, -1, 0],
+        [0, 0, 0, 0, 2, 0, -1, 0],
+        [0, 0, 0, 1, 2, 0, -1, 0],
+        [0, 0, 0, 2, 2, 0, -1, 0],
         [0, 1, 0, 0, 0, 0, -1, 0],
+        [0, 1, 0, 1, 0, 0, -1, 0],
+        [0, 1, 0, 2, 0, 0, -1, 0],
+        [0, 1, 0, 0, 1, 0, -1, 0],
+        [0, 1, 0, 1, 1, 0, -1, 0],
+        [0, 1, 0, 2, 1, 0, -1, 0],
+        [0, 1, 0, 0, 2, 0, -1, 0],
+        [0, 1, 0, 1, 2, 0, -1, 0],
+        [0, 1, 0, 2, 2, 0, -1, 0],
         [0, 2, 0, 0, 0, 0, -1, 0],
+        [0, 2, 0, 1, 0, 0, -1, 0],
+        [0, 2, 0, 2, 0, 0, -1, 0],
+        [0, 2, 0, 0, 1, 0, -1, 0],
+        [0, 2, 0, 1, 1, 0, -1, 0],
+        [0, 2, 0, 2, 1, 0, -1, 0],
+        [0, 2, 0, 0, 2, 0, -1, 0],
+        [0, 2, 0, 1, 2, 0, -1, 0],
+        [0, 2, 0, 2, 2, 0, -1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0],
-        [0, 2, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 1, 0, 0, 0, 0, 1, 0],
-        [0, 2, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 0, 2, 0],
-        [0, 1, 0, 0, 0, 0, 2, 0],
-        [0, 2, 0, 0, 0, 0, 2, 0],
-        [0, 0, 0, 0, 0, 0, 3, 0],
-        [0, 1, 0, 0, 0, 0, 3, 0],
-        [0, 2, 0, 0, 0, 0, 3, 0],
-        [0, 0, 0, 0, 0, 0, 4, 0],
-        [0, 1, 0, 0, 0, 0, 4, 0],
-        [0, 2, 0, 0, 0, 0, 4, 0],
-        [0, 0, 0, 0, 0, 0, -1, 1],
-        [0, 1, 0, 0, 0, 0, -1, 1],
-        [0, 2, 0, 0, 0, 0, -1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1],
-        [0, 1, 0, 0, 0, 0, 0, 1],
-        [0, 2, 0, 0, 0, 0, 0, 1],
-        [0, 0, 0, 0, 0, 0, 1, 1],
-        [0, 1, 0, 0, 0, 0, 1, 1],
-        [0, 2, 0, 0, 0, 0, 1, 1],
-        [0, 0, 0, 0, 0, 0, 2, 1],
-        [0, 1, 0, 0, 0, 0, 2, 1],
-        [0, 2, 0, 0, 0, 0, 2, 1],
-        [0, 0, 0, 0, 0, 0, 3, 1],
-        [0, 1, 0, 0, 0, 0, 3, 1],
-        [0, 2, 0, 0, 0, 0, 3, 1],
-        [0, 0, 0, 0, 0, 0, 4, 1],
-        [0, 1, 0, 0, 0, 0, 4, 1],
-        [0, 2, 0, 0, 0, 0, 4, 1],
-        [0, 0, 0, 0, 0, 1, -1, 0],
-        [0, 1, 0, 0, 0, 1, -1, 0],
-        [0, 2, 0, 0, 0, 1, -1, 0],
-        [0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 1, 0, 0, 0, 1, 0, 0],
-        [0, 2, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 1, 1, 0],
-        [0, 1, 0, 0, 0, 1, 1, 0],
-        [0, 2, 0, 0, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0, 1, 2, 0],
-        [0, 1, 0, 0, 0, 1, 2, 0],
-        [0, 2, 0, 0, 0, 1, 2, 0],
-        [0, 0, 0, 0, 0, 1, 3, 0],
-        [0, 1, 0, 0, 0, 1, 3, 0],
-        [0, 2, 0, 0, 0, 1, 3, 0],
-        [0, 0, 0, 0, 0, 1, 4, 0],
-        [0, 1, 0, 0, 0, 1, 4, 0],
-        [0, 2, 0, 0, 0, 1, 4, 0],
-        [0, 0, 0, 0, 0, 1, -1, 1],
-        [0, 1, 0, 0, 0, 1, -1, 1],
-        [0, 2, 0, 0, 0, 1, -1, 1],
-        [0, 0, 0, 0, 0, 1, 0, 1],
-        [0, 1, 0, 0, 0, 1, 0, 1],
-        [0, 2, 0, 0, 0, 1, 0, 1],
-        [0, 0, 0, 0, 0, 1, 1, 1],
-        [0, 1, 0, 0, 0, 1, 1, 1],
-        [0, 2, 0, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 1, 2, 1],
-        [0, 1, 0, 0, 0, 1, 2, 1],
-        [0, 2, 0, 0, 0, 1, 2, 1],
-        [0, 0, 0, 0, 0, 1, 3, 1],
-        [0, 1, 0, 0, 0, 1, 3, 1],
-        [0, 2, 0, 0, 0, 1, 3, 1],
-        [0, 0, 0, 0, 0, 1, 4, 1],
-        [0, 1, 0, 0, 0, 1, 4, 1],
-        [0, 2, 0, 0, 0, 1, 4, 1],
-        [1, 0, 0, 0, 0, 0, -1, 0],
-        [1, 0, 1, 1, 0, 0, -1, 0],
-        [1, 0, 2, 0, 1, 0, -1, 0],
-        [1, 1, 0, 0, 0, 0, -1, 0],
-        [1, 1, 1, 1, 0, 0, -1, 0],
-        [1, 1, 2, 0, 1, 0, -1, 0],
-        [1, 2, 0, 0, 0, 0, -1, 0],
-        [1, 2, 1, 1, 0, 0, -1, 0],
-        [1, 2, 2, 0, 1, 0, -1, 0],
-        [1, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 1, 1, 0, 0, 0, 0],
-        [1, 0, 2, 0, 1, 0, 0, 0],
-        [1, 1, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 0, 0, 0, 0],
-        [1, 1, 2, 0, 1, 0, 0, 0],
-        [1, 2, 0, 0, 0, 0, 0, 0],
-        [1, 2, 1, 1, 0, 0, 0, 0],
-        [1, 2, 2, 0, 1, 0, 0, 0],
-        [1, 0, 0, 0, 0, 0, 1, 0],
-        [1, 0, 1, 1, 0, 0, 1, 0],
-        [1, 0, 2, 0, 1, 0, 1, 0],
-        [1, 1, 0, 0, 0, 0, 1, 0],
-        [1, 1, 1, 1, 0, 0, 1, 0],
-        [1, 1, 2, 0, 1, 0, 1, 0],
-        [1, 2, 0, 0, 0, 0, 1, 0],
-        [1, 2, 1, 1, 0, 0, 1, 0],
-        [1, 2, 2, 0, 1, 0, 1, 0],
-        [1, 0, 0, 0, 0, 0, 2, 0],
-        [1, 0, 1, 1, 0, 0, 2, 0],
-        [1, 0, 2, 0, 1, 0, 2, 0],
-        [1, 1, 0, 0, 0, 0, 2, 0],
-        [1, 1, 1, 1, 0, 0, 2, 0],
-        [1, 1, 2, 0, 1, 0, 2, 0],
-        [1, 2, 0, 0, 0, 0, 2, 0],
-        [1, 2, 1, 1, 0, 0, 2, 0],
-        [1, 2, 2, 0, 1, 0, 2, 0],
-        [1, 0, 0, 0, 0, 0, 3, 0],
-        [1, 0, 1, 1, 0, 0, 3, 0],
-        [1, 0, 2, 0, 1, 0, 3, 0],
-        [1, 1, 0, 0, 0, 0, 3, 0],
-        [1, 1, 1, 1, 0, 0, 3, 0],
-        [1, 1, 2, 0, 1, 0, 3, 0],
-        [1, 2, 0, 0, 0, 0, 3, 0],
-        [1, 2, 1, 1, 0, 0, 3, 0],
-        [1, 2, 2, 0, 1, 0, 3, 0],
-        [1, 0, 0, 0, 0, 0, 4, 0],
-        [1, 0, 1, 1, 0, 0, 4, 0],
-        [1, 0, 2, 0, 1, 0, 4, 0],
-        [1, 1, 0, 0, 0, 0, 4, 0],
-        [1, 1, 1, 1, 0, 0, 4, 0],
-        [1, 1, 2, 0, 1, 0, 4, 0],
-        [1, 2, 0, 0, 0, 0, 4, 0],
-        [1, 2, 1, 1, 0, 0, 4, 0],
-        [1, 2, 2, 0, 1, 0, 4, 0],
-        [1, 0, 0, 0, 0, 0, 5, 0],
-        [1, 0, 1, 1, 0, 0, 5, 0],
-        [1, 0, 2, 0, 1, 0, 5, 0],
-        [1, 1, 0, 0, 0, 0, 5, 0],
-        [1, 1, 1, 1, 0, 0, 5, 0],
-        [1, 1, 2, 0, 1, 0, 5, 0],
-        [1, 2, 0, 0, 0, 0, 5, 0],
-        [1, 2, 1, 1, 0, 0, 5, 0],
-        [1, 2, 2, 0, 1, 0, 5, 0],
-        [1, 0, 0, 0, 0, 0, -1, 1],
-        [1, 0, 1, 1, 0, 0, -1, 1],
-        [1, 0, 2, 0, 1, 0, -1, 1],
-        [1, 1, 0, 0, 0, 0, -1, 1],
-        [1, 1, 1, 1, 0, 0, -1, 1],
-        [1, 1, 2, 0, 1, 0, -1, 1],
-        [1, 2, 0, 0, 0, 0, -1, 1],
-        [1, 2, 1, 1, 0, 0, -1, 1],
-        [1, 2, 2, 0, 1, 0, -1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 1, 0, 0, 0, 1],
-        [1, 0, 2, 0, 1, 0, 0, 1],
-        [1, 1, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 0, 0, 0, 1],
-        [1, 1, 2, 0, 1, 0, 0, 1],
-        [1, 2, 0, 0, 0, 0, 0, 1],
-        [1, 2, 1, 1, 0, 0, 0, 1],
-        [1, 2, 2, 0, 1, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1, 1],
-        [1, 0, 1, 1, 0, 0, 1, 1],
-        [1, 0, 2, 0, 1, 0, 1, 1],
-        [1, 1, 0, 0, 0, 0, 1, 1],
-        [1, 1, 1, 1, 0, 0, 1, 1],
-        [1, 1, 2, 0, 1, 0, 1, 1],
-        [1, 2, 0, 0, 0, 0, 1, 1],
-        [1, 2, 1, 1, 0, 0, 1, 1],
-        [1, 2, 2, 0, 1, 0, 1, 1],
-        [1, 0, 0, 0, 0, 0, 2, 1],
-        [1, 0, 1, 1, 0, 0, 2, 1],
-        [1, 0, 2, 0, 1, 0, 2, 1],
-        [1, 1, 0, 0, 0, 0, 2, 1],
-        [1, 1, 1, 1, 0, 0, 2, 1],
-        [1, 1, 2, 0, 1, 0, 2, 1],
-        [1, 2, 0, 0, 0, 0, 2, 1],
-        [1, 2, 1, 1, 0, 0, 2, 1],
-        [1, 2, 2, 0, 1, 0, 2, 1],
-        [1, 0, 0, 0, 0, 0, 3, 1],
-        [1, 0, 1, 1, 0, 0, 3, 1],
-        [1, 0, 2, 0, 1, 0, 3, 1],
-        [1, 1, 0, 0, 0, 0, 3, 1],
-        [1, 1, 1, 1, 0, 0, 3, 1],
-        [1, 1, 2, 0, 1, 0, 3, 1],
-        [1, 2, 0, 0, 0, 0, 3, 1],
-        [1, 2, 1, 1, 0, 0, 3, 1],
-        [1, 2, 2, 0, 1, 0, 3, 1],
-        [1, 0, 0, 0, 0, 0, 4, 1],
-        [1, 0, 1, 1, 0, 0, 4, 1],
-        [1, 0, 2, 0, 1, 0, 4, 1],
-        [1, 1, 0, 0, 0, 0, 4, 1],
-        [1, 1, 1, 1, 0, 0, 4, 1],
-        [1, 1, 2, 0, 1, 0, 4, 1],
-        [1, 2, 0, 0, 0, 0, 4, 1],
-        [1, 2, 1, 1, 0, 0, 4, 1],
-        [1, 2, 2, 0, 1, 0, 4, 1],
-        [1, 0, 0, 0, 0, 0, 5, 1],
-        [1, 0, 1, 1, 0, 0, 5, 1],
-        [1, 0, 2, 0, 1, 0, 5, 1],
-        [1, 1, 0, 0, 0, 0, 5, 1],
-        [1, 1, 1, 1, 0, 0, 5, 1],
-        [1, 1, 2, 0, 1, 0, 5, 1],
-        [1, 2, 0, 0, 0, 0, 5, 1],
-        [1, 2, 1, 1, 0, 0, 5, 1],
-        [1, 2, 2, 0, 1, 0, 5, 1],
-        [1, 0, 0, 0, 0, 1, -1, 0],
-        [1, 0, 1, 1, 0, 1, -1, 0],
-        [1, 0, 2, 0, 1, 1, -1, 0],
-        [1, 1, 0, 0, 0, 1, -1, 0],
-        [1, 1, 1, 1, 0, 1, -1, 0],
-        [1, 1, 2, 0, 1, 1, -1, 0],
-        [1, 2, 0, 0, 0, 1, -1, 0],
-        [1, 2, 1, 1, 0, 1, -1, 0],
-        [1, 2, 2, 0, 1, 1, -1, 0],
-        [1, 0, 0, 0, 0, 1, 0, 0],
-        [1, 0, 1, 1, 0, 1, 0, 0],
-        [1, 0, 2, 0, 1, 1, 0, 0],
-        [1, 1, 0, 0, 0, 1, 0, 0],
-        [1, 1, 1, 1, 0, 1, 0, 0],
-        [1, 1, 2, 0, 1, 1, 0, 0],
-        [1, 2, 0, 0, 0, 1, 0, 0],
-        [1, 2, 1, 1, 0, 1, 0, 0],
-        [1, 2, 2, 0, 1, 1, 0, 0],
-        [1, 0, 0, 0, 0, 1, 1, 0],
-        [1, 0, 1, 1, 0, 1, 1, 0],
-        [1, 0, 2, 0, 1, 1, 1, 0],
-        [1, 1, 0, 0, 0, 1, 1, 0],
-        [1, 1, 1, 1, 0, 1, 1, 0],
-        [1, 1, 2, 0, 1, 1, 1, 0],
-        [1, 2, 0, 0, 0, 1, 1, 0],
-        [1, 2, 1, 1, 0, 1, 1, 0],
-        [1, 2, 2, 0, 1, 1, 1, 0],
-        [1, 0, 0, 0, 0, 1, 2, 0],
-        [1, 0, 1, 1, 0, 1, 2, 0],
-        [1, 0, 2, 0, 1, 1, 2, 0],
-        [1, 1, 0, 0, 0, 1, 2, 0],
-        [1, 1, 1, 1, 0, 1, 2, 0],
-        [1, 1, 2, 0, 1, 1, 2, 0],
-        [1, 2, 0, 0, 0, 1, 2, 0],
-        [1, 2, 1, 1, 0, 1, 2, 0],
-        [1, 2, 2, 0, 1, 1, 2, 0],
-        [1, 0, 0, 0, 0, 1, 3, 0],
-        [1, 0, 1, 1, 0, 1, 3, 0],
-        [1, 0, 2, 0, 1, 1, 3, 0],
-        [1, 1, 0, 0, 0, 1, 3, 0],
-        [1, 1, 1, 1, 0, 1, 3, 0],
-        [1, 1, 2, 0, 1, 1, 3, 0],
-        [1, 2, 0, 0, 0, 1, 3, 0],
-        [1, 2, 1, 1, 0, 1, 3, 0],
-        [1, 2, 2, 0, 1, 1, 3, 0],
-        [1, 0, 0, 0, 0, 1, 4, 0],
-        [1, 0, 1, 1, 0, 1, 4, 0],
-        [1, 0, 2, 0, 1, 1, 4, 0],
-        [1, 1, 0, 0, 0, 1, 4, 0],
-        [1, 1, 1, 1, 0, 1, 4, 0],
-        [1, 1, 2, 0, 1, 1, 4, 0],
-        [1, 2, 0, 0, 0, 1, 4, 0],
-        [1, 2, 1, 1, 0, 1, 4, 0],
-        [1, 2, 2, 0, 1, 1, 4, 0],
-        [1, 0, 0, 0, 0, 1, 5, 0],
-        [1, 0, 1, 1, 0, 1, 5, 0],
-        [1, 0, 2, 0, 1, 1, 5, 0],
-        [1, 1, 0, 0, 0, 1, 5, 0],
-        [1, 1, 1, 1, 0, 1, 5, 0],
-        [1, 1, 2, 0, 1, 1, 5, 0],
-        [1, 2, 0, 0, 0, 1, 5, 0],
-        [1, 2, 1, 1, 0, 1, 5, 0],
-        [1, 2, 2, 0, 1, 1, 5, 0],
-        [1, 0, 0, 0, 0, 1, -1, 1],
-        [1, 0, 1, 1, 0, 1, -1, 1],
-        [1, 0, 2, 0, 1, 1, -1, 1],
-        [1, 1, 0, 0, 0, 1, -1, 1],
-        [1, 1, 1, 1, 0, 1, -1, 1],
-        [1, 1, 2, 0, 1, 1, -1, 1],
-        [1, 2, 0, 0, 0, 1, -1, 1],
-        [1, 2, 1, 1, 0, 1, -1, 1],
-        [1, 2, 2, 0, 1, 1, -1, 1],
-        [1, 0, 0, 0, 0, 1, 0, 1],
-        [1, 0, 1, 1, 0, 1, 0, 1],
-        [1, 0, 2, 0, 1, 1, 0, 1],
-        [1, 1, 0, 0, 0, 1, 0, 1],
-        [1, 1, 1, 1, 0, 1, 0, 1],
-        [1, 1, 2, 0, 1, 1, 0, 1],
-        [1, 2, 0, 0, 0, 1, 0, 1],
-        [1, 2, 1, 1, 0, 1, 0, 1],
-        [1, 2, 2, 0, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 1, 1, 1],
-        [1, 0, 1, 1, 0, 1, 1, 1],
-        [1, 0, 2, 0, 1, 1, 1, 1],
-        [1, 1, 0, 0, 0, 1, 1, 1],
-        [1, 1, 1, 1, 0, 1, 1, 1],
-        [1, 1, 2, 0, 1, 1, 1, 1],
-        [1, 2, 0, 0, 0, 1, 1, 1],
-        [1, 2, 1, 1, 0, 1, 1, 1],
-        [1, 2, 2, 0, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 1, 2, 1],
-        [1, 0, 1, 1, 0, 1, 2, 1],
-        [1, 0, 2, 0, 1, 1, 2, 1],
-        [1, 1, 0, 0, 0, 1, 2, 1],
-        [1, 1, 1, 1, 0, 1, 2, 1],
-        [1, 1, 2, 0, 1, 1, 2, 1],
-        [1, 2, 0, 0, 0, 1, 2, 1],
-        [1, 2, 1, 1, 0, 1, 2, 1],
-        [1, 2, 2, 0, 1, 1, 2, 1],
-        [1, 0, 0, 0, 0, 1, 3, 1],
-        [1, 0, 1, 1, 0, 1, 3, 1],
-        [1, 0, 2, 0, 1, 1, 3, 1],
-        [1, 1, 0, 0, 0, 1, 3, 1],
-        [1, 1, 1, 1, 0, 1, 3, 1],
-        [1, 1, 2, 0, 1, 1, 3, 1],
-        [1, 2, 0, 0, 0, 1, 3, 1],
-        [1, 2, 1, 1, 0, 1, 3, 1],
-        [1, 2, 2, 0, 1, 1, 3, 1],
-        [1, 0, 0, 0, 0, 1, 4, 1],
-        [1, 0, 1, 1, 0, 1, 4, 1],
-        [1, 0, 2, 0, 1, 1, 4, 1],
-        [1, 1, 0, 0, 0, 1, 4, 1],
-        [1, 1, 1, 1, 0, 1, 4, 1],
-        [1, 1, 2, 0, 1, 1, 4, 1],
-        [1, 2, 0, 0, 0, 1, 4, 1],
-        [1, 2, 1, 1, 0, 1, 4, 1],
-        [1, 2, 2, 0, 1, 1, 4, 1],
-        [1, 0, 0, 0, 0, 1, 5, 1],
-        [1, 0, 1, 1, 0, 1, 5, 1],
-        [1, 0, 2, 0, 1, 1, 5, 1],
-        [1, 1, 0, 0, 0, 1, 5, 1],
-        [1, 1, 1, 1, 0, 1, 5, 1],
-        [1, 1, 2, 0, 1, 1, 5, 1],
-        [1, 2, 0, 0, 0, 1, 5, 1],
-        [1, 2, 1, 1, 0, 1, 5, 1],
-        [1, 2, 2, 0, 1, 1, 5, 1],
+        [0, 0, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 2, 0, 0, 0, 0],
     ]
 
-    np.testing.assert_array_equal(states_true, states)
+    states_batch_2_true = [
+        [1, 1, 2, 0, 3, 0, -1, 1],
+        [1, 1, 2, 1, 3, 0, -1, 1],
+        [1, 1, 2, 2, 3, 0, -1, 1],
+        [1, 2, 0, 0, 0, 0, -1, 1],
+        [1, 2, 0, 1, 0, 0, -1, 1],
+        [1, 2, 1, 1, 0, 0, -1, 1],
+        [1, 2, 0, 2, 0, 0, -1, 1],
+        [1, 2, 1, 2, 0, 0, -1, 1],
+        [1, 2, 1, 3, 0, 0, -1, 1],
+        [1, 2, 0, 0, 1, 0, -1, 1],
+        [1, 2, 2, 0, 1, 0, -1, 1],
+        [1, 2, 0, 1, 1, 0, -1, 1],
+        [1, 2, 1, 1, 1, 0, -1, 1],
+        [1, 2, 2, 1, 1, 0, -1, 1],
+        [1, 2, 1, 2, 1, 0, -1, 1],
+        [1, 2, 2, 2, 1, 0, -1, 1],
+        [1, 2, 1, 3, 1, 0, -1, 1],
+        [1, 2, 0, 0, 2, 0, -1, 1],
+        [1, 2, 2, 0, 2, 0, -1, 1],
+        [1, 2, 1, 1, 2, 0, -1, 1],
+        [1, 2, 2, 1, 2, 0, -1, 1],
+        [1, 2, 0, 2, 2, 0, -1, 1],
+        [1, 2, 1, 2, 2, 0, -1, 1],
+        [1, 2, 2, 2, 2, 0, -1, 1],
+        [1, 2, 1, 3, 2, 0, -1, 1],
+        [1, 2, 2, 0, 3, 0, -1, 1],
+        [1, 2, 2, 1, 3, 0, -1, 1],
+        [1, 2, 2, 2, 3, 0, -1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 1, 0, 0, 0, 1],
+    ]
+
+    states_batch_3_true = [
+        [1, 2, 1, 1, 0, 1, 2, 1],
+        [1, 2, 0, 2, 0, 1, 2, 1],
+        [1, 2, 1, 2, 0, 1, 2, 1],
+        [1, 2, 1, 3, 0, 1, 2, 1],
+        [1, 2, 0, 0, 1, 1, 2, 1],
+        [1, 2, 2, 0, 1, 1, 2, 1],
+        [1, 2, 0, 1, 1, 1, 2, 1],
+        [1, 2, 1, 1, 1, 1, 2, 1],
+        [1, 2, 2, 1, 1, 1, 2, 1],
+        [1, 2, 1, 2, 1, 1, 2, 1],
+        [1, 2, 2, 2, 1, 1, 2, 1],
+        [1, 2, 1, 3, 1, 1, 2, 1],
+        [1, 2, 0, 0, 2, 1, 2, 1],
+        [1, 2, 2, 0, 2, 1, 2, 1],
+        [1, 2, 1, 1, 2, 1, 2, 1],
+        [1, 2, 2, 1, 2, 1, 2, 1],
+        [1, 2, 0, 2, 2, 1, 2, 1],
+        [1, 2, 1, 2, 2, 1, 2, 1],
+        [1, 2, 2, 2, 2, 1, 2, 1],
+        [1, 2, 1, 3, 2, 1, 2, 1],
+        [1, 2, 2, 0, 3, 1, 2, 1],
+        [1, 2, 2, 1, 3, 1, 2, 1],
+        [1, 2, 2, 2, 3, 1, 2, 1],
+        [1, 0, 0, 0, 0, 1, 3, 1],
+        [1, 0, 0, 1, 0, 1, 3, 1],
+        [1, 0, 1, 1, 0, 1, 3, 1],
+        [1, 0, 0, 2, 0, 1, 3, 1],
+        [1, 0, 1, 2, 0, 1, 3, 1],
+        [1, 0, 1, 3, 0, 1, 3, 1],
+        [1, 0, 0, 0, 1, 1, 3, 1],
+    ]
+
+    np.testing.assert_array_equal(states_shape_true, states.shape)
+    np.testing.assert_array_equal(states_batch_1_true, states[0:30])
+    np.testing.assert_array_equal(states_batch_2_true, states[1220:1250])
+    np.testing.assert_array_equal(states_batch_3_true, states[2500:2530])
 
 
 def test_unit_childbearing_age():
@@ -503,13 +289,13 @@ def test_unit_childbearing_age():
         "model_spec",
         "num_periods num_educ_levels num_types \
         last_child_bearing_period child_age_max \
-        educ_years child_age_init_max",
+        educ_years child_age_init_max init_exp_max",
     )
 
     num_periods = randint(1, 11)
     last_child_bearing_period = randrange(num_periods)
     model_spec = model_spec(
-        num_periods, 3, 2, last_child_bearing_period, 10, [0, 1, 2], 4
+        num_periods, 3, 2, last_child_bearing_period, 10, [0, 1, 2], 4, 4
     )
 
     states, _ = pyth_create_state_space(model_spec)
@@ -525,20 +311,18 @@ def test_unit_childbearing_age():
     )
 
 
-def test_no_children_prob_0():
-    """This test ensures that child age equals -1 in the entire simulates sample,
+def test_no_children_no_exp():
+    """This test ensures that
+    i) child age equals -1 in the entire simulates sample,
     equivalent to no kid is ever born, if the probability to get a child is zero
-    for all periods"""
+    for all periods
+    ii) initial experience is zero if so specified in constraint"""
 
     expected = 0
 
     is_expected = False
 
-    constr = {
-        "AGENTS": 200,
-        "PERIODS": 10,
-        "CHILD_AGE_INIT_MAX": -1,
-    }
+    constr = {"AGENTS": 200, "PERIODS": 10, "CHILD_AGE_INIT_MAX": -1, "INIT_EXP_MAX": 0}
     random_init(constr)
 
     model_params_df, model_params = read_model_params_init("test.soepy.pkl")
@@ -550,6 +334,12 @@ def test_no_children_prob_0():
     prob_educ_level = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
     prob_partner_present = gen_prob_partner_present_vector(model_spec)
+    prob_exp_ft = gen_prob_init_exp_vector(
+        model_spec, model_spec.ft_exp_shares_file_name
+    )
+    prob_exp_pt = gen_prob_init_exp_vector(
+        model_spec, model_spec.pt_exp_shares_file_name
+    )
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_partner_separation = gen_prob_partner_separation(model_spec)
 
@@ -587,6 +377,8 @@ def test_no_children_prob_0():
         prob_educ_level,
         prob_child_age,
         prob_partner_present,
+        prob_exp_ft,
+        prob_exp_pt,
         prob_child,
         prob_partner_arrival,
         prob_partner_separation,
@@ -594,6 +386,12 @@ def test_no_children_prob_0():
     )
 
     np.testing.assert_equal(sum(df.dropna()["Age_Youngest_Child"] != -1), expected)
+    np.testing.assert_equal(
+        sum(df[df["Period"] == 0].dropna()["Experience_Part_Time"] != 0), expected
+    )
+    np.testing.assert_equal(
+        sum(df[df["Period"] == 0].dropna()["Experience_Full_Time"] != 0), expected
+    )
 
 
 def test_shares_according_to_initial_conditions():
@@ -607,6 +405,7 @@ def test_shares_according_to_initial_conditions():
     constr["EDUC_YEARS"] = [0, 0, 0]
     constr["PERIODS"] = 2
     constr["CHILD_AGE_INIT_MAX"] = 1
+    constr["INIT_EXP_MAX"] = 2
 
     random_init(constr)
 
@@ -616,6 +415,12 @@ def test_shares_according_to_initial_conditions():
     prob_educ_level = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
     prob_partner_present = gen_prob_partner_present_vector(model_spec)
+    prob_exp_ft = gen_prob_init_exp_vector(
+        model_spec, model_spec.ft_exp_shares_file_name
+    )
+    prob_exp_pt = gen_prob_init_exp_vector(
+        model_spec, model_spec.pt_exp_shares_file_name
+    )
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_partner_separation = gen_prob_partner_separation(model_spec)
@@ -654,6 +459,8 @@ def test_shares_according_to_initial_conditions():
         prob_educ_level,
         prob_child_age,
         prob_partner_present,
+        prob_exp_ft,
+        prob_exp_pt,
         prob_child,
         prob_partner_arrival,
         prob_partner_separation,
@@ -693,6 +500,39 @@ def test_shares_according_to_initial_conditions():
         simulated, prob_child_age_flat, decimal=2, err_msg="Child age shares mismatch"
     )
 
+    # Experience in initial period
+    # Part-time
+    simulated = (
+        df[df["Period"] == 0]
+        .groupby(["Education_Level"])["Experience_Part_Time"]
+        .value_counts(normalize=True)
+        .sort_index(ascending=True)
+        .to_numpy()
+    )
+    prob_exp_pt_flat = [item for sublist in prob_exp_pt for item in sublist]
+    np.testing.assert_almost_equal(
+        simulated,
+        prob_exp_pt_flat,
+        decimal=2,
+        err_msg="Part-time experience shares mismatch",
+    )
+
+    # Full-time
+    simulated = (
+        df[df["Period"] == 0]
+        .groupby(["Education_Level"])["Experience_Full_Time"]
+        .value_counts(normalize=True)
+        .sort_index(ascending=True)
+        .to_numpy()
+    )
+    prob_exp_ft_flat = [item for sublist in prob_exp_ft for item in sublist]
+    np.testing.assert_almost_equal(
+        simulated,
+        prob_exp_ft_flat,
+        decimal=2,
+        err_msg="Full-time experience shares mismatch",
+    )
+
 
 def test_coef_educ_level_specificity():
     """This test ensures that when parameters for a specific
@@ -726,6 +566,12 @@ def test_coef_educ_level_specificity():
         prob_educ_level = gen_prob_educ_level_vector(model_spec)
         prob_child_age = gen_prob_child_init_age_vector(model_spec)
         prob_partner_present = gen_prob_partner_present_vector(model_spec)
+        prob_exp_ft = gen_prob_init_exp_vector(
+            model_spec, model_spec.ft_exp_shares_file_name
+        )
+        prob_exp_pt = gen_prob_init_exp_vector(
+            model_spec, model_spec.pt_exp_shares_file_name
+        )
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner_arrival = gen_prob_partner_arrival(model_spec)
         prob_partner_separation = gen_prob_partner_separation(model_spec)
@@ -764,6 +610,8 @@ def test_coef_educ_level_specificity():
             prob_educ_level,
             prob_child_age,
             prob_partner_present,
+            prob_exp_ft,
+            prob_exp_pt,
             prob_child,
             prob_partner_arrival,
             prob_partner_separation,

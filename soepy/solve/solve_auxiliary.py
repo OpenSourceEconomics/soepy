@@ -54,8 +54,8 @@ def pyth_create_state_space(model_spec):
         model_spec.num_periods,
         model_spec.num_educ_levels,
         NUM_CHOICES,
-        model_spec.num_periods,
-        model_spec.num_periods,
+        model_spec.num_periods + model_spec.init_exp_max,
+        model_spec.num_periods + model_spec.init_exp_max,
         model_spec.num_types,
         kids_ages.shape[0],
         2,
@@ -106,18 +106,30 @@ def pyth_create_state_space(model_spec):
 
                         # Loop over all admissible years of experience
                         # accumulated in full-time
-                        for exp_f in range(model_spec.num_periods):
+                        for exp_f in range(
+                            model_spec.num_periods + model_spec.init_exp_max + 1
+                        ):
 
                             # Loop over all admissible years of experience accumulated
                             # in part-time
-                            for exp_p in range(model_spec.num_periods):
+                            for exp_p in range(
+                                model_spec.num_periods + model_spec.init_exp_max + 1
+                            ):
 
                                 # The accumulation of experience cannot exceed time elapsed
                                 # since individual entered the model
                                 if (
                                     exp_f + exp_p
-                                    > period - model_spec.educ_years[educ_level]
+                                    > period
+                                    + model_spec.init_exp_max * 2
+                                    - model_spec.educ_years[educ_level]
                                 ):
+                                    continue
+
+                                if exp_f > period + model_spec.init_exp_max:
+                                    continue
+
+                                if exp_p > period + model_spec.init_exp_max:
                                     continue
 
                                 # Add an additional entry state
@@ -132,8 +144,8 @@ def pyth_create_state_space(model_spec):
                                         period,
                                         educ_level,
                                         0,
-                                        0,
-                                        0,
+                                        exp_p,
+                                        exp_f,
                                         type_,
                                         age_kid,
                                         partner_indicator,
@@ -145,8 +157,8 @@ def pyth_create_state_space(model_spec):
                                         period,
                                         educ_level,
                                         0,
-                                        0,
-                                        0,
+                                        exp_p,
+                                        exp_f,
                                         type_,
                                         age_kid,
                                         partner_indicator,
@@ -167,6 +179,7 @@ def pyth_create_state_space(model_spec):
                                         if (choice_lagged != 2) and (
                                             exp_f
                                             == period
+                                            + model_spec.init_exp_max
                                             - model_spec.educ_years[educ_level]
                                         ):
                                             continue
@@ -176,6 +189,7 @@ def pyth_create_state_space(model_spec):
                                         if (choice_lagged != 1) and (
                                             exp_p
                                             == period
+                                            + model_spec.init_exp_max
                                             - model_spec.educ_years[educ_level]
                                         ):
                                             continue
@@ -195,6 +209,7 @@ def pyth_create_state_space(model_spec):
                                         if (choice_lagged == 0) and (
                                             exp_f + exp_p
                                             == period
+                                            + model_spec.init_exp_max
                                             - model_spec.educ_years[educ_level]
                                         ):
                                             continue
@@ -867,7 +882,8 @@ def _get_max_aggregated_utilities(
 
 @numba.guvectorize(
     ["f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:], f8[:], f8, f8, f8, f8[:]"],
-    "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), (n_spec_params), (n_spec_params), (), (), () -> ()",
+    "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), "
+    "(n_spec_params), (n_spec_params), (), (), () -> ()",
     nopython=True,
     target="parallel",
 )

@@ -3,6 +3,7 @@ from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
+from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_arrival
 from soepy.exogenous_processes.partner import gen_prob_partner_separation
@@ -21,6 +22,12 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
     prob_educ_level = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
     prob_partner_present = gen_prob_partner_present_vector(model_spec)
+    prob_exp_ft = gen_prob_init_exp_vector(
+        model_spec, model_spec.ft_exp_shares_file_name
+    )
+    prob_exp_pt = gen_prob_init_exp_vector(
+        model_spec, model_spec.pt_exp_shares_file_name
+    )
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_partner_separation = gen_prob_partner_separation(model_spec)
@@ -59,6 +66,8 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
         prob_educ_level,
         prob_child_age,
         prob_partner_present,
+        prob_exp_ft,
+        prob_exp_pt,
         prob_child,
         prob_partner_arrival,
         prob_partner_separation,
