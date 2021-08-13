@@ -54,8 +54,8 @@ def pyth_create_state_space(model_spec):
         model_spec.num_periods,
         model_spec.num_educ_levels,
         NUM_CHOICES,
-        model_spec.num_periods,
-        model_spec.num_periods,
+        model_spec.num_periods + model_spec.init_exp_max,
+        model_spec.num_periods + model_spec.init_exp_max,
         model_spec.num_types,
         kids_ages.shape[0],
         2,
@@ -116,7 +116,17 @@ def pyth_create_state_space(model_spec):
                                 # since individual entered the model
                                 if (
                                     exp_f + exp_p
-                                    > period - model_spec.educ_years[educ_level]
+                                    > period + model_spec.init_exp_max*2 - model_spec.educ_years[educ_level]
+                                ):
+                                    continue
+
+                                if (
+                                        exp_f > period + model_spec.init_exp_max
+                                ):
+                                    continue
+
+                                if (
+                                        exp_p > period + model_spec.init_exp_max
                                 ):
                                     continue
 
@@ -126,14 +136,15 @@ def pyth_create_state_space(model_spec):
                                 # and still have no experience in any occupation.
                                 if period == model_spec.educ_years[educ_level]:
 
+
                                     # Assign an additional integer count i
                                     # for entry state
                                     indexer[
                                         period,
                                         educ_level,
                                         0,
-                                        0,
-                                        0,
+                                        exp_p,
+                                        exp_f,
                                         type_,
                                         age_kid,
                                         partner_indicator,
@@ -145,8 +156,8 @@ def pyth_create_state_space(model_spec):
                                         period,
                                         educ_level,
                                         0,
-                                        0,
-                                        0,
+                                        exp_p,
+                                        exp_f,
                                         type_,
                                         age_kid,
                                         partner_indicator,
