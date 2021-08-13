@@ -26,6 +26,8 @@ def test1():
             exog_educ_shares,
             exog_child_age_shares,
             exog_partner_shares,
+            exog_exper_shares_pt,
+            exog_exper_shares_ft,
             exog_child_info,
             exog_partner_arrival_info,
             exog_partner_separation_info,
@@ -36,12 +38,15 @@ def test1():
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
         exog_child_info.to_pickle("test.soepy.child.pkl")
         exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
+        exog_exper_shares_pt.to_pickle("test.soepy.pt.exp.shares.pkl")
+        exog_exper_shares_ft.to_pickle("test.soepy.ft.exp.shares.pkl")
         exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
         exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
         for col in expected_df.columns.tolist():
+            print(col)
             np.testing.assert_array_almost_equal(
                 expected_df[col],
                 calculated_df[col],
