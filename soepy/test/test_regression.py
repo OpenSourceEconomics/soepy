@@ -51,3 +51,61 @@ def test1():
                 calculated_df[col],
             )
     cleanup()
+
+
+# def save_new_fault():
+#     vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
+#
+#     with open(vault, "rb") as file:
+#         tests = pickle.load(file)
+#
+#     for i in range(0, 100):
+#         print(i)
+#
+#         (
+#             model_spec_init_dict,
+#             random_model_params_df,
+#             exog_educ_shares,
+#             exog_child_age_shares,
+#             exog_partner_shares,
+#             exog_exper_shares_pt,
+#             exog_exper_shares_ft,
+#             exog_child_info,
+#             exog_partner_arrival_info,
+#             exog_partner_separation_info,
+#             expected_df,
+#         ) = tests[i]
+#
+#         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
+#         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
+#         exog_child_info.to_pickle("test.soepy.child.pkl")
+#         exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
+#         exog_exper_shares_pt.to_pickle("test.soepy.pt.exp.shares.pkl")
+#         exog_exper_shares_ft.to_pickle("test.soepy.ft.exp.shares.pkl")
+#         exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
+#         exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
+#
+#         calculated_df = simulate(random_model_params_df, model_spec_init_dict)
+#
+#         tests[i] = (
+#             model_spec_init_dict,
+#             random_model_params_df,
+#             exog_educ_shares,
+#             exog_child_age_shares,
+#             exog_partner_shares,
+#             exog_exper_shares_pt,
+#             exog_exper_shares_ft,
+#             exog_child_info,
+#             exog_partner_arrival_info,
+#             exog_partner_separation_info,
+#             calculated_df,
+#         )
+#
+#     new_vault = TEST_RESOURCES_DIR / "regression_vault_new.soepy.pkl"
+#
+#     with open(new_vault, "wb") as file:
+#         pickle.dump(tests, file)
+#
+#     cleanup()
+#
+# save_new_fault()
