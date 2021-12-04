@@ -255,8 +255,19 @@ def calculate_deductions(deductions_spec, gross_labor_income):
 
 @numba.jit(nopython=True)
 def calculate_tax(income_tax_spec, taxable_income):
-    """Calculate household tax payments based on total household taxable income weekly"""
+    """Calculate income tax and soli based on income. This function does not separate
+    between spousal splitting and individual income. It just applies the german tax
+    function."""
 
+    inc_tax = calculate_inc_tax(income_tax_spec, taxable_income)
+
+    # Add soli
+    return inc_tax * (1 + income_tax_spec[4])
+
+
+@numba.jit(nopython=True)
+def calculate_inc_tax(income_tax_spec, taxable_income):
+    """Calculates the income tax."""
     tax_base = taxable_income - income_tax_spec[0]
 
     if taxable_income < income_tax_spec[0]:
@@ -276,9 +287,8 @@ def calculate_tax(income_tax_spec, taxable_income):
             / 2
         ) + income_tax_spec[3] * (taxable_income - income_tax_spec[1])
 
-    tax = (tax_rate * taxable_income / (tax_base + 0.0001)) * (1 + income_tax_spec[4])
-
-    return tax
+    # This does not make sense for me.
+    return tax_rate
 
 
 @numba.jit(nopython=True)
