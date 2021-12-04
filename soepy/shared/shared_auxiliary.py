@@ -254,12 +254,16 @@ def calculate_deductions(deductions_spec, gross_labor_income):
 
 
 @numba.jit(nopython=True)
-def calculate_tax(income_tax_spec, taxable_income):
+def calculate_tax(income_tax_spec, taxable_income, male_wage):
     """Calculate income tax and soli based on income. This function does not separate
     between spousal splitting and individual income. It just applies the german tax
     function."""
 
-    inc_tax = calculate_inc_tax(income_tax_spec, taxable_income)
+    # Ehegattensplitting
+    if male_wage > 0:
+        inc_tax = calculate_inc_tax(income_tax_spec, taxable_income / 2) * 2
+    else:
+        inc_tax = calculate_inc_tax(income_tax_spec, taxable_income)
 
     # Add soli
     return inc_tax * (1 + income_tax_spec[4])
@@ -304,7 +308,7 @@ def calculate_non_employment_consumption_resources(
     for i in range(male_wage.shape[0]):
         deductions_i = calculate_deductions(deductions_spec, male_wage[i])
         taxable_income_i = male_wage[i] + non_employment_benefits[i, 0] - deductions_i
-        tax_i = calculate_tax(income_tax_spec, taxable_income_i)
+        tax_i = calculate_tax(income_tax_spec, taxable_income_i, male_wage[i])
 
         non_employment_consumption_resources[i] = (
             taxable_income_i
@@ -318,7 +322,7 @@ def calculate_non_employment_consumption_resources(
 
 @numba.jit(nopython=True)
 def calculate_employment_consumption_resources(
-    deductions_spec, income_tax_spec, current_hh_income
+    deductions_spec, income_tax_spec, current_hh_income, male_wage
 ):
     """This function calculates the resources available to the individual
     to spend on consumption were she to choose to be employed.
@@ -331,7 +335,7 @@ def calculate_employment_consumption_resources(
     for i in range(current_hh_income.shape[0]):
         deductions_i = calculate_deductions(deductions_spec, current_hh_income[i])
         taxable_income_i = current_hh_income[i] - deductions_i
-        tax_i = calculate_tax(income_tax_spec, taxable_income_i)
+        tax_i = calculate_tax(income_tax_spec, taxable_income_i, male_wage[i])
 
         employment_consumption_resources[i] = taxable_income_i - tax_i
 

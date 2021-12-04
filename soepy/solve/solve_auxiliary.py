@@ -864,7 +864,7 @@ def _get_max_aggregated_utilities(
             deductions = calculate_deductions(deductions_spec, household_income)
             taxable_income = household_income - deductions
 
-            tax = calculate_tax(income_tax_spec, taxable_income)
+            tax = calculate_tax(income_tax_spec, taxable_income, male_wage)
 
             consumption = (taxable_income - tax + child_benefits) / equivalence
 

@@ -51,8 +51,29 @@ def test_total_tax(input_data, income):
     tax_params, thresholds, rates, intercept_low = input_data
     soli_st = 1 + tax_params[-1]
 
-    soepy_sol = calculate_tax(tax_params, income)
+    soepy_sol = calculate_tax(tax_params, income, male_wage=0)
 
     gettsim_sol = piecewise_polynomial(test_pandas, thresholds, rates, intercept_low)
+
+    np.testing.assert_allclose(soepy_sol, gettsim_sol * soli_st)
+
+
+@pytest.mark.parametrize("income", test_incomes)
+def test_ehegattensplitting(input_data, income):
+    tax_params, thresholds, rates, intercept_low = input_data
+    soli_st = 1 + tax_params[-1]
+
+    partner_ind = np.random.default_rng().binomial(1, 0.5)
+    if partner_ind == 1:
+        gettsim_sol = piecewise_polynomial(
+            pd.Series([income / 2, income / 2]), thresholds, rates, intercept_low
+        ).sum()
+        soepy_sol = calculate_tax(tax_params, income, male_wage=income / 2)
+
+    else:
+        gettsim_sol = piecewise_polynomial(
+            pd.Series(income), thresholds, rates, intercept_low
+        )
+        soepy_sol = calculate_tax(tax_params, income, male_wage=partner_ind)
 
     np.testing.assert_allclose(soepy_sol, gettsim_sol * soli_st)

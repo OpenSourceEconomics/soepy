@@ -160,9 +160,7 @@ def pyth_simulate(
 
         current_employment_consumption_resources = (
             calculate_employment_consumption_resources(
-                deductions_spec,
-                income_tax_spec,
-                current_hh_income,
+                deductions_spec, income_tax_spec, current_hh_income, current_male_wages
             )
         )
 
