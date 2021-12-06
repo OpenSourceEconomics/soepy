@@ -154,21 +154,14 @@ def pyth_simulate(
             -1, 1
         )
 
-        current_hh_income = current_hh_income.reshape(
-            2 * current_wages.shape[0], order="F"
-        )
-
         current_employment_consumption_resources = (
             calculate_employment_consumption_resources(
                 deductions_spec, income_tax_spec, current_hh_income, current_male_wages
             )
         )
 
-        current_employment_consumption_resources = (
-            current_employment_consumption_resources.reshape(
-                current_wages.shape[0], 2, order="F"
-            )
-            + current_child_benefits.reshape(-1, 1)
+        current_employment_consumption_resources += current_child_benefits.reshape(
+            -1, 1
         )
 
         current_consumption_resources = np.hstack(
@@ -177,6 +170,7 @@ def pyth_simulate(
                 current_employment_consumption_resources,
             )
         )
+        # breakpoint()
 
         # Calculate total values for all choices
         flow_utilities = (

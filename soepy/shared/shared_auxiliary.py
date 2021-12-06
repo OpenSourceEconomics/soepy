@@ -328,15 +328,17 @@ def calculate_employment_consumption_resources(
     to spend on consumption were she to choose to be employed.
     It adds the components from the budget constraint to the female wage."""
 
-    employment_consumption_resources = np.full(
-        current_hh_income.shape[0], INVALID_FLOAT
-    )
+    employment_consumption_resources = np.full(current_hh_income.shape, INVALID_FLOAT)
 
     for i in range(current_hh_income.shape[0]):
-        deductions_i = calculate_deductions(deductions_spec, current_hh_income[i])
-        taxable_income_i = current_hh_income[i] - deductions_i
-        tax_i = calculate_tax(income_tax_spec, taxable_income_i, male_wage[i])
+        male_wage_i = male_wage[i]
+        for choice_num in range(current_hh_income.shape[1]):
+            deductions_i = calculate_deductions(
+                deductions_spec, current_hh_income[i, choice_num]
+            )
+            taxable_income_i = current_hh_income[i, choice_num] - deductions_i
+            tax_i = calculate_tax(income_tax_spec, taxable_income_i, male_wage_i)
 
-        employment_consumption_resources[i] = taxable_income_i - tax_i
+            employment_consumption_resources[i, choice_num] = taxable_income_i - tax_i
 
     return employment_consumption_resources

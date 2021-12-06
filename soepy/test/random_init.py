@@ -52,7 +52,7 @@ def random_init(constr=None):
     if "NUM_DRAWS_EMAX" in constr.keys():
         num_draws_emax = constr["NUM_DRAWS_EMAX"]
     else:
-        num_draws_emax = np.random.randint(400, 600)
+        num_draws_emax = np.random.randint(600, 800)
 
     if "CHILD_AGE_INIT_MAX" in constr.keys():
         child_age_init_max = constr["CHILD_AGE_INIT_MAX"]

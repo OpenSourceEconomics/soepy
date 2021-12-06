@@ -540,7 +540,7 @@ def test_coef_educ_level_specificity():
     groups does not change."""
 
     constr = dict()
-    constr["AGENTS"] = 10000
+    constr["AGENTS"] = 100000
     constr["PERIODS"] = 10
 
     random_init(constr)
@@ -558,7 +558,7 @@ def test_coef_educ_level_specificity():
 
     data = []
 
-    for i in (model_params_base, model_params_changed):
+    for num_sim, i in enumerate([model_params_base, model_params_changed]):
 
         model_params_df, model_params = read_model_params_init(i)
         model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
@@ -594,7 +594,6 @@ def test_coef_educ_level_specificity():
             prob_partner_separation,
             is_expected=False,
         )
-
         # Simulate
         df = pyth_simulate(
             model_params,
@@ -628,5 +627,13 @@ def test_coef_educ_level_specificity():
             continue
         data_base_educ_level = data_base[data_base["Education_Level"] == level]
         data_changed_educ_level = data_changed[data_changed["Education_Level"] == level]
+        true_list = [
+            col
+            for col in data_changed_educ_level.columns.values
+            if not pd.Series.equals(
+                data_base_educ_level[col], data_changed_educ_level[col]
+            )
+        ]
 
+        # breakpoint()
         pd.testing.assert_frame_equal(data_base_educ_level, data_changed_educ_level)

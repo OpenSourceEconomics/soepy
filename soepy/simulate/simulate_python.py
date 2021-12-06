@@ -31,6 +31,7 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_partner_separation = gen_prob_partner_separation(model_spec)
+    # breakpoint()
 
     # Obtain model solution
     (
@@ -77,8 +78,9 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
     return df
 
 
-def prepare_simulation_solution(model_params_init_file_name, model_spec_init_file_name,
-               is_expected=True):
+def prepare_simulation_solution(
+    model_params_init_file_name, model_spec_init_file_name, is_expected=True
+):
 
     # Read in model specification from yaml file
     model_params_df, model_params = read_model_params_init(model_params_init_file_name)
@@ -118,24 +120,24 @@ def prepare_simulation_solution(model_params_init_file_name, model_spec_init_fil
     )
 
     sol_dict = {
-        "model_params":model_params,
-        "model_spec":model_spec,
-        "states":states,
-        "indexer":indexer,
-        "emaxs":emaxs,
-        "covariates":covariates,
-        "non_employment_consumption_resources":non_employment_consumption_resources,
-        "deductions_spec":deductions_spec,
-        "income_tax_spec":income_tax_spec,
-        "child_age_update_rule":child_age_update_rule,
-        "prob_educ_level":prob_educ_level,
-        "prob_child_age":prob_child_age,
-        "prob_partner_present":prob_partner_present,
-        "prob_exp_ft":prob_exp_ft,
-        "prob_exp_pt":prob_exp_pt,
-        "prob_child":prob_child,
-        "prob_partner_arrival":prob_partner_arrival,
-        "prob_partner_separation":prob_partner_separation,
+        "model_params": model_params,
+        "model_spec": model_spec,
+        "states": states,
+        "indexer": indexer,
+        "emaxs": emaxs,
+        "covariates": covariates,
+        "non_employment_consumption_resources": non_employment_consumption_resources,
+        "deductions_spec": deductions_spec,
+        "income_tax_spec": income_tax_spec,
+        "child_age_update_rule": child_age_update_rule,
+        "prob_educ_level": prob_educ_level,
+        "prob_child_age": prob_child_age,
+        "prob_partner_present": prob_partner_present,
+        "prob_exp_ft": prob_exp_ft,
+        "prob_exp_pt": prob_exp_pt,
+        "prob_child": prob_child,
+        "prob_partner_arrival": prob_partner_arrival,
+        "prob_partner_separation": prob_partner_separation,
         "is_expected": False,
     }
 
