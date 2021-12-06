@@ -322,21 +322,22 @@ def calculate_non_employment_consumption_resources(
 
 @numba.jit(nopython=True)
 def calculate_employment_consumption_resources(
-    deductions_spec, income_tax_spec, current_hh_income, male_wage
+    deductions_spec, income_tax_spec, current_female_income, male_wage
 ):
     """This function calculates the resources available to the individual
     to spend on consumption were she to choose to be employed.
     It adds the components from the budget constraint to the female wage."""
 
-    employment_consumption_resources = np.full(current_hh_income.shape, INVALID_FLOAT)
+    employment_consumption_resources = np.full(
+        current_female_income.shape, INVALID_FLOAT
+    )
 
-    for i in range(current_hh_income.shape[0]):
+    for i in range(current_female_income.shape[0]):
         male_wage_i = male_wage[i]
-        for choice_num in range(current_hh_income.shape[1]):
-            deductions_i = calculate_deductions(
-                deductions_spec, current_hh_income[i, choice_num]
-            )
-            taxable_income_i = current_hh_income[i, choice_num] - deductions_i
+        for choice_num in range(current_female_income.shape[1]):
+            current_hh_income = current_female_income[i, choice_num] + male_wage_i
+            deductions_i = calculate_deductions(deductions_spec, current_hh_income)
+            taxable_income_i = current_hh_income - deductions_i
             tax_i = calculate_tax(income_tax_spec, taxable_income_i, male_wage_i)
 
             employment_consumption_resources[i, choice_num] = taxable_income_i - tax_i

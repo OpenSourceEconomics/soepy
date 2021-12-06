@@ -31,7 +31,6 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner_arrival = gen_prob_partner_arrival(model_spec)
     prob_partner_separation = gen_prob_partner_separation(model_spec)
-    # breakpoint()
 
     # Obtain model solution
     (

@@ -150,13 +150,14 @@ def pyth_simulate(
             + draws_sim[period, current_states[:, 0]]
         )
 
-        current_hh_income = HOURS[1:] * current_wages + current_male_wages.reshape(
-            -1, 1
-        )
+        current_female_income = HOURS[1:] * current_wages
 
         current_employment_consumption_resources = (
             calculate_employment_consumption_resources(
-                deductions_spec, income_tax_spec, current_hh_income, current_male_wages
+                deductions_spec,
+                income_tax_spec,
+                current_female_income,
+                current_male_wages,
             )
         )
 
@@ -164,13 +165,15 @@ def pyth_simulate(
             -1, 1
         )
 
+        # breakpoint()
+
         current_consumption_resources = np.hstack(
             (
                 current_non_employment_consumption_resources.reshape(-1, 1),
                 current_employment_consumption_resources,
             )
         )
-        # breakpoint()
+        #
 
         # Calculate total values for all choices
         flow_utilities = (
