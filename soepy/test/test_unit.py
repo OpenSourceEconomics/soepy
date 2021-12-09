@@ -635,5 +635,4 @@ def test_coef_educ_level_specificity():
             )
         ]
 
-        # breakpoint()
         pd.testing.assert_frame_equal(data_base_educ_level, data_changed_educ_level)

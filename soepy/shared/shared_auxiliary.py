@@ -254,16 +254,21 @@ def calculate_deductions(deductions_spec, gross_labor_income):
 
 
 @numba.jit(nopython=True)
-def calculate_tax(income_tax_spec, taxable_income, male_wage):
+def calculate_tax(income_tax_spec, taxable_income, male_wage, tax_splitting=True):
     """Calculate income tax and soli based on income. This function does not separate
     between spousal splitting and individual income. It just applies the german tax
     function."""
 
-    # Ehegattensplitting
-    if male_wage > 0:
-        inc_tax = calculate_inc_tax(income_tax_spec, taxable_income / 2) * 2
+    if tax_splitting:
+        # Ehegattensplitting
+        if male_wage > 0:
+            inc_tax = calculate_inc_tax(income_tax_spec, taxable_income / 2) * 2
+        else:
+            inc_tax = calculate_inc_tax(income_tax_spec, taxable_income)
     else:
-        inc_tax = calculate_inc_tax(income_tax_spec, taxable_income)
+        inc_tax = calculate_inc_tax(
+            income_tax_spec, taxable_income
+        ) + calculate_inc_tax(income_tax_spec, male_wage)
 
     # Add soli
     return inc_tax * (1 + income_tax_spec[4])
@@ -297,7 +302,11 @@ def calculate_inc_tax(income_tax_spec, taxable_income):
 
 @numba.jit(nopython=True)
 def calculate_non_employment_consumption_resources(
-    deductions_spec, income_tax_spec, male_wage, non_employment_benefits
+    deductions_spec,
+    income_tax_spec,
+    male_wage,
+    non_employment_benefits,
+    tax_splitting=True,
 ):
     """This function calculates the resources available to the individual
     to spend on consumption were she to choose to not be employed.
@@ -308,7 +317,9 @@ def calculate_non_employment_consumption_resources(
     for i in range(male_wage.shape[0]):
         deductions_i = calculate_deductions(deductions_spec, male_wage[i])
         taxable_income_i = male_wage[i] + non_employment_benefits[i, 0] - deductions_i
-        tax_i = calculate_tax(income_tax_spec, taxable_income_i, male_wage[i])
+        tax_i = calculate_tax(
+            income_tax_spec, taxable_income_i, male_wage[i], tax_splitting
+        )
 
         non_employment_consumption_resources[i] = (
             taxable_income_i
@@ -322,7 +333,11 @@ def calculate_non_employment_consumption_resources(
 
 @numba.jit(nopython=True)
 def calculate_employment_consumption_resources(
-    deductions_spec, income_tax_spec, current_female_income, male_wage
+    deductions_spec,
+    income_tax_spec,
+    current_female_income,
+    male_wage,
+    tax_splitting=True,
 ):
     """This function calculates the resources available to the individual
     to spend on consumption were she to choose to be employed.
@@ -338,7 +353,9 @@ def calculate_employment_consumption_resources(
             current_hh_income = current_female_income[i, choice_num] + male_wage_i
             deductions_i = calculate_deductions(deductions_spec, current_hh_income)
             taxable_income_i = current_hh_income - deductions_i
-            tax_i = calculate_tax(income_tax_spec, taxable_income_i, male_wage_i)
+            tax_i = calculate_tax(
+                income_tax_spec, taxable_income_i, male_wage_i, tax_splitting
+            )
 
             employment_consumption_resources[i, choice_num] = taxable_income_i - tax_i
 

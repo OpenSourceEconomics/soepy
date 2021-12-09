@@ -109,6 +109,7 @@ def pyth_simulate(
         columns=DATA_LABLES_SIM[:9],
     ).astype(np.int)
 
+    tax_splitting = model_spec.tax_splitting
     data = []
 
     # Loop over all periods
@@ -158,14 +159,13 @@ def pyth_simulate(
                 income_tax_spec,
                 current_female_income,
                 current_male_wages,
+                tax_splitting,
             )
         )
 
         current_employment_consumption_resources += current_child_benefits.reshape(
             -1, 1
         )
-
-        # breakpoint()
 
         current_consumption_resources = np.hstack(
             (

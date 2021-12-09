@@ -181,6 +181,10 @@ def expand_model_spec_dict(model_spec_init_dict, model_params_df):
         "num_types": num_types,
     }
 
+    # Determine taxation type:
+    if "tax_splitting" not in model_spec_init_dict["TAXES_TRANSFERS"].keys():
+        model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = True
+
     return model_spec_init_dict
 
 

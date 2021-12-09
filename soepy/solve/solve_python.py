@@ -83,10 +83,15 @@ def pyth_solve(
 
     deductions_spec = np.array(model_spec.deductions)
     income_tax_spec = np.array(model_spec.income_tax)
+    tax_splitting = model_spec.tax_splitting
 
     non_employment_consumption_resources = (
         calculate_non_employment_consumption_resources(
-            deductions_spec, income_tax_spec, covariates[:, 1], non_employment_benefits
+            deductions_spec,
+            income_tax_spec,
+            covariates[:, 1],
+            non_employment_benefits,
+            tax_splitting,
         )
     )
 

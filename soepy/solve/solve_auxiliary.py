@@ -402,6 +402,9 @@ def pyth_backward_induction(
 
     emaxs = np.zeros((states.shape[0], NUM_CHOICES + 1))
 
+    # Set taxing type
+    tax_splitting = model_spec.tax_splitting
+
     # Loop backwards over all periods
     for period in reversed(range(model_spec.num_periods)):
 
@@ -472,6 +475,7 @@ def pyth_backward_induction(
             male_wage_period,
             child_benefits_period,
             equivalence_scale_period,
+            tax_splitting,
         )
         emaxs_period[:, 3] = emax_period
         emaxs[np.where(states[:, 0] == period)] = emaxs_period
@@ -850,6 +854,7 @@ def _get_max_aggregated_utilities(
     male_wage,
     child_benefits,
     equivalence,
+    tax_splitting=True,
 ):
     current_max_value_function = INVALID_FLOAT
 
@@ -864,7 +869,9 @@ def _get_max_aggregated_utilities(
             deductions = calculate_deductions(deductions_spec, household_income)
             taxable_income = household_income - deductions
 
-            tax = calculate_tax(income_tax_spec, taxable_income, male_wage)
+            tax = calculate_tax(
+                income_tax_spec, taxable_income, male_wage, tax_splitting
+            )
 
             consumption = (taxable_income - tax + child_benefits) / equivalence
 
@@ -881,9 +888,12 @@ def _get_max_aggregated_utilities(
 
 
 @numba.guvectorize(
-    ["f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:], f8[:], f8, f8, f8, f8[:]"],
+    [
+        "f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:], f8[:], f8, f8, f8, "
+        "b1, f8[:]"
+    ],
     "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), "
-    "(n_spec_params), (n_spec_params), (), (), () -> ()",
+    "(n_spec_params), (n_spec_params), (), (), (), () -> ()",
     nopython=True,
     target="parallel",
 )
@@ -901,6 +911,7 @@ def construct_emax(
     male_wage,
     child_benefits,
     equivalence,
+    tax_splitting,
     emax,
 ):
     """Simulate expected maximum utility for a given distribution of the unobservables.
@@ -978,6 +989,7 @@ def construct_emax(
             male_wage,
             child_benefits,
             equivalence,
+            tax_splitting,
         )
 
         emax[0] += max_total_utility
