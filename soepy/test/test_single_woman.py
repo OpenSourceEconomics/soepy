@@ -1,11 +1,8 @@
 from resources.aux_funcs import create_disc_sum_av_utility
 import pickle
-import random
 
-import pandas as pd
-
+import numpy as np
 from soepy.soepy_config import TEST_RESOURCES_DIR
-from development.tests.auxiliary.auxiliary import cleanup
 
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.pre_processing.model_processing import read_model_params_init
@@ -16,12 +13,9 @@ from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_arrival
 from soepy.exogenous_processes.partner import gen_prob_partner_separation
-from soepy.simulate.simulate_python import simulate
 from soepy.solve.solve_python import pyth_solve
 from soepy.simulate.simulate_auxiliary import pyth_simulate
 import pytest
-from soepy.shared.shared_constants import DATA_LABLES_SIM
-import itertools
 
 
 @pytest.fixture(scope="module")
@@ -69,10 +63,8 @@ def input_data():
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner_arrival = gen_prob_partner_arrival(model_spec)
         prob_partner_separation = gen_prob_partner_separation(model_spec)
-        breakpoint()
         prob_partner_arrival[:, :] = 0
         prob_partner_present[:] = 0
-        breakpoint()
 
         # Solve
         (
@@ -115,11 +107,14 @@ def input_data():
             prob_partner_separation,
             is_expected=False,
         )
-        breakpoint()
-
-        disc_sum = create_disc_sum_av_utility(calculated_df, model_params_df)
-        breakpoint()
+        disc_sum = create_disc_sum_av_utility(
+            calculated_df, model_spec_init_dict["CONSTANTS"]["delta"]
+        )
+        out = {}
+        out["calculated"] = disc_sum
+        out["expected"] = -0.44510328115983033
+        return out
 
 
 def test_single_woman(input_data):
-    breakpoint()
+    np.testing.assert_equal(input_data["calculated"], input_data["expected"])

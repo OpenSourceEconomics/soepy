@@ -5,8 +5,9 @@ def create_chosen_flow_util(data):
     return out
 
 
-def create_disc_sum_av_utility(data, model_params_df):
+def create_disc_sum_av_utility(data, delta):
     flow_util = create_chosen_flow_util(data)
-    delta = model_params_df.loc[("delta", slice(None)), "value"].to_numpy()
-    disc_av = (flow_util * (delta ** data["Period"])).groupby("Identifier").sum().mean()
+    disc_av = (
+        (flow_util * (delta ** data["Period"])).groupby(data["Identifier"]).sum().mean()
+    )
     return disc_av
