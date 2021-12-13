@@ -1,3 +1,5 @@
+"""This test looks at single women only."""
+
 from resources.aux_funcs import create_disc_sum_av_utility
 import pickle
 
@@ -112,7 +114,7 @@ def input_data():
         )
         out = {}
         out["calculated"] = disc_sum
-        out["expected"] = -0.44510328115983033
+        out["expected"] = -0.4464376650976864
         return out
 
 

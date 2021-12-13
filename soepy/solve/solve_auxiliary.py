@@ -209,7 +209,7 @@ def pyth_create_state_space(model_spec):
                                         if (choice_lagged == 0) and (
                                             exp_f + exp_p
                                             == period
-                                            + model_spec.init_exp_max
+                                            + 2 * model_spec.init_exp_max
                                             - model_spec.educ_years[educ_level]
                                         ):
                                             continue

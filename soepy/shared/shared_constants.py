@@ -33,6 +33,7 @@ DATA_LABLES_SIM = [
     "Value_Function_N",
     "Value_Function_P",
     "Value_Function_F",
+    "Male_Wages",
 ]
 
 DATA_FORMATS_SIM = {

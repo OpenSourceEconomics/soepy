@@ -265,6 +265,7 @@ def calculate_tax(income_tax_spec, taxable_income, male_wage, tax_splitting=True
             inc_tax = calculate_inc_tax(income_tax_spec, taxable_income / 2) * 2
         else:
             inc_tax = calculate_inc_tax(income_tax_spec, taxable_income)
+
     else:
         inc_tax = calculate_inc_tax(
             income_tax_spec, taxable_income

@@ -61,6 +61,7 @@ def pyth_simulate(
             n=1,
             p=prob_partner_present[educ_level],
         )
+
         # Part-time experience
         initial_pt_exp[initial_educ_level == educ_level] = np.random.choice(
             list(range(0, model_spec.init_exp_max + 1)),
@@ -253,6 +254,7 @@ def pyth_simulate(
                 flow_utilities,
                 continuation_values,
                 value_functions,
+                current_male_wages,
             )
         )
 
