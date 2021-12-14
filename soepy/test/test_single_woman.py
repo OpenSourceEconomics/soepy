@@ -1,6 +1,6 @@
 """This test looks at single women only."""
 
-from resources.aux_funcs import create_disc_sum_av_utility
+from soepy.test.resources.aux_funcs import create_disc_sum_av_utility
 import pickle
 
 import numpy as np

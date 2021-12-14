@@ -1,5 +1,5 @@
 from soepy.test.resources.gettsim_tax_func import piecewise_polynomial
-from soepy.shared.shared_auxiliary import calculate_inc_tax, calculate_tax
+from soepy.shared.tax_and_transfers import calculate_tax, calculate_inc_tax
 import numpy as np
 import pandas as pd
 import pytest

@@ -9,7 +9,7 @@ from soepy.shared.shared_constants import (
     HOURS,
 )
 from soepy.shared.shared_auxiliary import calculate_deductions
-from soepy.shared.shared_auxiliary import calculate_tax
+from soepy.shared.tax_and_transfers import calculate_tax
 
 
 @numba.jit(nopython=True)
