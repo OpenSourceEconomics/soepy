@@ -8,8 +8,9 @@ from soepy.shared.shared_constants import (
     INVALID_FLOAT,
     HOURS,
 )
-from soepy.shared.shared_auxiliary import calculate_deductions
-from soepy.shared.tax_and_transfers import calculate_tax
+from soepy.shared.tax_and_transfers import (
+    calculate_net_income,
+)
 
 
 @numba.jit(nopython=True)
@@ -863,17 +864,13 @@ def _get_max_aggregated_utilities(
         if j == 0:
             consumption = non_employment_consumption_resources / equivalence
         else:
-            household_income = (
-                hours[j] * np.exp(log_wage_systematic + draws[j - 1]) + male_wage
-            )
-            deductions = calculate_deductions(deductions_spec, household_income)
-            taxable_income = household_income - deductions
+            female_wage = hours[j] * np.exp(log_wage_systematic + draws[j - 1])
 
-            tax = calculate_tax(
-                income_tax_spec, taxable_income, male_wage, tax_splitting
+            net_income = calculate_net_income(
+                income_tax_spec, deductions_spec, female_wage, male_wage, tax_splitting
             )
 
-            consumption = (taxable_income - tax + child_benefits) / equivalence
+            consumption = (net_income + child_benefits) / equivalence
 
         consumption_utility = consumption ** mu / mu
 

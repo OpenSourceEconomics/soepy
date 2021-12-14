@@ -4,6 +4,8 @@ againts it."""
 import numpy as np
 import pandas as pd
 
+from soepy.shared.tax_and_transfers import calculate_ssc_deductions
+
 
 def piecewise_polynomial(
     x, thresholds, rates, intercepts_at_lower_thresholds, rates_multiplier=None
@@ -98,3 +100,15 @@ def piecewise_polynomial(
     out.loc[binned == 0] = intercepts_at_lower_thresholds[0]
 
     return out
+
+
+def calc_gettsim_sol_individual(
+    thresholds, rates, intercept_low, deductions_spec, income, soli_st
+):
+    deductions_ssc = calculate_ssc_deductions(deductions_spec, income)
+    taxable_inc = income - deductions_ssc
+    gettsim_tax = (
+        piecewise_polynomial(pd.Series([taxable_inc]), thresholds, rates, intercept_low)
+        * soli_st
+    )
+    return gettsim_tax, taxable_inc

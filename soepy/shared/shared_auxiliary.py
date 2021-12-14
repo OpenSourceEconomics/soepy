@@ -3,7 +3,9 @@ import numpy as np
 import numba
 
 from soepy.shared.shared_constants import NUM_CHOICES, HOURS, INVALID_FLOAT
-from soepy.shared.tax_and_transfers import calculate_tax
+from soepy.shared.tax_and_transfers import (
+    calculate_net_income,
+)
 
 
 def draw_disturbances(seed, num_periods, num_draws, model_params):
@@ -239,22 +241,6 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
 
 
 @numba.jit(nopython=True)
-def calculate_deductions(deductions_spec, gross_labor_income):
-    """Determines the social security contribution amount
-    to be deduced from the individuals gross labor income"""
-
-    health_contr = deductions_spec[0] * min(
-        gross_labor_income, 0.75 * deductions_spec[3]
-    )
-    pension_contr = deductions_spec[1] * min(gross_labor_income, deductions_spec[3])
-    unempl_contr = deductions_spec[2] * min(gross_labor_income, deductions_spec[3])
-    ssc = health_contr + pension_contr + unempl_contr
-    deduction_ssc = min(ssc, deductions_spec[4])
-
-    return deduction_ssc
-
-
-@numba.jit(nopython=True)
 def calculate_non_employment_consumption_resources(
     deductions_spec,
     income_tax_spec,
@@ -269,17 +255,16 @@ def calculate_non_employment_consumption_resources(
     non_employment_consumption_resources = np.full(male_wage.shape[0], INVALID_FLOAT)
 
     for i in range(male_wage.shape[0]):
-        deductions_i = calculate_deductions(deductions_spec, male_wage[i])
-        taxable_income_i = male_wage[i] + non_employment_benefits[i, 0] - deductions_i
-        tax_i = calculate_tax(
-            income_tax_spec, taxable_income_i, male_wage[i], tax_splitting
+        # Set female wage to
+        net_income = (
+            calculate_net_income(
+                income_tax_spec, deductions_spec, 0, male_wage[i], tax_splitting
+            )
+            + non_employment_benefits[i, 0]
         )
 
         non_employment_consumption_resources[i] = (
-            taxable_income_i
-            - tax_i
-            + non_employment_benefits[i, 1]
-            + non_employment_benefits[i, 2]
+            net_income + non_employment_benefits[i, 1] + non_employment_benefits[i, 2]
         )
 
     return non_employment_consumption_resources
@@ -304,13 +289,12 @@ def calculate_employment_consumption_resources(
     for i in range(current_female_income.shape[0]):
         male_wage_i = male_wage[i]
         for choice_num in range(current_female_income.shape[1]):
-            current_hh_income = current_female_income[i, choice_num] + male_wage_i
-            deductions_i = calculate_deductions(deductions_spec, current_hh_income)
-            taxable_income_i = current_hh_income - deductions_i
-            tax_i = calculate_tax(
-                income_tax_spec, taxable_income_i, male_wage_i, tax_splitting
+            employment_consumption_resources[i, choice_num] = calculate_net_income(
+                income_tax_spec,
+                deductions_spec,
+                current_female_income[i, choice_num],
+                male_wage_i,
+                tax_splitting,
             )
-
-            employment_consumption_resources[i, choice_num] = taxable_income_i - tax_i
 
     return employment_consumption_resources
