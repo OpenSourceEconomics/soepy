@@ -1,6 +1,5 @@
 """ This module contains the tax function from gettsim. We want to test our function
 againts it."""
-
 import numpy as np
 import pandas as pd
 

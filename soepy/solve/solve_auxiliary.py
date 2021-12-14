@@ -1,16 +1,12 @@
-import numpy as np
 import numba
+import numpy as np
 import pandas as pd
 
-from soepy.shared.shared_constants import (
-    MISSING_INT,
-    NUM_CHOICES,
-    INVALID_FLOAT,
-    HOURS,
-)
-from soepy.shared.tax_and_transfers import (
-    calculate_net_income,
-)
+from soepy.shared.shared_constants import HOURS
+from soepy.shared.shared_constants import INVALID_FLOAT
+from soepy.shared.shared_constants import MISSING_INT
+from soepy.shared.shared_constants import NUM_CHOICES
+from soepy.shared.tax_and_transfers import calculate_net_income
 
 
 @numba.jit(nopython=True)
@@ -295,9 +291,7 @@ def construct_covariates(states, model_spec):
     # 0-2, 3-5, 6-10, 11+
     age_kid = pd.Series(states[:, 6])
     bins = pd.cut(
-        age_kid,
-        bins=[-2, -1, 2, 5, 10, 11],
-        labels=[0, 1, 2, 3, 4],
+        age_kid, bins=[-2, -1, 2, 5, 10, 11], labels=[0, 1, 2, 3, 4],
     ).to_numpy()
 
     # Male wages based on age and education level of the woman
@@ -430,9 +424,9 @@ def pyth_backward_induction(
         non_consumption_utilities_period = non_consumption_utilities[
             states[:, 0] == period
         ]
-        non_employment_consumption_resources_period = (
-            non_employment_consumption_resources[states[:, 0] == period]
-        )
+        non_employment_consumption_resources_period = non_employment_consumption_resources[
+            states[:, 0] == period
+        ]
 
         # Corresponding equivalence scale for period states
         male_wage_period = covariates[np.where(states[:, 0] == period)][:, 1]
@@ -615,71 +609,29 @@ def get_continuation_values(
             # Child arrives
             # Choice: Non-employment
             k_0_10 = indexer[
-                period + 1,
-                educ_level,
-                0,
-                exp_p,
-                exp_f,
-                type_,
-                0,
-                0,  # No partner
+                period + 1, educ_level, 0, exp_p, exp_f, type_, 0, 0,  # No partner
             ]
 
             k_0_11 = indexer[
-                period + 1,
-                educ_level,
-                0,
-                exp_p,
-                exp_f,
-                type_,
-                0,
-                1,  # Partner
+                period + 1, educ_level, 0, exp_p, exp_f, type_, 0, 1,  # Partner
             ]
 
             # Choice: Part-time
             k_1_10 = indexer[
-                period + 1,
-                educ_level,
-                1,
-                exp_p + 1,
-                exp_f,
-                type_,
-                0,
-                0,  # No partner
+                period + 1, educ_level, 1, exp_p + 1, exp_f, type_, 0, 0,  # No partner
             ]
 
             k_1_11 = indexer[
-                period + 1,
-                educ_level,
-                1,
-                exp_p + 1,
-                exp_f,
-                type_,
-                0,
-                1,  # Partner
+                period + 1, educ_level, 1, exp_p + 1, exp_f, type_, 0, 1,  # Partner
             ]
 
             # Choice: Full-time
             k_2_10 = indexer[
-                period + 1,
-                educ_level,
-                2,
-                exp_p,
-                exp_f + 1,
-                type_,
-                0,
-                0,  # No partner
+                period + 1, educ_level, 2, exp_p, exp_f + 1, type_, 0, 0,  # No partner
             ]
 
             k_2_11 = indexer[
-                period + 1,
-                educ_level,
-                2,
-                exp_p,
-                exp_f + 1,
-                type_,
-                0,
-                1,  # Partner
+                period + 1, educ_level, 2, exp_p, exp_f + 1, type_, 0, 1,  # Partner
             ]
 
             # Calculate E-Max
@@ -779,63 +731,39 @@ def get_continuation_values(
                 # Partner is present in the parent (current) state, i.e.,
                 # partner remains or is lost in the child (future) state
                 emaxs[k_parent, 0] = (
-                    1 - prob_partner_separation_period[educ_level]
-                ) * emaxs[
-                    k_0_00, 3
-                ] + prob_partner_separation_period[  # no partner
-                    educ_level
-                ] * emaxs[
-                    k_0_01, 3
-                ]  # partner
+                    (1 - prob_partner_separation_period[educ_level]) * emaxs[k_0_00, 3]
+                    + prob_partner_separation_period[educ_level]  # no partner
+                    * emaxs[k_0_01, 3]
+                )  # partner
                 emaxs[k_parent, 1] = (
-                    1 - prob_partner_separation_period[educ_level]
-                ) * emaxs[
-                    k_1_00, 3
-                ] + prob_partner_separation_period[  # no partner
-                    educ_level
-                ] * emaxs[
-                    k_1_01, 3
-                ]  # partner
+                    (1 - prob_partner_separation_period[educ_level]) * emaxs[k_1_00, 3]
+                    + prob_partner_separation_period[educ_level]  # no partner
+                    * emaxs[k_1_01, 3]
+                )  # partner
                 emaxs[k_parent, 2] = (
-                    1 - prob_partner_separation_period[educ_level]
-                ) * emaxs[
-                    k_2_00, 3
-                ] + prob_partner_separation_period[  # no partner
-                    educ_level
-                ] * emaxs[
-                    k_2_01, 3
-                ]  # partner
+                    (1 - prob_partner_separation_period[educ_level]) * emaxs[k_2_00, 3]
+                    + prob_partner_separation_period[educ_level]  # no partner
+                    * emaxs[k_2_01, 3]
+                )  # partner
 
             else:
                 # Partner is not present in the parent (current) state, i.e.,
                 # partner arrives or does not arrive in the child (future) state
                 emaxs[k_parent, 0] = (
-                    1 - prob_partner_arrival_period[educ_level]
-                ) * emaxs[
-                    k_0_00, 3
-                ] + prob_partner_arrival_period[  # no partner
-                    educ_level
-                ] * emaxs[
-                    k_0_01, 3
-                ]  # partner
+                    (1 - prob_partner_arrival_period[educ_level]) * emaxs[k_0_00, 3]
+                    + prob_partner_arrival_period[educ_level]  # no partner
+                    * emaxs[k_0_01, 3]
+                )  # partner
                 emaxs[k_parent, 1] = (
-                    1 - prob_partner_arrival_period[educ_level]
-                ) * emaxs[
-                    k_1_00, 3
-                ] + prob_partner_arrival_period[  # no partner
-                    educ_level
-                ] * emaxs[
-                    k_1_01, 3
-                ]  # partner
+                    (1 - prob_partner_arrival_period[educ_level]) * emaxs[k_1_00, 3]
+                    + prob_partner_arrival_period[educ_level]  # no partner
+                    * emaxs[k_1_01, 3]
+                )  # partner
                 emaxs[k_parent, 2] = (
-                    1 - prob_partner_arrival_period[educ_level]
-                ) * emaxs[
-                    k_2_00, 3
-                ] + prob_partner_arrival_period[  # no partner
-                    educ_level
-                ] * emaxs[
-                    k_2_01, 3
-                ]  # partner
+                    (1 - prob_partner_arrival_period[educ_level]) * emaxs[k_2_00, 3]
+                    + prob_partner_arrival_period[educ_level]  # no partner
+                    * emaxs[k_2_01, 3]
+                )  # partner
 
     return emaxs
 

@@ -1,14 +1,12 @@
 import numpy as np
 import pandas as pd
 
-from soepy.shared.shared_constants import (
-    HOURS,
-    DATA_LABLES_SIM,
-    DATA_FORMATS_SIM,
-)
-from soepy.shared.shared_auxiliary import draw_disturbances
-from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import calculate_employment_consumption_resources
+from soepy.shared.shared_auxiliary import calculate_utility_components
+from soepy.shared.shared_auxiliary import draw_disturbances
+from soepy.shared.shared_constants import DATA_FORMATS_SIM
+from soepy.shared.shared_constants import DATA_LABLES_SIM
+from soepy.shared.shared_constants import HOURS
 
 
 def pyth_simulate(
@@ -140,9 +138,9 @@ def pyth_simulate(
         # Extract corresponding utilities
         current_log_wage_systematic = log_wage_systematic[idx]
         current_non_consumption_utilities = non_consumption_utilities[idx]
-        current_non_employment_consumption_resources = (
-            non_employment_consumption_resources[idx]
-        )
+        current_non_employment_consumption_resources = non_employment_consumption_resources[
+            idx
+        ]
         current_equivalence_scale = covariates[idx][:, 2]
         current_male_wages = covariates[idx][:, 1]
         current_child_benefits = covariates[idx][:, 3]
@@ -154,14 +152,12 @@ def pyth_simulate(
 
         current_female_income = HOURS[1:] * current_wages
 
-        current_employment_consumption_resources = (
-            calculate_employment_consumption_resources(
-                deductions_spec,
-                income_tax_spec,
-                current_female_income,
-                current_male_wages,
-                tax_splitting,
-            )
+        current_employment_consumption_resources = calculate_employment_consumption_resources(
+            deductions_spec,
+            income_tax_spec,
+            current_female_income,
+            current_male_wages,
+            tax_splitting,
         )
 
         current_employment_consumption_resources += current_child_benefits.reshape(

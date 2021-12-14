@@ -221,12 +221,12 @@ def random_init(constr=None):
     for i in range(1, num_types):
         # Draw random parameters
         (
-            model_params_init_dict["theta_p" + "{}".format(i)],
-            model_params_init_dict["theta_f" + "{}".format(i)],
+            model_params_init_dict["theta_p" + f"{i}"],
+            model_params_init_dict["theta_f" + f"{i}"],
         ) = np.random.uniform(-0.1, -1, 2).tolist()
 
         # Assign shares
-        model_params_init_dict["share_" + "{}".format(i)] = shares[i]
+        model_params_init_dict["share_" + f"{i}"] = shares[i]
 
     (
         model_params_init_dict["sigma_1"],
@@ -296,9 +296,7 @@ def random_init(constr=None):
         index_levels = [[0, 1, 2], list(range(-1, child_age_init_max + 1))]
     index = pd.MultiIndex.from_product(index_levels, names=["educ_level", "child_age"])
     exog_child_age_shares = pd.DataFrame(
-        child_age_shares.tolist(),
-        index=index,
-        columns=["child_age_shares"],
+        child_age_shares.tolist(), index=index, columns=["child_age_shares"],
     )
     exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
 
@@ -328,9 +326,7 @@ def random_init(constr=None):
             index_levels, names=["educ_level", label + "_exp"]
         )
         exog_exper_shares = pd.DataFrame(
-            exper_shares.tolist(),
-            index=index,
-            columns=["exper_shares"],
+            exper_shares.tolist(), index=index, columns=["exper_shares"],
         )
         exog_exper_shares.to_pickle("test.soepy." + label + ".exp.shares.pkl")
         if label == "pt":
@@ -413,7 +409,7 @@ def print_dict(model_spec_init_dict, file_name="test"):
     for key_ in order:
         ordered_dict[key_] = model_spec_init_dict[key_]
 
-    with open("{}.soepy.yml".format(file_name), "w") as outfile:
+    with open(f"{file_name}.soepy.yml", "w") as outfile:
         yaml.dump(ordered_dict, outfile, explicit_start=True, indent=4)
 
 

@@ -1,15 +1,13 @@
 import numpy as np
 
-from soepy.solve.solve_auxiliary import pyth_create_state_space
-from soepy.solve.solve_auxiliary import construct_covariates
-from soepy.shared.shared_auxiliary import draw_disturbances
-from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.shared.shared_auxiliary import calculate_non_employment_benefits
-from soepy.shared.shared_auxiliary import (
-    calculate_non_employment_consumption_resources,
-)
+from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
+from soepy.shared.shared_auxiliary import calculate_utility_components
+from soepy.shared.shared_auxiliary import draw_disturbances
+from soepy.solve.solve_auxiliary import construct_covariates
 from soepy.solve.solve_auxiliary import pyth_backward_induction
+from soepy.solve.solve_auxiliary import pyth_create_state_space
 
 
 def pyth_solve(
@@ -85,14 +83,12 @@ def pyth_solve(
     income_tax_spec = np.array(model_spec.income_tax)
     tax_splitting = model_spec.tax_splitting
 
-    non_employment_consumption_resources = (
-        calculate_non_employment_consumption_resources(
-            deductions_spec,
-            income_tax_spec,
-            covariates[:, 1],
-            non_employment_benefits,
-            tax_splitting,
-        )
+    non_employment_consumption_resources = calculate_non_employment_consumption_resources(
+        deductions_spec,
+        income_tax_spec,
+        covariates[:, 1],
+        non_employment_benefits,
+        tax_splitting,
     )
 
     child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)

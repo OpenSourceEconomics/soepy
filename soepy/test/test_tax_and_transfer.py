@@ -1,26 +1,18 @@
-from soepy.test.resources.gettsim_tax_func import (
-    piecewise_polynomial,
-    calc_gettsim_sol_individual,
-)
-from soepy.shared.tax_and_transfers import calculate_net_income, calculate_inc_tax
 import numpy as np
 import pandas as pd
 import pytest
+
+from soepy.shared.tax_and_transfers import calculate_inc_tax
+from soepy.shared.tax_and_transfers import calculate_net_income
+from soepy.test.resources.gettsim_tax_func import calc_gettsim_sol_individual
+from soepy.test.resources.gettsim_tax_func import piecewise_polynomial
 
 test_incomes = np.arange(1, 2000, 100).astype(float)
 
 
 @pytest.fixture(scope="module")
 def input_data():
-    tax_params = np.array(
-        [
-            163.00,
-            1001.00,
-            0.14,
-            0.42,
-            0.055,
-        ]
-    )
+    tax_params = np.array([163.00, 1001.00, 0.14, 0.42, 0.055,])
     deductions_spec = np.array([0.085, 0.0975, 0.0325, 1411.00, 445.00])
     thresholds = np.array([-np.inf, tax_params[0], tax_params[1], np.inf])
     # In gettsim the tax function takes the linear rates and the

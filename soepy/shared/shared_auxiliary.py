@@ -1,11 +1,10 @@
+import numba
 import numpy as np
 
-import numba
-
-from soepy.shared.shared_constants import NUM_CHOICES, HOURS, INVALID_FLOAT
-from soepy.shared.tax_and_transfers import (
-    calculate_net_income,
-)
+from soepy.shared.shared_constants import HOURS
+from soepy.shared.shared_constants import INVALID_FLOAT
+from soepy.shared.shared_constants import NUM_CHOICES
+from soepy.shared.tax_and_transfers import calculate_net_income
 
 
 def draw_disturbances(seed, num_periods, num_draws, model_params):

@@ -1,8 +1,7 @@
 import collections
 
-import yaml
-
 import pandas as pd
+import yaml
 
 
 def read_model_params_init(model_params_init_file_name):
