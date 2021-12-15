@@ -1,7 +1,6 @@
 import numba
 import numpy as np
 
-from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import INVALID_FLOAT
 from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.shared.tax_and_transfers import calculate_net_income
@@ -172,71 +171,6 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
     non_consumption_utility = np.exp(non_consumption_utility)
 
     return non_consumption_utility
-
-
-def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
-    """This function calculates the benefits an individual would receive if they were
-    to choose to be non-employed in the period"""
-
-    non_employment_benefits = np.full((states.shape[0], 3), np.nan)
-
-    # Individual worked last period: ALG I
-    # Based on labor income the individual would have earned
-    # working full-time in the period (excluding wage shock)
-    # for a person who worked last period
-    # 60% if no child
-    non_employment_benefits[:, 0] = np.where(
-        ((states[:, 2] != 0) & (states[:, 6] == -1)),
-        model_spec.alg1_replacement_no_child * np.exp(log_wage_systematic) * HOURS[2],
-        0.00,
-    )
-    # 67% if child
-    non_employment_benefits[:, 0] = np.where(
-        ((states[:, 2] != 0) & (states[:, 6] != -1) & (states[:, 6] != 0)),
-        model_spec.alg1_replacement_child * np.exp(log_wage_systematic) * HOURS[2],
-        non_employment_benefits[:, 0],
-    )
-
-    # Individual did not work last period: Social assistance
-    # No partner, No child
-    non_employment_benefits[:, 1] = np.where(
-        ((states[:, 2] == 0) & (states[:, 6] == -1) & (states[:, 7] == 0)),
-        model_spec.regelsatz_single + model_spec.housing + model_spec.housing * 0.25,
-        0.00,
-    )
-    # Yes partner, No child
-    non_employment_benefits[:, 1] = np.where(
-        ((states[:, 2] == 0) & (states[:, 6] == -1) & (states[:, 7] == 1)),
-        2 * model_spec.regelsatz_partner + model_spec.housing * 1.5,
-        non_employment_benefits[:, 1],
-    )
-    # Yes partner, Yes child
-    non_employment_benefits[:, 1] = np.where(
-        ((states[:, 2] == 0) & (states[:, 6] != -1) & (states[:, 7] == 1)),
-        2 * model_spec.regelsatz_partner
-        + model_spec.regelsatz_child
-        + model_spec.housing * 1.5,
-        non_employment_benefits[:, 1],
-    )
-    # No partner, Yes child
-    non_employment_benefits[:, 1] = np.where(
-        ((states[:, 2] == 0) & (states[:, 6] != -1) & (states[:, 7] == 0)),
-        model_spec.regelsatz_single
-        + model_spec.regelsatz_child
-        + model_spec.addition_child_single
-        + model_spec.housing * 0.25,
-        non_employment_benefits[:, 1],
-    )
-
-    # Motherhood
-    # System 2007
-    non_employment_benefits[:, 2] = np.where(
-        ((states[:, 2] != 0) & (states[:, 6] == 0)),
-        model_spec.motherhood_replacement * np.exp(log_wage_systematic) * HOURS[2],
-        0.00,
-    )
-
-    return non_employment_benefits
 
 
 @numba.jit(nopython=True)

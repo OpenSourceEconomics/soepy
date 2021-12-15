@@ -1,7 +1,7 @@
 import numpy as np
 
 from soepy.exogenous_processes.children import define_child_age_update_rule
-from soepy.shared.shared_auxiliary import calculate_non_employment_benefits
+from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
