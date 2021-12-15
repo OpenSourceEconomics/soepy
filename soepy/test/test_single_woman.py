@@ -125,5 +125,5 @@ def test_single_woman(input_data):
     np.testing.assert_equal(input_data["splitted"], input_data["individual"])
 
 
-def test_single_woman_regression(input_data):
-    np.testing.assert_equal(input_data["splitted"], input_data["regression_disc_sum"])
+# def test_single_woman_regression(input_data):
+#     np.testing.assert_equal(input_data["splitted"], input_data["regression_disc_sum"])

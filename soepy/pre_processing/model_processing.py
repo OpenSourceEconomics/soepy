@@ -3,6 +3,8 @@ import collections
 import pandas as pd
 import yaml
 
+from soepy.pre_processing.tax_parameters import process_tax_system
+
 
 def read_model_params_init(model_params_init_file_name):
     """Reads in specification of model parameters
@@ -180,9 +182,7 @@ def expand_model_spec_dict(model_spec_init_dict, model_params_df):
         "num_types": num_types,
     }
 
-    # Determine taxation type:
-    if "tax_splitting" not in model_spec_init_dict["TAXES_TRANSFERS"].keys():
-        model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = True
+    model_spec_init_dict = process_tax_system(model_spec_init_dict)
 
     return model_spec_init_dict
 

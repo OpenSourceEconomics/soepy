@@ -314,9 +314,8 @@ def construct_covariates(states, model_spec):
     # scale: 1 for a single woman HH, 1.5 for a woman with a partner,
     # 1.8 for a woman with a partner and a child and 1.3 for a woman with
     # a child and no partner
-    equivalence_scale = np.full(states.shape[0], np.nan)
     equivalence_scale = np.where(
-        (states[:, 6] == -1) & (states[:, 7] == 0), 1.0, equivalence_scale
+        (states[:, 6] == -1) & (states[:, 7] == 0), 1.0, np.nan
     )
     equivalence_scale = np.where(
         (states[:, 6] == -1) & (states[:, 7] == 1), 1.5, equivalence_scale
@@ -814,11 +813,11 @@ def _get_max_aggregated_utilities(
 
 @numba.guvectorize(
     [
-        "f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:], f8[:], f8, f8, f8, "
+        "f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:], f8[:, :], f8, f8, f8, "
         "b1, f8[:]"
     ],
     "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), "
-    "(n_spec_params), (n_spec_params), (), (), (), () -> ()",
+    "(n_ssc_params), (n_tax_params, n_tax_params), (), (), (), () -> ()",
     nopython=True,
     target="parallel",
 )
