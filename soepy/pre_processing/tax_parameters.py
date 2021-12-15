@@ -18,7 +18,7 @@ def process_tax_system(model_dict):
 
 def create_tax_parameters():
     """This function creates an array containing all paramters for the tax function."""
-    thresholds = np.array([7_664, 12_739, 52_151, 250_000])
+    thresholds = np.array([7_664, 12_739, 52_151, 250_000]) / 48  # Divide by 4 * 12
     rates_linear = np.array([0.15, 0.2397, 0.42, 0.45])
     rates_quadratic = np.zeros(rates_linear.shape)
     for i in range(2):

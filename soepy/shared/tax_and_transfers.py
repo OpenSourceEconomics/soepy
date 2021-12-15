@@ -37,30 +37,25 @@ def calculate_net_income(
 @numba.jit(nopython=True)
 def calculate_inc_tax(tax_params, taxable_income):
     """Calculates the income tax."""
-    if taxable_income < tax_params[0, 0]:
+    thresholds = tax_params[0, :]
+    if taxable_income < thresholds[0]:
         tax_rate = 0
     else:
-        tax_rate = 1
-    #     if (taxable_income >= tax_params[0, 0]) and (
-    #         taxable_income < tax_params[0, 1]
-    #     ):
-    #         interval_num = 0
-    #     elif (taxable_income >= tax_params[0, 1]) and (
-    #         taxable_income < tax_params[0, 2]
-    #     ):
-    #         interval_num = 1
-    #     elif (taxable_income >= tax_params[0, 2]) and (
-    #                 taxable_income < tax_params[0, 3]
-    #         ):
-    #         interval_num = 2
-    #     else:
-    #         interval_num = 3
-    #
-    #     difference_to_calc = taxable_income - tax_params[0, interval_num]
-    #     tax_rate = tax_params[2, interval_num] * difference_to_calc + \
-    #                tax_params[3, interval_num] * difference_to_calc**2
-    #     tax_rate += tax_params[1, 0]
-    tax_rate = 0
+        if (taxable_income >= thresholds[0]) and (taxable_income < thresholds[1]):
+            interval_num = 0
+        elif (taxable_income >= thresholds[1]) and (taxable_income < thresholds[2]):
+            interval_num = 1
+        elif (taxable_income >= thresholds[2]) and (taxable_income < thresholds[3]):
+            interval_num = 2
+        else:
+            interval_num = 3
+
+        difference_to_calc = taxable_income - tax_params[0, interval_num]
+        tax_rate = (
+            tax_params[2, interval_num] * difference_to_calc
+            + tax_params[3, interval_num] * difference_to_calc ** 2
+        )
+        tax_rate += tax_params[1, interval_num]
 
     return tax_rate
 
