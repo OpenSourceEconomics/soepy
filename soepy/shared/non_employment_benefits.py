@@ -13,6 +13,7 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
     working_ft_last_period = states[:, 2] == 2
     working_pt_last_period = states[:, 2] == 1
     working_last_period = working_ft_last_period | working_pt_last_period
+    married = states[:, 7] == 1
 
     prox_net_wage_systematic = 0.65 * np.exp(log_wage_systematic)
 
@@ -26,35 +27,15 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
         model_spec.alg1_replacement_child,
     )
 
-    # Individual did not work last period: Social assistance
-    # No partner, No child
-    non_employment_benefits[:, 1] = np.where(
-        (~working_last_period & no_child & (states[:, 7] == 0)),
-        model_spec.regelsatz_single + model_spec.housing + model_spec.housing * 0.25,
-        0.00,
-    )
-    # Yes partner, No child
-    non_employment_benefits[:, 1] = np.where(
-        (~working_last_period & no_child & (states[:, 7] == 1)),
-        2 * model_spec.regelsatz_partner + model_spec.housing * 1.5,
-        non_employment_benefits[:, 1],
-    )
-    # Yes partner, Yes child
-    non_employment_benefits[:, 1] = np.where(
-        (~working_last_period & ~no_child & (states[:, 7] == 1)),
-        2 * model_spec.regelsatz_partner
-        + model_spec.regelsatz_child
-        + model_spec.housing * 1.5,
-        non_employment_benefits[:, 1],
-    )
-    # No partner, Yes child
-    non_employment_benefits[:, 1] = np.where(
-        (~working_last_period & ~no_child & (states[:, 7] == 0)),
-        model_spec.regelsatz_single
-        + model_spec.regelsatz_child
-        + model_spec.addition_child_single
-        + model_spec.housing * 0.25,
-        non_employment_benefits[:, 1],
+    non_employment_benefits[:, 1] = calculate_alg2(
+        working_last_period,
+        no_child,
+        married,
+        model_spec.regelsatz_single,
+        model_spec.housing,
+        model_spec.regelsatz_partner,
+        model_spec.regelsatz_child,
+        model_spec.addition_child_single,
     )
 
     non_employment_benefits[:, 2] = calculate_elterngeld(
@@ -66,6 +47,44 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
     )
 
     return non_employment_benefits
+
+
+def calculate_alg2(
+    working_last_period,
+    no_child,
+    married,
+    regelsatz_single,
+    housing,
+    regelsatz_partner,
+    regelsatz_child,
+    addition_child_single,
+):
+    # Individual did not work last period: Social assistance
+    # No partner, No child
+    alg2 = np.where(
+        (~working_last_period & no_child & ~married),
+        regelsatz_single + housing * 1.25,
+        0.00,
+    )
+    # Yes partner, No child
+    alg2 = np.where(
+        (~working_last_period & no_child & married),
+        2 * regelsatz_partner + housing * 1.5,
+        alg2,
+    )
+    # Yes partner, Yes child
+    alg2 = np.where(
+        (~working_last_period & ~no_child & married),
+        2 * regelsatz_partner + regelsatz_child + housing * 1.5,
+        alg2,
+    )
+    # No partner, Yes child
+    alg2 = np.where(
+        (~working_last_period & ~no_child & ~married),
+        regelsatz_single + regelsatz_child + addition_child_single + housing * 0.25,
+        alg2,
+    )
+    return alg2
 
 
 def calculate_elterngeld(
