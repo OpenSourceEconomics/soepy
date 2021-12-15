@@ -97,12 +97,16 @@ def calculate_elterngeld(
     """This implements the 2007 elterngeld regime."""
     elterngeld = np.where(
         (working_ft_last_period & newborn_child),
-        motherhood_replacement * prox_net_wage_systematic * HOURS[2],
+        (motherhood_replacement * prox_net_wage_systematic * HOURS[2]).clip(
+            min=300, max=1800
+        ),
         0.00,
     )
     elterngeld = np.where(
         (working_pt_last_period & newborn_child),
-        motherhood_replacement * prox_net_wage_systematic * HOURS[1],
+        (motherhood_replacement * prox_net_wage_systematic * HOURS[1]).clip(
+            min=300, max=1800
+        ),
         elterngeld,
     )
     return elterngeld
