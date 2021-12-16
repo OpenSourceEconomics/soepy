@@ -111,7 +111,6 @@ def pyth_solve(
         prob_partner_separation,
         non_employment_consumption_resources,
         deductions_spec,
-        model_spec.tax_params,
     )
 
     # Return function output

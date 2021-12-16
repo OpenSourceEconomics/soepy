@@ -60,7 +60,7 @@ def create_child_care_costs(model_dict):
     1. They only depend on the working status of the woman.
     """
     if "child_care_costs" not in model_dict["TAXES_TRANSFERS"].keys():
-        model_dict["TAXES_TRANSFERS"]["child_care_costs"] = np.array(
-            [[219, 381], [122, 128]]
-        )
+        model_dict["TAXES_TRANSFERS"]["child_care_costs"] = (
+            np.array([[0, 0], [219, 381], [122, 128]]) / 4
+        )  # Get per week value
     return model_dict

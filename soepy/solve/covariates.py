@@ -55,9 +55,6 @@ def construct_covariates(states, model_spec):
     # If a woman has a child she receives child benefits
     child_benefits = np.where(states[:, 6] == -1, 0, model_spec.child_benefits)
 
-    # child_care_costs = np.zeros(bins.shape)
-    # child_care_costs[bins==1] ==
-
     # Collect in covariates vector
     covariates = np.column_stack((bins, male_wages, equivalence_scale, child_benefits))
 

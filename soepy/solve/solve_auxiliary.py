@@ -278,7 +278,6 @@ def pyth_backward_induction(
     prob_partner_separation,
     non_employment_consumption_resources,
     deductions_spec,
-    income_tax_spec,
 ):
     """Get expected maximum value function at every state space point.
     Backward induction is performed all at once for all states in a given period.
@@ -351,6 +350,7 @@ def pyth_backward_induction(
         male_wage_period = covariates[np.where(state_period_cond)][:, 1]
         equivalence_scale_period = covariates[state_period_cond][:, 2]
         child_benefits_period = covariates[state_period_cond][:, 3]
+        child_bins_period = covariates[state_period_cond][:, 0]
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
@@ -385,9 +385,10 @@ def pyth_backward_induction(
             model_spec.mu,
             non_employment_consumption_resources_period,
             deductions_spec,
-            income_tax_spec,
+            model_spec.tax_params,
             model_spec.child_care_costs,
             male_wage_period,
+            child_bins_period,
             child_benefits_period,
             equivalence_scale_period,
             tax_splitting,
@@ -703,7 +704,9 @@ def _get_max_aggregated_utilities(
     male_wage,
     child_benefits,
     equivalence,
-    tax_splitting=True,
+    child_care_costs,
+    child_care_bin,
+    tax_splitting,
 ):
     current_max_value_function = INVALID_FLOAT
 
@@ -735,11 +738,12 @@ def _get_max_aggregated_utilities(
 @numba.guvectorize(
     [
         "f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:], f8[:, :], f8[:, :], "
-        "f8, f8, f8, "
+        "f8, f8, f8, f8, "
         "b1, f8[:]"
     ],
     "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), "
-    "(n_ssc_params), (n_tax_params, n_tax_params), (n_work_choices, n_age_child_costs), (), (), (), "
+    "(n_ssc_params), (n_tax_params, n_tax_params), (n_work_choices, "
+    "n_age_child_costs), (), (), (), (), "
     "() -> ()",
     nopython=True,
     target="parallel",
@@ -757,6 +761,7 @@ def construct_emax(
     income_tax_spec,
     child_care_costs,
     male_wage,
+    child_care_bin,
     child_benefits,
     equivalence,
     tax_splitting,
@@ -838,6 +843,8 @@ def construct_emax(
             child_benefits,
             equivalence,
             tax_splitting,
+            child_care_costs,
+            child_care_bin,
         )
 
         emax[0] += max_total_utility
