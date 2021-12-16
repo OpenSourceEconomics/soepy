@@ -41,7 +41,6 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
         emaxs,
         child_age_update_rule,
         deductions_spec,
-        income_tax_spec,
     ) = pyth_solve(
         model_params,
         model_spec,
@@ -61,7 +60,7 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
         covariates,
         non_employment_consumption_resources,
         deductions_spec,
-        income_tax_spec,
+        model_spec.tax_params,
         child_age_update_rule,
         prob_educ_level,
         prob_child_age,
@@ -108,7 +107,6 @@ def prepare_simulation_solution(
         emaxs,
         child_age_update_rule,
         deductions_spec,
-        income_tax_spec,
     ) = pyth_solve(
         model_params,
         model_spec,
@@ -127,7 +125,7 @@ def prepare_simulation_solution(
         "covariates": covariates,
         "non_employment_consumption_resources": non_employment_consumption_resources,
         "deductions_spec": deductions_spec,
-        "income_tax_spec": income_tax_spec,
+        "tax_params": model_spec.tax_params,
         "child_age_update_rule": child_age_update_rule,
         "prob_educ_level": prob_educ_level,
         "prob_child_age": prob_child_age,

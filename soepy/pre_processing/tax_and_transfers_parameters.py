@@ -51,3 +51,16 @@ def create_intercepts(rates_linear, rates_quadratic, thresholds):
             + (thresholds[i] - thresholds[i - 1]) ** 2 * rates_quadratic[i - 1]
         )
     return interecepts
+
+
+def create_child_care_costs(model_dict):
+    """
+    We define the child care costs as array with age bins in rows and pt/ft in
+    columns. They are indexed corresponding to row/col_index = bin_num/choice_num -
+    1. They only depend on the working status of the woman.
+    """
+    if "child_care_costs" not in model_dict["TAXES_TRANSFERS"].keys():
+        model_dict["TAXES_TRANSFERS"]["child_care_costs"] = np.array(
+            [[219, 381], [122, 128]]
+        )
+    return model_dict

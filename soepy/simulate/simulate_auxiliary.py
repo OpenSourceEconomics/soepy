@@ -145,6 +145,10 @@ def pyth_simulate(
         current_male_wages = covariates[idx][:, 1]
         current_child_benefits = covariates[idx][:, 3]
 
+        child_care_costs = get_child_care_cost_for_choice(
+            covariates[idx][:, 0].astype(float), model_spec.child_care_costs
+        )
+
         current_wages = np.exp(
             current_log_wage_systematic.reshape(-1, 1)
             + draws_sim[period, current_states[:, 0]]
@@ -282,3 +286,14 @@ def pyth_simulate(
     ]
 
     return dataset
+
+
+def get_child_care_cost_for_choice(child_bins, child_care_costs):
+    child_bins[child_bins > 2] = 0
+    child_costs = np.zeros((child_bins.shape[0], 2))
+    for choice in range(2):
+        for age_bin in range(1, 3):
+            child_costs[child_bins == age_bin, choice] = child_care_costs[
+                age_bin - 1, choice
+            ]
+    return

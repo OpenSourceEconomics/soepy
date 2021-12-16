@@ -3,7 +3,8 @@ import collections
 import pandas as pd
 import yaml
 
-from soepy.pre_processing.tax_parameters import process_tax_system
+from soepy.pre_processing.tax_and_transfers_parameters import create_child_care_costs
+from soepy.pre_processing.tax_and_transfers_parameters import process_tax_system
 
 
 def read_model_params_init(model_params_init_file_name):
@@ -183,6 +184,7 @@ def expand_model_spec_dict(model_spec_init_dict, model_params_df):
     }
 
     model_spec_init_dict = process_tax_system(model_spec_init_dict)
+    model_spec_init_dict = create_child_care_costs(model_spec_init_dict)
 
     return model_spec_init_dict
 

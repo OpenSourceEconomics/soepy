@@ -5,7 +5,7 @@ from soepy.shared.non_employment_benefits import calculate_non_employment_benefi
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
-from soepy.solve.solve_auxiliary import construct_covariates
+from soepy.solve.covariates import construct_covariates
 from soepy.solve.solve_auxiliary import pyth_backward_induction
 from soepy.solve.solve_auxiliary import pyth_create_state_space
 
@@ -80,18 +80,19 @@ def pyth_solve(
     )
 
     deductions_spec = np.array(model_spec.deductions)
-    income_tax_spec = model_spec.tax_params
     tax_splitting = model_spec.tax_splitting
 
     non_employment_consumption_resources = calculate_non_employment_consumption_resources(
         deductions_spec,
-        income_tax_spec,
+        model_spec.tax_params,
         covariates[:, 1],
         non_employment_benefits,
         tax_splitting,
     )
 
     child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
+
+    child_care_costs = model_spec.child_care_costs
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
@@ -110,7 +111,7 @@ def pyth_solve(
         prob_partner_separation,
         non_employment_consumption_resources,
         deductions_spec,
-        income_tax_spec,
+        model_spec.tax_params,
     )
 
     # Return function output
@@ -122,5 +123,4 @@ def pyth_solve(
         emaxs,
         child_age_update_rule,
         deductions_spec,
-        income_tax_spec,
     )

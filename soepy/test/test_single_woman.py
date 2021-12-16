@@ -81,7 +81,6 @@ def input_data():
                 emaxs,
                 child_age_update_rule,
                 deductions_spec,
-                income_tax_spec,
             ) = pyth_solve(
                 model_params,
                 model_spec,
@@ -101,7 +100,7 @@ def input_data():
                 covariates,
                 non_employment_consumption_resources,
                 deductions_spec,
-                income_tax_spec,
+                model_spec.tax_params,
                 child_age_update_rule,
                 prob_educ_level,
                 prob_child_age,
