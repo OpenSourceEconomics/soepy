@@ -401,15 +401,14 @@ def pyth_backward_induction(
 
     # Loop backwards over all periods
     for period in reversed(range(model_spec.num_periods)):
+        state_period_cond = states[:, 0] == period
 
         # Extract period information
         # States
-        states_period = states[np.where(states[:, 0] == period)]
+        states_period = states[state_period_cond]
 
         # Info on updated age of child
-        child_age_update_rule_period = child_age_update_rule[
-            np.where(states[:, 0] == period)
-        ]
+        child_age_update_rule_period = child_age_update_rule[state_period_cond]
 
         # Probability that a child arrives
         prob_child_period = prob_child[period]
@@ -419,18 +418,16 @@ def pyth_backward_induction(
         prob_partner_separation_period = prob_partner_separation[period]
 
         # Period rewards
-        log_wage_systematic_period = log_wage_systematic[states[:, 0] == period]
-        non_consumption_utilities_period = non_consumption_utilities[
-            states[:, 0] == period
-        ]
+        log_wage_systematic_period = log_wage_systematic[state_period_cond]
+        non_consumption_utilities_period = non_consumption_utilities[state_period_cond]
         non_employment_consumption_resources_period = non_employment_consumption_resources[
-            states[:, 0] == period
+            state_period_cond
         ]
 
         # Corresponding equivalence scale for period states
-        male_wage_period = covariates[np.where(states[:, 0] == period)][:, 1]
-        equivalence_scale_period = covariates[np.where(states[:, 0] == period)][:, 2]
-        child_benefits_period = covariates[np.where(states[:, 0] == period)][:, 3]
+        male_wage_period = covariates[np.where(state_period_cond)][:, 1]
+        equivalence_scale_period = covariates[np.where(state_period_cond)][:, 2]
+        child_benefits_period = covariates[np.where(state_period_cond)][:, 3]
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
@@ -452,7 +449,7 @@ def pyth_backward_induction(
             )
 
         # Extract current period information for current loop calculation
-        emaxs_period = emaxs[np.where(states[:, 0] == period)]
+        emaxs_period = emaxs[state_period_cond]
 
         # Calculate emax for current period reached by the loop
         emax_period = construct_emax(
@@ -472,7 +469,7 @@ def pyth_backward_induction(
             tax_splitting,
         )
         emaxs_period[:, 3] = emax_period
-        emaxs[np.where(states[:, 0] == period)] = emaxs_period
+        emaxs[state_period_cond] = emaxs_period
 
     return emaxs
 
