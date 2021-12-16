@@ -117,7 +117,7 @@ def input_data():
             out[name] = create_disc_sum_av_utility(
                 calculated_df, model_spec_init_dict["CONSTANTS"]["delta"]
             )
-        out["regression_disc_sum"] = -0.5067394099836353
+        out["regression_disc_sum"] = -0.5066927046319128
         return out
 
 
