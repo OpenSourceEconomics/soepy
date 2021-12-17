@@ -170,12 +170,13 @@ def pyth_simulate(
 
         current_employment_consumption_resources -= child_care_costs
 
+        # Join alternative consumption resources. Ensure positivity.
         current_consumption_resources = np.hstack(
             (
                 current_non_employment_consumption_resources.reshape(-1, 1),
                 current_employment_consumption_resources,
             )
-        ).clip(min=0)
+        ).clip(min=np.finfo(float).eps)
 
         # Calculate total values for all choices
         flow_utilities = (
