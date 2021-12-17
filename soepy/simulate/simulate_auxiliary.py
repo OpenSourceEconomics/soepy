@@ -176,7 +176,6 @@ def pyth_simulate(
                 current_employment_consumption_resources,
             )
         ).clip(min=0)
-        #
 
         # Calculate total values for all choices
         flow_utilities = (
@@ -193,7 +192,7 @@ def pyth_simulate(
 
         # Determine choice as option with highest choice specific value function
         choice = np.argmax(value_functions, axis=1)
-        breakpoint()
+
         child_current_age = current_states[:, 7]
 
         # Update child age

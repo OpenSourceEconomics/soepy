@@ -1,7 +1,7 @@
 def create_chosen_flow_util(data):
     out = data["Flow_Utility_N"].copy()
-    out.loc[data["Choice"] == "Part"] = data[data["Choice"] == "1"]["Flow_Utility_P"]
-    out.loc[data["Choice"] == "Full"] = data[data["Choice"] == "2"]["Flow_Utility_F"]
+    out.loc[data["Choice"] == 1] = data[data["Choice"] == 1]["Flow_Utility_P"]
+    out.loc[data["Choice"] == 2] = data[data["Choice"] == 2]["Flow_Utility_F"]
     return out
 
 
