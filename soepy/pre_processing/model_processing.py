@@ -3,8 +3,8 @@ import collections
 import pandas as pd
 import yaml
 
-from soepy.pre_processing.tax_and_transfers_parameters import create_child_care_costs
-from soepy.pre_processing.tax_and_transfers_parameters import process_tax_system
+from soepy.pre_processing.tax_and_transfers_params import create_child_care_costs
+from soepy.pre_processing.tax_and_transfers_params import process_tax_system
 
 
 def read_model_params_init(model_params_init_file_name):

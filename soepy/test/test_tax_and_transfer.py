@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from soepy.pre_processing.tax_and_transfers_parameters import create_tax_parameters
+from soepy.pre_processing.tax_and_transfers_params import create_tax_parameters
 from soepy.shared.tax_and_transfers import calculate_inc_tax
 from soepy.shared.tax_and_transfers import calculate_net_income
 from soepy.test.resources.gettsim_tax_func import calc_gettsim_sol_individual

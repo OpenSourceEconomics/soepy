@@ -92,8 +92,6 @@ def pyth_solve(
 
     child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
 
-    child_care_costs = model_spec.child_care_costs
-
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
