@@ -59,8 +59,20 @@ def create_child_care_costs(model_dict):
     columns. They are indexed corresponding to row/col_index = bin_num/choice_num -
     1. They only depend on the working status of the woman.
     """
-    if "child_care_costs" not in model_dict["TAXES_TRANSFERS"].keys():
-        model_dict["TAXES_TRANSFERS"]["child_care_costs"] = (
-            np.array([[0, 0], [219, 381], [122, 128]]) / 4
-        )  # Get per week value
+    if (
+        "child_care_costs" not in model_dict["TAXES_TRANSFERS"].keys()
+        or "under_3" not in model_dict["TAXES_TRANSFERS"]["child_care_costs"].keys()
+        or "3_to_6" not in model_dict["TAXES_TRANSFERS"]["child_care_costs"].keys()
+    ):
+        raise ValueError("Child care costs not specified")
+    else:
+        child_care_costs = np.zeros((3, 2), dtype=float)
+        child_care_costs[1, :] = model_dict["TAXES_TRANSFERS"]["child_care_costs"][
+            "under_3"
+        ]
+        child_care_costs[2, :] = model_dict["TAXES_TRANSFERS"]["child_care_costs"][
+            "3_to_6"
+        ]
+        model_dict["TAXES_TRANSFERS"]["child_care_costs"] = child_care_costs / 4  # Get
+        # per week value
     return model_dict

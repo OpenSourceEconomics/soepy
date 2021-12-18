@@ -55,6 +55,16 @@ def input_data():
 
         for name, tax in [("splitted", True), ("individual", False)]:
             model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = tax
+            model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"] = {}
+            model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["under_3"] = [
+                219,
+                381,
+            ]
+            model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["3_to_6"] = [
+                122,
+                128,
+            ]
+
             model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 
             prob_educ_level = gen_prob_educ_level_vector(model_spec)
@@ -117,7 +127,7 @@ def input_data():
                 calculated_df, model_spec_init_dict["CONSTANTS"]["delta"]
             )
 
-        out["regression_disc_sum"] = -0.16611305040473928
+        out["regression_disc_sum"] = -0.16584720838990802
         return out
 
 

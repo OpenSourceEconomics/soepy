@@ -102,6 +102,8 @@ def random_init(constr=None):
     model_spec_init_dict["TAXES_TRANSFERS"]["motherhood_replacement"] = 0.67
     model_spec_init_dict["TAXES_TRANSFERS"]["addition_child_single"] = 33
     model_spec_init_dict["TAXES_TRANSFERS"]["housing"] = 62
+    model_spec_init_dict["TAXES_TRANSFERS"]["child_care_cost_part_time"] = [219, 122]
+    model_spec_init_dict["TAXES_TRANSFERS"]["child_care_cost_full_time"] = [381, 128]
     model_spec_init_dict["TAXES_TRANSFERS"]["deductions"] = [
         0.085,
         0.0975,
@@ -109,13 +111,7 @@ def random_init(constr=None):
         1411.00,
         445.00,
     ]
-    model_spec_init_dict["TAXES_TRANSFERS"]["income_tax"] = [
-        163.00,
-        1001.00,
-        0.14,
-        0.42,
-        0.055,
-    ]
+    model_spec_init_dict["TAXES_TRANSFERS"]["tax_year"] = 2007
 
     model_spec_init_dict["INITIAL_CONDITIONS"][
         "educ_shares_file_name"

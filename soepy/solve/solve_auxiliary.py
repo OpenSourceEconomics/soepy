@@ -713,8 +713,6 @@ def _get_max_aggregated_utilities(
     current_max_value_function = INVALID_FLOAT
 
     for j in range(NUM_CHOICES):
-        child_costs = child_care_costs[j, child_care_bin]
-
         if j == 0:
             consumption = non_employment_consumption_resources / equivalence
         else:
@@ -723,6 +721,8 @@ def _get_max_aggregated_utilities(
             net_income = calculate_net_income(
                 income_tax_spec, deductions_spec, female_wage, male_wage, tax_splitting
             )
+
+            child_costs = child_care_costs[child_care_bin, j - 1]
 
             consumption = (
                 max(net_income + child_benefits - child_costs, 1e-14) / equivalence
