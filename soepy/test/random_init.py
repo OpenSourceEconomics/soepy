@@ -102,8 +102,15 @@ def random_init(constr=None):
     model_spec_init_dict["TAXES_TRANSFERS"]["motherhood_replacement"] = 0.67
     model_spec_init_dict["TAXES_TRANSFERS"]["addition_child_single"] = 33
     model_spec_init_dict["TAXES_TRANSFERS"]["housing"] = 62
-    model_spec_init_dict["TAXES_TRANSFERS"]["child_care_cost_part_time"] = [219, 122]
-    model_spec_init_dict["TAXES_TRANSFERS"]["child_care_cost_full_time"] = [381, 128]
+    model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"] = {}
+    model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["under_3"] = [
+        219,
+        381,
+    ]
+    model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["3_to_6"] = [
+        122,
+        128,
+    ]
     model_spec_init_dict["TAXES_TRANSFERS"]["deductions"] = [
         0.085,
         0.0975,
@@ -466,7 +473,7 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     ]
     init_dict["TAXES_TRANSFERS"]["housing"] = init_dict_flat["housing"]
     init_dict["TAXES_TRANSFERS"]["deductions"] = init_dict_flat["deductions"]
-    init_dict["TAXES_TRANSFERS"]["income_tax"] = init_dict_flat["income_tax"]
+    init_dict["TAXES_TRANSFERS"]["tax_year"] = init_dict_flat["tax_year"]
 
     init_dict["INITIAL_CONDITIONS"] = dict()
     init_dict["INITIAL_CONDITIONS"]["child_age_init_max"] = init_dict_flat[
