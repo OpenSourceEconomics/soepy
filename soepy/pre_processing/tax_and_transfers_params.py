@@ -7,7 +7,7 @@ def process_tax_system(model_dict):
         model_dict["TAXES_TRANSFERS"]["tax_splitting"] = True
 
     if "tax_year" not in model_dict["TAXES_TRANSFERS"].keys():
-        model_dict["TAXES_TRANSFERS"]["tax_year"] = 2007
+        raise ValueError("Specify tax_year.")
 
     if model_dict["TAXES_TRANSFERS"]["tax_year"] == 2007:
         model_dict["TAXES_TRANSFERS"]["tax_params"] = create_tax_parameters()
@@ -64,7 +64,7 @@ def create_child_care_costs(model_dict):
         or "under_3" not in model_dict["TAXES_TRANSFERS"]["child_care_costs"].keys()
         or "3_to_6" not in model_dict["TAXES_TRANSFERS"]["child_care_costs"].keys()
     ):
-        raise ValueError("Child care costs not specified")
+        raise ValueError("Child care costs not properly specified.")
     else:
         child_care_costs = np.zeros((3, 2), dtype=float)
         child_care_costs[1, :] = model_dict["TAXES_TRANSFERS"]["child_care_costs"][
