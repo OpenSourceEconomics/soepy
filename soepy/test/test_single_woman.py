@@ -55,15 +55,6 @@ def input_data():
 
         for name, tax in [("splitted", True), ("individual", False)]:
             model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = tax
-            model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"] = {}
-            model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["under_3"] = [
-                219,
-                381,
-            ]
-            model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["3_to_6"] = [
-                122,
-                128,
-            ]
 
             model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 

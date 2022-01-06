@@ -53,15 +53,6 @@ def update_solve_objectes():
         exog_exper_shares_ft.to_pickle("test.soepy.ft.exp.shares.pkl")
         exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
         exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
-        model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"] = {}
-        model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["under_3"] = [
-            219,
-            381,
-        ]
-        model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["3_to_6"] = [
-            122,
-            128,
-        ]
 
         model_params_df, model_params = read_model_params_init(random_model_params_df)
         model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
@@ -174,15 +165,6 @@ def update_sim_objectes():
         exog_exper_shares_ft.to_pickle("test.soepy.ft.exp.shares.pkl")
         exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
         exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
-        model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"] = {}
-        model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["under_3"] = [
-            219,
-            381,
-        ]
-        model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["3_to_6"] = [
-            122,
-            128,
-        ]
 
         calculated_df_sim = simulate(random_model_params_df, model_spec_init_dict)
 
@@ -207,5 +189,5 @@ def update_sim_objectes():
     cleanup(options="regression")
 
 
-update_sim_objectes()
-update_solve_objectes()
+# update_sim_objectes()
+# update_solve_objectes()
