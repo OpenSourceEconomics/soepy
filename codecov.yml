@@ -6,8 +6,9 @@ coverage:
   precision: 2
   round: down
   range: "50...100"
-  target: 70
-
-ignore:
-  - "setup.py"
-  - "dashboard/**/*"
+  status:
+    project:
+      default:
+        target: 70
+  ignore:
+    - "soepy/__init__.py"
