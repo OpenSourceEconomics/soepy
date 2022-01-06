@@ -132,13 +132,13 @@ def update_solve_objectes():
             exog_partner_arrival_info,
             exog_partner_separation_info,
             expected_df_sim_func,
-            calculated_df_sim_sol,
+            calculated_df_sim_sol.sum(axis=0),
         )
 
     with open(vault_file, "wb") as file:
         pickle.dump(vault, file)
 
-    cleanup()
+    cleanup(options="regression")
 
 
 def update_sim_objectes():
@@ -197,12 +197,14 @@ def update_sim_objectes():
             exog_child_info,
             exog_partner_arrival_info,
             exog_partner_separation_info,
-            calculated_df_sim,
+            calculated_df_sim.sum(axis=0),
             expected_df_sim_sol,
         )
 
     with open(vault_file, "wb") as file:
         pickle.dump(vault, file)
+
+    cleanup(options="regression")
 
 
 update_sim_objectes()
