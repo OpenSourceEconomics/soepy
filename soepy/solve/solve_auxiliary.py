@@ -747,8 +747,8 @@ def _get_max_aggregated_utilities(
         "b1, f8[:]"
     ],
     "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), "
-    "(n_ssc_params), (n_tax_params, n_tax_params), (n_choices, n_age_child_costs), (), (), (), (), "
-    "() -> ()",
+    "(n_ssc_params), (n_tax_params, n_tax_params), (n_choices, n_age_child_costs), (),"
+    " (), (), (), () -> ()",
     nopython=True,
     target="parallel",
 )
