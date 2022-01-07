@@ -10,5 +10,6 @@ coverage:
     project:
       default:
         target: 70
+        threshold: 3%
   ignore:
     - "soepy/__init__.py"
