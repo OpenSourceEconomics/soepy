@@ -54,7 +54,11 @@ def input_data():
     model_params_df, model_params = read_model_params_init(random_model_params_df)
 
     for name, tax in [("splitted", True), ("individual", False)]:
-        model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = tax
+        # Standard tax_spltting is true
+        if tax:
+            pass
+        else:
+            model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = tax
 
         model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 

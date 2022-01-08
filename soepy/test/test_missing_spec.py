@@ -77,3 +77,12 @@ def test_missing_child_care_costs_under_3_6(input_data):
     with pytest.raises(ValueError) as error_info:
         read_model_spec_init(local_init_dict, random_model_params_df)
     assert str(error_info.value) == "Child care costs not properly specified."
+
+
+def test_missing_tax_splitting(input_data):
+    model_spec_init_dict, random_model_params_df = input_data
+    local_init_dict = copy.deepcopy(model_spec_init_dict)
+    del local_init_dict["TAXES_TRANSFERS"]["tax_splitting"]
+    with pytest.raises(ValueError) as error_info:
+        read_model_spec_init(local_init_dict, random_model_params_df)
+    assert str(error_info.value) == "Specify if couples share taxes."

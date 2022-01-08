@@ -29,6 +29,7 @@ TAXES_TRANSFERS:
         3_to_6: [122, 128]
     deductions: [0.085, 0.0975, 0.0325, 1411.00, 445.00]
     tax_year: 2007
+    tax_splitting: True
 INITIAL_CONDITIONS:
     educ_shares_file_name: 'exog_educ_shares.pkl'
     child_age_shares_file_name: 'exog_child_age_shares.pkl'

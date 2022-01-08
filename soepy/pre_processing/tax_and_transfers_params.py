@@ -4,7 +4,7 @@ import numpy as np
 def process_tax_system(model_dict):
     # Determine taxation type:
     if "tax_splitting" not in model_dict["TAXES_TRANSFERS"].keys():
-        model_dict["TAXES_TRANSFERS"]["tax_splitting"] = True
+        raise ValueError("Specify if couples share taxes.")
 
     if "tax_year" not in model_dict["TAXES_TRANSFERS"].keys():
         raise ValueError("Specify tax_year.")

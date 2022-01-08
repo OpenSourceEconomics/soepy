@@ -119,6 +119,7 @@ def random_init(constr=None):
         445.00,
     ]
     model_spec_init_dict["TAXES_TRANSFERS"]["tax_year"] = 2007
+    model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = True
 
     model_spec_init_dict["INITIAL_CONDITIONS"][
         "educ_shares_file_name"
