@@ -79,7 +79,7 @@ def pyth_solve(
         model_spec, states, log_wage_systematic
     )
 
-    deductions_spec = np.array(model_spec.deductions)
+    deductions_spec = np.array(model_spec.ssc_deductions)
     tax_splitting = model_spec.tax_splitting
 
     non_employment_consumption_resources = calculate_non_employment_consumption_resources(

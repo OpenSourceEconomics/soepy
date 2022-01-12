@@ -111,13 +111,8 @@ def random_init(constr=None):
         122,
         128,
     ]
-    model_spec_init_dict["TAXES_TRANSFERS"]["deductions"] = [
-        0.085,
-        0.0975,
-        0.0325,
-        1411.00,
-        445.00,
-    ]
+    model_spec_init_dict["TAXES_TRANSFERS"]["ssc_rate"] = 0.215
+    model_spec_init_dict["TAXES_TRANSFERS"]["ssc_cap"] = 63_000
     model_spec_init_dict["TAXES_TRANSFERS"]["tax_year"] = 2007
     model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = True
 
@@ -473,7 +468,9 @@ def init_dict_flat_to_init_dict(init_dict_flat):
         "addition_child_single"
     ]
     init_dict["TAXES_TRANSFERS"]["housing"] = init_dict_flat["housing"]
-    init_dict["TAXES_TRANSFERS"]["deductions"] = init_dict_flat["deductions"]
+    init_dict["TAXES_TRANSFERS"]["ssc_rate"] = init_dict_flat["ssc_rate"]
+    init_dict["TAXES_TRANSFERS"]["ssc_cap"] = init_dict_flat["ssc_cap"]
+
     init_dict["TAXES_TRANSFERS"]["tax_year"] = init_dict_flat["tax_year"]
 
     init_dict["INITIAL_CONDITIONS"] = dict()

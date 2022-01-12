@@ -76,3 +76,14 @@ def create_child_care_costs(model_dict):
         model_dict["TAXES_TRANSFERS"]["child_care_costs"] = child_care_costs / 4  # Get
         # per week value
     return model_dict
+
+
+def process_ssc(model_dict):
+    """This function processes the social security contributions."""
+    model_dict["TAXES_TRANSFERS"]["ssc_deductions"] = np.array(
+        [
+            model_dict["TAXES_TRANSFERS"]["ssc_rate"],
+            model_dict["TAXES_TRANSFERS"]["ssc_cap"] / (12 * 4.3),
+        ]
+    )
+    return model_dict

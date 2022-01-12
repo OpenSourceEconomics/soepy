@@ -27,7 +27,8 @@ TAXES_TRANSFERS:
     child_care_costs:
         under_3: [219, 381]
         3_to_6: [122, 128]
-    deductions: [0.085, 0.0975, 0.0325, 1411.00, 445.00]
+    ssc_rate: 0.215
+    ssc_cap: 63000
     tax_year: 2007
     tax_splitting: True
 INITIAL_CONDITIONS:

@@ -5,6 +5,7 @@ import pytest
 from soepy.pre_processing.tax_and_transfers_params import create_tax_parameters
 from soepy.shared.tax_and_transfers import calculate_inc_tax
 from soepy.shared.tax_and_transfers import calculate_net_income
+from soepy.shared.tax_and_transfers import calculate_ssc_deductions
 from soepy.test.resources.gettsim_tax_func import calc_gettsim_sol_individual
 from soepy.test.resources.gettsim_tax_func import piecewise_polynomial
 
@@ -14,7 +15,7 @@ test_incomes = np.arange(1, 2000, 100).astype(float)
 @pytest.fixture(scope="module")
 def input_data():
     tax_params = create_tax_parameters()
-    deductions_spec = np.array([0.085, 0.0975, 0.0325, 1411.00, 445.00])
+    deductions_spec = np.array([0.215, 63_000 / (12 * 4.3)])
     thresholds = np.append(np.append(-np.inf, tax_params[0, :]), np.inf)
     # In gettsim the tax function takes the linear rates and the
     # quadratic rates (progressionsfactor)
@@ -54,6 +55,19 @@ def test_total_tax_and_transfer(input_data, income):
     gettsim_sol = taxable_inc - gettsim_tax
 
     np.testing.assert_allclose(soepy_sol, gettsim_sol)
+
+
+@pytest.mark.parametrize("income", test_incomes)
+def test_ssc(input_data, income):
+    tax_params, deductions_spec, thresholds, rates, intercept_low = input_data
+
+    ssc_income = calculate_ssc_deductions(deductions_spec, income)
+
+    if income >= deductions_spec[1]:
+        ssc_expected = calculate_ssc_deductions(deductions_spec, deductions_spec[1])
+    else:
+        ssc_expected = 0.215 * income
+    np.testing.assert_allclose(ssc_income, ssc_expected)
 
 
 @pytest.mark.parametrize("income", test_incomes)

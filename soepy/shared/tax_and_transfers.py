@@ -65,12 +65,8 @@ def calculate_ssc_deductions(deductions_spec, gross_labor_income):
     """Determines the social security contribution amount
     to be deduced from the individuals gross labor income"""
 
-    health_contr = deductions_spec[0] * min(
-        gross_labor_income, 0.75 * deductions_spec[3]
-    )
-    pension_contr = deductions_spec[1] * min(gross_labor_income, deductions_spec[3])
-    unempl_contr = deductions_spec[2] * min(gross_labor_income, deductions_spec[3])
-    ssc = health_contr + pension_contr + unempl_contr
-    deduction_ssc = min(ssc, deductions_spec[4])
+    capped_income = min(gross_labor_income, deductions_spec[1])
 
-    return deduction_ssc
+    ssc_contrib = deductions_spec[0] * capped_income
+
+    return ssc_contrib
