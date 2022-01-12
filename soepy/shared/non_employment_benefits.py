@@ -32,7 +32,8 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
         no_child,
         married,
         model_spec.regelsatz_single,
-        model_spec.housing,
+        model_spec.housing_single,
+        model_spec.housing_addtion,
         model_spec.regelsatz_partner,
         model_spec.regelsatz_child,
         model_spec.addition_child_single,
@@ -54,34 +55,39 @@ def calculate_alg2(
     no_child,
     married,
     regelsatz_single,
-    housing,
+    housing_single,
+    housing_addtion,
     regelsatz_partner,
     regelsatz_child,
     addition_child_single,
 ):
-    # Individual did not work last period: Social assistance
-    # No partner, No child
+    # Individual did not work last period: Social assistance if not married.
+    # No child:
     alg2 = np.where(
         (~working_last_period & no_child & ~married),
-        regelsatz_single + housing * 1.25,
+        regelsatz_single + housing_single,
         0.00,
     )
-    # Yes partner, No child
-    alg2 = np.where(
-        (~working_last_period & no_child & married),
-        2 * regelsatz_partner + housing * 1.5,
-        alg2,
-    )
-    # Yes partner, Yes child
-    alg2 = np.where(
-        (~working_last_period & ~no_child & married),
-        2 * regelsatz_partner + regelsatz_child + housing * 1.5,
-        alg2,
-    )
-    # No partner, Yes child
+    # # Yes partner, No child
+    # alg2 = np.where(
+    #     (~working_last_period & no_child & married),
+    #     regelsatz_single + regelsatz_partner + housing_single + housing_addtion,
+    #     alg2,
+    # )
+    # # Yes partner, Yes child
+    # alg2 = np.where(
+    #     (~working_last_period & ~no_child & married),
+    #     regelsatz_single + regelsatz_partner + regelsatz_child + housing_single + housing_addtion,
+    #     alg2,
+    # )
+    # Yes child:
     alg2 = np.where(
         (~working_last_period & ~no_child & ~married),
-        regelsatz_single + regelsatz_child + addition_child_single + housing * 0.25,
+        regelsatz_single
+        + regelsatz_child
+        + addition_child_single
+        + housing_single
+        + housing_addtion,
         alg2,
     )
     return alg2

@@ -1,5 +1,8 @@
 import numpy as np
 
+M_FACTOR = 4.3
+Y_FACTOR = 12 * M_FACTOR
+
 
 def process_tax_system(model_dict):
     # Determine taxation type:
@@ -18,7 +21,7 @@ def process_tax_system(model_dict):
 
 def create_tax_parameters():
     """This function creates an array containing all paramters for the tax function."""
-    thresholds = np.array([7_664, 12_739, 52_151, 250_000]) / 48  # Divide by 4 * 12
+    thresholds = np.array([7_664, 12_739, 52_151, 250_000]) / Y_FACTOR
     rates_linear = np.array([0.15, 0.2397, 0.42, 0.45])
     rates_quadratic = np.zeros(rates_linear.shape)
     for i in range(2):
@@ -73,8 +76,7 @@ def create_child_care_costs(model_dict):
         child_care_costs[2, :] = model_dict["TAXES_TRANSFERS"]["child_care_costs"][
             "3_to_6"
         ]
-        model_dict["TAXES_TRANSFERS"]["child_care_costs"] = child_care_costs / 4  # Get
-        # per week value
+        model_dict["TAXES_TRANSFERS"]["child_care_costs"] = child_care_costs / M_FACTOR
     return model_dict
 
 
@@ -83,7 +85,7 @@ def process_ssc(model_dict):
     model_dict["TAXES_TRANSFERS"]["ssc_deductions"] = np.array(
         [
             model_dict["TAXES_TRANSFERS"]["ssc_rate"],
-            model_dict["TAXES_TRANSFERS"]["ssc_cap"] / (12 * 4.3),
+            model_dict["TAXES_TRANSFERS"]["ssc_cap"] / Y_FACTOR,
         ]
     )
     return model_dict

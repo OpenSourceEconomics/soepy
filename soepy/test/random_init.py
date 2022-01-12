@@ -101,7 +101,9 @@ def random_init(constr=None):
     model_spec_init_dict["TAXES_TRANSFERS"]["regelsatz_child"] = 59
     model_spec_init_dict["TAXES_TRANSFERS"]["motherhood_replacement"] = 0.67
     model_spec_init_dict["TAXES_TRANSFERS"]["addition_child_single"] = 33
-    model_spec_init_dict["TAXES_TRANSFERS"]["housing"] = 62
+    model_spec_init_dict["TAXES_TRANSFERS"]["housing_single"] = 77.5
+    model_spec_init_dict["TAXES_TRANSFERS"]["housing_addtion"] = 15
+
     model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"] = {}
     model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["under_3"] = [
         219,
@@ -467,7 +469,9 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["TAXES_TRANSFERS"]["addition_child_single"] = init_dict_flat[
         "addition_child_single"
     ]
-    init_dict["TAXES_TRANSFERS"]["housing"] = init_dict_flat["housing"]
+    init_dict["TAXES_TRANSFERS"]["housing_single"] = init_dict_flat["housing_single"]
+    init_dict["TAXES_TRANSFERS"]["housing_addtion"] = init_dict_flat["housing_addtion"]
+
     init_dict["TAXES_TRANSFERS"]["ssc_rate"] = init_dict_flat["ssc_rate"]
     init_dict["TAXES_TRANSFERS"]["ssc_cap"] = init_dict_flat["ssc_cap"]
 

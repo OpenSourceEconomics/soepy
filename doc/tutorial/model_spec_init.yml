@@ -23,7 +23,8 @@ TAXES_TRANSFERS:
     regelsatz_child: 59
     motherhood_replacement: 0.67
     addition_child_single: 33
-    housing: 62
+    housing_single: 77.5
+    housing_addtion: 15
     child_care_costs:
         under_3: [219, 381]
         3_to_6: [122, 128]
