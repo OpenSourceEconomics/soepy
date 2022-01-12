@@ -68,18 +68,6 @@ def calculate_alg2(
         regelsatz_single + housing_single,
         0.00,
     )
-    # # Yes partner, No child
-    # alg2 = np.where(
-    #     (~working_last_period & no_child & married),
-    #     regelsatz_single + regelsatz_partner + housing_single + housing_addtion,
-    #     alg2,
-    # )
-    # # Yes partner, Yes child
-    # alg2 = np.where(
-    #     (~working_last_period & ~no_child & married),
-    #     regelsatz_single + regelsatz_partner + regelsatz_child + housing_single + housing_addtion,
-    #     alg2,
-    # )
     # Yes child:
     alg2 = np.where(
         (~working_last_period & ~no_child & ~married),
