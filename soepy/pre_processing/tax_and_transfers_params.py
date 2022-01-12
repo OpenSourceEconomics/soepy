@@ -89,3 +89,10 @@ def process_ssc(model_dict):
         ]
     )
     return model_dict
+
+
+def process_elterngeld(model_dict):
+    """THis function scales the elterngeld from montly to weekly values."""
+    model_dict["TAXES_TRANSFERS"]["elterngeld_min"] /= M_FACTOR
+    model_dict["TAXES_TRANSFERS"]["elterngeld_max"] /= M_FACTOR
+    return model_dict

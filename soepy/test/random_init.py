@@ -100,6 +100,9 @@ def random_init(constr=None):
     model_spec_init_dict["TAXES_TRANSFERS"]["regelsatz_partner"] = 82
     model_spec_init_dict["TAXES_TRANSFERS"]["regelsatz_child"] = 59
     model_spec_init_dict["TAXES_TRANSFERS"]["motherhood_replacement"] = 0.67
+    model_spec_init_dict["TAXES_TRANSFERS"]["elterngeld_min"] = 300
+    model_spec_init_dict["TAXES_TRANSFERS"]["elterngeld_max"] = 1800
+
     model_spec_init_dict["TAXES_TRANSFERS"]["addition_child_single"] = 33
     model_spec_init_dict["TAXES_TRANSFERS"]["housing_single"] = 77.5
     model_spec_init_dict["TAXES_TRANSFERS"]["housing_addtion"] = 15
@@ -466,6 +469,9 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["TAXES_TRANSFERS"]["motherhood_replacement"] = init_dict_flat[
         "motherhood_replacement"
     ]
+    init_dict["TAXES_TRANSFERS"]["elterngeld_min"] = init_dict_flat["elterngeld_min"]
+    init_dict["TAXES_TRANSFERS"]["elterngeld_max"] = init_dict_flat["elterngeld_max"]
+
     init_dict["TAXES_TRANSFERS"]["addition_child_single"] = init_dict_flat[
         "addition_child_single"
     ]

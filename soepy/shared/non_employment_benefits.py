@@ -45,6 +45,8 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
         newborn_child,
         prox_net_wage_systematic,
         model_spec.motherhood_replacement,
+        model_spec.elterngeld_min,
+        model_spec.elterngeld_max,
     )
 
     return non_employment_benefits
@@ -87,19 +89,21 @@ def calculate_elterngeld(
     newborn_child,
     prox_net_wage_systematic,
     motherhood_replacement,
+    elterngeld_min,
+    elterngeld_max,
 ):
     """This implements the 2007 elterngeld regime."""
     elterngeld = np.where(
         (working_ft_last_period & newborn_child),
         (motherhood_replacement * prox_net_wage_systematic * HOURS[2]).clip(
-            min=300, max=1800
+            min=elterngeld_min, max=elterngeld_max
         ),
         0.00,
     )
     elterngeld = np.where(
         (working_pt_last_period & newborn_child),
         (motherhood_replacement * prox_net_wage_systematic * HOURS[1]).clip(
-            min=300, max=1800
+            min=elterngeld_min, max=elterngeld_max
         ),
         elterngeld,
     )

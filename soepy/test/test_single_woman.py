@@ -122,7 +122,7 @@ def input_data():
             calculated_df, model_spec_init_dict["CONSTANTS"]["delta"]
         )
 
-    out["regression_disc_sum"] = -0.16584720838990802
+    out["regression_disc_sum"] = -0.16381167785110312
     return out
 
 
