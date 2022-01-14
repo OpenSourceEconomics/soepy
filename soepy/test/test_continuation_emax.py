@@ -51,10 +51,6 @@ def input_data():
     exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
     exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
-    # Type 1 never wants to work!
-    random_model_params_df.loc[("hetrg_unobs", "theta_p1"), "value"] *= 100
-    random_model_params_df.loc[("hetrg_unobs", "theta_f1"), "value"] *= 100
-
     model_params_df, model_params = read_model_params_init(random_model_params_df)
     model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 
@@ -135,10 +131,7 @@ def test_emaxs_married(input_data):
     ) = input_data
     # Get states from period 1, type 1, married and no kid
     states_selected = states[
-        (states[:, 0] == 1)
-        & (states[:, 5] == 1)
-        & (states[:, 6] == -1)
-        & (states[:, 7] == 1)
+        (states[:, 0] == 1) & (states[:, 6] == -1) & (states[:, 7] == 1)
     ]
     rand_state = np.random.randint(0, states_selected.shape[0])
     (
@@ -152,7 +145,6 @@ def test_emaxs_married(input_data):
         partner_ind,
     ) = states_selected[rand_state, :]
     assert period == 1
-    assert type_1 == 1
     assert age_young_child == -1
     assert partner_ind == 1
     ind_state = indexer[
@@ -201,12 +193,9 @@ def test_emaxs_single(input_data):
         prob_partner_arrival,
         child_age_update_rule,
     ) = input_data
-    # Get states from period 1, type 1, married and no kid
+    # Get states from period 1, type 1, not married and no kid
     states_selected = states[
-        (states[:, 0] == 1)
-        & (states[:, 5] == 1)
-        & (states[:, 6] == -1)
-        & (states[:, 7] == 0)
+        (states[:, 0] == 1) & (states[:, 6] == -1) & (states[:, 7] == 0)
     ]
     rand_state = np.random.randint(0, states_selected.shape[0])
     (
@@ -220,7 +209,6 @@ def test_emaxs_single(input_data):
         partner_ind,
     ) = states_selected[rand_state, :]
     assert period == 1
-    assert type_1 == 1
     assert age_young_child == -1
     assert partner_ind == 0
     ind_state = indexer[
@@ -269,12 +257,9 @@ def test_emaxs_single_with_kid(input_data):
         prob_partner_arrival,
         child_age_update_rule,
     ) = input_data
-    # Get states from period 1, type 1, married and no kid
+    # Get states from period 1, type 1, married and kids
     states_selected = states[
-        (states[:, 0] == 1)
-        & (states[:, 5] == 1)
-        & (states[:, 6] != -1)
-        & (states[:, 7] == 0)
+        (states[:, 0] == 1) & (states[:, 6] != -1) & (states[:, 7] == 0)
     ]
     rand_state = np.random.randint(0, states_selected.shape[0])
     (
@@ -288,7 +273,6 @@ def test_emaxs_single_with_kid(input_data):
         partner_ind,
     ) = states_selected[rand_state, :]
     assert period == 1
-    assert type_1 == 1
     assert age_young_child != -1
     assert partner_ind == 0
     ind_state = indexer[
