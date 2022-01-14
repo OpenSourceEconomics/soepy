@@ -169,10 +169,13 @@ def test_emaxs(input_data):
     ]
     p_child_arr = prob_child[period, educ_level]
     p_part_sep = prob_partner_separation[period, educ_level]
-    weighted_sum = p_child_arr * p_part_sep * emax_cstate_sep_kid
-    +(1 - p_child_arr) * p_part_sep * emax_cstate_sep_no_kid + p_child_arr * (
-        1 - p_part_sep
-    ) * emax_cstate_mar_kid + (1 - p_child_arr) * (
-        1 - p_part_sep
-    ) * emax_cstate_mar_no_kid
+
+    w_child_single = p_child_arr * p_part_sep * emax_cstate_sep_kid
+    w_no_child_single = (1 - p_child_arr) * p_part_sep * emax_cstate_sep_no_kid
+    w_child_married = p_child_arr * (1 - p_part_sep) * emax_cstate_mar_kid
+    w_no_child_married = (1 - p_child_arr) * (1 - p_part_sep) * emax_cstate_mar_no_kid
+
+    weighted_sum = (
+        w_child_single + w_no_child_single + w_child_married + w_no_child_married
+    )
     np.testing.assert_equal(weighted_sum, emaxs[ind_state, 0])
