@@ -77,6 +77,11 @@ def test_male_wages(input_data):
     np.testing.assert_array_equal(states[:, 7] == 1, covariates[:, 1] > 0)
 
 
+def test_child_present(input_data):
+    covariates, states, non_employment_consumption_resources, model_spec = input_data
+    np.testing.assert_equal(covariates[:, 0] != 0, states[:, 6] > -1)
+
+
 def test_non_consumption_resources_married_no_newborn(input_data):
     covariates, states, non_employment_consumption_resources, model_spec = input_data
     married = states[:, 7] == 1
