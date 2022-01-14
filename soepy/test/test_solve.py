@@ -68,22 +68,74 @@ def input_data():
         prob_partner_separation,
         is_expected=False,
     )
-    return covariates, states, non_employment_consumption_resources, model_spec
+    return (
+        covariates,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    )
 
 
 def test_male_wages(input_data):
     """This tests that in all married states there are male wages"""
-    covariates, states, non_employment_consumption_resources, model_spec = input_data
+    (
+        covariates,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
     np.testing.assert_array_equal(states[:, 7] == 1, covariates[:, 1] > 0)
 
 
 def test_child_present(input_data):
-    covariates, states, non_employment_consumption_resources, model_spec = input_data
+    (
+        covariates,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
     np.testing.assert_equal(covariates[:, 0] != 0, states[:, 6] > -1)
 
 
+def test_child_update_rule_no_child(input_data):
+    (
+        covariates,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
+    no_child = states[:, 6] == -1
+    np.testing.assert_array_equal(
+        states[no_child][:, 6], child_age_update_rule[no_child]
+    )
+
+
+def test_child_update_rule_aging_child(input_data):
+    (
+        covariates,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
+    aging_child = (states[:, 6] > -1) & (states[:, 6] <= model_spec.child_age_max)
+    np.testing.assert_array_equal(
+        states[aging_child][:, 6] + 1, child_age_update_rule[aging_child]
+    )
+
+
 def test_non_consumption_resources_married_no_newborn(input_data):
-    covariates, states, non_employment_consumption_resources, model_spec = input_data
+    (
+        covariates,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
     married = states[:, 7] == 1
     working_ft_last_period = states[:, 2] == 2
     working_pt_last_period = states[:, 2] == 1
@@ -107,7 +159,13 @@ def test_non_consumption_resources_married_no_newborn(input_data):
 
 
 def test_work_choices(input_data):
-    covariates, states, non_employment_consumption_resources, model_spec = input_data
+    (
+        covariates,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
     working_ft_last_period = states[:, 2] == 2
     working_pt_last_period = states[:, 2] == 1
     working_last_period = working_ft_last_period | working_pt_last_period
