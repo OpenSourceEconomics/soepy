@@ -562,12 +562,12 @@ def get_continuation_values(
                 # Partner is present in the parent (current) state, i.e.,
                 # partner remains or is lost in the child (future) state
                 emaxs[k_parent, 0] = (  # non-employment
-                    1 - prob_partner_separation_period[educ_level]  # no partner
+                    prob_partner_separation_period[educ_level]  # no partner
                 ) * (
                     (1 - prob_child_period[educ_level]) * emaxs[k_0_00, 3]  # no child
                     + prob_child_period[educ_level] * emaxs[k_0_10, 3]  # child
                 ) + (
-                    prob_partner_separation_period[educ_level]  # partner
+                    (1 - prob_partner_separation_period[educ_level])  # partner
                     * (
                         (1 - prob_child_period[educ_level])
                         * emaxs[k_0_01, 3]  # no child
@@ -576,12 +576,12 @@ def get_continuation_values(
                 )
 
                 emaxs[k_parent, 1] = (  # part-time employment
-                    1 - prob_partner_separation_period[educ_level]  # no partner
+                    prob_partner_separation_period[educ_level]  # no partner
                 ) * (
                     (1 - prob_child_period[educ_level]) * emaxs[k_1_00, 3]  # no child
                     + prob_child_period[educ_level] * emaxs[k_1_10, 3]  # child
                 ) + (
-                    prob_partner_separation_period[educ_level]  # partner
+                    (1 - prob_partner_separation_period[educ_level])  # partner
                     * (
                         (1 - prob_child_period[educ_level])
                         * emaxs[k_1_01, 3]  # no child
@@ -590,12 +590,12 @@ def get_continuation_values(
                 )
 
                 emaxs[k_parent, 2] = (
-                    1 - prob_partner_separation_period[educ_level]
+                    prob_partner_separation_period[educ_level]
                 ) * (  # no partner
                     (1 - prob_child_period[educ_level]) * emaxs[k_2_00, 3]  # no child
                     + prob_child_period[educ_level] * emaxs[k_2_10, 3]  # child
                 ) + (
-                    prob_partner_separation_period[educ_level]  # partner
+                    (1 - prob_partner_separation_period[educ_level])  # partner
                     * (
                         (1 - prob_child_period[educ_level])
                         * emaxs[k_2_01, 3]  # no child
@@ -654,18 +654,18 @@ def get_continuation_values(
                 # Partner is present in the parent (current) state, i.e.,
                 # partner remains or is lost in the child (future) state
                 emaxs[k_parent, 0] = (
-                    (1 - prob_partner_separation_period[educ_level]) * emaxs[k_0_00, 3]
-                    + prob_partner_separation_period[educ_level]  # no partner
+                    (prob_partner_separation_period[educ_level]) * emaxs[k_0_00, 3]
+                    + (1 - prob_partner_separation_period[educ_level])  # no partner
                     * emaxs[k_0_01, 3]
                 )  # partner
                 emaxs[k_parent, 1] = (
-                    (1 - prob_partner_separation_period[educ_level]) * emaxs[k_1_00, 3]
-                    + prob_partner_separation_period[educ_level]  # no partner
+                    (prob_partner_separation_period[educ_level]) * emaxs[k_1_00, 3]
+                    + (1 - prob_partner_separation_period[educ_level])  # no partner
                     * emaxs[k_1_01, 3]
                 )  # partner
                 emaxs[k_parent, 2] = (
-                    (1 - prob_partner_separation_period[educ_level]) * emaxs[k_2_00, 3]
-                    + prob_partner_separation_period[educ_level]  # no partner
+                    (prob_partner_separation_period[educ_level]) * emaxs[k_2_00, 3]
+                    + (1 - prob_partner_separation_period[educ_level])  # no partner
                     * emaxs[k_2_01, 3]
                 )  # partner
 

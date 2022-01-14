@@ -8,7 +8,6 @@ from soepy.exogenous_processes.partner import gen_prob_partner_arrival
 from soepy.exogenous_processes.partner import gen_prob_partner_separation
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.pre_processing.tax_and_transfers_params import Y_FACTOR
 from soepy.shared.shared_auxiliary import calculate_net_income
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.solve_python import pyth_solve
@@ -69,7 +68,6 @@ def input_data():
         prob_partner_separation,
         is_expected=False,
     )
-
     return covariates, states, non_employment_consumption_resources, model_spec
 
 
@@ -79,7 +77,7 @@ def test_male_wages(input_data):
     np.testing.assert_array_equal(states[:, 7] == 1, covariates[:, 1] > 0)
 
 
-def test_non_consumption_resources(input_data):
+def test_non_consumption_resources_married_no_newborn(input_data):
     covariates, states, non_employment_consumption_resources, model_spec = input_data
     married = states[:, 7] == 1
     working_ft_last_period = states[:, 2] == 2
