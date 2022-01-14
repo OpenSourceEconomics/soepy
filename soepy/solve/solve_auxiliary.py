@@ -329,9 +329,6 @@ def pyth_backward_induction(
         # States
         states_period = states[state_period_cond]
 
-        # Info on updated age of child
-        child_age_update_rule_period = child_age_update_rule[state_period_cond]
-
         # Probability that a child arrives
         prob_child_period = prob_child[period]
 
@@ -366,7 +363,7 @@ def pyth_backward_induction(
                 states_period,
                 indexer,
                 emaxs,
-                child_age_update_rule_period,
+                child_age_update_rule,
                 prob_child_period,
                 prob_partner_arrival_period,
                 prob_partner_separation_period,
@@ -407,7 +404,7 @@ def get_continuation_values(
     states_subset,
     indexer,
     emaxs,
-    child_age_update_rule_period,
+    child_age_update_rule,
     prob_child_period,
     prob_partner_arrival_period,
     prob_partner_separation_period,
@@ -465,7 +462,7 @@ def get_continuation_values(
             exp_p,
             exp_f,
             type_,
-            child_age_update_rule_period[i],
+            child_age_update_rule[k_parent],
             0,  # No partner
         ]
 
@@ -476,7 +473,7 @@ def get_continuation_values(
             exp_p,
             exp_f,
             type_,
-            child_age_update_rule_period[i],
+            child_age_update_rule[k_parent],
             1,  # Partner
         ]
 
@@ -488,7 +485,7 @@ def get_continuation_values(
             exp_p + 1,
             exp_f,
             type_,
-            child_age_update_rule_period[i],
+            child_age_update_rule[k_parent],
             0,  # No partner
         ]
 
@@ -499,7 +496,7 @@ def get_continuation_values(
             exp_p + 1,
             exp_f,
             type_,
-            child_age_update_rule_period[i],
+            child_age_update_rule[k_parent],
             1,  # Partner
         ]
 
@@ -511,7 +508,7 @@ def get_continuation_values(
             exp_p,
             exp_f + 1,
             type_,
-            child_age_update_rule_period[i],
+            child_age_update_rule[k_parent],
             0,  # No partner
         ]
 
@@ -522,7 +519,7 @@ def get_continuation_values(
             exp_p,
             exp_f + 1,
             type_,
-            child_age_update_rule_period[i],
+            child_age_update_rule[k_parent],
             1,  # Partner
         ]
 

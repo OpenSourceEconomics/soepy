@@ -118,11 +118,21 @@ def input_data():
         indexer,
         prob_child,
         prob_partner_separation,
+        prob_partner_arrival,
+        child_age_update_rule,
     )
 
 
-def test_emaxs(input_data):
-    (emaxs, states, indexer, prob_child, prob_partner_separation,) = input_data
+def test_emaxs_married(input_data):
+    (
+        emaxs,
+        states,
+        indexer,
+        prob_child,
+        prob_partner_separation,
+        prob_partner_arrival,
+        child_age_update_rule,
+    ) = input_data
     # Get states from period 1, type 1, married and no kid
     states_selected = states[
         (states[:, 0] == 1)
@@ -179,3 +189,164 @@ def test_emaxs(input_data):
         w_child_single + w_no_child_single + w_child_married + w_no_child_married
     )
     np.testing.assert_equal(weighted_sum, emaxs[ind_state, 0])
+
+
+def test_emaxs_single(input_data):
+    (
+        emaxs,
+        states,
+        indexer,
+        prob_child,
+        prob_partner_separation,
+        prob_partner_arrival,
+        child_age_update_rule,
+    ) = input_data
+    # Get states from period 1, type 1, married and no kid
+    states_selected = states[
+        (states[:, 0] == 1)
+        & (states[:, 5] == 1)
+        & (states[:, 6] == -1)
+        & (states[:, 7] == 0)
+    ]
+    rand_state = np.random.randint(0, states_selected.shape[0])
+    (
+        period,
+        educ_level,
+        lagged_choice,
+        exp_pt,
+        exp_ft,
+        type_1,
+        age_young_child,
+        partner_ind,
+    ) = states_selected[rand_state, :]
+    assert period == 1
+    assert type_1 == 1
+    assert age_young_child == -1
+    assert partner_ind == 0
+    ind_state = indexer[
+        period,
+        educ_level,
+        lagged_choice,
+        exp_pt,
+        exp_ft,
+        type_1,
+        age_young_child,
+        partner_ind,
+    ]
+    emax_cstate_sep_no_kid = emaxs[
+        indexer[period + 1, educ_level, 0, exp_pt, exp_ft, type_1, -1, 0], 3
+    ]
+    emax_cstate_sep_kid = emaxs[
+        indexer[period + 1, educ_level, 0, exp_pt, exp_ft, type_1, 0, 0], 3
+    ]
+    emax_cstate_mar_kid = emaxs[
+        indexer[period + 1, educ_level, 0, exp_pt, exp_ft, type_1, 0, 1], 3
+    ]
+    emax_cstate_mar_no_kid = emaxs[
+        indexer[period + 1, educ_level, 0, exp_pt, exp_ft, type_1, -1, 1], 3
+    ]
+    p_child_arr = prob_child[period, educ_level]
+    p_part_arriv = prob_partner_arrival[period, educ_level]
+
+    w_child_single = p_child_arr * (1 - p_part_arriv) * emax_cstate_sep_kid
+    w_no_child_single = (1 - p_child_arr) * (1 - p_part_arriv) * emax_cstate_sep_no_kid
+    w_child_married = p_child_arr * p_part_arriv * emax_cstate_mar_kid
+    w_no_child_married = (1 - p_child_arr) * p_part_arriv * emax_cstate_mar_no_kid
+
+    weighted_sum = (
+        w_child_single + w_no_child_single + w_child_married + w_no_child_married
+    )
+    np.testing.assert_equal(weighted_sum, emaxs[ind_state, 0])
+
+
+def test_emaxs_single_with_kid(input_data):
+    (
+        emaxs,
+        states,
+        indexer,
+        prob_child,
+        prob_partner_separation,
+        prob_partner_arrival,
+        child_age_update_rule,
+    ) = input_data
+    # Get states from period 1, type 1, married and no kid
+    states_selected = states[
+        (states[:, 0] == 1)
+        & (states[:, 5] == 1)
+        & (states[:, 6] != -1)
+        & (states[:, 7] == 0)
+    ]
+    rand_state = np.random.randint(0, states_selected.shape[0])
+    (
+        period,
+        educ_level,
+        lagged_choice,
+        exp_pt,
+        exp_ft,
+        type_1,
+        age_young_child,
+        partner_ind,
+    ) = states_selected[rand_state, :]
+    assert period == 1
+    assert type_1 == 1
+    assert age_young_child != -1
+    assert partner_ind == 0
+    ind_state = indexer[
+        period,
+        educ_level,
+        lagged_choice,
+        exp_pt,
+        exp_ft,
+        type_1,
+        age_young_child,
+        partner_ind,
+    ]
+
+    emax_cstate_sep_no_kid_arr = emaxs[
+        indexer[
+            period + 1,
+            educ_level,
+            0,
+            exp_pt,
+            exp_ft,
+            type_1,
+            child_age_update_rule[ind_state],
+            0,
+        ],
+        3,
+    ]
+    emax_cstate_mar_no_kid_arr = emaxs[
+        indexer[
+            period + 1,
+            educ_level,
+            0,
+            exp_pt,
+            exp_ft,
+            type_1,
+            child_age_update_rule[ind_state],
+            1,
+        ],
+        3,
+    ]
+
+    emax_cstate_sep_kid = emaxs[
+        indexer[period + 1, educ_level, 0, exp_pt, exp_ft, type_1, 0, 0], 3
+    ]
+    emax_cstate_mar_kid = emaxs[
+        indexer[period + 1, educ_level, 0, exp_pt, exp_ft, type_1, 0, 1], 3
+    ]
+
+    p_child_arr = prob_child[period, educ_level]
+    p_part_arriv = prob_partner_arrival[period, educ_level]
+
+    w_child_single = p_child_arr * (1 - p_part_arriv) * emax_cstate_sep_kid
+    w_no_child_single = (
+        (1 - p_child_arr) * (1 - p_part_arriv) * emax_cstate_sep_no_kid_arr
+    )
+    w_child_married = p_child_arr * p_part_arriv * emax_cstate_mar_kid
+    w_no_child_married = (1 - p_child_arr) * p_part_arriv * emax_cstate_mar_no_kid_arr
+
+    weighted_sum = (
+        w_child_single + w_no_child_single + w_child_married + w_no_child_married
+    )
+    np.testing.assert_almost_equal(weighted_sum, emaxs[ind_state, 0], decimal=20)
