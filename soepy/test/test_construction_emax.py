@@ -15,8 +15,8 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
-from soepy.solve.solve_auxiliary import pyth_backward_induction
-from soepy.solve.solve_auxiliary import pyth_create_state_space
+from soepy.solve.create_state_space import pyth_create_state_space
+from soepy.solve.solve_python import pyth_backward_induction
 
 
 @pytest.fixture(scope="module")
@@ -52,8 +52,8 @@ def input_data():
     exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
     # Type 1 never wants to work!
-    random_model_params_df.loc[("hetrg_unobs", "theta_p1"), "value"] *= 100
-    random_model_params_df.loc[("hetrg_unobs", "theta_f1"), "value"] *= 100
+    random_model_params_df.loc[("hetrg_unobs", "theta_p1"), "value"] *= -50
+    random_model_params_df.loc[("hetrg_unobs", "theta_f1"), "value"] *= -50
 
     model_params_df, model_params = read_model_params_init(random_model_params_df)
     model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
@@ -121,6 +121,7 @@ def input_data():
         indexer,
         covariates,
         non_employment_consumption_resources,
+        non_consumption_utilities,
     )
 
 
@@ -133,9 +134,10 @@ def states_tested(input_data):
         indexer,
         covariates,
         non_employment_consumption_resources,
+        non_consumption_utilities,
     ) = input_data
     # Get states from type 1
-    states_selected = states[(states[:, 5] == 1)]
+    states_selected = states[(states[:, 5] == 1) & (states[:, 0] == 2)]
     rand_states = np.random.randint(0, states_selected.shape[0], size=100)
     return rand_states
 
@@ -148,9 +150,11 @@ def test_construct_emax(input_data, states_tested):
         indexer,
         covariates,
         non_employment_consumption_resources,
+        non_consumption_utilities,
     ) = input_data
     # Get states from type 1
-    states_selected = states[(states[:, 5] == 1)]
+    states_selected = states[(states[:, 5] == 1) & (states[:, 0] == 2)]
+
     for test_state in states_tested:
 
         (
@@ -176,6 +180,8 @@ def test_construct_emax(input_data, states_tested):
             partner_ind,
         ]
         equ_scale = covariates[ind_state, 2]
-        non_employ_resource = (
-            non_employment_consumption_resources[ind_state] / equ_scale
-        )
+        non_employ_cons = non_employment_consumption_resources[ind_state] / equ_scale
+        mu = model_spec.mu
+        consumption_utility = non_employ_cons ** mu / mu
+        value_func = consumption_utility + model_spec.delta * emaxs[ind_state, 0]
+        np.testing.assert_equal(value_func, emaxs[ind_state, 3])

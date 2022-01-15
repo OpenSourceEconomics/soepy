@@ -17,7 +17,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.simulate.simulate_auxiliary import pyth_simulate
 from soepy.simulate.simulate_python import simulate
-from soepy.solve.solve_auxiliary import pyth_create_state_space
+from soepy.solve.create_state_space import pyth_create_state_space
 from soepy.solve.solve_python import pyth_solve
 from soepy.test.random_init import init_dict_flat_to_init_dict
 from soepy.test.random_init import namedtuple_to_dict

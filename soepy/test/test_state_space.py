@@ -3,7 +3,7 @@ import collections
 import numpy as np
 import pytest
 
-from soepy.solve.solve_auxiliary import pyth_create_state_space
+from soepy.solve.create_state_space import pyth_create_state_space
 
 
 @pytest.fixture(scope="module")

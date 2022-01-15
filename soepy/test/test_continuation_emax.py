@@ -15,8 +15,8 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
-from soepy.solve.solve_auxiliary import pyth_backward_induction
-from soepy.solve.solve_auxiliary import pyth_create_state_space
+from soepy.solve.create_state_space import pyth_create_state_space
+from soepy.solve.solve_python import pyth_backward_induction
 
 
 @pytest.fixture(scope="module")
@@ -333,4 +333,4 @@ def test_emaxs_single_with_kid(input_data):
     weighted_sum = (
         w_child_single + w_no_child_single + w_child_married + w_no_child_married
     )
-    np.testing.assert_almost_equal(weighted_sum, emaxs[ind_state, 0], decimal=20)
+    np.testing.assert_equal(weighted_sum, emaxs[ind_state, 0])
