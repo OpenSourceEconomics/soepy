@@ -1,8 +1,13 @@
 import collections
-
-import yaml
+import copy
 
 import pandas as pd
+import yaml
+
+from soepy.pre_processing.tax_and_transfers_params import create_child_care_costs
+from soepy.pre_processing.tax_and_transfers_params import process_elterngeld
+from soepy.pre_processing.tax_and_transfers_params import process_ssc
+from soepy.pre_processing.tax_and_transfers_params import process_tax_system
 
 
 def read_model_params_init(model_params_init_file_name):
@@ -143,22 +148,22 @@ def dict_to_namedtuple_params(dictionary):
     return collections.namedtuple("model_parameters", dictionary.keys())(**dictionary)
 
 
-def read_model_spec_init(model_spec_init, model_params):
+def read_model_spec_init(model_spec_init_dict, model_params):
     """Reads in the model specification from yaml file.
     This initialisation component contains only information
     that does not change during estimation. Inputs are made
     available as named tuple."""
 
     # Import yaml initialization file as dictionary init_dict
-    if isinstance(model_spec_init, str):
-        with open(model_spec_init) as y:
-            model_spec_init_dict = yaml.load(y, Loader=yaml.Loader)
+    if isinstance(model_spec_init_dict, str):
+        with open(model_spec_init_dict) as y:
+            model_spec_init = yaml.load(y, Loader=yaml.Loader)
     else:
-        model_spec_init_dict = model_spec_init
+        model_spec_init = copy.deepcopy(model_spec_init_dict)
 
-    model_spec_dict = expand_model_spec_dict(model_spec_init_dict, model_params)
+    model_spec_dict_expand = expand_model_spec_dict(model_spec_init, model_params)
 
-    model_spec_dict_flat = flatten_model_spec_dict(model_spec_dict)
+    model_spec_dict_flat = flatten_model_spec_dict(model_spec_dict_expand)
 
     model_spec = dict_to_namedtuple_spec(model_spec_dict_flat)
 
@@ -180,6 +185,11 @@ def expand_model_spec_dict(model_spec_init_dict, model_params_df):
         "num_educ_levels": num_educ_levels,
         "num_types": num_types,
     }
+
+    model_spec_init_dict = process_tax_system(model_spec_init_dict)
+    model_spec_init_dict = create_child_care_costs(model_spec_init_dict)
+    model_spec_init_dict = process_ssc(model_spec_init_dict)
+    model_spec_init_dict = process_elterngeld(model_spec_init_dict)
 
     return model_spec_init_dict
 

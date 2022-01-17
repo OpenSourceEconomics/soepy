@@ -3,9 +3,9 @@ import os
 
 import pytest
 
+import soepy.soepy_config
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import PACKAGE_DIR
-import soepy.soepy_config
 
 
 def test():

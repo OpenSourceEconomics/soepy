@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """This script allows us to run some more extensive testing for our pull requests."""
-import subprocess
 import os
+import subprocess
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,14 +19,14 @@ if os.getenv("TRAVIS") is not None:
     num_tests_regression = 1
 
 print(" \n ... running robustness tests")
-cmd = "python run.py {:}".format(num_minutes_robustness)
+cmd = f"python run.py {num_minutes_robustness}"
 subprocess.check_call(cmd, shell=True, cwd=SCRIPT_DIR + "/robustness")
 
 print(" \n ... running regression tests")
 cmd = ""
-cmd += "python run.py --request check --num {:}".format(num_tests_regression)
+cmd += f"python run.py --request check --num {num_tests_regression}"
 subprocess.check_call(cmd, shell=True, cwd=SCRIPT_DIR + "/regression")
 
 print(" \n ... running property tests")
-cmd = "python run.py --request run --hours {:}".format(num_hours_property)
+cmd = f"python run.py --request run --hours {num_hours_property}"
 subprocess.check_call(cmd, shell=True, cwd=SCRIPT_DIR + "/property")

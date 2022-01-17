@@ -1,11 +1,11 @@
 """This module contains some auxiliary functions for the property testing."""
-from datetime import datetime
-import importlib
 import argparse
+import glob
+import importlib
+import os
 import shutil
 import string
-import glob
-import os
+from datetime import datetime
 
 import numpy as np
 

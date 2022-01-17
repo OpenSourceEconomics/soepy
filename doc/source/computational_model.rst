@@ -55,25 +55,25 @@ in one another. As a result we arrive at a single term that represents :math:`u(
 First we substitute the experience term in the first line of the wage equation,
 
 .. math::
-	
+
 	ln \hspace{2pt} w_t^m = \gamma_{s,0}  + \gamma_{s,1} ln[(e_P \hspace{2pt} \cdot \hspace{2pt} g_{sP} + e_F)(1-\delta_s) + 1] + \xi_t,
 
 and take the exponent of both sides of the equation:
 
 .. math::
-	
+
 	w_t^m = exp \hspace{2pt} {\gamma_{s,0}} \hspace{2pt} \cdot \hspace{2pt} exp\{\gamma_{s,1} \hspace{2pt} \cdot \hspace{2pt} ln[(e_P*g_{sP} + e_F)(1-\delta_s) + 1]\} \hspace{2pt} \cdot \hspace{2pt} exp \hspace{2pt} {\xi_t},
 
 We then substitute the wage in the budget constraint:
 
 .. math::
-	
+
 	c_t = h_t \hspace{2pt} \cdot \hspace{2pt} \{exp \hspace{2pt} {\gamma_{s,0}} \hspace{2pt} \cdot \hspace{2pt} exp\{\gamma_{s,1} \hspace{2pt} \cdot \hspace{2pt} ln[(e_P*g_{sP} + e_F)(1-\delta_s) + 1]\} \hspace{2pt} \cdot \hspace{2pt} exp \hspace{2pt} {\xi_t}\},
 
 And we arrive at the final expression by substituting consumption in the utility function:
 
 .. math::
-	
+
 	\begin{split}
 	u(c_t, l_t; \theta) & = \frac{h_t^\mu \hspace{2pt} \cdot \hspace{2pt} \{exp \hspace{2pt} {\gamma_{s,0}} \hspace{2pt} \cdot \hspace{2pt} exp\{\gamma_{s,1} \hspace{2pt} \cdot \hspace{2pt} ln[(e_P*g_{sP} + e_F)(1-\delta_s) + 1]\} \hspace{2pt} \cdot \hspace{2pt} exp \hspace{2pt} {\xi_t}\}^\mu } \hspace{2pt} \\
 	& \cdot \hspace{2pt} \hspace{2pt} exp
@@ -223,4 +223,3 @@ Furthermore, we plan to include model features that go beyond the application in
 
 * beliefs in the female wage equation
 * labor market frictions
-

@@ -1,22 +1,21 @@
 #!/usr/bin/env python
 """The test provides the basic capabilities to run numerous property tests."""
-from datetime import timedelta
-from datetime import datetime
 import functools
-import traceback
-import shutil
-import random
 import os
+import random
+import shutil
+import traceback
+from datetime import datetime
+from datetime import timedelta
 
 import numpy as np
-
-from property_auxiliary import distribute_command_line_arguments
-from property_auxiliary import process_command_line_arguments
-from property_auxiliary import get_random_string
-from property_auxiliary import run_property_test
-from property_auxiliary import print_rslt_ext
 from property_auxiliary import collect_tests
+from property_auxiliary import distribute_command_line_arguments
 from property_auxiliary import finish
+from property_auxiliary import get_random_string
+from property_auxiliary import print_rslt_ext
+from property_auxiliary import process_command_line_arguments
+from property_auxiliary import run_property_test
 
 
 def choose_module(inp_dict):

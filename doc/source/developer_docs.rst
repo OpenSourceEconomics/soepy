@@ -72,7 +72,7 @@ Let us briefly discuss the dimension of the mapping_state_index array. Each dime
 Let us briefly discuss the dimention of the states_all array:
 
 * the 1st dimension is determined by the number of periods in our model
-* the 2nd dimension is related to the maximum number of state space points ever feasible / possibly reachable in one of the periods. 
+* the 2nd dimension is related to the maximum number of state space points ever feasible / possibly reachable in one of the periods.
 * the 3rd dimension is equal to the number of remaining state space components (except period number) that we want to record: educ_years + educ_min, choice_lagged, exp_p, exp_f
 
 We note that we set the size of dimension to equal to the highest possible number of state space points ever reachable in a period. This number is calculated as the maximum number of combinantions of the state space componenents given no restrictions.
@@ -91,7 +91,7 @@ Finally, we briefly repeat what has been recorded in one of the main function ou
 * choice_lagged: 0, 1, 2 corresponding to N, P, and F
 * exp_p: part-time experience that can range from 0 to 9
 * exp_f: full-time experience that can range from 0 to 9
- 
+
 Note: There is a difference to respy here. In respy, the loop in experience is one iteration longer, goes to num_periods + 1 instead of to num_periods.
 
 
@@ -116,7 +116,7 @@ The array periods_emax contains the highest value function value among the choic
 
 Code content
 """"""""""""
-The individuals in our model solve their optimization problem by making a labor supply choice in every period. They choose the option that is associated with the highest value function. The value function for each of the 3 alternatives is the sum of the current period flow utility of choosing alternative j and a continuation value. The continuation value is, in turn, next period's value function given an optimal choice in the future. 
+The individuals in our model solve their optimization problem by making a labor supply choice in every period. They choose the option that is associated with the highest value function. The value function for each of the 3 alternatives is the sum of the current period flow utility of choosing alternative j and a continuation value. The continuation value is, in turn, next period's value function given an optimal choice in the future.
 
 The flow utility includes the current period wage shock, which the individual becomes aware of in the begining of the period and includes in her calculations. To obtain an estimate of the continuation value the individual has to integrate out the distribution of the future shocks. In the model implementation, we perform numerical integration via a Monte Carlo simulation.
 
@@ -157,13 +157,12 @@ First, we need to genrate draws of the error term distribution. We note that thi
 
 Next, we need to simulate a sample of initial conditions. In this example, we need to assing a value for the years of education to every agent whose life-cycle we want to simulate.
 
-Finally, we loop forward through all agents and all periods to generate agent's experiences in the model and record these in a data frame. 
+Finally, we loop forward through all agents and all periods to generate agent's experiences in the model and record these in a data frame.
 
-We note that the sumulation procedure uses a slightly modified verion of the construct covariates function than the backward iteration procedure. During backward iteration, the education level is determined for all possible years of education depending on which state space point has currently been reached by the loop. During simulation, the education level needs to be determined according the simulated initial condition for the individual currently reached by the loop. We further note that the simulation procedure does need all subfunctions related to the calculation of the instantaneous utility, but it does not need the construction of the expected maximum (construct_emax) as a subfunction. The model's solution has already been computed in the backward iteration procedure. During simulation, we can access the relevant continuation value recorded in the periods_emax array given the current period number and state space components determined by the agent's experiences so far.  
+We note that the sumulation procedure uses a slightly modified verion of the construct covariates function than the backward iteration procedure. During backward iteration, the education level is determined for all possible years of education depending on which state space point has currently been reached by the loop. During simulation, the education level needs to be determined according the simulated initial condition for the individual currently reached by the loop. We further note that the simulation procedure does need all subfunctions related to the calculation of the instantaneous utility, but it does not need the construction of the expected maximum (construct_emax) as a subfunction. The model's solution has already been computed in the backward iteration procedure. During simulation, we can access the relevant continuation value recorded in the periods_emax array given the current period number and state space components determined by the agent's experiences so far.
 
 Possibles To Do's to consider:
 * rearrange init file as to possibly avoid selecting parameters using big numbers
 * consider wether it is more efficient to generate education level information at some other stage of the core (currently in loop over state space components as part of the construct covariates function)
 * add mean as function input to error term generation
 * move hours definition from calculate_consumption_utilties in shared_auxiliary to the initialization file.
-

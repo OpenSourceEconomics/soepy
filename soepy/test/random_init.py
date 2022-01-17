@@ -52,7 +52,7 @@ def random_init(constr=None):
     if "NUM_DRAWS_EMAX" in constr.keys():
         num_draws_emax = constr["NUM_DRAWS_EMAX"]
     else:
-        num_draws_emax = np.random.randint(400, 600)
+        num_draws_emax = np.random.randint(600, 800)
 
     if "CHILD_AGE_INIT_MAX" in constr.keys():
         child_age_init_max = constr["CHILD_AGE_INIT_MAX"]
@@ -100,22 +100,26 @@ def random_init(constr=None):
     model_spec_init_dict["TAXES_TRANSFERS"]["regelsatz_partner"] = 82
     model_spec_init_dict["TAXES_TRANSFERS"]["regelsatz_child"] = 59
     model_spec_init_dict["TAXES_TRANSFERS"]["motherhood_replacement"] = 0.67
+    model_spec_init_dict["TAXES_TRANSFERS"]["elterngeld_min"] = 300
+    model_spec_init_dict["TAXES_TRANSFERS"]["elterngeld_max"] = 1800
+
     model_spec_init_dict["TAXES_TRANSFERS"]["addition_child_single"] = 33
-    model_spec_init_dict["TAXES_TRANSFERS"]["housing"] = 62
-    model_spec_init_dict["TAXES_TRANSFERS"]["deductions"] = [
-        0.085,
-        0.0975,
-        0.0325,
-        1411.00,
-        445.00,
+    model_spec_init_dict["TAXES_TRANSFERS"]["housing_single"] = 77.5
+    model_spec_init_dict["TAXES_TRANSFERS"]["housing_addtion"] = 15
+
+    model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"] = {}
+    model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["under_3"] = [
+        219,
+        381,
     ]
-    model_spec_init_dict["TAXES_TRANSFERS"]["income_tax"] = [
-        163.00,
-        1001.00,
-        0.14,
-        0.42,
-        0.055,
+    model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["3_to_6"] = [
+        122,
+        128,
     ]
+    model_spec_init_dict["TAXES_TRANSFERS"]["ssc_rate"] = 0.215
+    model_spec_init_dict["TAXES_TRANSFERS"]["ssc_cap"] = 63_000
+    model_spec_init_dict["TAXES_TRANSFERS"]["tax_year"] = 2007
+    model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = True
 
     model_spec_init_dict["INITIAL_CONDITIONS"][
         "educ_shares_file_name"
@@ -221,12 +225,12 @@ def random_init(constr=None):
     for i in range(1, num_types):
         # Draw random parameters
         (
-            model_params_init_dict["theta_p" + "{}".format(i)],
-            model_params_init_dict["theta_f" + "{}".format(i)],
+            model_params_init_dict["theta_p" + f"{i}"],
+            model_params_init_dict["theta_f" + f"{i}"],
         ) = np.random.uniform(-0.1, -1, 2).tolist()
 
         # Assign shares
-        model_params_init_dict["share_" + "{}".format(i)] = shares[i]
+        model_params_init_dict["share_" + f"{i}"] = shares[i]
 
     (
         model_params_init_dict["sigma_1"],
@@ -296,9 +300,7 @@ def random_init(constr=None):
         index_levels = [[0, 1, 2], list(range(-1, child_age_init_max + 1))]
     index = pd.MultiIndex.from_product(index_levels, names=["educ_level", "child_age"])
     exog_child_age_shares = pd.DataFrame(
-        child_age_shares.tolist(),
-        index=index,
-        columns=["child_age_shares"],
+        child_age_shares.tolist(), index=index, columns=["child_age_shares"],
     )
     exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
 
@@ -328,9 +330,7 @@ def random_init(constr=None):
             index_levels, names=["educ_level", label + "_exp"]
         )
         exog_exper_shares = pd.DataFrame(
-            exper_shares.tolist(),
-            index=index,
-            columns=["exper_shares"],
+            exper_shares.tolist(), index=index, columns=["exper_shares"],
         )
         exog_exper_shares.to_pickle("test.soepy." + label + ".exp.shares.pkl")
         if label == "pt":
@@ -413,7 +413,7 @@ def print_dict(model_spec_init_dict, file_name="test"):
     for key_ in order:
         ordered_dict[key_] = model_spec_init_dict[key_]
 
-    with open("{}.soepy.yml".format(file_name), "w") as outfile:
+    with open(f"{file_name}.soepy.yml", "w") as outfile:
         yaml.dump(ordered_dict, outfile, explicit_start=True, indent=4)
 
 
@@ -469,12 +469,19 @@ def init_dict_flat_to_init_dict(init_dict_flat):
     init_dict["TAXES_TRANSFERS"]["motherhood_replacement"] = init_dict_flat[
         "motherhood_replacement"
     ]
+    init_dict["TAXES_TRANSFERS"]["elterngeld_min"] = init_dict_flat["elterngeld_min"]
+    init_dict["TAXES_TRANSFERS"]["elterngeld_max"] = init_dict_flat["elterngeld_max"]
+
     init_dict["TAXES_TRANSFERS"]["addition_child_single"] = init_dict_flat[
         "addition_child_single"
     ]
-    init_dict["TAXES_TRANSFERS"]["housing"] = init_dict_flat["housing"]
-    init_dict["TAXES_TRANSFERS"]["deductions"] = init_dict_flat["deductions"]
-    init_dict["TAXES_TRANSFERS"]["income_tax"] = init_dict_flat["income_tax"]
+    init_dict["TAXES_TRANSFERS"]["housing_single"] = init_dict_flat["housing_single"]
+    init_dict["TAXES_TRANSFERS"]["housing_addtion"] = init_dict_flat["housing_addtion"]
+
+    init_dict["TAXES_TRANSFERS"]["ssc_rate"] = init_dict_flat["ssc_rate"]
+    init_dict["TAXES_TRANSFERS"]["ssc_cap"] = init_dict_flat["ssc_cap"]
+
+    init_dict["TAXES_TRANSFERS"]["tax_year"] = init_dict_flat["tax_year"]
 
     init_dict["INITIAL_CONDITIONS"] = dict()
     init_dict["INITIAL_CONDITIONS"]["child_age_init_max"] = init_dict_flat[

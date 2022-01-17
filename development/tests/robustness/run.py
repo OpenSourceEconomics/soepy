@@ -3,9 +3,9 @@
 import datetime
 import sys
 
+from development.tests.auxiliary.auxiliary import cleanup
 from soepy.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
-from development.tests.auxiliary.auxiliary import cleanup
 
 
 def func(maxrt):

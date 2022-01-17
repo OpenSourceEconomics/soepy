@@ -63,7 +63,4 @@ def gen_prob_partner_present_vector(model_spec):
     Shares differ by the level of education of the individuals."""
 
     partner_shares = pd.read_pickle(model_spec.partner_shares_file_name)
-
-    prob_partner_present = list(partner_shares["partner_shares"])
-
-    return prob_partner_present
+    return partner_shares.to_numpy().flatten()

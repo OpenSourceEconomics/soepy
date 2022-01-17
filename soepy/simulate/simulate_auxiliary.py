@@ -1,14 +1,12 @@
 import numpy as np
 import pandas as pd
 
-from soepy.shared.shared_constants import (
-    HOURS,
-    DATA_LABLES_SIM,
-    DATA_FORMATS_SIM,
-)
-from soepy.shared.shared_auxiliary import draw_disturbances
-from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import calculate_employment_consumption_resources
+from soepy.shared.shared_auxiliary import calculate_utility_components
+from soepy.shared.shared_auxiliary import draw_disturbances
+from soepy.shared.shared_constants import DATA_FORMATS_SIM
+from soepy.shared.shared_constants import DATA_LABLES_SIM
+from soepy.shared.shared_constants import HOURS
 
 
 def pyth_simulate(
@@ -61,6 +59,7 @@ def pyth_simulate(
             n=1,
             p=prob_partner_present[educ_level],
         )
+
         # Part-time experience
         initial_pt_exp[initial_educ_level == educ_level] = np.random.choice(
             list(range(0, model_spec.init_exp_max + 1)),
@@ -109,6 +108,7 @@ def pyth_simulate(
         columns=DATA_LABLES_SIM[:9],
     ).astype(np.int)
 
+    tax_splitting = model_spec.tax_splitting
     data = []
 
     # Loop over all periods
@@ -138,9 +138,9 @@ def pyth_simulate(
         # Extract corresponding utilities
         current_log_wage_systematic = log_wage_systematic[idx]
         current_non_consumption_utilities = non_consumption_utilities[idx]
-        current_non_employment_consumption_resources = (
-            non_employment_consumption_resources[idx]
-        )
+        current_non_employment_consumption_resources = non_employment_consumption_resources[
+            idx
+        ]
         current_equivalence_scale = covariates[idx][:, 2]
         current_male_wages = covariates[idx][:, 1]
         current_child_benefits = covariates[idx][:, 3]
@@ -150,39 +150,37 @@ def pyth_simulate(
             + draws_sim[period, current_states[:, 0]]
         )
 
-        current_hh_income = HOURS[1:] * current_wages + current_male_wages.reshape(
+        current_female_income = HOURS[1:] * current_wages
+
+        current_employment_consumption_resources = calculate_employment_consumption_resources(
+            deductions_spec,
+            income_tax_spec,
+            current_female_income,
+            current_male_wages,
+            tax_splitting,
+        )
+
+        current_employment_consumption_resources += current_child_benefits.reshape(
             -1, 1
         )
 
-        current_hh_income = current_hh_income.reshape(
-            2 * current_wages.shape[0], order="F"
+        child_care_costs = get_child_care_cost_for_choice(
+            covariates[idx][:, 0].astype(float), model_spec.child_care_costs
         )
 
-        current_employment_consumption_resources = (
-            calculate_employment_consumption_resources(
-                deductions_spec,
-                income_tax_spec,
-                current_hh_income,
-            )
-        )
+        current_employment_consumption_resources -= child_care_costs
 
-        current_employment_consumption_resources = (
-            current_employment_consumption_resources.reshape(
-                current_wages.shape[0], 2, order="F"
-            )
-            + current_child_benefits.reshape(-1, 1)
-        )
-
+        # Join alternative consumption resources. Ensure positivity.
         current_consumption_resources = np.hstack(
             (
                 current_non_employment_consumption_resources.reshape(-1, 1),
                 current_employment_consumption_resources,
             )
-        )
+        ).clip(min=np.finfo(float).eps)
 
         # Calculate total values for all choices
         flow_utilities = (
-            ((current_consumption_resources) / current_equivalence_scale.reshape(-1, 1))
+            (current_consumption_resources / current_equivalence_scale.reshape(-1, 1))
             ** model_spec.mu
             / model_spec.mu
             * current_non_consumption_utilities
@@ -258,6 +256,7 @@ def pyth_simulate(
                 flow_utilities,
                 continuation_values,
                 value_functions,
+                current_male_wages,
             )
         )
 
@@ -289,3 +288,14 @@ def pyth_simulate(
     ]
 
     return dataset
+
+
+def get_child_care_cost_for_choice(child_bins, child_care_costs):
+    child_bins[child_bins > 2] = 0
+    child_costs = np.zeros((child_bins.shape[0], 2))
+    for choice in range(2):
+        for age_bin in range(1, 3):
+            child_costs[child_bins == age_bin, choice] = child_care_costs[
+                age_bin, choice
+            ]
+    return child_costs

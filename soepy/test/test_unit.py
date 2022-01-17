@@ -1,27 +1,28 @@
 import collections
+import random
+from random import randint
+from random import randrange
 
 import numpy as np
 import pandas as pd
-import random
-from random import randrange, randint
 
-from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.pre_processing.model_processing import read_model_params_init
-from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
-from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
+from soepy.exogenous_processes.education import gen_prob_educ_level_vector
+from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_arrival
+from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 from soepy.exogenous_processes.partner import gen_prob_partner_separation
-from soepy.solve.solve_auxiliary import pyth_create_state_space
+from soepy.pre_processing.model_processing import read_model_params_init
+from soepy.pre_processing.model_processing import read_model_spec_init
+from soepy.simulate.simulate_auxiliary import pyth_simulate
 from soepy.simulate.simulate_python import simulate
+from soepy.solve.create_state_space import pyth_create_state_space
+from soepy.solve.solve_python import pyth_solve
+from soepy.test.random_init import init_dict_flat_to_init_dict
+from soepy.test.random_init import namedtuple_to_dict
 from soepy.test.random_init import random_init
 from soepy.test.random_init import read_init_file2
-from soepy.test.random_init import namedtuple_to_dict
-from soepy.test.random_init import init_dict_flat_to_init_dict
-from soepy.solve.solve_python import pyth_solve
-from soepy.simulate.simulate_auxiliary import pyth_simulate
 
 
 def test_unit_nan():
@@ -37,12 +38,10 @@ def test_unit_nan():
     df = simulate("test.soepy.pkl", "test.soepy.yml")
 
     np.testing.assert_equal(
-        df[df["Education_Level"] == 1]["Period"].min(),
-        constr["EDUC_YEARS"][1],
+        df[df["Education_Level"] == 1]["Period"].min(), constr["EDUC_YEARS"][1],
     )
     np.testing.assert_equal(
-        df[df["Education_Level"] == 2]["Period"].min(),
-        constr["EDUC_YEARS"][2],
+        df[df["Education_Level"] == 2]["Period"].min(), constr["EDUC_YEARS"][2],
     )
 
 
@@ -112,7 +111,6 @@ def test_unit_data_frame_shape():
             emaxs,
             child_age_update_rule,
             deductions_spec,
-            income_tax_spec,
         ) = pyth_solve(
             model_params,
             model_spec,
@@ -132,7 +130,7 @@ def test_unit_data_frame_shape():
             covariates,
             non_employment_consumption_resources,
             deductions_spec,
-            income_tax_spec,
+            model_spec.tax_params,
             child_age_update_rule,
             prob_educ_level,
             prob_child_age,
@@ -157,127 +155,6 @@ def test_unit_data_frame_shape():
         )
 
         np.testing.assert_array_equal(df.shape[0], shape)
-
-
-def test_unit_states_hard_code():
-    """This test ensures that the state space creation generates the correct admissible
-    state space points for the first 4 periods."""
-
-    model_spec = collections.namedtuple(
-        "model_spec",
-        "num_periods num_educ_levels num_types \
-         last_child_bearing_period, child_age_max \
-         educ_years child_age_init_max init_exp_max",
-    )
-    model_spec = model_spec(2, 3, 2, 24, 10, [0, 0, 0], 4, 2)
-
-    states, _ = pyth_create_state_space(model_spec)
-
-    states_shape_true = (2748, 8)
-
-    states_batch_1_true = [
-        [0, 0, 0, 0, 0, 0, -1, 0],
-        [0, 0, 0, 1, 0, 0, -1, 0],
-        [0, 0, 0, 2, 0, 0, -1, 0],
-        [0, 0, 0, 0, 1, 0, -1, 0],
-        [0, 0, 0, 1, 1, 0, -1, 0],
-        [0, 0, 0, 2, 1, 0, -1, 0],
-        [0, 0, 0, 0, 2, 0, -1, 0],
-        [0, 0, 0, 1, 2, 0, -1, 0],
-        [0, 0, 0, 2, 2, 0, -1, 0],
-        [0, 1, 0, 0, 0, 0, -1, 0],
-        [0, 1, 0, 1, 0, 0, -1, 0],
-        [0, 1, 0, 2, 0, 0, -1, 0],
-        [0, 1, 0, 0, 1, 0, -1, 0],
-        [0, 1, 0, 1, 1, 0, -1, 0],
-        [0, 1, 0, 2, 1, 0, -1, 0],
-        [0, 1, 0, 0, 2, 0, -1, 0],
-        [0, 1, 0, 1, 2, 0, -1, 0],
-        [0, 1, 0, 2, 2, 0, -1, 0],
-        [0, 2, 0, 0, 0, 0, -1, 0],
-        [0, 2, 0, 1, 0, 0, -1, 0],
-        [0, 2, 0, 2, 0, 0, -1, 0],
-        [0, 2, 0, 0, 1, 0, -1, 0],
-        [0, 2, 0, 1, 1, 0, -1, 0],
-        [0, 2, 0, 2, 1, 0, -1, 0],
-        [0, 2, 0, 0, 2, 0, -1, 0],
-        [0, 2, 0, 1, 2, 0, -1, 0],
-        [0, 2, 0, 2, 2, 0, -1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 2, 0, 0, 0, 0],
-    ]
-
-    states_batch_2_true = [
-        [1, 1, 2, 0, 3, 0, -1, 1],
-        [1, 1, 2, 1, 3, 0, -1, 1],
-        [1, 1, 2, 2, 3, 0, -1, 1],
-        [1, 2, 0, 0, 0, 0, -1, 1],
-        [1, 2, 0, 1, 0, 0, -1, 1],
-        [1, 2, 1, 1, 0, 0, -1, 1],
-        [1, 2, 0, 2, 0, 0, -1, 1],
-        [1, 2, 1, 2, 0, 0, -1, 1],
-        [1, 2, 1, 3, 0, 0, -1, 1],
-        [1, 2, 0, 0, 1, 0, -1, 1],
-        [1, 2, 2, 0, 1, 0, -1, 1],
-        [1, 2, 0, 1, 1, 0, -1, 1],
-        [1, 2, 1, 1, 1, 0, -1, 1],
-        [1, 2, 2, 1, 1, 0, -1, 1],
-        [1, 2, 1, 2, 1, 0, -1, 1],
-        [1, 2, 2, 2, 1, 0, -1, 1],
-        [1, 2, 1, 3, 1, 0, -1, 1],
-        [1, 2, 0, 0, 2, 0, -1, 1],
-        [1, 2, 2, 0, 2, 0, -1, 1],
-        [1, 2, 1, 1, 2, 0, -1, 1],
-        [1, 2, 2, 1, 2, 0, -1, 1],
-        [1, 2, 0, 2, 2, 0, -1, 1],
-        [1, 2, 1, 2, 2, 0, -1, 1],
-        [1, 2, 2, 2, 2, 0, -1, 1],
-        [1, 2, 1, 3, 2, 0, -1, 1],
-        [1, 2, 2, 0, 3, 0, -1, 1],
-        [1, 2, 2, 1, 3, 0, -1, 1],
-        [1, 2, 2, 2, 3, 0, -1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 1, 0, 0, 0, 1],
-    ]
-
-    states_batch_3_true = [
-        [1, 2, 1, 1, 0, 1, 2, 1],
-        [1, 2, 0, 2, 0, 1, 2, 1],
-        [1, 2, 1, 2, 0, 1, 2, 1],
-        [1, 2, 1, 3, 0, 1, 2, 1],
-        [1, 2, 0, 0, 1, 1, 2, 1],
-        [1, 2, 2, 0, 1, 1, 2, 1],
-        [1, 2, 0, 1, 1, 1, 2, 1],
-        [1, 2, 1, 1, 1, 1, 2, 1],
-        [1, 2, 2, 1, 1, 1, 2, 1],
-        [1, 2, 1, 2, 1, 1, 2, 1],
-        [1, 2, 2, 2, 1, 1, 2, 1],
-        [1, 2, 1, 3, 1, 1, 2, 1],
-        [1, 2, 0, 0, 2, 1, 2, 1],
-        [1, 2, 2, 0, 2, 1, 2, 1],
-        [1, 2, 1, 1, 2, 1, 2, 1],
-        [1, 2, 2, 1, 2, 1, 2, 1],
-        [1, 2, 0, 2, 2, 1, 2, 1],
-        [1, 2, 1, 2, 2, 1, 2, 1],
-        [1, 2, 2, 2, 2, 1, 2, 1],
-        [1, 2, 1, 3, 2, 1, 2, 1],
-        [1, 2, 2, 0, 3, 1, 2, 1],
-        [1, 2, 2, 1, 3, 1, 2, 1],
-        [1, 2, 2, 2, 3, 1, 2, 1],
-        [1, 0, 0, 0, 0, 1, 3, 1],
-        [1, 0, 0, 1, 0, 1, 3, 1],
-        [1, 0, 1, 1, 0, 1, 3, 1],
-        [1, 0, 0, 2, 0, 1, 3, 1],
-        [1, 0, 1, 2, 0, 1, 3, 1],
-        [1, 0, 1, 3, 0, 1, 3, 1],
-        [1, 0, 0, 0, 1, 1, 3, 1],
-    ]
-
-    np.testing.assert_array_equal(states_shape_true, states.shape)
-    np.testing.assert_array_equal(states_batch_1_true, states[0:30])
-    np.testing.assert_array_equal(states_batch_2_true, states[1220:1250])
-    np.testing.assert_array_equal(states_batch_3_true, states[2500:2530])
 
 
 def test_unit_childbearing_age():
@@ -352,7 +229,6 @@ def test_no_children_no_exp():
         emaxs,
         child_age_update_rule,
         deductions_spec,
-        income_tax_spec,
     ) = pyth_solve(
         model_params,
         model_spec,
@@ -372,7 +248,7 @@ def test_no_children_no_exp():
         covariates,
         non_employment_consumption_resources,
         deductions_spec,
-        income_tax_spec,
+        model_spec.tax_params,
         child_age_update_rule,
         prob_educ_level,
         prob_child_age,
@@ -434,7 +310,6 @@ def test_shares_according_to_initial_conditions():
         emaxs,
         child_age_update_rule,
         deductions_spec,
-        income_tax_spec,
     ) = pyth_solve(
         model_params,
         model_spec,
@@ -454,7 +329,7 @@ def test_shares_according_to_initial_conditions():
         covariates,
         non_employment_consumption_resources,
         deductions_spec,
-        income_tax_spec,
+        model_spec.tax_params,
         child_age_update_rule,
         prob_educ_level,
         prob_child_age,
@@ -540,7 +415,7 @@ def test_coef_educ_level_specificity():
     groups does not change."""
 
     constr = dict()
-    constr["AGENTS"] = 10000
+    constr["AGENTS"] = 100000
     constr["PERIODS"] = 10
 
     random_init(constr)
@@ -558,7 +433,7 @@ def test_coef_educ_level_specificity():
 
     data = []
 
-    for i in (model_params_base, model_params_changed):
+    for num_sim, i in enumerate([model_params_base, model_params_changed]):
 
         model_params_df, model_params = read_model_params_init(i)
         model_spec = read_model_spec_init("test.soepy.yml", model_params_df)
@@ -585,7 +460,6 @@ def test_coef_educ_level_specificity():
             emaxs,
             child_age_update_rule,
             deductions_spec,
-            income_tax_spec,
         ) = pyth_solve(
             model_params,
             model_spec,
@@ -594,7 +468,6 @@ def test_coef_educ_level_specificity():
             prob_partner_separation,
             is_expected=False,
         )
-
         # Simulate
         df = pyth_simulate(
             model_params,
@@ -605,7 +478,7 @@ def test_coef_educ_level_specificity():
             covariates,
             non_employment_consumption_resources,
             deductions_spec,
-            income_tax_spec,
+            model_spec.tax_params,
             child_age_update_rule,
             prob_educ_level,
             prob_child_age,
@@ -628,5 +501,12 @@ def test_coef_educ_level_specificity():
             continue
         data_base_educ_level = data_base[data_base["Education_Level"] == level]
         data_changed_educ_level = data_changed[data_changed["Education_Level"] == level]
+        true_list = [
+            col
+            for col in data_changed_educ_level.columns.values
+            if not pd.Series.equals(
+                data_base_educ_level[col], data_changed_educ_level[col]
+            )
+        ]
 
         pd.testing.assert_frame_equal(data_base_educ_level, data_changed_educ_level)

@@ -2,12 +2,13 @@
 """This module contains the process that generates our regression test battery."""
 import argparse
 import pickle
+
 import numpy as np
 
+from development.tests.auxiliary.auxiliary import cleanup
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.test.random_init import random_init
-from development.tests.auxiliary.auxiliary import cleanup
 
 
 def process_arguments(parser):
