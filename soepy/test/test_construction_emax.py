@@ -41,7 +41,7 @@ def input_data():
         expected_df_sim_func,
         expected_df_sim_sol,
     ) = tests[0]
-    model_spec_init_dict["SOLUTION"]["num_draws_emax"] = 500
+    model_spec_init_dict["SOLUTION"]["num_draws_emax"] = 1
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
     exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
@@ -185,5 +185,4 @@ def test_construct_emax(input_data, states_tested):
         mu = model_spec.mu
         consumption_utility = non_employ_cons ** mu / mu
         value_func = consumption_utility + model_spec.delta * emaxs[ind_state, 0]
-        # breakpoint()
-        np.testing.assert_almost_equal(value_func, emaxs[ind_state, 3])
+        np.testing.assert_equal(value_func, emaxs[ind_state, 3])
