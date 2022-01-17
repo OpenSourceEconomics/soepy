@@ -41,6 +41,7 @@ def input_data():
         expected_df_sim_func,
         expected_df_sim_sol,
     ) = tests[0]
+    model_spec_init_dict["SOLUTION"]["num_draws_emax"] = 500
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
     exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
@@ -137,7 +138,7 @@ def states_tested(input_data):
         non_consumption_utilities,
     ) = input_data
     # Get states from type 1
-    states_selected = states[(states[:, 5] == 1) & (states[:, 0] == 2)]
+    states_selected = states[(states[:, 5] == 1)]
     rand_states = np.random.randint(0, states_selected.shape[0], size=100)
     return rand_states
 
@@ -153,7 +154,7 @@ def test_construct_emax(input_data, states_tested):
         non_consumption_utilities,
     ) = input_data
     # Get states from type 1
-    states_selected = states[(states[:, 5] == 1) & (states[:, 0] == 2)]
+    states_selected = states[(states[:, 5] == 1)]
 
     for test_state in states_tested:
 
@@ -184,4 +185,5 @@ def test_construct_emax(input_data, states_tested):
         mu = model_spec.mu
         consumption_utility = non_employ_cons ** mu / mu
         value_func = consumption_utility + model_spec.delta * emaxs[ind_state, 0]
-        np.testing.assert_equal(value_func, emaxs[ind_state, 3])
+        # breakpoint()
+        np.testing.assert_almost_equal(value_func, emaxs[ind_state, 3])
