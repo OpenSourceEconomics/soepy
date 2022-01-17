@@ -122,7 +122,7 @@ def input_data():
             calculated_df, model_spec_init_dict["CONSTANTS"]["delta"]
         )
 
-    out["regression_disc_sum"] = -0.16381167785110312
+    out["regression_disc_sum"] = -0.163811677851
     return out
 
 
@@ -131,4 +131,6 @@ def test_single_woman(input_data):
 
 
 def test_single_woman_regression(input_data):
-    np.testing.assert_equal(input_data["splitted"], input_data["regression_disc_sum"])
+    np.testing.assert_almost_equal(
+        input_data["splitted"], input_data["regression_disc_sum"], decimal=12
+    )
