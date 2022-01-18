@@ -1,86 +1,54 @@
 ---
+GENERAL:
+    num_periods: 10
 CONSTANTS:
     delta: 0.98
     mu: -0.56
 EDUC:
-    educ_years:
-    - 0
-    - 0
-    - 0
-EXOG_PROC:
-    child_age_max: 15
-    child_info_file_name: exog_child_info.pkl
-    last_child_bearing_period: 24
-    partner_arrival_info_file_name: exog_partner_arrival_info.pkl
-    partner_cf_age: !!python/object/apply:numpy.core.multiarray.scalar
-    - &id001 !!python/object/apply:numpy.dtype
-        args:
-        - f8
-        - false
-        - true
-        state: !!python/tuple
-        - 3
-        - <
-        - null
-        - null
-        - null
-        - -1
-        - -1
-        - 0
-    - !!binary |
-        u+NequNCnz8=
-    partner_cf_age_sq: !!python/object/apply:numpy.core.multiarray.scalar
-    - *id001
-    - !!binary |
-        TV6uj5jqQ78=
-    partner_cf_const: !!python/object/apply:numpy.core.multiarray.scalar
-    - *id001
-    - !!binary |
-        d9oaEYxDBEA=
-    partner_cf_educ: !!python/object/apply:numpy.core.multiarray.scalar
-    - *id001
-    - !!binary |
-        3Iqz2NyHvj8=
-    partner_separation_info_file_name: exog_partner_separation_info.pkl
+    educ_years: [0, 0, 0]
 EXPERIENCE:
     exp_cap: 15
-GENERAL:
-    num_periods: 10
-INITIAL_CONDITIONS:
-    child_age_init_max: 4
-    child_age_shares_file_name: exog_child_age_shares.pkl
-    educ_shares_file_name: exog_educ_shares.pkl
-    ft_exp_shares_file_name: exog_ft_exp_shares.pkl
-    init_exp_max: 4
-    partner_shares_file_name: exog_partner_shares.pkl
-    pt_exp_shares_file_name: exog_pt_exp_shares.pkl
 SIMULATION:
-    num_agents_sim: 10000
     seed_sim: 102
+    num_agents_sim: 10000
 SOLUTION:
-    num_draws_emax: 500
     seed_emax: 635
+    num_draws_emax: 500
 TAXES_TRANSFERS:
-    addition_child_single: 33
-    alg1_replacement_child: 0.67
     alg1_replacement_no_child: 0.6
+    alg1_replacement_child: 0.67
     child_benefits: 43
-    child_care_costs:
-        3_to_6:
-        - 122
-        - 128
-        under_3:
-        - 219
-        - 381
-    elterngeld_max: 1800
-    elterngeld_min: 300
-    housing_addtion: 15
-    housing_single: 77.5
-    motherhood_replacement: 0.67
-    regelsatz_child: 59
-    regelsatz_partner: 82
     regelsatz_single: 91
-    ssc_cap: 63000
+    regelsatz_partner: 82
+    regelsatz_child: 59
+    motherhood_replacement: 0.67
+    elterngeld_min: 300
+    elterngeld_max: 1800
+    addition_child_single: 33
+    housing_single: 77.5
+    housing_addtion: 15
+    child_care_costs:
+        under_3: [219, 381]
+        3_to_6: [122, 128]
     ssc_rate: 0.215
-    tax_splitting: true
+    ssc_cap: 63000
     tax_year: 2007
+    tax_splitting: True
+INITIAL_CONDITIONS:
+    educ_shares_file_name: 'exog_educ_shares.pkl'
+    child_age_shares_file_name: 'exog_child_age_shares.pkl'
+    child_age_init_max: 4
+    partner_shares_file_name: 'exog_partner_shares.pkl'
+    ft_exp_shares_file_name: 'exog_ft_exp_shares.pkl'
+    pt_exp_shares_file_name: 'exog_pt_exp_shares.pkl'
+    init_exp_max: 4
+EXOG_PROC:
+    child_info_file_name: 'exog_child_info.pkl'
+    partner_arrival_info_file_name: 'exog_partner_arrival_info.pkl'
+    partner_separation_info_file_name: 'exog_partner_separation_info.pkl'
+    child_age_max: 15
+    last_child_bearing_period: 24
+    partner_cf_const: 2.532982
+    partner_cf_age: 0.0305286
+    partner_cf_age_sq: -0.0006078
+    partner_cf_educ: 0.1192606
