@@ -218,17 +218,32 @@ def pyth_backward_induction(
             pass
         else:
 
+            prob_partner_process = np.zeros(
+                shape=(prob_partner_arrival_period.shape[0], 2, 2), dtype=float
+            )
+            for educ_type in range(prob_partner_arrival_period.shape[0]):
+                prob_partner_process[educ_type, 0, 1] = prob_partner_arrival_period[
+                    educ_type
+                ]
+                prob_partner_process[educ_type, 0, 0] = (
+                    1 - prob_partner_arrival_period[educ_type]
+                )
+                prob_partner_process[educ_type, 1, 0] = prob_partner_separation_period[
+                    educ_type
+                ]
+                prob_partner_process[educ_type, 1, 1] = (
+                    1 - prob_partner_separation_period[educ_type]
+                )
+
             # Fill first block of elements in emaxs for the current period
             # corresponding to the continuation values
             emaxs = get_continuation_values(
-                model_spec,
                 states_period,
                 indexer,
                 emaxs,
                 child_age_update_rule,
                 prob_child_period,
-                prob_partner_arrival_period,
-                prob_partner_separation_period,
+                prob_partner_process,
             )
 
         # Extract current period information for current loop calculation

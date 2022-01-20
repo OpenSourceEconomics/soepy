@@ -19,7 +19,7 @@ from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.solve_python import pyth_solve
 
-CASES_TEST = random.sample(range(0, 100), 10)
+CASES_TEST = [0]
 
 
 @pytest.fixture(scope="module")

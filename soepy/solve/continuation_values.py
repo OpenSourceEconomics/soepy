@@ -3,14 +3,12 @@ import numba
 
 @numba.njit(nogil=True)
 def get_continuation_values(
-    model_spec,
     states_subset,
     indexer,
     emaxs,
     child_age_update_rule,
     prob_child_period,
-    prob_partner_arrival_period,
-    prob_partner_separation_period,
+    prob_partner_process,
 ):
     """Obtain continuation values for each of the choices at each state
     of the period currently reached by the parent loop.
@@ -127,165 +125,76 @@ def get_continuation_values(
         ]
 
         # Child possible, integrate out partner and child probability
-        if period <= model_spec.last_child_bearing_period:
+        k_0_10 = indexer[
+            period + 1, educ_level, 0, exp_p, exp_f, type_, 0, 0,  # No partner
+        ]
 
-            # Child arrives
-            # Choice: Non-employment
-            k_0_10 = indexer[
-                period + 1, educ_level, 0, exp_p, exp_f, type_, 0, 0,  # No partner
-            ]
+        k_0_11 = indexer[
+            period + 1, educ_level, 0, exp_p, exp_f, type_, 0, 1,  # Partner
+        ]
 
-            k_0_11 = indexer[
-                period + 1, educ_level, 0, exp_p, exp_f, type_, 0, 1,  # Partner
-            ]
+        # Choice: Part-time
+        k_1_10 = indexer[
+            period + 1, educ_level, 1, exp_p + 1, exp_f, type_, 0, 0,  # No partner
+        ]
 
-            # Choice: Part-time
-            k_1_10 = indexer[
-                period + 1, educ_level, 1, exp_p + 1, exp_f, type_, 0, 0,  # No partner
-            ]
+        k_1_11 = indexer[
+            period + 1, educ_level, 1, exp_p + 1, exp_f, type_, 0, 1,  # Partner
+        ]
 
-            k_1_11 = indexer[
-                period + 1, educ_level, 1, exp_p + 1, exp_f, type_, 0, 1,  # Partner
-            ]
+        # Choice: Full-time
+        k_2_10 = indexer[
+            period + 1, educ_level, 2, exp_p, exp_f + 1, type_, 0, 0,  # No partner
+        ]
 
-            # Choice: Full-time
-            k_2_10 = indexer[
-                period + 1, educ_level, 2, exp_p, exp_f + 1, type_, 0, 0,  # No partner
-            ]
+        k_2_11 = indexer[
+            period + 1, educ_level, 2, exp_p, exp_f + 1, type_, 0, 1,  # Partner
+        ]
 
-            k_2_11 = indexer[
-                period + 1, educ_level, 2, exp_p, exp_f + 1, type_, 0, 1,  # Partner
-            ]
+        emaxs[k_parent, 0] = weight_emax_with_child(
+            emax_01=emaxs[k_0_01, 3],
+            emax_00=emaxs[k_0_00, 3],
+            emax_10=emaxs[k_0_10, 3],
+            emax_11=emaxs[k_0_11, 3],
+            prob_kid=prob_child_period[educ_level],
+            prob_partner=prob_partner_process[educ_level, partner_indicator, :],
+        )
 
-            # Calculate E-Max
-            if partner_indicator == 1:
-                # Partner is present in the parent (current) state, i.e.,
-                # partner remains or is lost in the child (future) state
-                emaxs[k_parent, 0] = (  # non-employment
-                    prob_partner_separation_period[educ_level]  # no partner
-                ) * (
-                    (1 - prob_child_period[educ_level]) * emaxs[k_0_00, 3]  # no child
-                    + prob_child_period[educ_level] * emaxs[k_0_10, 3]  # child
-                ) + (
-                    (1 - prob_partner_separation_period[educ_level])  # partner
-                    * (
-                        (1 - prob_child_period[educ_level])
-                        * emaxs[k_0_01, 3]  # no child
-                        + prob_child_period[educ_level] * emaxs[k_0_11, 3]  # child
-                    )
-                )
-
-                emaxs[k_parent, 1] = (  # part-time employment
-                    prob_partner_separation_period[educ_level]  # no partner
-                ) * (
-                    (1 - prob_child_period[educ_level]) * emaxs[k_1_00, 3]  # no child
-                    + prob_child_period[educ_level] * emaxs[k_1_10, 3]  # child
-                ) + (
-                    (1 - prob_partner_separation_period[educ_level])  # partner
-                    * (
-                        (1 - prob_child_period[educ_level])
-                        * emaxs[k_1_01, 3]  # no child
-                        + prob_child_period[educ_level] * emaxs[k_1_11, 3]  # child
-                    )
-                )
-
-                emaxs[k_parent, 2] = (
-                    prob_partner_separation_period[educ_level]
-                ) * (  # no partner
-                    (1 - prob_child_period[educ_level]) * emaxs[k_2_00, 3]  # no child
-                    + prob_child_period[educ_level] * emaxs[k_2_10, 3]  # child
-                ) + (
-                    (1 - prob_partner_separation_period[educ_level])  # partner
-                    * (
-                        (1 - prob_child_period[educ_level])
-                        * emaxs[k_2_01, 3]  # no child
-                        + prob_child_period[educ_level] * emaxs[k_2_11, 3]  # child
-                    )
-                )
-
-            else:
-                # Partner is not present in the parent (current) state, i.e.,
-                # partner arrives or does not arrive in the child (future) state
-                emaxs[k_parent, 0] = (  # non-employment
-                    1 - prob_partner_arrival_period[educ_level]  # no partner
-                ) * (
-                    (1 - prob_child_period[educ_level]) * emaxs[k_0_00, 3]  # no child
-                    + prob_child_period[educ_level] * emaxs[k_0_10, 3]  # child
-                ) + (
-                    prob_partner_arrival_period[educ_level]  # partner
-                    * (
-                        (1 - prob_child_period[educ_level])
-                        * emaxs[k_0_01, 3]  # no child
-                        + prob_child_period[educ_level] * emaxs[k_0_11, 3]  # child
-                    )
-                )
-
-                emaxs[k_parent, 1] = (  # part-time employment
-                    1 - prob_partner_arrival_period[educ_level]  # no partner
-                ) * (
-                    (1 - prob_child_period[educ_level]) * emaxs[k_1_00, 3]  # no child
-                    + prob_child_period[educ_level] * emaxs[k_1_10, 3]  # child
-                ) + (
-                    prob_partner_arrival_period[educ_level]  # partner
-                    * (
-                        (1 - prob_child_period[educ_level])
-                        * emaxs[k_1_01, 3]  # no child
-                        + prob_child_period[educ_level] * emaxs[k_1_11, 3]  # child
-                    )
-                )
-
-                emaxs[k_parent, 2] = (
-                    1 - prob_partner_arrival_period[educ_level]
-                ) * (  # no partner
-                    (1 - prob_child_period[educ_level]) * emaxs[k_2_00, 3]  # no child
-                    + prob_child_period[educ_level] * emaxs[k_2_10, 3]  # child
-                ) + (
-                    prob_partner_arrival_period[educ_level]  # partner
-                    * (
-                        (1 - prob_child_period[educ_level])
-                        * emaxs[k_2_01, 3]  # no child
-                        + prob_child_period[educ_level] * emaxs[k_2_11, 3]  # child
-                    )
-                )
-
-        else:
-            # Child not possible
-            if partner_indicator == 1:
-                # Partner is present in the parent (current) state, i.e.,
-                # partner remains or is lost in the child (future) state
-                emaxs[k_parent, 0] = (
-                    (prob_partner_separation_period[educ_level]) * emaxs[k_0_00, 3]
-                    + (1 - prob_partner_separation_period[educ_level])  # no partner
-                    * emaxs[k_0_01, 3]
-                )  # partner
-                emaxs[k_parent, 1] = (
-                    (prob_partner_separation_period[educ_level]) * emaxs[k_1_00, 3]
-                    + (1 - prob_partner_separation_period[educ_level])  # no partner
-                    * emaxs[k_1_01, 3]
-                )  # partner
-                emaxs[k_parent, 2] = (
-                    (prob_partner_separation_period[educ_level]) * emaxs[k_2_00, 3]
-                    + (1 - prob_partner_separation_period[educ_level])  # no partner
-                    * emaxs[k_2_01, 3]
-                )  # partner
-
-            else:
-                # Partner is not present in the parent (current) state, i.e.,
-                # partner arrives or does not arrive in the child (future) state
-                emaxs[k_parent, 0] = (
-                    (1 - prob_partner_arrival_period[educ_level]) * emaxs[k_0_00, 3]
-                    + prob_partner_arrival_period[educ_level]  # no partner
-                    * emaxs[k_0_01, 3]
-                )  # partner
-                emaxs[k_parent, 1] = (
-                    (1 - prob_partner_arrival_period[educ_level]) * emaxs[k_1_00, 3]
-                    + prob_partner_arrival_period[educ_level]  # no partner
-                    * emaxs[k_1_01, 3]
-                )  # partner
-                emaxs[k_parent, 2] = (
-                    (1 - prob_partner_arrival_period[educ_level]) * emaxs[k_2_00, 3]
-                    + prob_partner_arrival_period[educ_level]  # no partner
-                    * emaxs[k_2_01, 3]
-                )  # partner
+        emaxs[k_parent, 1] = weight_emax_with_child(
+            emax_01=emaxs[k_1_01, 3],
+            emax_00=emaxs[k_1_00, 3],
+            emax_10=emaxs[k_1_10, 3],
+            emax_11=emaxs[k_1_11, 3],
+            prob_kid=prob_child_period[educ_level],
+            prob_partner=prob_partner_process[educ_level, partner_indicator, :],
+        )
+        emaxs[k_parent, 2] = weight_emax_with_child(
+            emax_01=emaxs[k_2_01, 3],
+            emax_00=emaxs[k_2_00, 3],
+            emax_10=emaxs[k_2_10, 3],
+            emax_11=emaxs[k_2_11, 3],
+            prob_kid=prob_child_period[educ_level],
+            prob_partner=prob_partner_process[educ_level, partner_indicator, :],
+        )
 
     return emaxs
+
+
+@numba.njit(nogil=True)
+def weight_emax_with_child(emax_01, emax_00, emax_10, emax_11, prob_kid, prob_partner):
+    weight_01 = (1 - prob_kid) * prob_partner[1] * emax_01
+    weight_00 = (1 - prob_kid) * prob_partner[0] * emax_00
+    weight_10 = prob_kid * prob_partner[0] * emax_10
+    weight_11 = prob_kid * prob_partner[1] * emax_11
+    return weight_11 + weight_10 + weight_00 + weight_01
+
+
+# def get_child_states(
+#         period,
+#         educ_level,
+#         child_lagged_choice,
+#         child_exp_p,
+#         child_exp_f,
+#         type_,
+#         child_age_update_rule):
+#     emax_01 =
