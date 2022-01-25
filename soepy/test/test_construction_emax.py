@@ -105,13 +105,11 @@ def input_data():
     emaxs = pyth_backward_induction(
         model_spec,
         states,
-        indexer,
         child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,
         covariates,
-        child_age_update_rule,
         prob_child,
         prob_partner,
         non_employment_consumption_resources,

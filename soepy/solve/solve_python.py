@@ -1,15 +1,12 @@
 import numpy as np
 
-from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.solve.covariates import construct_covariates
-from soepy.solve.create_state_space import create_child_indexes
-from soepy.solve.create_state_space import pyth_create_state_space
+from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.emaxs import construct_emax
 
 
@@ -58,18 +55,13 @@ def pyth_solve(
         Lat element contains the expected maximum value function of the state space point.
     """
 
-    # Create all necessary grids and objects related to the state space
-    states, indexer = pyth_create_state_space(model_spec)
-
-    # Create objects that depend only on the state space
-    covariates = construct_covariates(states, model_spec)
-
-    # Define child update rule
-    child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
-
-    child_state_indexes = create_child_indexes(
-        states, indexer, model_spec, child_age_update_rule
-    )
+    (
+        states,
+        indexer,
+        covariates,
+        child_age_update_rule,
+        child_state_indexes,
+    ) = create_state_space_objects(model_spec)
 
     attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
     draws_emax = draw_disturbances(
@@ -101,13 +93,11 @@ def pyth_solve(
     emaxs = pyth_backward_induction(
         model_spec,
         states,
-        indexer,
         child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,
         covariates,
-        child_age_update_rule,
         prob_child,
         prob_partner,
         non_employment_consumption_resources,
@@ -129,13 +119,11 @@ def pyth_solve(
 def pyth_backward_induction(
     model_spec,
     states,
-    indexer,
     child_state_indexes,
     log_wage_systematic,
     non_consumption_utilities,
     draws,
     covariates,
-    child_age_update_rule,
     prob_child,
     prob_partner,
     non_employment_consumption_resources,

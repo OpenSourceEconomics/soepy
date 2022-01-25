@@ -1,8 +1,29 @@
 import numba
 import numpy as np
 
+from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.shared.shared_constants import MISSING_INT
 from soepy.shared.shared_constants import NUM_CHOICES
+from soepy.solve.covariates import construct_covariates
+
+
+def create_state_space_objects(model_spec):
+    """This function creates all necessary objects of the state space. This function
+    could be refactored out of the solve functions. The objects do not change if
+    the parameters in the params dataframe are changed."""
+    # Create all necessary grids and objects related to the state space
+    states, indexer = pyth_create_state_space(model_spec)
+
+    # Create objects that depend only on the state space
+    covariates = construct_covariates(states, model_spec)
+
+    # Define child update rule
+    child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
+
+    child_state_indexes = create_child_indexes(
+        states, indexer, model_spec, child_age_update_rule
+    )
+    return states, indexer, covariates, child_age_update_rule, child_state_indexes
 
 
 @numba.jit(nopython=True)
