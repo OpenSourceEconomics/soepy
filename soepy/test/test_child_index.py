@@ -63,7 +63,7 @@ def input_data():
     # Create objects that depend only on the state space
     covariates = construct_covariates(states, model_spec)
 
-    child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
+    child_age_update_rule = define_child_age_update_rule(model_spec, states)
 
     child_state_indexes = create_child_indexes(
         states, indexer, model_spec, child_age_update_rule

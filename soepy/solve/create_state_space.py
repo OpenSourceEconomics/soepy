@@ -18,7 +18,7 @@ def create_state_space_objects(model_spec):
     covariates = construct_covariates(states, model_spec)
 
     # Define child update rule
-    child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
+    child_age_update_rule = define_child_age_update_rule(model_spec, states)
 
     child_state_indexes = create_child_indexes(
         states, indexer, model_spec, child_age_update_rule
