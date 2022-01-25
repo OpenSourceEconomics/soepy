@@ -14,6 +14,7 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
+from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
 from soepy.solve.solve_python import pyth_backward_induction
 
@@ -66,6 +67,12 @@ def input_data():
     # Create objects that depend only on the state space
     covariates = construct_covariates(states, model_spec)
 
+    child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
+
+    child_state_indexes = create_child_indexes(
+        states, indexer, model_spec, child_age_update_rule
+    )
+
     attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
     draws_emax = draw_disturbances(
         *[getattr(model_spec, attr) for attr in attrs_spec], model_params
@@ -92,8 +99,6 @@ def input_data():
         tax_splitting,
     )
 
-    child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
-
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
@@ -101,6 +106,7 @@ def input_data():
         model_spec,
         states,
         indexer,
+        child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,

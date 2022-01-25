@@ -125,6 +125,11 @@ def weight_emax(
         disutil_type,
         child_age_update_rule_current_state,
     )
+    return do_weighting_emax(emax_00, emax_11, emax_10, emax_01, prob_kid, prob_partner)
+
+
+@numba.njit(nogil=True)
+def do_weighting_emax(emax_00, emax_11, emax_10, emax_01, prob_kid, prob_partner):
     weight_01 = (1 - prob_kid) * prob_partner[1] * emax_01
     weight_00 = (1 - prob_kid) * prob_partner[0] * emax_00
     weight_10 = prob_kid * prob_partner[0] * emax_10
