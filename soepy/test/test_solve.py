@@ -9,6 +9,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.shared_auxiliary import calculate_net_income
 from soepy.soepy_config import TEST_RESOURCES_DIR
+from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
 
 
@@ -49,17 +50,24 @@ def input_data():
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner = gen_prob_partner(model_spec)
 
-    # Solve
     (
         states,
         indexer,
         covariates,
-        non_employment_consumption_resources,
-        emaxs,
         child_age_update_rule,
-        deductions_spec,
-    ) = pyth_solve(
-        model_params, model_spec, prob_child, prob_partner, is_expected=False,
+        child_state_indexes,
+    ) = create_state_space_objects(model_spec)
+
+    # Obtain model solution
+    non_employment_consumption_resources, emaxs = pyth_solve(
+        states,
+        covariates,
+        child_state_indexes,
+        model_params,
+        model_spec,
+        prob_child,
+        prob_partner,
+        False,
     )
     return (
         covariates,

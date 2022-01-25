@@ -16,6 +16,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.simulate.simulate_auxiliary import pyth_simulate
 from soepy.simulate.simulate_python import simulate
+from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.create_state_space import pyth_create_state_space
 from soepy.solve.solve_python import pyth_solve
 from soepy.test.random_init import init_dict_flat_to_init_dict
@@ -100,17 +101,24 @@ def test_unit_data_frame_shape():
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner = gen_prob_partner(model_spec)
 
-        # Solve
         (
             states,
             indexer,
             covariates,
-            non_employment_consumption_resources,
-            emaxs,
             child_age_update_rule,
-            deductions_spec,
-        ) = pyth_solve(
-            model_params, model_spec, prob_child, prob_partner, is_expected=False,
+            child_state_indexes,
+        ) = create_state_space_objects(model_spec)
+
+        # Obtain model solution
+        non_employment_consumption_resources, emaxs = pyth_solve(
+            states,
+            covariates,
+            child_state_indexes,
+            model_params,
+            model_spec,
+            prob_child,
+            prob_partner,
+            False,
         )
 
         # Simulate
@@ -122,7 +130,7 @@ def test_unit_data_frame_shape():
             emaxs,
             covariates,
             non_employment_consumption_resources,
-            deductions_spec,
+            model_spec.ssc_deductions,
             model_spec.tax_params,
             child_age_update_rule,
             prob_educ_level,
@@ -211,16 +219,25 @@ def test_no_children_no_exp():
     )
     prob_partner = gen_prob_partner(model_spec)
 
-    # Solve
     (
         states,
         indexer,
         covariates,
-        non_employment_consumption_resources,
-        emaxs,
         child_age_update_rule,
-        deductions_spec,
-    ) = pyth_solve(model_params, model_spec, prob_child, prob_partner, is_expected,)
+        child_state_indexes,
+    ) = create_state_space_objects(model_spec)
+
+    # Obtain model solution
+    non_employment_consumption_resources, emaxs = pyth_solve(
+        states,
+        covariates,
+        child_state_indexes,
+        model_params,
+        model_spec,
+        prob_child,
+        prob_partner,
+        False,
+    )
 
     # Simulate
     df = pyth_simulate(
@@ -231,7 +248,7 @@ def test_no_children_no_exp():
         emaxs,
         covariates,
         non_employment_consumption_resources,
-        deductions_spec,
+        model_spec.ssc_deductions,
         model_spec.tax_params,
         child_age_update_rule,
         prob_educ_level,
@@ -283,17 +300,24 @@ def test_shares_according_to_initial_conditions():
     prob_child = gen_prob_child_vector(model_spec)
     prob_partner = gen_prob_partner(model_spec)
 
-    # Solve
     (
         states,
         indexer,
         covariates,
-        non_employment_consumption_resources,
-        emaxs,
         child_age_update_rule,
-        deductions_spec,
-    ) = pyth_solve(
-        model_params, model_spec, prob_child, prob_partner, is_expected=False,
+        child_state_indexes,
+    ) = create_state_space_objects(model_spec)
+
+    # Obtain model solution
+    non_employment_consumption_resources, emaxs = pyth_solve(
+        states,
+        covariates,
+        child_state_indexes,
+        model_params,
+        model_spec,
+        prob_child,
+        prob_partner,
+        False,
     )
 
     # Simulate
@@ -305,7 +329,7 @@ def test_shares_according_to_initial_conditions():
         emaxs,
         covariates,
         non_employment_consumption_resources,
-        deductions_spec,
+        model_spec.ssc_deductions,
         model_spec.tax_params,
         child_age_update_rule,
         prob_educ_level,
@@ -426,17 +450,24 @@ def test_coef_educ_level_specificity():
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner = gen_prob_partner(model_spec)
 
-        # Solve
         (
             states,
             indexer,
             covariates,
-            non_employment_consumption_resources,
-            emaxs,
             child_age_update_rule,
-            deductions_spec,
-        ) = pyth_solve(
-            model_params, model_spec, prob_child, prob_partner, is_expected=False,
+            child_state_indexes,
+        ) = create_state_space_objects(model_spec)
+
+        # Obtain model solution
+        non_employment_consumption_resources, emaxs = pyth_solve(
+            states,
+            covariates,
+            child_state_indexes,
+            model_params,
+            model_spec,
+            prob_child,
+            prob_partner,
+            False,
         )
         # Simulate
         df = pyth_simulate(
@@ -447,7 +478,7 @@ def test_coef_educ_level_specificity():
             emaxs,
             covariates,
             non_employment_consumption_resources,
-            deductions_spec,
+            model_spec.ssc_deductions,
             model_spec.tax_params,
             child_age_update_rule,
             prob_educ_level,
