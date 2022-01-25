@@ -6,12 +6,18 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.emaxs import construct_emax
 
 
 def pyth_solve(
-    model_params, model_spec, prob_child, prob_partner, is_expected,
+    states,
+    covariates,
+    child_state_indexes,
+    model_params,
+    model_spec,
+    prob_child,
+    prob_partner,
+    is_expected,
 ):
     """Solve the model by backward induction.
 
@@ -55,14 +61,6 @@ def pyth_solve(
         Lat element contains the expected maximum value function of the state space point.
     """
 
-    (
-        states,
-        indexer,
-        covariates,
-        child_age_update_rule,
-        child_state_indexes,
-    ) = create_state_space_objects(model_spec)
-
     attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
     draws_emax = draw_disturbances(
         *[getattr(model_spec, attr) for attr in attrs_spec], model_params
@@ -76,11 +74,10 @@ def pyth_solve(
         model_spec, states, log_wage_systematic
     )
 
-    deductions_spec = np.array(model_spec.ssc_deductions)
     tax_splitting = model_spec.tax_splitting
 
     non_employment_consumption_resources = calculate_non_employment_consumption_resources(
-        deductions_spec,
+        model_spec.ssc_deductions,
         model_spec.tax_params,
         covariates[:, 1],
         non_employment_benefits,
@@ -101,18 +98,13 @@ def pyth_solve(
         prob_child,
         prob_partner,
         non_employment_consumption_resources,
-        deductions_spec,
+        model_spec.ssc_deductions,
     )
 
     # Return function output
     return (
-        states,
-        indexer,
-        covariates,
         non_employment_consumption_resources,
         emaxs,
-        child_age_update_rule,
-        deductions_spec,
     )
 
 
@@ -183,7 +175,7 @@ def pyth_backward_induction(
         # Probability that a child arrives
         prob_child_period = prob_child[period][states_period[:, 1]]
 
-        # Probability that a partner arrives
+        # Probability of partner states.
         prob_partner_period = prob_partner[period][
             states_period[:, 1], states_period[:, 7]
         ]
