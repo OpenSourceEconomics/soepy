@@ -263,7 +263,7 @@ def pyth_create_state_space(model_spec):
 
 @numba.njit(nogil=True)
 def create_child_indexes(states, indexer, model_spec, child_age_update_rule):
-    child_indexes = np.full((states.shape[0], 3, 2, 2), MISSING_INT)
+    child_indexes = np.full((states.shape[0], NUM_CHOICES, 2, 2), MISSING_INT)
 
     for num_state in range(states.shape[0]):
         (
@@ -322,7 +322,7 @@ def create_child_indexes(states, indexer, model_spec, child_age_update_rule):
                 disutil_type=disutil_type,
                 child_age_update_rule_current_state=child_age_update_rule[k_parent],
             )
-        return child_indexes
+    return child_indexes
 
 
 @numba.njit(nogil=True)

@@ -66,7 +66,7 @@ def get_continuation_values(
             child_exp_f=exp_f,
             disutil_type=type_,
             child_age_update_rule_current_state=child_age_update_rule[k_parent],
-            prob_kid=prob_child_period[educ_level],
+            prob_child=prob_child_period[educ_level],
             prob_partner=prob_partner_process[educ_level, partner_indicator, :],
         )
 
@@ -80,7 +80,7 @@ def get_continuation_values(
             child_exp_f=exp_f,
             disutil_type=type_,
             child_age_update_rule_current_state=child_age_update_rule[k_parent],
-            prob_kid=prob_child_period[educ_level],
+            prob_child=prob_child_period[educ_level],
             prob_partner=prob_partner_process[educ_level, partner_indicator, :],
         )
         emaxs[k_parent, 2] = weight_emax(
@@ -93,7 +93,7 @@ def get_continuation_values(
             child_exp_f=exp_f + 1,
             disutil_type=type_,
             child_age_update_rule_current_state=child_age_update_rule[k_parent],
-            prob_kid=prob_child_period[educ_level],
+            prob_child=prob_child_period[educ_level],
             prob_partner=prob_partner_process[educ_level, partner_indicator, :],
         )
 
@@ -111,43 +111,8 @@ def weight_emax(
     child_exp_f,
     disutil_type,
     child_age_update_rule_current_state,
-    prob_kid,
+    prob_child,
     prob_partner,
-):
-    emax_00, emax_11, emax_10, emax_01 = get_child_states(
-        cont_emaxs,
-        indexer,
-        next_period,
-        educ_level,
-        child_lagged_choice,
-        child_exp_p,
-        child_exp_f,
-        disutil_type,
-        child_age_update_rule_current_state,
-    )
-    return do_weighting_emax(emax_00, emax_11, emax_10, emax_01, prob_kid, prob_partner)
-
-
-@numba.njit(nogil=True)
-def do_weighting_emax(emax_00, emax_11, emax_10, emax_01, prob_kid, prob_partner):
-    weight_01 = (1 - prob_kid) * prob_partner[1] * emax_01
-    weight_00 = (1 - prob_kid) * prob_partner[0] * emax_00
-    weight_10 = prob_kid * prob_partner[0] * emax_10
-    weight_11 = prob_kid * prob_partner[1] * emax_11
-    return weight_11 + weight_10 + weight_00 + weight_01
-
-
-@numba.njit(nogil=True)
-def get_child_states(
-    cont_emaxs,
-    indexer,
-    next_period,
-    educ_level,
-    child_lagged_choice,
-    child_exp_p,
-    child_exp_f,
-    disutil_type,
-    child_age_update_rule_current_state,
 ):
     child_indexes = get_child_states_index(
         indexer,
@@ -159,8 +124,18 @@ def get_child_states(
         disutil_type,
         child_age_update_rule_current_state,
     )
+    return do_weighting_emax(cont_emaxs, child_indexes, prob_child, prob_partner)
+
+
+@numba.njit(nogil=True)
+def do_weighting_emax(cont_emaxs, child_indexes, prob_child, prob_partner):
     emax_01 = cont_emaxs[child_indexes[0, 1]]
     emax_00 = cont_emaxs[child_indexes[0, 0]]
     emax_11 = cont_emaxs[child_indexes[1, 1]]
     emax_10 = cont_emaxs[child_indexes[1, 0]]
-    return emax_00, emax_11, emax_10, emax_01
+
+    weight_01 = (1 - prob_child) * prob_partner[1] * emax_01
+    weight_00 = (1 - prob_child) * prob_partner[0] * emax_00
+    weight_10 = prob_child * prob_partner[0] * emax_10
+    weight_11 = prob_child * prob_partner[1] * emax_11
+    return weight_11 + weight_10 + weight_00 + weight_01
