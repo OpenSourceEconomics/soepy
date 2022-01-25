@@ -1,5 +1,7 @@
 import numba
 
+from soepy.solve.create_state_space import get_child_states_index
+
 
 @numba.njit(nogil=True)
 def get_continuation_values(
@@ -142,52 +144,18 @@ def get_child_states(
     disutil_type,
     child_age_update_rule_current_state,
 ):
-    emax_01 = cont_emaxs[
-        indexer[
-            next_period,
-            educ_level,
-            child_lagged_choice,
-            child_exp_p,
-            child_exp_f,
-            disutil_type,
-            child_age_update_rule_current_state,
-            1,
-        ]
-    ]
-    emax_00 = cont_emaxs[
-        indexer[
-            next_period,
-            educ_level,
-            child_lagged_choice,
-            child_exp_p,
-            child_exp_f,
-            disutil_type,
-            child_age_update_rule_current_state,
-            0,
-        ]
-    ]
-    emax_11 = cont_emaxs[
-        indexer[
-            next_period,
-            educ_level,
-            child_lagged_choice,
-            child_exp_p,
-            child_exp_f,
-            disutil_type,
-            0,
-            1,
-        ]
-    ]
-    emax_10 = cont_emaxs[
-        indexer[
-            next_period,
-            educ_level,
-            child_lagged_choice,
-            child_exp_p,
-            child_exp_f,
-            disutil_type,
-            0,
-            0,
-        ]
-    ]
+    child_indexes = get_child_states_index(
+        indexer,
+        next_period,
+        educ_level,
+        child_lagged_choice,
+        child_exp_p,
+        child_exp_f,
+        disutil_type,
+        child_age_update_rule_current_state,
+    )
+    emax_01 = cont_emaxs[child_indexes[0, 1]]
+    emax_00 = cont_emaxs[child_indexes[0, 0]]
+    emax_11 = cont_emaxs[child_indexes[1, 1]]
+    emax_10 = cont_emaxs[child_indexes[1, 0]]
     return emax_00, emax_11, emax_10, emax_01

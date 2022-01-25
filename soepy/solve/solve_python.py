@@ -9,6 +9,7 @@ from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.solve.continuation_values import get_continuation_values
 from soepy.solve.covariates import construct_covariates
+from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
 from soepy.solve.emaxs import construct_emax
 
@@ -64,6 +65,13 @@ def pyth_solve(
     # Create objects that depend only on the state space
     covariates = construct_covariates(states, model_spec)
 
+    # Define child update rule
+    child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
+
+    child_state_indexes = create_child_indexes(
+        states, indexer, model_spec, child_age_update_rule
+    )
+
     attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
     draws_emax = draw_disturbances(
         *[getattr(model_spec, attr) for attr in attrs_spec], model_params
@@ -88,8 +96,6 @@ def pyth_solve(
         tax_splitting,
     )
 
-    child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
-
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
@@ -97,6 +103,7 @@ def pyth_solve(
         model_spec,
         states,
         indexer,
+        child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,
@@ -124,6 +131,7 @@ def pyth_backward_induction(
     model_spec,
     states,
     indexer,
+    child_state_indexes,
     log_wage_systematic,
     non_consumption_utilities,
     draws,
@@ -207,7 +215,9 @@ def pyth_backward_induction(
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
         if period == model_spec.num_periods - 1:
-            pass
+            emaxs_child_states = np.zeros(
+                shape=(states_period.shape[0], 3, 2, 2), dtype=float
+            )
         else:
 
             # Fill first block of elements in emaxs for the current period
