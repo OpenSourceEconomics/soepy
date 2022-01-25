@@ -26,8 +26,7 @@ def pyth_simulate(
     prob_exp_ft,
     prob_exp_pt,
     prob_child,
-    prob_partner_arrival,
-    prob_partner_separation,
+    prob_partner,
     is_expected,
 ):
     """Simulate agent experiences."""
@@ -229,7 +228,7 @@ def pyth_simulate(
         partner_arrival_current_draw = np.random.binomial(
             size=current_states_no_partner.shape[0],
             n=1,
-            p=prob_partner_arrival[period, current_states_no_partner[:, 2]],
+            p=prob_partner[period, current_states_no_partner[:, 2], 0, 1],
         )
         new_partner_status[current_states[:, 8] == 0] = partner_arrival_current_draw
 
@@ -238,7 +237,7 @@ def pyth_simulate(
         partner_separation_current_draw = np.random.binomial(
             size=current_states_with_partner.shape[0],
             n=1,
-            p=prob_partner_separation[period, current_states_with_partner[:, 2]],
+            p=prob_partner[period, current_states_with_partner[:, 2], 1, 0],
         )
         new_partner_status[current_states[:, 8] == 1] = (
             current_partner_status[current_states[:, 8] == 1]

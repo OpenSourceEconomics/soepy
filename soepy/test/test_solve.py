@@ -4,8 +4,7 @@ import numpy as np
 import pytest
 
 from soepy.exogenous_processes.children import gen_prob_child_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_arrival
-from soepy.exogenous_processes.partner import gen_prob_partner_separation
+from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.shared_auxiliary import calculate_net_income
@@ -48,8 +47,7 @@ def input_data():
     model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 
     prob_child = gen_prob_child_vector(model_spec)
-    prob_partner_arrival = gen_prob_partner_arrival(model_spec)
-    prob_partner_separation = gen_prob_partner_separation(model_spec)
+    prob_partner = gen_prob_partner(model_spec)
 
     # Solve
     (
@@ -61,12 +59,7 @@ def input_data():
         child_age_update_rule,
         deductions_spec,
     ) = pyth_solve(
-        model_params,
-        model_spec,
-        prob_child,
-        prob_partner_arrival,
-        prob_partner_separation,
-        is_expected=False,
+        model_params, model_spec, prob_child, prob_partner, is_expected=False,
     )
     return (
         covariates,

@@ -5,8 +5,7 @@ import pytest
 
 from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.exogenous_processes.children import gen_prob_child_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_arrival
-from soepy.exogenous_processes.partner import gen_prob_partner_separation
+from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
@@ -55,8 +54,7 @@ def input_data():
     model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 
     prob_child = gen_prob_child_vector(model_spec)
-    prob_partner_arrival = gen_prob_partner_arrival(model_spec)
-    prob_partner_separation = gen_prob_partner_separation(model_spec)
+    prob_partner = gen_prob_partner(model_spec)
 
     states, indexer = pyth_create_state_space(model_spec)
 
@@ -102,8 +100,7 @@ def input_data():
         covariates,
         child_age_update_rule,
         prob_child,
-        prob_partner_arrival,
-        prob_partner_separation,
+        prob_partner,
         non_employment_consumption_resources,
         deductions_spec,
     )
@@ -113,8 +110,7 @@ def input_data():
         states,
         indexer,
         prob_child,
-        prob_partner_separation,
-        prob_partner_arrival,
+        prob_partner,
         child_age_update_rule,
     )
 
@@ -125,8 +121,7 @@ def test_emaxs_married(input_data):
         states,
         indexer,
         prob_child,
-        prob_partner_separation,
-        prob_partner_arrival,
+        prob_partner,
         child_age_update_rule,
     ) = input_data
     # Get states from period 1, type 1, married and no kid
@@ -170,7 +165,7 @@ def test_emaxs_married(input_data):
         indexer[period + 1, educ_level, 0, exp_pt, exp_ft, type_1, -1, 1], 3
     ]
     p_child_arr = prob_child[period, educ_level]
-    p_part_sep = prob_partner_separation[period, educ_level]
+    p_part_sep = prob_partner[period, educ_level, 1, 0]
 
     w_child_single = p_child_arr * p_part_sep * emax_cstate_sep_kid
     w_no_child_single = (1 - p_child_arr) * p_part_sep * emax_cstate_sep_no_kid
@@ -189,8 +184,7 @@ def test_emaxs_single(input_data):
         states,
         indexer,
         prob_child,
-        prob_partner_separation,
-        prob_partner_arrival,
+        prob_partner,
         child_age_update_rule,
     ) = input_data
     # Get states from period 1, type 1, not married and no kid
@@ -234,7 +228,7 @@ def test_emaxs_single(input_data):
         indexer[period + 1, educ_level, 0, exp_pt, exp_ft, type_1, -1, 1], 3
     ]
     p_child_arr = prob_child[period, educ_level]
-    p_part_arriv = prob_partner_arrival[period, educ_level]
+    p_part_arriv = prob_partner[period, educ_level, 0, 1]
 
     w_child_single = p_child_arr * (1 - p_part_arriv) * emax_cstate_sep_kid
     w_no_child_single = (1 - p_child_arr) * (1 - p_part_arriv) * emax_cstate_sep_no_kid
@@ -253,8 +247,7 @@ def test_emaxs_single_with_kid(input_data):
         states,
         indexer,
         prob_child,
-        prob_partner_separation,
-        prob_partner_arrival,
+        prob_partner,
         child_age_update_rule,
     ) = input_data
     # Get states from period 1, type 1, married and kids
@@ -321,7 +314,7 @@ def test_emaxs_single_with_kid(input_data):
     ]
 
     p_child_arr = prob_child[period, educ_level]
-    p_part_arriv = prob_partner_arrival[period, educ_level]
+    p_part_arriv = prob_partner[period, educ_level, 0, 1]
 
     w_child_single = p_child_arr * (1 - p_part_arriv) * emax_cstate_sep_kid
     w_no_child_single = (

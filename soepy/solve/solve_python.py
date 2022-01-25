@@ -14,12 +14,7 @@ from soepy.solve.emaxs import construct_emax
 
 
 def pyth_solve(
-    model_params,
-    model_spec,
-    prob_child,
-    prob_partner_arrival,
-    prob_partner_separation,
-    is_expected,
+    model_params, model_spec, prob_child, prob_partner, is_expected,
 ):
     """Solve the model by backward induction.
 
@@ -108,8 +103,7 @@ def pyth_solve(
         covariates,
         child_age_update_rule,
         prob_child,
-        prob_partner_arrival,
-        prob_partner_separation,
+        prob_partner,
         non_employment_consumption_resources,
         deductions_spec,
     )
@@ -136,8 +130,7 @@ def pyth_backward_induction(
     covariates,
     child_age_update_rule,
     prob_child,
-    prob_partner_arrival,
-    prob_partner_separation,
+    prob_partner,
     non_employment_consumption_resources,
     deductions_spec,
 ):
@@ -195,8 +188,7 @@ def pyth_backward_induction(
         prob_child_period = prob_child[period]
 
         # Probability that a partner arrives
-        prob_partner_arrival_period = prob_partner_arrival[period]
-        prob_partner_separation_period = prob_partner_separation[period]
+        prob_partner_period = prob_partner[period]
 
         # Period rewards
         log_wage_systematic_period = log_wage_systematic[state_period_cond]
@@ -218,23 +210,6 @@ def pyth_backward_induction(
             pass
         else:
 
-            prob_partner_process = np.zeros(
-                shape=(prob_partner_arrival_period.shape[0], 2, 2), dtype=float
-            )
-            for educ_type in range(prob_partner_arrival_period.shape[0]):
-                prob_partner_process[educ_type, 0, 1] = prob_partner_arrival_period[
-                    educ_type
-                ]
-                prob_partner_process[educ_type, 0, 0] = (
-                    1 - prob_partner_arrival_period[educ_type]
-                )
-                prob_partner_process[educ_type, 1, 0] = prob_partner_separation_period[
-                    educ_type
-                ]
-                prob_partner_process[educ_type, 1, 1] = (
-                    1 - prob_partner_separation_period[educ_type]
-                )
-
             # Fill first block of elements in emaxs for the current period
             # corresponding to the continuation values
             emaxs = get_continuation_values(
@@ -243,7 +218,7 @@ def pyth_backward_induction(
                 emaxs,
                 child_age_update_rule,
                 prob_child_period,
-                prob_partner_process,
+                prob_partner_period,
             )
 
         # Extract current period information for current loop calculation

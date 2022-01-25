@@ -8,9 +8,8 @@ from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_arrival
+from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_separation
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.simulate.simulate_auxiliary import pyth_simulate
@@ -72,9 +71,9 @@ def input_data():
             model_spec, model_spec.pt_exp_shares_file_name
         )
         prob_child = gen_prob_child_vector(model_spec)
-        prob_partner_arrival = gen_prob_partner_arrival(model_spec)
-        prob_partner_separation = gen_prob_partner_separation(model_spec)
-        prob_partner_arrival[:, :] = 0
+        prob_partner = gen_prob_partner(model_spec)
+        prob_partner[:, :, 0, 1] = 0
+        prob_partner[:, :, 0, 0] = 1
         prob_partner_present[:] = 0
 
         # Solve
@@ -87,12 +86,7 @@ def input_data():
             child_age_update_rule,
             deductions_spec,
         ) = pyth_solve(
-            model_params,
-            model_spec,
-            prob_child,
-            prob_partner_arrival,
-            prob_partner_separation,
-            is_expected=False,
+            model_params, model_spec, prob_child, prob_partner, is_expected=False,
         )
 
         # Simulate
@@ -113,14 +107,16 @@ def input_data():
             prob_exp_ft,
             prob_exp_pt,
             prob_child,
-            prob_partner_arrival,
-            prob_partner_separation,
+            prob_partner,
             is_expected=False,
         )
 
         out[name] = create_disc_sum_av_utility(
             calculated_df, model_spec_init_dict["CONSTANTS"]["delta"]
         )
+
+        # Check if really all are single at any time
+        assert (calculated_df["Male_Wages"] == 0).all()
 
     out["regression_disc_sum"] = -0.163811677851
     return out

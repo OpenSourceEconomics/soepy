@@ -8,9 +8,8 @@ from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_arrival
+from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_separation
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.simulate.simulate_auxiliary import pyth_simulate
@@ -67,8 +66,7 @@ def update_solve_objectes():
             model_spec, model_spec.pt_exp_shares_file_name
         )
         prob_child = gen_prob_child_vector(model_spec)
-        prob_partner_arrival = gen_prob_partner_arrival(model_spec)
-        prob_partner_separation = gen_prob_partner_separation(model_spec)
+        prob_partner = gen_prob_partner(model_spec)
 
         solve_dict[i] = {}
         # Solve
@@ -85,7 +83,7 @@ def update_solve_objectes():
             model_spec,
             prob_child,
             prob_partner_arrival,
-            prob_partner_separation,
+            prob_partner,
             is_expected=False,
         )
         # Simulate
@@ -107,7 +105,7 @@ def update_solve_objectes():
             prob_exp_pt,
             prob_child,
             prob_partner_arrival,
-            prob_partner_separation,
+            prob_partner,
             is_expected=False,
         )
 

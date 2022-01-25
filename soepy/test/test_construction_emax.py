@@ -5,8 +5,7 @@ import pytest
 
 from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.exogenous_processes.children import gen_prob_child_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_arrival
-from soepy.exogenous_processes.partner import gen_prob_partner_separation
+from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
@@ -60,8 +59,7 @@ def input_data():
     model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 
     prob_child = gen_prob_child_vector(model_spec)
-    prob_partner_arrival = gen_prob_partner_arrival(model_spec)
-    prob_partner_separation = gen_prob_partner_separation(model_spec)
+    prob_partner = gen_prob_partner(model_spec)
 
     states, indexer = pyth_create_state_space(model_spec)
 
@@ -109,8 +107,7 @@ def input_data():
         covariates,
         child_age_update_rule,
         prob_child,
-        prob_partner_arrival,
-        prob_partner_separation,
+        prob_partner,
         non_employment_consumption_resources,
         deductions_spec,
     )
