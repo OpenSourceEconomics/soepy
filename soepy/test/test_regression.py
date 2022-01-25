@@ -107,8 +107,6 @@ def test_pyth_simulate(input_vault, test_id):
         emaxs,
         covariates,
         non_employment_consumption_resources,
-        model_spec.ssc_deductions,
-        model_spec.tax_params,
         child_age_update_rule,
         prob_educ_level,
         prob_child_age,

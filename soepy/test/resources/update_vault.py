@@ -95,8 +95,6 @@ def update_solve_objectes():
             emaxs,
             covariates,
             non_employment_consumption_resources,
-            model_spec.ssc_deductions,
-            model_spec.tax_params,
             solve_dict[i]["child_age_update_rule"],
             prob_educ_level,
             prob_child_age,

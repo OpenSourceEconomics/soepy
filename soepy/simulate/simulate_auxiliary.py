@@ -17,8 +17,6 @@ def pyth_simulate(
     emaxs,
     covariates,
     non_employment_consumption_resources,
-    deductions_spec,
-    income_tax_spec,
     child_age_update_rule,
     prob_educ_level,
     prob_child_age,
@@ -152,8 +150,8 @@ def pyth_simulate(
         current_female_income = HOURS[1:] * current_wages
 
         current_employment_consumption_resources = calculate_employment_consumption_resources(
-            deductions_spec,
-            income_tax_spec,
+            model_spec.ssc_deductions,
+            model_spec.tax_params,
             current_female_income,
             current_male_wages,
             tax_splitting,
