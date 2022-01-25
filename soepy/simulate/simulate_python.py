@@ -142,7 +142,7 @@ def partiable_simulate(
     prob_partner,
     model_params_init_file_name,
     model_spec_init_file_name,
-    is_expected,
+    is_expected=True,
 ):
     # Read in model specification from yaml file
     model_params_df, model_params = read_model_params_init(model_params_init_file_name)
