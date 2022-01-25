@@ -54,125 +54,43 @@ def get_continuation_values(
             partner_indicator,
         ]
 
-        # Child: No arrival
-        # Choice: Non-employment
-        k_0_00 = indexer[
-            period + 1,
-            educ_level,
-            0,
-            exp_p,
-            exp_f,
-            type_,
-            child_age_update_rule[k_parent],
-            0,  # No partner
-        ]
-
-        k_0_01 = indexer[
-            period + 1,
-            educ_level,
-            0,
-            exp_p,
-            exp_f,
-            type_,
-            child_age_update_rule[k_parent],
-            1,  # Partner
-        ]
-
-        # Choice: Part-time
-        k_1_00 = indexer[
-            period + 1,
-            educ_level,
-            1,
-            exp_p + 1,
-            exp_f,
-            type_,
-            child_age_update_rule[k_parent],
-            0,  # No partner
-        ]
-
-        k_1_01 = indexer[
-            period + 1,
-            educ_level,
-            1,
-            exp_p + 1,
-            exp_f,
-            type_,
-            child_age_update_rule[k_parent],
-            1,  # Partner
-        ]
-
-        # Choice: Full-time
-        k_2_00 = indexer[
-            period + 1,
-            educ_level,
-            2,
-            exp_p,
-            exp_f + 1,
-            type_,
-            child_age_update_rule[k_parent],
-            0,  # No partner
-        ]
-
-        k_2_01 = indexer[
-            period + 1,
-            educ_level,
-            2,
-            exp_p,
-            exp_f + 1,
-            type_,
-            child_age_update_rule[k_parent],
-            1,  # Partner
-        ]
-
-        # Child possible, integrate out partner and child probability
-        k_0_10 = indexer[
-            period + 1, educ_level, 0, exp_p, exp_f, type_, 0, 0,  # No partner
-        ]
-
-        k_0_11 = indexer[
-            period + 1, educ_level, 0, exp_p, exp_f, type_, 0, 1,  # Partner
-        ]
-
-        # Choice: Part-time
-        k_1_10 = indexer[
-            period + 1, educ_level, 1, exp_p + 1, exp_f, type_, 0, 0,  # No partner
-        ]
-
-        k_1_11 = indexer[
-            period + 1, educ_level, 1, exp_p + 1, exp_f, type_, 0, 1,  # Partner
-        ]
-
-        # Choice: Full-time
-        k_2_10 = indexer[
-            period + 1, educ_level, 2, exp_p, exp_f + 1, type_, 0, 0,  # No partner
-        ]
-
-        k_2_11 = indexer[
-            period + 1, educ_level, 2, exp_p, exp_f + 1, type_, 0, 1,  # Partner
-        ]
-
-        emaxs[k_parent, 0] = weight_emax_with_child(
-            emax_01=emaxs[k_0_01, 3],
-            emax_00=emaxs[k_0_00, 3],
-            emax_10=emaxs[k_0_10, 3],
-            emax_11=emaxs[k_0_11, 3],
+        emaxs[k_parent, 0] = weight_emax(
+            cont_emaxs=emaxs[:, 3],
+            indexer=indexer,
+            next_period=period + 1,
+            educ_level=educ_level,
+            child_lagged_choice=0,
+            child_exp_p=exp_p,
+            child_exp_f=exp_f,
+            disutil_type=type_,
+            child_age_update_rule_current_state=child_age_update_rule[k_parent],
             prob_kid=prob_child_period[educ_level],
             prob_partner=prob_partner_process[educ_level, partner_indicator, :],
         )
 
-        emaxs[k_parent, 1] = weight_emax_with_child(
-            emax_01=emaxs[k_1_01, 3],
-            emax_00=emaxs[k_1_00, 3],
-            emax_10=emaxs[k_1_10, 3],
-            emax_11=emaxs[k_1_11, 3],
+        emaxs[k_parent, 1] = weight_emax(
+            cont_emaxs=emaxs[:, 3],
+            indexer=indexer,
+            next_period=period + 1,
+            educ_level=educ_level,
+            child_lagged_choice=1,
+            child_exp_p=exp_p + 1,
+            child_exp_f=exp_f,
+            disutil_type=type_,
+            child_age_update_rule_current_state=child_age_update_rule[k_parent],
             prob_kid=prob_child_period[educ_level],
             prob_partner=prob_partner_process[educ_level, partner_indicator, :],
         )
-        emaxs[k_parent, 2] = weight_emax_with_child(
-            emax_01=emaxs[k_2_01, 3],
-            emax_00=emaxs[k_2_00, 3],
-            emax_10=emaxs[k_2_10, 3],
-            emax_11=emaxs[k_2_11, 3],
+        emaxs[k_parent, 2] = weight_emax(
+            cont_emaxs=emaxs[:, 3],
+            indexer=indexer,
+            next_period=period + 1,
+            educ_level=educ_level,
+            child_lagged_choice=2,
+            child_exp_p=exp_p,
+            child_exp_f=exp_f + 1,
+            disutil_type=type_,
+            child_age_update_rule_current_state=child_age_update_rule[k_parent],
             prob_kid=prob_child_period[educ_level],
             prob_partner=prob_partner_process[educ_level, partner_indicator, :],
         )
@@ -181,7 +99,30 @@ def get_continuation_values(
 
 
 @numba.njit(nogil=True)
-def weight_emax_with_child(emax_01, emax_00, emax_10, emax_11, prob_kid, prob_partner):
+def weight_emax(
+    cont_emaxs,
+    indexer,
+    next_period,
+    educ_level,
+    child_lagged_choice,
+    child_exp_p,
+    child_exp_f,
+    disutil_type,
+    child_age_update_rule_current_state,
+    prob_kid,
+    prob_partner,
+):
+    emax_00, emax_11, emax_10, emax_01 = get_child_states(
+        cont_emaxs,
+        indexer,
+        next_period,
+        educ_level,
+        child_lagged_choice,
+        child_exp_p,
+        child_exp_f,
+        disutil_type,
+        child_age_update_rule_current_state,
+    )
     weight_01 = (1 - prob_kid) * prob_partner[1] * emax_01
     weight_00 = (1 - prob_kid) * prob_partner[0] * emax_00
     weight_10 = prob_kid * prob_partner[0] * emax_10
@@ -189,12 +130,64 @@ def weight_emax_with_child(emax_01, emax_00, emax_10, emax_11, prob_kid, prob_pa
     return weight_11 + weight_10 + weight_00 + weight_01
 
 
-# def get_child_states(
-#         period,
-#         educ_level,
-#         child_lagged_choice,
-#         child_exp_p,
-#         child_exp_f,
-#         type_,
-#         child_age_update_rule):
-#     emax_01 =
+@numba.njit(nogil=True)
+def get_child_states(
+    cont_emaxs,
+    indexer,
+    next_period,
+    educ_level,
+    child_lagged_choice,
+    child_exp_p,
+    child_exp_f,
+    disutil_type,
+    child_age_update_rule_current_state,
+):
+    emax_01 = cont_emaxs[
+        indexer[
+            next_period,
+            educ_level,
+            child_lagged_choice,
+            child_exp_p,
+            child_exp_f,
+            disutil_type,
+            child_age_update_rule_current_state,
+            1,
+        ]
+    ]
+    emax_00 = cont_emaxs[
+        indexer[
+            next_period,
+            educ_level,
+            child_lagged_choice,
+            child_exp_p,
+            child_exp_f,
+            disutil_type,
+            child_age_update_rule_current_state,
+            0,
+        ]
+    ]
+    emax_11 = cont_emaxs[
+        indexer[
+            next_period,
+            educ_level,
+            child_lagged_choice,
+            child_exp_p,
+            child_exp_f,
+            disutil_type,
+            0,
+            1,
+        ]
+    ]
+    emax_10 = cont_emaxs[
+        indexer[
+            next_period,
+            educ_level,
+            child_lagged_choice,
+            child_exp_p,
+            child_exp_f,
+            disutil_type,
+            0,
+            0,
+        ]
+    ]
+    return emax_00, emax_11, emax_10, emax_01
