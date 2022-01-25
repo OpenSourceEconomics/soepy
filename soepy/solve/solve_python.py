@@ -7,7 +7,6 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.solve.continuation_values import get_continuation_values
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
@@ -178,6 +177,7 @@ def pyth_backward_induction(
         as its first elements. The last row element corresponds to the maximum
         expected value function of the state.
     """
+    dummy_array = np.zeros(4)  # Need this array to define output for construct_emaxs
 
     emaxs = np.zeros((states.shape[0], NUM_CHOICES + 1))
 
@@ -193,10 +193,12 @@ def pyth_backward_induction(
         states_period = states[state_period_cond]
 
         # Probability that a child arrives
-        prob_child_period = prob_child[period]
+        prob_child_period = prob_child[period][states_period[:, 1]]
 
         # Probability that a partner arrives
-        prob_partner_period = prob_partner[period]
+        prob_partner_period = prob_partner[period][
+            states_period[:, 1], states_period[:, 7]
+        ]
 
         # Period rewards
         log_wage_systematic_period = log_wage_systematic[state_period_cond]
@@ -219,28 +221,18 @@ def pyth_backward_induction(
                 shape=(states_period.shape[0], 3, 2, 2), dtype=float
             )
         else:
-
-            # Fill first block of elements in emaxs for the current period
-            # corresponding to the continuation values
-            emaxs = get_continuation_values(
-                states_period,
-                indexer,
-                emaxs,
-                child_age_update_rule,
-                prob_child_period,
-                prob_partner_period,
-            )
-
-        # Extract current period information for current loop calculation
-        emaxs_period = emaxs[state_period_cond]
+            child_states_ind_period = child_state_indexes[state_period_cond]
+            emaxs_child_states = emaxs[:, 3][child_states_ind_period]
 
         # Calculate emax for current period reached by the loop
-        emax_period = construct_emax(
+        emaxs_period = construct_emax(
             model_spec.delta,
             log_wage_systematic_period,
             non_consumption_utilities_period,
             draws[period],
-            emaxs_period[:, :3],
+            emaxs_child_states,
+            prob_child_period,
+            prob_partner_period,
             HOURS,
             model_spec.mu,
             non_employment_consumption_resources_period,
@@ -252,9 +244,9 @@ def pyth_backward_induction(
             child_benefits_period,
             equivalence_scale_period,
             tax_splitting,
+            dummy_array,
         )
 
-        emaxs_period[:, 3] = emax_period
         emaxs[state_period_cond] = emaxs_period
 
     return emaxs

@@ -55,15 +55,24 @@ def _get_max_aggregated_utilities(
     return current_max_value_function
 
 
+@numba.njit(nogil=True)
+def do_weighting_emax(child_emaxs, prob_child, prob_partner):
+    weight_01 = (1 - prob_child) * prob_partner[1] * child_emaxs[0, 1]
+    weight_00 = (1 - prob_child) * prob_partner[0] * child_emaxs[0, 0]
+    weight_10 = prob_child * prob_partner[0] * child_emaxs[1, 0]
+    weight_11 = prob_child * prob_partner[1] * child_emaxs[1, 1]
+    return weight_11 + weight_10 + weight_00 + weight_01
+
+
 @numba.guvectorize(
     [
-        "f8, f8, f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8[:], f8[:, :], f8[:, :], "
-        "i8, f8, f8, f8, "
-        "b1, f8[:]"
+        "f8, f8, f8[:], f8[:, :], f8[:, :, :], f8, f8[:], f8[:], f8, f8, f8[:], "
+        "f8[:, :], f8[:, :], i8, f8, f8, f8, b1, f8[:], f8[:]"
     ],
-    "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices), (n_choices), (), (), "
-    "(n_ssc_params), (n_tax_params, n_tax_params), (n_choices, n_age_child_costs), (),"
-    " (), (), (), () -> ()",
+    "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices, n_children_states, "
+    "n_partner_states), (), (n_partner_states), (n_choices), (), "
+    "(), (n_ssc_params), (n_tax_params, n_tax_params), (n_choices, "
+    "n_age_child_costs), (), (), (), (), (), (num_outputs) -> (num_outputs)",
     nopython=True,
     target="parallel",
 )
@@ -72,7 +81,9 @@ def construct_emax(
     log_wage_systematic,
     non_consumption_utilities,
     draws,
-    emaxs_choices,
+    emaxs_child_states,
+    prob_child,
+    prob_partner,
     hours,
     mu,
     non_employment_consumption_resources,
@@ -84,6 +95,7 @@ def construct_emax(
     child_benefits,
     equivalence,
     tax_splitting,
+    dummy_array,
     emax,
 ):
     """Simulate expected maximum utility for a given distribution of the unobservables.
@@ -144,7 +156,11 @@ def construct_emax(
     """
     num_draws = draws.shape[0]
 
-    emax[0] = 0.0
+    emax[0] = do_weighting_emax(emaxs_child_states[0, :, :], prob_child, prob_partner)
+    emax[1] = do_weighting_emax(emaxs_child_states[1, :, :], prob_child, prob_partner)
+    emax[2] = do_weighting_emax(emaxs_child_states[2, :, :], prob_child, prob_partner)
+
+    emax[3] = 0.0
 
     for i in range(num_draws):
         max_total_utility = _get_max_aggregated_utilities(
@@ -152,7 +168,7 @@ def construct_emax(
             log_wage_systematic,
             non_consumption_utilities,
             draws[i],
-            emaxs_choices,
+            emax[:3],
             hours,
             mu,
             non_employment_consumption_resources,
@@ -166,6 +182,6 @@ def construct_emax(
             index_child_care_costs,
         )
 
-        emax[0] += max_total_utility
+        emax[3] += max_total_utility
 
-    emax[0] /= num_draws
+    emax[3] /= num_draws

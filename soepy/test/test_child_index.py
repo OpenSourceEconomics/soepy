@@ -13,10 +13,10 @@ from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_r
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.soepy_config import TEST_RESOURCES_DIR
-from soepy.solve.continuation_values import do_weighting_emax
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
+from soepy.solve.emaxs import do_weighting_emax
 from soepy.solve.solve_python import pyth_backward_induction
 
 
@@ -112,7 +112,7 @@ def input_data():
         deductions_spec,
     )
 
-    return (states, emaxs, child_state_indexes, prob_child, prob_partner)
+    return states, emaxs, child_state_indexes, prob_child, prob_partner
 
 
 def test_child_state_index(input_data):
@@ -130,10 +130,12 @@ def test_child_state_index(input_data):
     ) = states[10]
 
     child_index = child_state_indexes[10, 1, :, :]
+    child_emax = emaxs[:, 3][child_index]
+
     weighted_emax = do_weighting_emax(
-        emaxs[:, 3],
-        child_index,
+        child_emax,
         prob_child[period, educ_level],
         prob_partner[period, educ_level, partner_indicator, :],
     )
+
     np.testing.assert_allclose(weighted_emax, emaxs[10, 1])
