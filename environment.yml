@@ -1,4 +1,4 @@
-name: soepy
+name: soepy_jax
 channels:
   - defaults
   - conda-forge
@@ -11,6 +11,7 @@ dependencies:
 - pytest-cov
 - pandoc
 - pyyaml
+- jupyter
 - nbsphinx
 - sphinx_rtd_theme
 - codecov
@@ -19,3 +20,4 @@ dependencies:
 - pip:
   - pre-commit
   - black
+  - jax
