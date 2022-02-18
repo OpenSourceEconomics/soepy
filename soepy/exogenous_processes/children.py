@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 
-def define_child_age_update_rule(model_spec, states, covariates):
+def define_child_age_update_rule(model_spec, states):
     """Defines a vector with the length of the number of states that contains the
     value the state space component `age_kid` should take depending on whether or not
      a child arrives in the period.
@@ -17,9 +17,7 @@ def define_child_age_update_rule(model_spec, states, covariates):
     # Age stays at -1 if no kids so far
     child_age_update_rule = np.full(states.shape[0], -1)
     # Age increases by one, if there is a kid
-    child_age_update_rule[np.where(covariates[:, 0] != 0)] = (
-        states[np.where(covariates[:, 0] != 0)][:, 6] + 1
-    )
+    child_age_update_rule[states[:, 6] != -1] = states[states[:, 6] != -1][:, 6] + 1
     # Age does not exceed 10. We assume that the moment the youngest child reaches age 10
     # individuals behave as if they do not have children
     child_age_update_rule[child_age_update_rule > model_spec.child_age_max] = -1

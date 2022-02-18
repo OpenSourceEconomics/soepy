@@ -1,24 +1,22 @@
 import numpy as np
 
-from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.solve.continuation_values import get_continuation_values
-from soepy.solve.covariates import construct_covariates
-from soepy.solve.create_state_space import pyth_create_state_space
 from soepy.solve.emaxs import construct_emax
 
 
 def pyth_solve(
+    states,
+    covariates,
+    child_state_indexes,
     model_params,
     model_spec,
     prob_child,
-    prob_partner_arrival,
-    prob_partner_separation,
+    prob_partner,
     is_expected,
 ):
     """Solve the model by backward induction.
@@ -63,12 +61,6 @@ def pyth_solve(
         Lat element contains the expected maximum value function of the state space point.
     """
 
-    # Create all necessary grids and objects related to the state space
-    states, indexer = pyth_create_state_space(model_spec)
-
-    # Create objects that depend only on the state space
-    covariates = construct_covariates(states, model_spec)
-
     attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
     draws_emax = draw_disturbances(
         *[getattr(model_spec, attr) for attr in attrs_spec], model_params
@@ -82,18 +74,15 @@ def pyth_solve(
         model_spec, states, log_wage_systematic
     )
 
-    deductions_spec = np.array(model_spec.ssc_deductions)
     tax_splitting = model_spec.tax_splitting
 
     non_employment_consumption_resources = calculate_non_employment_consumption_resources(
-        deductions_spec,
+        model_spec.ssc_deductions,
         model_spec.tax_params,
         covariates[:, 1],
         non_employment_benefits,
         tax_splitting,
     )
-
-    child_age_update_rule = define_child_age_update_rule(model_spec, states, covariates)
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
@@ -101,43 +90,34 @@ def pyth_solve(
     emaxs = pyth_backward_induction(
         model_spec,
         states,
-        indexer,
+        child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,
         covariates,
-        child_age_update_rule,
         prob_child,
-        prob_partner_arrival,
-        prob_partner_separation,
+        prob_partner,
         non_employment_consumption_resources,
-        deductions_spec,
+        model_spec.ssc_deductions,
     )
 
     # Return function output
     return (
-        states,
-        indexer,
-        covariates,
         non_employment_consumption_resources,
         emaxs,
-        child_age_update_rule,
-        deductions_spec,
     )
 
 
 def pyth_backward_induction(
     model_spec,
     states,
-    indexer,
+    child_state_indexes,
     log_wage_systematic,
     non_consumption_utilities,
     draws,
     covariates,
-    child_age_update_rule,
     prob_child,
-    prob_partner_arrival,
-    prob_partner_separation,
+    prob_partner,
     non_employment_consumption_resources,
     deductions_spec,
 ):
@@ -177,6 +157,7 @@ def pyth_backward_induction(
         as its first elements. The last row element corresponds to the maximum
         expected value function of the state.
     """
+    dummy_array = np.zeros(4)  # Need this array to define output for construct_emaxs
 
     emaxs = np.zeros((states.shape[0], NUM_CHOICES + 1))
 
@@ -192,11 +173,12 @@ def pyth_backward_induction(
         states_period = states[state_period_cond]
 
         # Probability that a child arrives
-        prob_child_period = prob_child[period]
+        prob_child_period = prob_child[period][states_period[:, 1]]
 
-        # Probability that a partner arrives
-        prob_partner_arrival_period = prob_partner_arrival[period]
-        prob_partner_separation_period = prob_partner_separation[period]
+        # Probability of partner states.
+        prob_partner_period = prob_partner[period][
+            states_period[:, 1], states_period[:, 7]
+        ]
 
         # Period rewards
         log_wage_systematic_period = log_wage_systematic[state_period_cond]
@@ -215,32 +197,22 @@ def pyth_backward_induction(
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
         if period == model_spec.num_periods - 1:
-            pass
-        else:
-
-            # Fill first block of elements in emaxs for the current period
-            # corresponding to the continuation values
-            emaxs = get_continuation_values(
-                model_spec,
-                states_period,
-                indexer,
-                emaxs,
-                child_age_update_rule,
-                prob_child_period,
-                prob_partner_arrival_period,
-                prob_partner_separation_period,
+            emaxs_child_states = np.zeros(
+                shape=(states_period.shape[0], 3, 2, 2), dtype=float
             )
-
-        # Extract current period information for current loop calculation
-        emaxs_period = emaxs[state_period_cond]
+        else:
+            child_states_ind_period = child_state_indexes[state_period_cond]
+            emaxs_child_states = emaxs[:, 3][child_states_ind_period]
 
         # Calculate emax for current period reached by the loop
-        emax_period = construct_emax(
+        emaxs_period = construct_emax(
             model_spec.delta,
             log_wage_systematic_period,
             non_consumption_utilities_period,
             draws[period],
-            emaxs_period[:, :3],
+            emaxs_child_states,
+            prob_child_period,
+            prob_partner_period,
             HOURS,
             model_spec.mu,
             non_employment_consumption_resources_period,
@@ -252,9 +224,9 @@ def pyth_backward_induction(
             child_benefits_period,
             equivalence_scale_period,
             tax_splitting,
+            dummy_array,
         )
 
-        emaxs_period[:, 3] = emax_period
         emaxs[state_period_cond] = emaxs_period
 
     return emaxs

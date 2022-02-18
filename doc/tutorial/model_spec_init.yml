@@ -1,6 +1,6 @@
 ---
 GENERAL:
-    num_periods: 10
+    num_periods: 28
 CONSTANTS:
     delta: 0.98
     mu: -0.56

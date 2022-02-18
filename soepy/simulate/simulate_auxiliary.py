@@ -17,8 +17,6 @@ def pyth_simulate(
     emaxs,
     covariates,
     non_employment_consumption_resources,
-    deductions_spec,
-    income_tax_spec,
     child_age_update_rule,
     prob_educ_level,
     prob_child_age,
@@ -26,8 +24,7 @@ def pyth_simulate(
     prob_exp_ft,
     prob_exp_pt,
     prob_child,
-    prob_partner_arrival,
-    prob_partner_separation,
+    prob_partner,
     is_expected,
 ):
     """Simulate agent experiences."""
@@ -153,8 +150,8 @@ def pyth_simulate(
         current_female_income = HOURS[1:] * current_wages
 
         current_employment_consumption_resources = calculate_employment_consumption_resources(
-            deductions_spec,
-            income_tax_spec,
+            model_spec.ssc_deductions,
+            model_spec.tax_params,
             current_female_income,
             current_male_wages,
             tax_splitting,
@@ -229,7 +226,7 @@ def pyth_simulate(
         partner_arrival_current_draw = np.random.binomial(
             size=current_states_no_partner.shape[0],
             n=1,
-            p=prob_partner_arrival[period, current_states_no_partner[:, 2]],
+            p=prob_partner[period, current_states_no_partner[:, 2], 0, 1],
         )
         new_partner_status[current_states[:, 8] == 0] = partner_arrival_current_draw
 
@@ -238,7 +235,7 @@ def pyth_simulate(
         partner_separation_current_draw = np.random.binomial(
             size=current_states_with_partner.shape[0],
             n=1,
-            p=prob_partner_separation[period, current_states_with_partner[:, 2]],
+            p=prob_partner[period, current_states_with_partner[:, 2], 1, 0],
         )
         new_partner_status[current_states[:, 8] == 1] = (
             current_partner_status[current_states[:, 8] == 1]

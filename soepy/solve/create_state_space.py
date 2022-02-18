@@ -1,8 +1,29 @@
 import numba
 import numpy as np
 
+from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.shared.shared_constants import MISSING_INT
 from soepy.shared.shared_constants import NUM_CHOICES
+from soepy.solve.covariates import construct_covariates
+
+
+def create_state_space_objects(model_spec):
+    """This function creates all necessary objects of the state space. This function
+    could be refactored out of the solve functions. The objects do not change if
+    the parameters in the params dataframe are changed."""
+    # Create all necessary grids and objects related to the state space
+    states, indexer = pyth_create_state_space(model_spec)
+
+    # Create objects that depend only on the state space
+    covariates = construct_covariates(states, model_spec)
+
+    # Define child update rule
+    child_age_update_rule = define_child_age_update_rule(model_spec, states)
+
+    child_state_indexes = create_child_indexes(
+        states, indexer, model_spec, child_age_update_rule
+    )
+    return states, indexer, covariates, child_age_update_rule, child_state_indexes
 
 
 @numba.jit(nopython=True)
@@ -259,3 +280,124 @@ def pyth_create_state_space(model_spec):
 
     # Return function output
     return states, indexer
+
+
+@numba.njit(nogil=True)
+def create_child_indexes(states, indexer, model_spec, child_age_update_rule):
+    child_indexes = np.full((states.shape[0], NUM_CHOICES, 2, 2), MISSING_INT)
+
+    for num_state in range(states.shape[0]):
+        (
+            period,
+            educ_level,
+            choice_lagged,
+            exp_p,
+            exp_f,
+            disutil_type,
+            age_kid,
+            partner_indicator,
+        ) = states[num_state]
+
+        if period < model_spec.num_periods - 1:
+
+            k_parent = indexer[
+                period,
+                educ_level,
+                choice_lagged,
+                exp_p,
+                exp_f,
+                disutil_type,
+                age_kid,
+                partner_indicator,
+            ]
+
+            child_indexes[num_state, 0, :, :] = get_child_states_index(
+                indexer=indexer,
+                next_period=period + 1,
+                educ_level=educ_level,
+                child_lagged_choice=0,
+                child_exp_p=exp_p,
+                child_exp_f=exp_f,
+                disutil_type=disutil_type,
+                child_age_update_rule_current_state=child_age_update_rule[k_parent],
+            )
+
+            child_indexes[num_state, 1, :, :] = get_child_states_index(
+                indexer=indexer,
+                next_period=period + 1,
+                educ_level=educ_level,
+                child_lagged_choice=1,
+                child_exp_p=exp_p + 1,
+                child_exp_f=exp_f,
+                disutil_type=disutil_type,
+                child_age_update_rule_current_state=child_age_update_rule[k_parent],
+            )
+
+            child_indexes[num_state, 2, :, :] = get_child_states_index(
+                indexer=indexer,
+                next_period=period + 1,
+                educ_level=educ_level,
+                child_lagged_choice=2,
+                child_exp_p=exp_p,
+                child_exp_f=exp_f + 1,
+                disutil_type=disutil_type,
+                child_age_update_rule_current_state=child_age_update_rule[k_parent],
+            )
+    return child_indexes
+
+
+@numba.njit(nogil=True)
+def get_child_states_index(
+    indexer,
+    next_period,
+    educ_level,
+    child_lagged_choice,
+    child_exp_p,
+    child_exp_f,
+    disutil_type,
+    child_age_update_rule_current_state,
+):
+    child_indexes = np.full(shape=(2, 2), fill_value=MISSING_INT)
+
+    child_indexes[0, 1] = indexer[
+        next_period,
+        educ_level,
+        child_lagged_choice,
+        child_exp_p,
+        child_exp_f,
+        disutil_type,
+        child_age_update_rule_current_state,
+        1,
+    ]
+    child_indexes[0, 0] = indexer[
+        next_period,
+        educ_level,
+        child_lagged_choice,
+        child_exp_p,
+        child_exp_f,
+        disutil_type,
+        child_age_update_rule_current_state,
+        0,
+    ]
+    child_indexes[1, 1] = indexer[
+        next_period,
+        educ_level,
+        child_lagged_choice,
+        child_exp_p,
+        child_exp_f,
+        disutil_type,
+        0,
+        1,
+    ]
+
+    child_indexes[1, 0] = indexer[
+        next_period,
+        educ_level,
+        child_lagged_choice,
+        child_exp_p,
+        child_exp_f,
+        disutil_type,
+        0,
+        0,
+    ]
+    return child_indexes

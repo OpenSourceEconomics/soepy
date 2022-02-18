@@ -9,15 +9,16 @@ from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
 from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_arrival
+from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_separation
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.simulate.simulate_auxiliary import pyth_simulate
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
+from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
+
 
 CASES_TEST = random.sample(range(0, 100), 10)
 
@@ -75,25 +76,26 @@ def test_pyth_simulate(input_vault, test_id):
         model_spec, model_spec.pt_exp_shares_file_name
     )
     prob_child = gen_prob_child_vector(model_spec)
-    prob_partner_arrival = gen_prob_partner_arrival(model_spec)
-    prob_partner_separation = gen_prob_partner_separation(model_spec)
+    prob_partner = gen_prob_partner(model_spec)
 
-    # Solve
     (
         states,
         indexer,
         covariates,
-        non_employment_consumption_resources,
-        emaxs,
         child_age_update_rule,
-        deductions_spec,
-    ) = pyth_solve(
+        child_state_indexes,
+    ) = create_state_space_objects(model_spec)
+
+    # Obtain model solution
+    non_employment_consumption_resources, emaxs = pyth_solve(
+        states,
+        covariates,
+        child_state_indexes,
         model_params,
         model_spec,
         prob_child,
-        prob_partner_arrival,
-        prob_partner_separation,
-        is_expected=False,
+        prob_partner,
+        False,
     )
 
     # Simulate
@@ -105,8 +107,6 @@ def test_pyth_simulate(input_vault, test_id):
         emaxs,
         covariates,
         non_employment_consumption_resources,
-        deductions_spec,
-        model_spec.tax_params,
         child_age_update_rule,
         prob_educ_level,
         prob_child_age,
@@ -114,8 +114,7 @@ def test_pyth_simulate(input_vault, test_id):
         prob_exp_ft,
         prob_exp_pt,
         prob_child,
-        prob_partner_arrival,
-        prob_partner_separation,
+        prob_partner,
         is_expected=False,
     )
 
