@@ -14,7 +14,7 @@ test_incomes = np.arange(1, 2000, 100).astype(float)
 
 @pytest.fixture(scope="module")
 def input_data():
-    tax_params = create_tax_parameters()
+    tax_params_jax, tax_params = create_tax_parameters()
     deductions_spec = np.array([0.215, 63_000 / (12 * 4.3)])
     thresholds = np.append(np.append(-np.inf, tax_params[0, :]), np.inf)
     # In gettsim the tax function takes the linear rates and the

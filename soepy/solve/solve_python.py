@@ -1,3 +1,4 @@
+import jax.numpy as jnp
 import numpy as np
 
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
@@ -6,7 +7,7 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.solve.emaxs import construct_emax
+from soepy.solve.emaxs_jax import vmap_construct_emax_jax
 
 
 def pyth_solve(
@@ -157,76 +158,87 @@ def pyth_backward_induction(
         as its first elements. The last row element corresponds to the maximum
         expected value function of the state.
     """
-    dummy_array = np.zeros(4)  # Need this array to define output for construct_emaxs
-
     emaxs = np.zeros((states.shape[0], NUM_CHOICES + 1))
 
-    # Set taxing type
+    # Read relevant values from dictionary
     tax_splitting = model_spec.tax_splitting
+    delta = model_spec.delta
+    tax_params_jax = jnp.array(model_spec.tax_params_jax)
+    child_care_costs = jnp.array(model_spec.child_care_costs)
+    mu = model_spec.mu
+    hours = jnp.array(HOURS)
+    deductions_spec_jax = jnp.array(deductions_spec)
 
     # Loop backwards over all periods
     for period in reversed(range(model_spec.num_periods)):
-        state_period_cond = states[:, 0] == period
+        state_period_index = np.where(states[:, 0] == period)[0]
 
         # Extract period information
         # States
-        states_period = states[state_period_cond]
+        states_period = states[state_period_index]
 
         # Probability that a child arrives
-        prob_child_period = prob_child[period][states_period[:, 1]]
+        prob_child_period = jnp.take(prob_child[period], states_period[:, 1])
 
         # Probability of partner states.
-        prob_partner_period = prob_partner[period][
+        prob_partner_period_np = prob_partner[period][
             states_period[:, 1], states_period[:, 7]
         ]
+        prob_partner_period = jnp.array(prob_partner_period_np)
 
         # Period rewards
-        log_wage_systematic_period = log_wage_systematic[state_period_cond]
-        non_consumption_utilities_period = non_consumption_utilities[state_period_cond]
-        non_employment_consumption_resources_period = non_employment_consumption_resources[
-            state_period_cond
-        ]
+        log_wage_systematic_period = jnp.take(log_wage_systematic, state_period_index)
+        non_consumption_utilities_period = jnp.take(
+            non_consumption_utilities, state_period_index, axis=0
+        )
+        non_employment_consumption_resources_period = jnp.take(
+            non_employment_consumption_resources, state_period_index
+        )
 
         # Corresponding equivalence scale for period states
-        male_wage_period = covariates[np.where(state_period_cond)][:, 1]
-        equivalence_scale_period = covariates[state_period_cond][:, 2]
-        child_benefits_period = covariates[state_period_cond][:, 3]
-        child_bins_period = covariates[state_period_cond][:, 0].astype(int)
-        index_child_care_costs = np.where(child_bins_period > 2, 0, child_bins_period)
+        male_wage_period = jnp.take(covariates[:, 1], state_period_index)
+        equivalence_scale_period = jnp.take(covariates[:, 2], state_period_index)
+        child_benefits_period = jnp.take(covariates[:, 3], state_period_index)
+        child_bins_period = jnp.take(covariates[:, 0].astype(int), state_period_index)
+        index_child_care_costs = jnp.where(child_bins_period > 2, 0, child_bins_period)
+
+        partner_indicator = jnp.array(states_period[:, 7])
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
         if period == model_spec.num_periods - 1:
-            emaxs_child_states = np.zeros(
+            emaxs_child_states = jnp.zeros(
                 shape=(states_period.shape[0], 3, 2, 2), dtype=float
             )
         else:
-            child_states_ind_period = child_state_indexes[state_period_cond]
-            emaxs_child_states = emaxs[:, 3][child_states_ind_period]
+            child_states_ind_period = jnp.take(
+                child_state_indexes, state_period_index, axis=0
+            )
+            emaxs_child_states = jnp.take(emaxs[:, 3], child_states_ind_period, axis=0)
 
         # Calculate emax for current period reached by the loop
-        emaxs_period = construct_emax(
-            model_spec.delta,
+        emaxs_period = vmap_construct_emax_jax(
+            delta,
+            mu,
+            tax_splitting,
             log_wage_systematic_period,
             non_consumption_utilities_period,
-            draws[period],
+            jnp.array(draws[period]),
             emaxs_child_states,
             prob_child_period,
             prob_partner_period,
-            HOURS,
-            model_spec.mu,
+            hours,
             non_employment_consumption_resources_period,
-            deductions_spec,
-            model_spec.tax_params,
-            model_spec.child_care_costs,
+            deductions_spec_jax,
+            tax_params_jax,
+            child_care_costs,
             index_child_care_costs,
             male_wage_period,
             child_benefits_period,
             equivalence_scale_period,
-            tax_splitting,
-            dummy_array,
+            partner_indicator,
         )
 
-        emaxs[state_period_cond] = emaxs_period
+        emaxs[state_period_index, :] = emaxs_period
 
     return emaxs
