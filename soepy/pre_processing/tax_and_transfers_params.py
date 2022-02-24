@@ -13,9 +13,8 @@ def process_tax_system(model_dict):
         raise ValueError("Specify tax_year.")
 
     if model_dict["TAXES_TRANSFERS"]["tax_year"] == 2007:
-        tax_params_jax, tax_params = create_tax_parameters()
+        tax_params = create_tax_parameters()
         model_dict["TAXES_TRANSFERS"]["tax_params"] = tax_params
-        model_dict["TAXES_TRANSFERS"]["tax_params_jax"] = tax_params_jax
 
     else:
         raise ValueError("Tax year not implemented.")
@@ -35,7 +34,7 @@ def create_tax_parameters():
     tax_params[1, :] = intercepts
     tax_params[2, :] = rates_linear
     tax_params[3, :] = rates_quadratic
-    return np.column_stack(([0, 0, 0, 0], tax_params)), tax_params
+    return np.column_stack(([0, 0, 0, 0], tax_params))
 
 
 def create_progressionsfactor(rates_linear, thresholds, interval_num):

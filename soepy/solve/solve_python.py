@@ -1,5 +1,8 @@
+from functools import partial
+
 import jax.numpy as jnp
 import numpy as np
+from jax import vmap
 
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
@@ -75,15 +78,15 @@ def pyth_solve(
         model_spec, states, log_wage_systematic
     )
 
-    tax_splitting = model_spec.tax_splitting
-
-    non_employment_consumption_resources = calculate_non_employment_consumption_resources(
-        model_spec.ssc_deductions,
-        model_spec.tax_params,
-        covariates[:, 1],
-        non_employment_benefits,
-        tax_splitting,
-    )
+    non_employment_consumption_resources = vmap(
+        partial(
+            calculate_non_employment_consumption_resources,
+            model_spec.ssc_deductions,
+            model_spec.tax_params,
+            model_spec.tax_splitting,
+        ),
+        in_axes=(0, 0, 0),
+    )(covariates[:, 1], non_employment_benefits, states[:, 7])
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
@@ -163,7 +166,7 @@ def pyth_backward_induction(
     # Read relevant values from dictionary
     tax_splitting = model_spec.tax_splitting
     delta = model_spec.delta
-    tax_params_jax = jnp.array(model_spec.tax_params_jax)
+    tax_params_jax = jnp.array(model_spec.tax_params)
     child_care_costs = jnp.array(model_spec.child_care_costs)
     mu = model_spec.mu
     hours = jnp.array(HOURS)

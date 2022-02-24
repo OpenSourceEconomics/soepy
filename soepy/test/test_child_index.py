@@ -1,7 +1,9 @@
 import pickle
+from functools import partial
 
 import numpy as np
 import pytest
+from jax import vmap
 
 from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.exogenous_processes.children import gen_prob_child_vector
@@ -16,7 +18,7 @@ from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
-from soepy.solve.emaxs import do_weighting_emax
+from soepy.solve.emaxs_jax import do_weighting_emax_jax
 from soepy.solve.solve_python import pyth_backward_induction
 
 
@@ -85,13 +87,15 @@ def input_data():
     deductions_spec = np.array(model_spec.ssc_deductions)
     tax_splitting = model_spec.tax_splitting
 
-    non_employment_consumption_resources = calculate_non_employment_consumption_resources(
-        deductions_spec,
-        model_spec.tax_params,
-        covariates[:, 1],
-        non_employment_benefits,
-        tax_splitting,
-    )
+    non_employment_consumption_resources = vmap(
+        partial(
+            calculate_non_employment_consumption_resources,
+            model_spec.ssc_deductions,
+            model_spec.tax_params,
+            model_spec.tax_splitting,
+        ),
+        in_axes=(0, 0, 0),
+    )(covariates[:, 1], non_employment_benefits, states[:, 7])
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
@@ -130,7 +134,7 @@ def test_child_state_index(input_data):
     child_index = child_state_indexes[10, 1, :, :]
     child_emax = emaxs[:, 3][child_index]
 
-    weighted_emax = do_weighting_emax(
+    weighted_emax = do_weighting_emax_jax(
         child_emax,
         prob_child[period, educ_level],
         prob_partner[period, educ_level, partner_indicator, :],

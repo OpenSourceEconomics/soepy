@@ -1,7 +1,9 @@
-import numba
-import numpy as np
+from functools import partial
 
-from soepy.shared.shared_constants import INVALID_FLOAT
+import jax.numpy as jnp
+import numpy as np
+from jax import jit
+
 from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.shared.tax_and_transfers import calculate_net_income
 
@@ -173,61 +175,67 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
     return non_consumption_utility
 
 
-@numba.jit(nopython=True)
+@partial(jit, static_argnums=(2,))
 def calculate_non_employment_consumption_resources(
     deductions_spec,
     income_tax_spec,
+    tax_splitting,
     male_wage,
     non_employment_benefits,
-    tax_splitting=True,
+    partner_indicator,
 ):
     """This function calculates the resources available to the individual
     to spend on consumption were she to choose to not be employed.
     It adds the components from the budget constraint to the female wage."""
 
-    non_employment_consumption_resources = np.full(male_wage.shape[0], INVALID_FLOAT)
-
-    for i in range(male_wage.shape[0]):
-        # Set female wage to
-        net_income = (
-            calculate_net_income(
-                income_tax_spec, deductions_spec, 0, male_wage[i], tax_splitting
-            )
-            + non_employment_benefits[i, 0]
+    # Set female wage to
+    net_income = (
+        calculate_net_income(
+            income_tax_spec,
+            deductions_spec,
+            0,
+            male_wage,
+            partner_indicator,
+            tax_splitting,
         )
+        + non_employment_benefits[0]
+    )
 
-        non_employment_consumption_resources[i] = (
-            net_income + non_employment_benefits[i, 1] + non_employment_benefits[i, 2]
-        )
-
-    return non_employment_consumption_resources
+    return net_income + non_employment_benefits[1] + non_employment_benefits[2]
 
 
-@numba.jit(nopython=True)
+@partial(jit, static_argnums=(2,))
 def calculate_employment_consumption_resources(
     deductions_spec,
     income_tax_spec,
+    tax_splitting,
     current_female_income,
     male_wage,
-    tax_splitting=True,
+    partner_indicator,
 ):
     """This function calculates the resources available to the individual
     to spend on consumption were she to choose to be employed.
     It adds the components from the budget constraint to the female wage."""
 
-    employment_consumption_resources = np.full(
-        current_female_income.shape, INVALID_FLOAT
+    # TODO: Vmap can do two dimensions. Easy example to try once tests are working
+    employment_consumption_resources_0 = calculate_net_income(
+        income_tax_spec,
+        deductions_spec,
+        current_female_income[0],
+        male_wage,
+        partner_indicator,
+        tax_splitting,
     )
 
-    for i in range(current_female_income.shape[0]):
-        male_wage_i = male_wage[i]
-        for choice_num in range(current_female_income.shape[1]):
-            employment_consumption_resources[i, choice_num] = calculate_net_income(
-                income_tax_spec,
-                deductions_spec,
-                current_female_income[i, choice_num],
-                male_wage_i,
-                tax_splitting,
-            )
+    employment_consumption_resources_1 = calculate_net_income(
+        income_tax_spec,
+        deductions_spec,
+        current_female_income[1],
+        male_wage,
+        partner_indicator,
+        tax_splitting,
+    )
 
-    return employment_consumption_resources
+    return jnp.array(
+        [employment_consumption_resources_0, employment_consumption_resources_1]
+    )

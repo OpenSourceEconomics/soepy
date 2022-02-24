@@ -1,3 +1,4 @@
+import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import pytest
@@ -9,23 +10,21 @@ from soepy.shared.tax_and_transfers import calculate_ssc_deductions
 from soepy.test.resources.gettsim_tax_func import calc_gettsim_sol_individual
 from soepy.test.resources.gettsim_tax_func import piecewise_polynomial
 
-test_incomes = np.arange(1, 2000, 100).astype(float)
+test_incomes = np.arange(0, 5000, 100).astype(float)
 
 
 @pytest.fixture(scope="module")
 def input_data():
-    tax_params_jax, tax_params = create_tax_parameters()
+    tax_params = create_tax_parameters()
     deductions_spec = np.array([0.215, 63_000 / (12 * 4.3)])
-    thresholds = np.append(np.append(-np.inf, tax_params[0, :]), np.inf)
+    thresholds = np.append(np.append(-np.inf, tax_params[0, 1:]), np.inf)
     # In gettsim the tax function takes the linear rates and the
     # quadratic rates (progressionsfactor)
     rates = np.empty((2, 5))
-    rates[0, 0] = 0
-    rates[0, 1:] = tax_params[2, :]
-    rates[1, :] = 0
-    rates[1, 1:] = tax_params[3, :]
+    rates[0, :] = tax_params[2, :]
+    rates[1, :] = tax_params[3, :]
 
-    intercept_low = np.append(0, tax_params[1, :])
+    intercept_low = tax_params[1, :]
     return tax_params, deductions_spec, thresholds, rates, intercept_low
 
 
@@ -47,14 +46,22 @@ def test_total_tax_and_transfer(input_data, income):
     tax_params, deductions_spec, thresholds, rates, intercept_low = input_data
     soli_st = 1.05
 
-    soepy_sol = calculate_net_income(tax_params, deductions_spec, income, male_wage=0)
+    soepy_sol = calculate_net_income(
+        tax_params,
+        deductions_spec,
+        jnp.array([income]),
+        male_wage=0,
+        partner_indicator=0,
+        tax_splitting=True,
+    )
 
     gettsim_tax, taxable_inc = calc_gettsim_sol_individual(
         thresholds, rates, intercept_low, deductions_spec, income, soli_st
     )
+
     gettsim_sol = taxable_inc - gettsim_tax
 
-    np.testing.assert_allclose(soepy_sol, gettsim_sol)
+    np.testing.assert_allclose(soepy_sol - gettsim_sol.values, 0, atol=1e-3)
 
 
 @pytest.mark.parametrize("income", test_incomes)
@@ -83,7 +90,12 @@ def test_ehegattensplitting(input_data, income):
         )
         gettsim_sol = (taxable_inc - gettsim_tax) * 2
         soepy_sol = calculate_net_income(
-            tax_params, deductions_spec, income / 2, male_wage=income / 2
+            tax_params,
+            deductions_spec,
+            income / 2,
+            male_wage=income / 2,
+            partner_indicator=1,
+            tax_splitting=True,
         )
 
     else:
@@ -92,7 +104,12 @@ def test_ehegattensplitting(input_data, income):
         )
         gettsim_sol = taxable_inc - gettsim_tax
         soepy_sol = calculate_net_income(
-            tax_params, deductions_spec, income, male_wage=partner_ind
+            tax_params,
+            deductions_spec,
+            income,
+            male_wage=partner_ind,
+            partner_indicator=0,
+            tax_splitting=True,
         )
 
-    np.testing.assert_allclose(soepy_sol, gettsim_sol)
+    np.testing.assert_allclose(soepy_sol, gettsim_sol, atol=1e-3)

@@ -1,9 +1,6 @@
 """ This module contains the tax function from gettsim. We want to test our function
 againts it."""
-import numpy as np
 import pandas as pd
-
-from soepy.shared.tax_and_transfers import calculate_ssc_deductions
 
 
 def piecewise_polynomial(x, thresholds, rates, intercepts_at_lower_thresholds):
@@ -70,10 +67,21 @@ def piecewise_polynomial(x, thresholds, rates, intercepts_at_lower_thresholds):
 def calc_gettsim_sol_individual(
     thresholds, rates, intercept_low, deductions_spec, income, soli_st
 ):
-    deductions_ssc = calculate_ssc_deductions(deductions_spec, income)
+    deductions_ssc = calculate_ssc_deductions_gettsim(deductions_spec, income)
     taxable_inc = income - deductions_ssc
     gettsim_tax = (
         piecewise_polynomial(pd.Series([taxable_inc]), thresholds, rates, intercept_low)
         * soli_st
     )
     return gettsim_tax, taxable_inc
+
+
+def calculate_ssc_deductions_gettsim(deductions_spec, gross_labor_income):
+    """Determines the social security contribution amount
+    to be deduced from the individuals gross labor income"""
+
+    capped_income = min(gross_labor_income, deductions_spec[1])
+
+    ssc_contrib = deductions_spec[0] * capped_income
+
+    return ssc_contrib

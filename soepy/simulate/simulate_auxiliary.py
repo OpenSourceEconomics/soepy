@@ -1,5 +1,8 @@
+from functools import partial
+
 import numpy as np
 import pandas as pd
+from jax import vmap
 
 from soepy.shared.shared_auxiliary import calculate_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_utility_components
@@ -148,14 +151,17 @@ def pyth_simulate(
         )
 
         current_female_income = HOURS[1:] * current_wages
+        current_partner_status = current_states[:, 8]
 
-        current_employment_consumption_resources = calculate_employment_consumption_resources(
-            model_spec.ssc_deductions,
-            model_spec.tax_params,
-            current_female_income,
-            current_male_wages,
-            tax_splitting,
-        )
+        current_employment_consumption_resources = vmap(
+            partial(
+                calculate_employment_consumption_resources,
+                model_spec.ssc_deductions,
+                model_spec.tax_params,
+                model_spec.tax_splitting,
+            ),
+            in_axes=(0, 0, 0),
+        )(current_female_income, current_male_wages, current_partner_status)
 
         current_employment_consumption_resources += current_child_benefits.reshape(
             -1, 1
@@ -218,7 +224,6 @@ def pyth_simulate(
             child_new_age = child_age_update_rule[idx]
 
         # Update partner status according to random draw
-        current_partner_status = current_states[:, 8]
         new_partner_status = np.full(current_states.shape[0], np.nan)
 
         # Get individuals without partner

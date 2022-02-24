@@ -1,7 +1,9 @@
 import pickle
+from functools import partial
 
 import numpy as np
 import pytest
+from jax import vmap
 
 from soepy.exogenous_processes.children import define_child_age_update_rule
 from soepy.exogenous_processes.children import gen_prob_child_vector
@@ -84,13 +86,15 @@ def input_data():
     deductions_spec = np.array(model_spec.ssc_deductions)
     tax_splitting = model_spec.tax_splitting
 
-    non_employment_consumption_resources = calculate_non_employment_consumption_resources(
-        deductions_spec,
-        model_spec.tax_params,
-        covariates[:, 1],
-        non_employment_benefits,
-        tax_splitting,
-    )
+    non_employment_consumption_resources = vmap(
+        partial(
+            calculate_non_employment_consumption_resources,
+            model_spec.ssc_deductions,
+            model_spec.tax_params,
+            model_spec.tax_splitting,
+        ),
+        in_axes=(0, 0, 0),
+    )(covariates[:, 1], non_employment_benefits, states[:, 7])
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out

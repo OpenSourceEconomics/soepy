@@ -5,7 +5,7 @@ from jax import jit
 from jax import vmap
 
 from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.solve.tax_and_transfers_jax import calculate_net_income_jax
+from soepy.shared.tax_and_transfers import calculate_net_income
 
 
 @partial(jit, static_argnums=(1,))
@@ -36,7 +36,7 @@ def get_max_aggregated_utilities_jax(
     for j in range(1, NUM_CHOICES):
         female_wage = hours[j] * jnp.exp(log_wage_systematic + draws[j - 1])
 
-        net_income = calculate_net_income_jax(
+        net_income = calculate_net_income(
             income_tax_spec,
             deductions_spec,
             female_wage,
