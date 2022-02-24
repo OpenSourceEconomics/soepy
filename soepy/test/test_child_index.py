@@ -18,7 +18,7 @@ from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
-from soepy.solve.emaxs_jax import do_weighting_emax_jax
+from soepy.solve.emaxs import do_weighting_emax_jax
 from soepy.solve.solve_python import pyth_backward_induction
 
 

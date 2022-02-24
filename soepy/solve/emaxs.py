@@ -64,7 +64,7 @@ def get_max_aggregated_utilities_jax(
 
 @jit
 def calc_value_func_from_cons(cons, non_cons_utility, delta, mu, emax):
-    consumption_utility = cons ** mu / mu
+    consumption_utility = (cons ** mu) / mu
 
     return consumption_utility * non_cons_utility + delta * emax
 

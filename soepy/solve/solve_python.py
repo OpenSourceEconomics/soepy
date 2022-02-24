@@ -10,7 +10,7 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.solve.emaxs_jax import vmap_construct_emax_jax
+from soepy.solve.emaxs import vmap_construct_emax_jax
 
 
 def pyth_solve(

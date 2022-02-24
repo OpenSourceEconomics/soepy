@@ -145,6 +145,7 @@ def states_tested(input_data):
     # Get states from type 1
     states_selected = states[(states[:, 5] == 1)]
     rand_states = np.random.randint(0, states_selected.shape[0], size=100)
+    pickle.dump(rand_states, open("test_states_constr_emax.pkl", "wb"))
     return rand_states
 
 
@@ -190,4 +191,4 @@ def test_construct_emax(input_data, states_tested):
         mu = model_spec.mu
         consumption_utility = non_employ_cons ** mu / mu
         value_func = consumption_utility + model_spec.delta * emaxs[ind_state, 0]
-        np.testing.assert_equal(value_func, emaxs[ind_state, 3])
+        np.testing.assert_equal(float(value_func), emaxs[ind_state, 3])
