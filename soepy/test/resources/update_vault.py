@@ -57,13 +57,10 @@ def create_random_states_constr_emax():
     model_params_df, model_params = read_model_params_init(random_model_params_df)
     model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 
-    prob_child = gen_prob_child_vector(model_spec)
-    prob_partner = gen_prob_partner(model_spec)
-
     states, indexer = pyth_create_state_space(model_spec)
     states_selected = states[(states[:, 5] == 1)]
     rand_states = np.random.randint(0, states_selected.shape[0], size=100)
-    pickle.dump(rand_states, open("test_states_constr_emax.pkl", "wb"))
+    pickle.dump(rand_states, open("rand_states_constr_emax.pkl", "wb"))
 
 
 def update_solve_objectes():

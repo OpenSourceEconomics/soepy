@@ -21,6 +21,11 @@ from soepy.solve.create_state_space import pyth_create_state_space
 from soepy.solve.solve_python import pyth_backward_induction
 
 
+rand_states = pickle.load(
+    open(TEST_RESOURCES_DIR / "rand_states_constr_emax.pkl", "rb")
+)
+
+
 @pytest.fixture(scope="module")
 def input_data():
 
@@ -145,7 +150,7 @@ def states_tested(input_data):
     # Get states from type 1
     states_selected = states[(states[:, 5] == 1)]
     rand_states = np.random.randint(0, states_selected.shape[0], size=100)
-    pickle.dump(rand_states, open("test_states_constr_emax.pkl", "wb"))
+    pickle.dump(rand_states, open("rand_states_constr_emax.pkl", "wb"))
     return rand_states
 
 
