@@ -48,8 +48,7 @@ def get_max_aggregated_utilities_jax(
         child_costs = child_care_costs[child_care_bin, j - 1]
 
         consumption = (
-            jnp.clip(net_income + child_benefits - child_costs, a_max=1e-14)
-            / equivalence
+            jnp.maximum(net_income + child_benefits - child_costs, 1e-20) / equivalence
         )
         value_function_choice = calc_value_func_from_cons(
             consumption, non_consumption_utilities[j], delta, mu, emaxs[j]
@@ -248,9 +247,9 @@ def construct_emax_jax(
         child_care_costs,
         index_child_care_costs,
         partner_indicator,
-    )
+    ).sum()
 
-    emax_3 = max_total_utility.sum()
+    emax_3 = max_total_utility
 
     emax_3 /= num_draws
 

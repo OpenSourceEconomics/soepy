@@ -1,6 +1,7 @@
 import pickle
 from functools import partial
 
+import jax.numpy as jnp
 import numpy as np
 import pytest
 from jax import vmap
@@ -95,18 +96,19 @@ def input_data():
         model_spec, states, log_wage_systematic
     )
 
-    deductions_spec = np.array(model_spec.ssc_deductions)
-    tax_splitting = model_spec.tax_splitting
-
     non_employment_consumption_resources = vmap(
         partial(
             calculate_non_employment_consumption_resources,
-            model_spec.ssc_deductions,
-            model_spec.tax_params,
+            jnp.array(model_spec.ssc_deductions),
+            jnp.array(model_spec.tax_params),
             model_spec.tax_splitting,
         ),
         in_axes=(0, 0, 0),
-    )(covariates[:, 1], non_employment_benefits, states[:, 7])
+    )(
+        jnp.array(covariates[:, 1]),
+        jnp.array(non_employment_benefits),
+        jnp.array(states[:, 7]),
+    )
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
@@ -122,7 +124,7 @@ def input_data():
         prob_child,
         prob_partner,
         non_employment_consumption_resources,
-        deductions_spec,
+        model_spec.ssc_deductions,
     )
 
     return (
@@ -136,25 +138,8 @@ def input_data():
     )
 
 
-@pytest.fixture(scope="module")
-def states_tested(input_data):
-    (
-        model_spec,
-        emaxs,
-        states,
-        indexer,
-        covariates,
-        non_employment_consumption_resources,
-        non_consumption_utilities,
-    ) = input_data
-    # Get states from type 1
-    states_selected = states[(states[:, 5] == 1)]
-    rand_states = np.random.randint(0, states_selected.shape[0], size=100)
-    pickle.dump(rand_states, open("rand_states_constr_emax.pkl", "wb"))
-    return rand_states
-
-
-def test_construct_emax(input_data, states_tested):
+@pytest.mark.parametrize("random_state", rand_states)
+def test_construct_emax(input_data, random_state):
     (
         model_spec,
         emaxs,
@@ -167,33 +152,31 @@ def test_construct_emax(input_data, states_tested):
     # Get states from type 1
     states_selected = states[(states[:, 5] == 1)]
 
-    for test_state in states_tested:
+    (
+        period,
+        educ_level,
+        lagged_choice,
+        exp_pt,
+        exp_ft,
+        type_1,
+        age_young_child,
+        partner_ind,
+    ) = states_selected[random_state, :]
+    assert type_1 == 1
 
-        (
-            period,
-            educ_level,
-            lagged_choice,
-            exp_pt,
-            exp_ft,
-            type_1,
-            age_young_child,
-            partner_ind,
-        ) = states_selected[test_state, :]
-        assert type_1 == 1
-
-        ind_state = indexer[
-            period,
-            educ_level,
-            lagged_choice,
-            exp_pt,
-            exp_ft,
-            type_1,
-            age_young_child,
-            partner_ind,
-        ]
-        equ_scale = covariates[ind_state, 2]
-        non_employ_cons = non_employment_consumption_resources[ind_state] / equ_scale
-        mu = model_spec.mu
-        consumption_utility = non_employ_cons ** mu / mu
-        value_func = consumption_utility + model_spec.delta * emaxs[ind_state, 0]
-        np.testing.assert_equal(float(value_func), emaxs[ind_state, 3])
+    ind_state = indexer[
+        period,
+        educ_level,
+        lagged_choice,
+        exp_pt,
+        exp_ft,
+        type_1,
+        age_young_child,
+        partner_ind,
+    ]
+    equ_scale = covariates[ind_state, 2]
+    non_employ_cons = non_employment_consumption_resources[ind_state] / equ_scale
+    mu = model_spec.mu
+    consumption_utility = non_employ_cons ** mu / mu
+    value_func = consumption_utility + model_spec.delta * emaxs[ind_state, 0]
+    np.testing.assert_almost_equal(float(value_func), emaxs[ind_state, 3])

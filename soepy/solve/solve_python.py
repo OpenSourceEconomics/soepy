@@ -3,6 +3,7 @@ from functools import partial
 import jax.numpy as jnp
 import numpy as np
 from jax import vmap
+from jax.config import config
 
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
@@ -11,6 +12,8 @@ from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.solve.emaxs import vmap_construct_emax_jax
+
+config.update("jax_enable_x64", True)
 
 
 def pyth_solve(
@@ -81,12 +84,16 @@ def pyth_solve(
     non_employment_consumption_resources = vmap(
         partial(
             calculate_non_employment_consumption_resources,
-            model_spec.ssc_deductions,
-            model_spec.tax_params,
+            jnp.array(model_spec.ssc_deductions),
+            jnp.array(model_spec.tax_params),
             model_spec.tax_splitting,
         ),
         in_axes=(0, 0, 0),
-    )(covariates[:, 1], non_employment_benefits, states[:, 7])
+    )(
+        jnp.array(covariates[:, 1]),
+        jnp.array(non_employment_benefits),
+        jnp.array(states[:, 7]),
+    )
 
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
