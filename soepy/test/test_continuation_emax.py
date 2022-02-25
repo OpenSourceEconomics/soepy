@@ -183,7 +183,7 @@ def test_emaxs_married(input_data):
     weighted_sum = (
         w_child_single + w_no_child_single + w_child_married + w_no_child_married
     )
-    np.testing.assert_equal(weighted_sum, emaxs[ind_state, 0])
+    np.testing.assert_allclose(weighted_sum, emaxs[ind_state, 0])
 
 
 def test_emaxs_single(input_data):
@@ -246,7 +246,7 @@ def test_emaxs_single(input_data):
     weighted_sum = (
         w_child_single + w_no_child_single + w_child_married + w_no_child_married
     )
-    np.testing.assert_equal(weighted_sum, emaxs[ind_state, 0])
+    np.testing.assert_allclose(weighted_sum, emaxs[ind_state, 0])
 
 
 def test_emaxs_single_with_kid(input_data):
@@ -334,4 +334,4 @@ def test_emaxs_single_with_kid(input_data):
     weighted_sum = (
         w_child_single + w_no_child_single + w_child_married + w_no_child_married
     )
-    np.testing.assert_equal(weighted_sum, emaxs[ind_state, 0])
+    np.testing.assert_allclose(weighted_sum, emaxs[ind_state, 0])

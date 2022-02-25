@@ -2,10 +2,14 @@ from functools import partial
 
 import jax.numpy as jnp
 from jax import jit
+from jax import pmap
 from jax import vmap
+from jax.config import config
 
 from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.shared.tax_and_transfers import calculate_net_income
+
+config.update("jax_enable_x64", True)
 
 
 @partial(jit, static_argnums=(1,))

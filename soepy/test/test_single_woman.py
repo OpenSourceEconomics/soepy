@@ -129,7 +129,9 @@ def input_data():
 
 
 def test_single_woman(input_data):
-    np.testing.assert_equal(input_data["splitted"], input_data["individual"])
+    np.testing.assert_almost_equal(
+        input_data["splitted"], input_data["individual"], decimal=12
+    )
 
 
 def test_single_woman_regression(input_data):

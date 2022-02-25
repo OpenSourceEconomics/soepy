@@ -1,5 +1,6 @@
 import pickle
 
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
@@ -145,18 +146,18 @@ def test_non_consumption_resources_married_no_newborn(input_data):
     subgroup_check = married & ~working_last_period & ~newborn_child
     married_non_emplyed = non_employment_consumption_resources[subgroup_check]
     relevant_male_wages = covariates[:, 1][subgroup_check]
+    partner_indicator = states[:, 7][subgroup_check]
 
     for i in range(married_non_emplyed.shape[0]):
-        assert (
-            calculate_net_income(
-                np.array(model_spec.tax_params),
-                np.array(model_spec.ssc_deductions),
-                0,
-                relevant_male_wages[i],
-                model_spec.tax_splitting,
-            )
-            == married_non_emplyed[i]
+        calc_inc = calculate_net_income(
+            jnp.array(model_spec.tax_params),
+            jnp.array(model_spec.ssc_deductions),
+            0,
+            relevant_male_wages[i],
+            partner_indicator[i],
+            model_spec.tax_splitting,
         )
+        np.testing.assert_almost_equal(calc_inc, married_non_emplyed[i])
 
 
 def test_work_choices(input_data):
