@@ -5,4 +5,3 @@ doc/build/
 .pytest_cache/
 .coverage
 *.egg-info/
-*test.ipynb

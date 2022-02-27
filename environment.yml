@@ -19,5 +19,7 @@ dependencies:
 - pip
 - pip:
   - pre-commit
+  - snakeviz
   - black
+  - jaxlib
   - jax
