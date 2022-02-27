@@ -73,7 +73,7 @@ def calc_value_func_from_cons(cons, non_cons_utility, delta, mu, emax):
 
 
 @jit
-def do_weighting_emax_jax(child_emaxs, prob_child, prob_partner):
+def weighting_emax(child_emaxs, prob_child, prob_partner):
     weight_01 = (1 - prob_child) * prob_partner[1] * child_emaxs[0, 1]
     weight_00 = (1 - prob_child) * prob_partner[0] * child_emaxs[0, 0]
     weight_10 = prob_child * prob_partner[0] * child_emaxs[1, 0]
@@ -88,9 +88,7 @@ def vmap_construct_emax_jax(
     log_wage_systematic,
     non_consumption_utilities,
     draws,
-    emaxs_child_states,
-    prob_child,
-    prob_partner,
+    continuation_values,
     hours,
     non_employment_consumption_resources,
     deductions_spec,
@@ -102,23 +100,24 @@ def vmap_construct_emax_jax(
     equivalence,
     partner_indicator,
 ):
-    partial_emax = partial(construct_emax_jax, delta, mu, tax_splitting)
-    vmap_func = vmap(
-        partial_emax,
-        in_axes=(0, 0, None, 0, 0, 0, None, 0, None, None, None, 0, 0, 0, 0, 0),
-    )
-    return vmap_func(
-        log_wage_systematic,
-        non_consumption_utilities,
+    partial_emax = partial(
+        construct_emax_jax,
+        delta,
+        mu,
+        tax_splitting,
         draws,
-        emaxs_child_states,
-        prob_child,
-        prob_partner,
         hours,
-        non_employment_consumption_resources,
         deductions_spec,
         income_tax_spec,
         child_care_costs,
+    )
+    vmap_func = vmap(partial_emax, in_axes=0, out_axes=0)
+
+    return vmap_func(
+        log_wage_systematic,
+        non_consumption_utilities,
+        continuation_values,
+        non_employment_consumption_resources,
         index_child_care_costs,
         male_wage,
         child_benefits,
@@ -132,17 +131,15 @@ def construct_emax_jax(
     delta,
     mu,
     tax_splitting,
-    log_wage_systematic,
-    non_consumption_utilities,
     draws,
-    emaxs_child_states,
-    prob_child,
-    prob_partner,
     hours,
-    non_employment_consumption_resources,
     deductions_spec,
     income_tax_spec,
     child_care_costs,
+    log_wage_systematic,
+    non_consumption_utilities,
+    continuation_values,
+    non_employment_consumption_resources,
     index_child_care_costs,
     male_wage,
     child_benefits,
@@ -207,16 +204,6 @@ def construct_emax_jax(
     # """
     num_draws = draws.shape[0]
 
-    emax_0 = do_weighting_emax_jax(
-        emaxs_child_states[0, :, :], prob_child, prob_partner
-    )
-    emax_1 = do_weighting_emax_jax(
-        emaxs_child_states[1, :, :], prob_child, prob_partner
-    )
-    emax_2 = do_weighting_emax_jax(
-        emaxs_child_states[2, :, :], prob_child, prob_partner
-    )
-
     partial_max_ut = partial(get_max_aggregated_utilities_jax, delta, tax_splitting, mu)
     max_total_utility = vmap(
         partial_max_ut,
@@ -240,7 +227,7 @@ def construct_emax_jax(
         log_wage_systematic,
         non_consumption_utilities,
         draws,
-        jnp.array([emax_0, emax_1, emax_2]),
+        continuation_values,
         hours,
         non_employment_consumption_resources,
         deductions_spec,
@@ -257,4 +244,4 @@ def construct_emax_jax(
 
     emax_3 /= num_draws
 
-    return jnp.array([emax_0, emax_1, emax_2, emax_3])
+    return emax_3

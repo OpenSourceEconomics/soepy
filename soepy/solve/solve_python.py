@@ -11,6 +11,7 @@ from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.solve.emaxs import vmap_construct_emax_jax
+from soepy.solve.emaxs import weighting_emax
 
 
 def pyth_solve(
@@ -214,14 +215,17 @@ def pyth_backward_induction(
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
         if period == model_spec.num_periods - 1:
-            emaxs_child_states = jnp.zeros(
-                shape=(states_period.shape[0], 3, 2, 2), dtype=float
+            continuation_values = jnp.zeros(
+                shape=(states_period.shape[0], 3), dtype=float
             )
         else:
             child_states_ind_period = jnp.take(
                 child_state_indexes, state_period_index, axis=0
             )
             emaxs_child_states = jnp.take(emaxs[:, 3], child_states_ind_period, axis=0)
+            continuation_values = vmap(
+                vmap(weighting_emax, in_axes=(0, None, None)), in_axes=(0, 0, 0)
+            )(emaxs_child_states, prob_child_period, prob_partner_period)
 
         # Calculate emax for current period reached by the loop
         emaxs_period = vmap_construct_emax_jax(
@@ -231,9 +235,7 @@ def pyth_backward_induction(
             log_wage_systematic_period,
             non_consumption_utilities_period,
             jnp.array(draws[period]),
-            emaxs_child_states,
-            prob_child_period,
-            prob_partner_period,
+            continuation_values,
             hours,
             non_employment_consumption_resources_period,
             deductions_spec_jax,
@@ -245,7 +247,7 @@ def pyth_backward_induction(
             equivalence_scale_period,
             partner_indicator,
         )
-
-        emaxs[state_period_index, :] = emaxs_period
+        emaxs[state_period_index, :3] = continuation_values
+        emaxs[state_period_index, 3] = emaxs_period
 
     return emaxs
