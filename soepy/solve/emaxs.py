@@ -17,24 +17,24 @@ def get_max_aggregated_utilities_jax(
     delta,
     tax_splitting,
     mu,
+    hours,
+    deductions_spec,
+    income_tax_spec,
+    child_care_costs,
     log_wage_systematic,
     non_consumption_utilities,
     draws,
-    emaxs,
-    hours,
+    cont_values,
     non_employment_consumption_resources,
-    deductions_spec,
-    income_tax_spec,
     male_wage,
     child_benefits,
     equivalence,
-    child_care_costs,
     child_care_bin,
     partner_indicator,
 ):
     consumption_not_working = non_employment_consumption_resources / equivalence
     current_max_value_function = calc_value_func_from_cons(
-        consumption_not_working, non_consumption_utilities[0], delta, mu, emaxs[0]
+        consumption_not_working, non_consumption_utilities[0], delta, mu, cont_values[0]
     )
 
     for j in range(1, NUM_CHOICES):
@@ -55,7 +55,7 @@ def get_max_aggregated_utilities_jax(
             jnp.maximum(net_income + child_benefits - child_costs, 1e-20) / equivalence
         )
         value_function_choice = calc_value_func_from_cons(
-            consumption, non_consumption_utilities[j], delta, mu, emaxs[j]
+            consumption, non_consumption_utilities[j], delta, mu, cont_values[j]
         )
 
         current_max_value_function = jnp.maximum(
@@ -74,56 +74,14 @@ def calc_value_func_from_cons(cons, non_cons_utility, delta, mu, emax):
 
 @jit
 def weighting_emax(child_emaxs, prob_child, prob_partner):
+    """
+    This weights the child state emaxs according to the exogenous process probabilities.
+    """
     weight_01 = (1 - prob_child) * prob_partner[1] * child_emaxs[0, 1]
     weight_00 = (1 - prob_child) * prob_partner[0] * child_emaxs[0, 0]
     weight_10 = prob_child * prob_partner[0] * child_emaxs[1, 0]
     weight_11 = prob_child * prob_partner[1] * child_emaxs[1, 1]
     return weight_11 + weight_10 + weight_00 + weight_01
-
-
-def vmap_construct_emax_jax(
-    delta,
-    mu,
-    tax_splitting,
-    log_wage_systematic,
-    non_consumption_utilities,
-    draws,
-    continuation_values,
-    hours,
-    non_employment_consumption_resources,
-    deductions_spec,
-    income_tax_spec,
-    child_care_costs,
-    index_child_care_costs,
-    male_wage,
-    child_benefits,
-    equivalence,
-    partner_indicator,
-):
-    partial_emax = partial(
-        construct_emax_jax,
-        delta,
-        mu,
-        tax_splitting,
-        draws,
-        hours,
-        deductions_spec,
-        income_tax_spec,
-        child_care_costs,
-    )
-    vmap_func = vmap(partial_emax, in_axes=0, out_axes=0)
-
-    return vmap_func(
-        log_wage_systematic,
-        non_consumption_utilities,
-        continuation_values,
-        non_employment_consumption_resources,
-        index_child_care_costs,
-        male_wage,
-        child_benefits,
-        equivalence,
-        partner_indicator,
-    )
 
 
 @partial(jit, static_argnums=(2,))
@@ -202,46 +160,36 @@ def construct_emax_jax(
     #     https://en.wikipedia.org/wiki/Monte_Carlo_integration
     #
     # """
-    num_draws = draws.shape[0]
 
-    partial_max_ut = partial(get_max_aggregated_utilities_jax, delta, tax_splitting, mu)
-    max_total_utility = vmap(
-        partial_max_ut,
-        in_axes=(
-            None,
-            None,
-            0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
+    partial_max_ut = partial(
+        get_max_aggregated_utilities_jax,
+        delta,
+        tax_splitting,
+        mu,
+        hours,
+        deductions_spec,
+        income_tax_spec,
+        child_care_costs,
+    )
+    emax_3 = vmap(
+        vmap(
+            partial_max_ut,
+            in_axes=(None, None, 0, None, None, None, None, None, None, None,),
         ),
+        in_axes=(0, 0, None, 0, 0, 0, 0, 0, 0, 0),
     )(
         log_wage_systematic,
         non_consumption_utilities,
         draws,
         continuation_values,
-        hours,
         non_employment_consumption_resources,
-        deductions_spec,
-        income_tax_spec,
         male_wage,
         child_benefits,
         equivalence,
-        child_care_costs,
         index_child_care_costs,
         partner_indicator,
-    ).sum()
-
-    emax_3 = max_total_utility
-
-    emax_3 /= num_draws
+    ).mean(
+        axis=1
+    )
 
     return emax_3

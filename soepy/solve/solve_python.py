@@ -10,7 +10,7 @@ from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.solve.emaxs import vmap_construct_emax_jax
+from soepy.solve.emaxs import construct_emax_jax
 from soepy.solve.emaxs import weighting_emax
 
 
@@ -228,19 +228,19 @@ def pyth_backward_induction(
             )(emaxs_child_states, prob_child_period, prob_partner_period)
 
         # Calculate emax for current period reached by the loop
-        emaxs_period = vmap_construct_emax_jax(
+        emaxs_period = construct_emax_jax(
             delta,
             mu,
             tax_splitting,
-            log_wage_systematic_period,
-            non_consumption_utilities_period,
             jnp.array(draws[period]),
-            continuation_values,
             hours,
-            non_employment_consumption_resources_period,
             deductions_spec_jax,
             tax_params_jax,
             child_care_costs,
+            log_wage_systematic_period,
+            non_consumption_utilities_period,
+            continuation_values,
+            non_employment_consumption_resources_period,
             index_child_care_costs,
             male_wage_period,
             child_benefits_period,
