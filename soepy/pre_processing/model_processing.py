@@ -25,7 +25,7 @@ def read_model_params_init(model_params_init_file_name):
     # Transform data frame to dictionary
     model_params_dict = {
         l: model_params_df.loc[l, "value"].to_dict()
-        for l in model_params_df.index.levels[0]
+        for l in model_params_df.index.get_level_values(0).unique()
     }
 
     # Add share of baseline type to parameters dictionary
@@ -81,21 +81,20 @@ def group_parameters(model_params_dict_expanded):
 
     model_params_dict_flat = dict()
 
-    model_params_dict_flat["gamma_0"] = np.array(
-        list(model_params_dict_expanded["const_wage_eq"].values())
-    )
+    for category, param in [
+        ("const_wage_eq", "gamma_0"),
+        ("exp_returns_f", "gamma_f"),
+        ("exp_returns_p", "gamma_p"),
+        ("exp_returns_p_subj", "gamma_p_subj"),
+    ]:
+        model_params_dict_flat[param] = np.zeros(
+            len(model_params_dict_expanded["const_wage_eq"]), dtype=float
+        )
 
-    model_params_dict_flat["gamma_f"] = np.array(
-        list(model_params_dict_expanded["exp_returns_f"].values())
-    )
-
-    model_params_dict_flat["gamma_p"] = np.array(
-        list(model_params_dict_expanded["exp_returns_p"].values())
-    )
-
-    model_params_dict_flat["gamma_p_subj"] = np.array(
-        list(model_params_dict_expanded["exp_returns_p_subj"].values())
-    )
+        for educ_ind, educ_type in enumerate(["low", "middle", "high"]):
+            model_params_dict_flat[param][educ_ind] = model_params_dict_expanded[
+                category
+            ][f"{param}_{educ_type}"]
 
     for key_ in list(model_params_dict_expanded["disutil_work"].keys()):
         if "child" in key_:

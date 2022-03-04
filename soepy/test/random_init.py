@@ -171,19 +171,19 @@ def random_init(constr=None):
         model_params_init_dict["gamma_f_low"],
         model_params_init_dict["gamma_f_middle"],
         model_params_init_dict["gamma_f_high"],
-    ) = np.random.uniform(0.001, 0.5, 3).tolist()
+    ) = np.random.uniform(0.001, 0.2, 3).tolist()
 
     (
         model_params_init_dict["gamma_p_low"],
         model_params_init_dict["gamma_p_middle"],
         model_params_init_dict["gamma_p_high"],
-    ) = np.random.uniform(0.001, 0.5, 3).tolist()
+    ) = np.random.uniform(0.001, 0.2, 3).tolist()
 
     (
         model_params_init_dict["gamma_p_subj_low"],
         model_params_init_dict["gamma_p_subj_middle"],
         model_params_init_dict["gamma_p_subj_high"],
-    ) = [0.570, 0.533, 0.625]
+    ) = np.random.uniform(0.001, 0.2, 3).tolist()
 
     (
         model_params_init_dict["no_kids_f_educ_low"],
