@@ -162,34 +162,28 @@ def random_init(constr=None):
     model_params_init_dict = dict()
 
     (
-        model_params_init_dict["gamma_0s1"],
-        model_params_init_dict["gamma_0s2"],
-        model_params_init_dict["gamma_0s3"],
+        model_params_init_dict["gamma_0_low"],
+        model_params_init_dict["gamma_0_middle"],
+        model_params_init_dict["gamma_0_high"],
     ) = np.random.uniform(0.5, 4.0, 3).tolist()
 
     (
-        model_params_init_dict["gamma_1s1"],
-        model_params_init_dict["gamma_1s2"],
-        model_params_init_dict["gamma_1s3"],
+        model_params_init_dict["gamma_f_low"],
+        model_params_init_dict["gamma_f_middle"],
+        model_params_init_dict["gamma_f_high"],
     ) = np.random.uniform(0.001, 0.5, 3).tolist()
 
     (
-        model_params_init_dict["g_s1"],
-        model_params_init_dict["g_s2"],
-        model_params_init_dict["g_s3"],
+        model_params_init_dict["gamma_p_low"],
+        model_params_init_dict["gamma_p_middle"],
+        model_params_init_dict["gamma_p_high"],
     ) = np.random.uniform(0.001, 0.5, 3).tolist()
 
     (
-        model_params_init_dict["g_bar_s1"],
-        model_params_init_dict["g_bar_s2"],
-        model_params_init_dict["g_bar_s3"],
+        model_params_init_dict["gamma_p_subj_low"],
+        model_params_init_dict["gamma_p_subj_middle"],
+        model_params_init_dict["gamma_p_subj_high"],
     ) = [0.570, 0.533, 0.625]
-
-    (
-        model_params_init_dict["delta_s1"],
-        model_params_init_dict["delta_s2"],
-        model_params_init_dict["delta_s3"],
-    ) = np.random.uniform(0.001, 0.2, 3).tolist()
 
     (
         model_params_init_dict["no_kids_f_educ_low"],
@@ -244,14 +238,12 @@ def random_init(constr=None):
         # Check if key is even then add pair to new dictionary
         if "gamma_0" in key:
             category.append("const_wage_eq")
-        elif "gamma_1" in key:
-            category.append("exp_returns")
-        elif "g_s" in key:
-            category.append("exp_accm")
-        elif "g_bar_s" in key:
-            category.append("exp_accm_expected")
-        elif "delta" in key:
-            category.append("exp_deprec")
+        elif "gamma_f" in key:
+            category.append("exp_returns_f")
+        elif ("gamma_p" in key) and ("gamma_p_subj" not in key):
+            category.append("exp_returns_p")
+        elif "gamma_p_subj" in key:
+            category.append("exp_returns_p_subj")
         elif "theta" in key:
             category.append("hetrg_unobs")
         elif "share" in key:

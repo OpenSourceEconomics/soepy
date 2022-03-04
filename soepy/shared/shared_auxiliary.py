@@ -60,8 +60,16 @@ def calculate_utility_components(
         contribution of non-pecuniary factors.
 
     """
+    if is_expected:
+        gamma_p = model_params.gamma_p_subj
+    else:
+        gamma_p = model_params.gamma_p
     log_wage_systematic = calculate_log_wage_systematic(
-        model_params, model_spec, states, is_expected
+        gamma_0=model_params.gamma_0,
+        gamma_p=gamma_p,
+        gamma_f=model_params.gamma_f,
+        model_spec=model_spec,
+        states=states,
     )
 
     non_consumption_utility = calculate_non_consumption_utility(
@@ -71,38 +79,42 @@ def calculate_utility_components(
     return log_wage_systematic, non_consumption_utility
 
 
-def calculate_log_wage_systematic(model_params, model_spec, states, is_expected):
+def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, model_spec, states):
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
     exp_p_state, exp_f_state = states[:, 3], states[:, 4]
 
-    exp_p = np.where(
-        exp_p_state + exp_f_state > model_spec.exp_cap,
-        np.around(exp_p_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap),
-        exp_p_state,
+    log_exp_p = np.log(
+        np.where(
+            exp_p_state + exp_f_state > model_spec.exp_cap,
+            np.around(
+                exp_p_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap
+            ),
+            exp_p_state,
+        )
+        + 1
     )
 
-    exp_f = np.where(
-        exp_p_state + exp_f_state > model_spec.exp_cap,
-        np.around(exp_f_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap),
-        exp_f_state,
+    log_exp_f = np.log(
+        np.where(
+            exp_p_state + exp_f_state > model_spec.exp_cap,
+            np.around(
+                exp_f_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap
+            ),
+            exp_f_state,
+        )
+        + 1
     )
 
     # Construct wage components
-    gamma_0s = np.array(model_params.gamma_0s)[states[:, 1]]
-    gamma_1s = np.array(model_params.gamma_1s)[states[:, 1]]
-
-    if is_expected:
-        period_exp_sum = np.array(model_params.g_bar_s)[states[:, 1]] * exp_p + exp_f
-    else:
-        period_exp_sum = exp_p * np.array(model_params.g_s)[states[:, 1]] + exp_f
-
-    depreciation = 1 - np.array(model_params.delta_s)[states[:, 1]]
+    gamma_0_edu = gamma_0[states[:, 1]]
+    gamma_f_edu = gamma_f[states[:, 1]]
+    gamma_p_edu = gamma_p[states[:, 1]]
 
     # Calculate wage in the given state
-    period_exp_total = period_exp_sum * depreciation + 1
-    returns_to_exp = gamma_1s * np.log(period_exp_total)
-    log_wage_systematic = gamma_0s + returns_to_exp
+    log_wage_systematic = (
+        gamma_0_edu + gamma_f_edu * log_exp_f + gamma_p_edu * log_exp_p
+    )
 
     return log_wage_systematic
 

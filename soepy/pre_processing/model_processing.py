@@ -1,6 +1,7 @@
 import collections
 import copy
 
+import numpy as np
 import pandas as pd
 import yaml
 
@@ -80,24 +81,20 @@ def group_parameters(model_params_dict_expanded):
 
     model_params_dict_flat = dict()
 
-    model_params_dict_flat["gamma_0s"] = list(
-        model_params_dict_expanded["const_wage_eq"].values()
+    model_params_dict_flat["gamma_0"] = np.array(
+        list(model_params_dict_expanded["const_wage_eq"].values())
     )
 
-    model_params_dict_flat["gamma_1s"] = list(
-        model_params_dict_expanded["exp_returns"].values()
+    model_params_dict_flat["gamma_f"] = np.array(
+        list(model_params_dict_expanded["exp_returns_f"].values())
     )
 
-    model_params_dict_flat["g_s"] = list(
-        model_params_dict_expanded["exp_accm"].values()
+    model_params_dict_flat["gamma_p"] = np.array(
+        list(model_params_dict_expanded["exp_returns_p"].values())
     )
 
-    model_params_dict_flat["g_bar_s"] = list(
-        model_params_dict_expanded["exp_accm_expected"].values()
-    )
-
-    model_params_dict_flat["delta_s"] = list(
-        model_params_dict_expanded["exp_deprec"].values()
+    model_params_dict_flat["gamma_p_subj"] = np.array(
+        list(model_params_dict_expanded["exp_returns_p_subj"].values())
     )
 
     for key_ in list(model_params_dict_expanded["disutil_work"].keys()):

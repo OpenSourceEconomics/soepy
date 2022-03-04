@@ -5,3 +5,4 @@ doc/build/
 .pytest_cache/
 .coverage
 *.egg-info/
+Speed_test.ipynb
