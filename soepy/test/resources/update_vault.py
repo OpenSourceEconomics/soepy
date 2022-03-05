@@ -1,5 +1,7 @@
 import pickle
 
+import numpy as np
+
 from development.tests.auxiliary.auxiliary import cleanup
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
@@ -23,7 +25,6 @@ def update_solve_objectes():
     with open(vault_file, "rb") as file:
         tests_sim_func = pickle.load(file)
 
-    solve_dict = {}
     for i in range(0, 100):
         print(i)
 
@@ -41,6 +42,28 @@ def update_solve_objectes():
             expected_df_sim_func,
             expected_df_sim_sol,
         ) = tests_sim_func[i]
+
+        # random_model_params_df.drop("const_wage_eq", level=0, inplace=True)
+        # random_model_params_df.drop("exp_returns", level=0, inplace=True)
+        # random_model_params_df.drop("exp_accm_expected", level=0, inplace=True)
+        # random_model_params_df.drop("exp_deprec", level=0, inplace=True)
+        # random_model_params_df.drop("exp_accm", level=0, inplace=True)
+        #
+        # for educ_typ in ["low", "middle", "high"]:
+        #     random_model_params_df.loc[
+        #         ("const_wage_eq", f"gamma_0_{educ_typ}"), "value"
+        #     ] = np.random.uniform(0.5, 4.0)
+        #     random_model_params_df.loc[
+        #         ("exp_returns_f", f"gamma_f_{educ_typ}"), "value"
+        #     ] = np.random.uniform(0.01, 0.2)
+        #     random_model_params_df.loc[
+        #         ("exp_returns_p", f"gamma_p_{educ_typ}"), "value"
+        #     ] = np.random.uniform(0.01, 0.2)
+        #     random_model_params_df.loc[
+        #         ("exp_returns_p_subj", f"gamma_p_subj_{educ_typ}"), "value"
+        #     ] = np.random.uniform(0.01, 0.2)
+        #
+        # random_model_params_df.sort_index(inplace=True)
 
         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
@@ -95,7 +118,7 @@ def update_solve_objectes():
             emaxs,
             covariates,
             non_employment_consumption_resources,
-            solve_dict[i]["child_age_update_rule"],
+            child_age_update_rule,
             prob_educ_level,
             prob_child_age,
             prob_partner_present,

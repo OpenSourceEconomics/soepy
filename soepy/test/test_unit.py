@@ -417,12 +417,13 @@ def test_coef_educ_level_specificity():
     model_params_base = pd.read_pickle("test.soepy.pkl")
 
     # Draw random education level to change
+    educ_levels = ["low", "middle", "high"]
     random_educ_level = random.choice([0, 1, 2])
-    param_to_change = "gamma_1s" + str(random_educ_level + 1)
+    param_to_change = f"gamma_f_{educ_levels[random_educ_level]}"
 
     model_params_changed = model_params_base
-    model_params_changed.loc[("exp_returns", param_to_change), "value"] = (
-        model_params_changed.loc[("exp_returns", param_to_change), "value"] * 2
+    model_params_changed.loc[("exp_returns_f", param_to_change), "value"] = (
+        model_params_changed.loc[("exp_returns_f", param_to_change), "value"] * 2
     )
 
     data = []
