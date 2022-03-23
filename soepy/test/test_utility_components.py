@@ -78,9 +78,12 @@ def test_pyth_simulate(input_vault, test_id, is_expected):
             ("exp_returns_f", f"gamma_f_{edu_type}"), "value"
         ]
         if is_expected:
-            gamma_p = random_model_params_df.loc[
-                ("exp_returns_p_subj", f"gamma_p_subj_{edu_type}"), "value"
-            ]
+            gamma_p = (
+                random_model_params_df.loc[
+                    ("exp_returns_p_subj", f"gamma_p_bias_{edu_type}"), "value"
+                ]
+                * gamma_f
+            )
         else:
             gamma_p = random_model_params_df.loc[
                 ("exp_returns_p", f"gamma_p_{edu_type}"), "value"
