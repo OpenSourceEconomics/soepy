@@ -85,7 +85,7 @@ def group_parameters(model_params_dict_expanded):
         ("const_wage_eq", "gamma_0"),
         ("exp_returns_f", "gamma_f"),
         ("exp_returns_p", "gamma_p"),
-        ("exp_returns_p_subj", "gamma_p_subj"),
+        ("exp_returns_p_bias", "gamma_p_bias"),
     ]:
         model_params_dict_flat[param] = np.zeros(
             len(model_params_dict_expanded["const_wage_eq"]), dtype=float

@@ -61,7 +61,10 @@ def calculate_utility_components(
 
     """
     if is_expected:
-        gamma_p = model_params.gamma_p_subj
+        # Calculate biased part-time expectation by using ratio from expected data and structural paramteters
+        gamma_p = (
+            model_params.gamma_p_bias / (model_params.gamma_p / model_params.gamma_f)
+        ) * model_params.gamma_p
     else:
         gamma_p = model_params.gamma_p
     log_wage_systematic = calculate_log_wage_systematic(

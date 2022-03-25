@@ -43,25 +43,19 @@ def update_solve_objectes():
             expected_df_sim_sol,
         ) = tests_sim_func[i]
 
-        # random_model_params_df.drop("const_wage_eq", level=0, inplace=True)
-        # random_model_params_df.drop("exp_returns", level=0, inplace=True)
-        # random_model_params_df.drop("exp_accm_expected", level=0, inplace=True)
-        # random_model_params_df.drop("exp_deprec", level=0, inplace=True)
-        # random_model_params_df.drop("exp_accm", level=0, inplace=True)
-        #
         # for educ_typ in ["low", "middle", "high"]:
         #     random_model_params_df.loc[
-        #         ("const_wage_eq", f"gamma_0_{educ_typ}"), "value"
-        #     ] = np.random.uniform(0.5, 4.0)
-        #     random_model_params_df.loc[
-        #         ("exp_returns_f", f"gamma_f_{educ_typ}"), "value"
-        #     ] = np.random.uniform(0.01, 0.2)
-        #     random_model_params_df.loc[
-        #         ("exp_returns_p", f"gamma_p_{educ_typ}"), "value"
-        #     ] = np.random.uniform(0.01, 0.2)
-        #     random_model_params_df.loc[
-        #         ("exp_returns_p_subj", f"gamma_p_subj_{educ_typ}"), "value"
-        #     ] = np.random.uniform(0.01, 0.2)
+        #         ("exp_returns_p_bias", f"gamma_p_bias_{educ_typ}"), "value"
+        #     ] = (
+        #         random_model_params_df.loc[
+        #             ("exp_returns_p_subj", f"gamma_p_subj_{educ_typ}"), "value"
+        #         ]
+        #         / random_model_params_df.loc[
+        #             ("exp_returns_f", f"gamma_f_{educ_typ}"), "value"
+        #         ]
+        #     )
+        #
+        # random_model_params_df.drop("exp_returns_p_subj", level=0, inplace=True)
         #
         # random_model_params_df.sort_index(inplace=True)
 
