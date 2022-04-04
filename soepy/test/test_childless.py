@@ -73,8 +73,8 @@ def input_data():
             ("disutil_work", "yes_kids_p_educ_middle"),
             ("disutil_work", "yes_kids_p_educ_low"),
             ("disutil_work", "yes_kids_p_educ_high"),
-            ("disutil_work", "child_02_f"),
-            ("disutil_work", "child_35_f"),
+            ("disutil_work", "child_0_2_f"),
+            ("disutil_work", "child_3_5_f"),
         ]
 
         for param_ind in params_ind_list:

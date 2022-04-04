@@ -195,7 +195,7 @@ def random_init(constr=None):
         model_params_init_dict["child_0_2_f"],
         model_params_init_dict["child_3_5_f"],
         model_params_init_dict["child_6_10_f"],
-        model_params_init_dict["child_11_older_f"],
+        model_params_init_dict["child_11_age_max_f"],
     ) = np.random.uniform(0.001, 0.2, 10).tolist()
 
     (
@@ -208,7 +208,7 @@ def random_init(constr=None):
         model_params_init_dict["child_0_2_p"],
         model_params_init_dict["child_3_5_p"],
         model_params_init_dict["child_6_10_p"],
-        model_params_init_dict["child_11_older_p"],
+        model_params_init_dict["child_11_age_max_p"],
     ) = np.random.uniform(-1.5, -0.001, 10).tolist()
 
     # Random number of types: 1, 2, 3, or 4
