@@ -155,7 +155,7 @@ def update_solve_objectes():
             exog_partner_arrival_info,
             exog_partner_separation_info,
             expected_df_sim_func,
-            expected_df_sim_sol,
+            calculated_df_sim_sol.sum(axis=0),
         )
 
     with open(vault_file, "wb") as file:
