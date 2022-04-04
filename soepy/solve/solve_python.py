@@ -76,12 +76,14 @@ def pyth_solve(
 
     tax_splitting = model_spec.tax_splitting
 
-    non_employment_consumption_resources = calculate_non_employment_consumption_resources(
-        model_spec.ssc_deductions,
-        model_spec.tax_params,
-        covariates[:, 1],
-        non_employment_benefits,
-        tax_splitting,
+    non_employment_consumption_resources = (
+        calculate_non_employment_consumption_resources(
+            model_spec.ssc_deductions,
+            model_spec.tax_params,
+            covariates[:, 1],
+            non_employment_benefits,
+            tax_splitting,
+        )
     )
 
     # Solve the model in a backward induction procedure
@@ -183,9 +185,9 @@ def pyth_backward_induction(
         # Period rewards
         log_wage_systematic_period = log_wage_systematic[state_period_cond]
         non_consumption_utilities_period = non_consumption_utilities[state_period_cond]
-        non_employment_consumption_resources_period = non_employment_consumption_resources[
-            state_period_cond
-        ]
+        non_employment_consumption_resources_period = (
+            non_employment_consumption_resources[state_period_cond]
+        )
 
         # Corresponding equivalence scale for period states
         male_wage_period = covariates[np.where(state_period_cond)][:, 1]

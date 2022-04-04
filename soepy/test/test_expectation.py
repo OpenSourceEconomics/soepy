@@ -73,6 +73,7 @@ def test_simulation_func_exp(input_vault, test_id):
     )
 
     pd.testing.assert_series_equal(
-        calculated_df_false.sum(axis=0), calculated_df_true.sum(axis=0),
+        calculated_df_false.sum(axis=0),
+        calculated_df_true.sum(axis=0),
     )
     cleanup()

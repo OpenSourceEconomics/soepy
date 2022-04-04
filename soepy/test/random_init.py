@@ -192,10 +192,11 @@ def random_init(constr=None):
         model_params_init_dict["yes_kids_f_educ_low"],
         model_params_init_dict["yes_kids_f_educ_middle"],
         model_params_init_dict["yes_kids_f_educ_high"],
-        model_params_init_dict["child_02_f"],
-        model_params_init_dict["child_35_f"],
-        model_params_init_dict["child_6orolder_f"],
-    ) = np.random.uniform(0.001, 0.2, 9).tolist()
+        model_params_init_dict["child_0_2_f"],
+        model_params_init_dict["child_3_5_f"],
+        model_params_init_dict["child_6_10_f"],
+        model_params_init_dict["child_11_age_max_f"],
+    ) = np.random.uniform(0.001, 0.2, 10).tolist()
 
     (
         model_params_init_dict["no_kids_p_educ_low"],
@@ -204,10 +205,11 @@ def random_init(constr=None):
         model_params_init_dict["yes_kids_p_educ_low"],
         model_params_init_dict["yes_kids_p_educ_middle"],
         model_params_init_dict["yes_kids_p_educ_high"],
-        model_params_init_dict["child_02_p"],
-        model_params_init_dict["child_35_p"],
-        model_params_init_dict["child_6orolder_p"],
-    ) = np.random.uniform(-1.5, -0.001, 9).tolist()
+        model_params_init_dict["child_0_2_p"],
+        model_params_init_dict["child_3_5_p"],
+        model_params_init_dict["child_6_10_p"],
+        model_params_init_dict["child_11_age_max_p"],
+    ) = np.random.uniform(-1.5, -0.001, 10).tolist()
 
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
@@ -292,7 +294,9 @@ def random_init(constr=None):
         index_levels = [[0, 1, 2], list(range(-1, child_age_init_max + 1))]
     index = pd.MultiIndex.from_product(index_levels, names=["educ_level", "child_age"])
     exog_child_age_shares = pd.DataFrame(
-        child_age_shares.tolist(), index=index, columns=["child_age_shares"],
+        child_age_shares.tolist(),
+        index=index,
+        columns=["child_age_shares"],
     )
     exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
 
@@ -322,7 +326,9 @@ def random_init(constr=None):
             index_levels, names=["educ_level", label + "_exp"]
         )
         exog_exper_shares = pd.DataFrame(
-            exper_shares.tolist(), index=index, columns=["exper_shares"],
+            exper_shares.tolist(),
+            index=index,
+            columns=["exper_shares"],
         )
         exog_exper_shares.to_pickle("test.soepy." + label + ".exp.shares.pkl")
         if label == "pt":

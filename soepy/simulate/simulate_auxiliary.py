@@ -135,9 +135,9 @@ def pyth_simulate(
         # Extract corresponding utilities
         current_log_wage_systematic = log_wage_systematic[idx]
         current_non_consumption_utilities = non_consumption_utilities[idx]
-        current_non_employment_consumption_resources = non_employment_consumption_resources[
-            idx
-        ]
+        current_non_employment_consumption_resources = (
+            non_employment_consumption_resources[idx]
+        )
         current_equivalence_scale = covariates[idx][:, 2]
         current_male_wages = covariates[idx][:, 1]
         current_child_benefits = covariates[idx][:, 3]
@@ -149,12 +149,14 @@ def pyth_simulate(
 
         current_female_income = HOURS[1:] * current_wages
 
-        current_employment_consumption_resources = calculate_employment_consumption_resources(
-            model_spec.ssc_deductions,
-            model_spec.tax_params,
-            current_female_income,
-            current_male_wages,
-            tax_splitting,
+        current_employment_consumption_resources = (
+            calculate_employment_consumption_resources(
+                model_spec.ssc_deductions,
+                model_spec.tax_params,
+                current_female_income,
+                current_male_wages,
+                tax_splitting,
+            )
         )
 
         current_employment_consumption_resources += current_child_benefits.reshape(

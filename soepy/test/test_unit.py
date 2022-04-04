@@ -38,10 +38,12 @@ def test_unit_nan():
     df = simulate("test.soepy.pkl", "test.soepy.yml")
 
     np.testing.assert_equal(
-        df[df["Education_Level"] == 1]["Period"].min(), constr["EDUC_YEARS"][1],
+        df[df["Education_Level"] == 1]["Period"].min(),
+        constr["EDUC_YEARS"][1],
     )
     np.testing.assert_equal(
-        df[df["Education_Level"] == 2]["Period"].min(), constr["EDUC_YEARS"][2],
+        df[df["Education_Level"] == 2]["Period"].min(),
+        constr["EDUC_YEARS"][2],
     )
 
 

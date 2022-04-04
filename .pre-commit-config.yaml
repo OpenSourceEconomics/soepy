@@ -24,32 +24,9 @@ repos:
           - id: pyupgrade
             args: [--py36-plus]
     - repo: https://github.com/psf/black
-      rev: 19.10b0
+      rev: 22.3.0
       hooks:
           - id: black
-#    - repo: https://gitlab.com/pycqa/flake8
-#      rev: 3.8.3
-#      hooks:
-#          - id: flake8
-#            additional_dependencies: [
-#                    flake8-alfred,
-#                    flake8-bugbear,
-#                    flake8-builtins,
-#                    flake8-comprehensions,
-#                    flake8-docstrings,
-#                    flake8-eradicate,
-#                    flake8-print,
-#                    # flake8-pytest-style,  # produces SyntaxError with umlauts.
-#                    flake8-todo,
-#                    flake8-unused-arguments,
-#                    pep8-naming,
-#                    pydocstyle,
-#                    Pygments,
-#                ]
-    # -   repo: https://github.com/codespell-project/codespell
-    #     rev: v1.17.1
-    #     hooks:
-    #     -   id: codespell
     - repo: meta
       hooks:
           - id: check-hooks-apply

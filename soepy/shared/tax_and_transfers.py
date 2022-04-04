@@ -53,7 +53,7 @@ def calculate_inc_tax(tax_params, taxable_income):
         difference_to_calc = taxable_income - tax_params[0, interval_num]
         tax_rate = (
             tax_params[2, interval_num] * difference_to_calc
-            + tax_params[3, interval_num] * difference_to_calc ** 2
+            + tax_params[3, interval_num] * difference_to_calc**2
         )
         tax_rate += tax_params[1, interval_num]
 

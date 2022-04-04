@@ -84,12 +84,14 @@ def input_data():
     deductions_spec = np.array(model_spec.ssc_deductions)
     tax_splitting = model_spec.tax_splitting
 
-    non_employment_consumption_resources = calculate_non_employment_consumption_resources(
-        deductions_spec,
-        model_spec.tax_params,
-        covariates[:, 1],
-        non_employment_benefits,
-        tax_splitting,
+    non_employment_consumption_resources = (
+        calculate_non_employment_consumption_resources(
+            deductions_spec,
+            model_spec.tax_params,
+            covariates[:, 1],
+            non_employment_benefits,
+            tax_splitting,
+        )
     )
 
     # Solve the model in a backward induction procedure

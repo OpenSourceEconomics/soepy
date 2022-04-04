@@ -91,12 +91,14 @@ def input_data():
     deductions_spec = np.array(model_spec.ssc_deductions)
     tax_splitting = model_spec.tax_splitting
 
-    non_employment_consumption_resources = calculate_non_employment_consumption_resources(
-        deductions_spec,
-        model_spec.tax_params,
-        covariates[:, 1],
-        non_employment_benefits,
-        tax_splitting,
+    non_employment_consumption_resources = (
+        calculate_non_employment_consumption_resources(
+            deductions_spec,
+            model_spec.tax_params,
+            covariates[:, 1],
+            non_employment_benefits,
+            tax_splitting,
+        )
     )
 
     # Solve the model in a backward induction procedure
@@ -184,6 +186,6 @@ def test_construct_emax(input_data, states_tested):
         equ_scale = covariates[ind_state, 2]
         non_employ_cons = non_employment_consumption_resources[ind_state] / equ_scale
         mu = model_spec.mu
-        consumption_utility = non_employ_cons ** mu / mu
+        consumption_utility = non_employ_cons**mu / mu
         value_func = consumption_utility + model_spec.delta * emaxs[ind_state, 0]
         np.testing.assert_equal(value_func, emaxs[ind_state, 3])

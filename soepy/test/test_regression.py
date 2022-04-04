@@ -119,7 +119,8 @@ def test_pyth_simulate(input_vault, test_id):
     )
 
     pd.testing.assert_series_equal(
-        calculated_df.sum(axis=0), expected_df_sim_sol,
+        calculated_df.sum(axis=0),
+        expected_df_sim_sol,
     )
     cleanup()
 
@@ -156,6 +157,7 @@ def test_simulation_func(input_vault, test_id):
     calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
     pd.testing.assert_series_equal(
-        expected_df_sim_func, calculated_df.sum(axis=0),
+        expected_df_sim_func,
+        calculated_df.sum(axis=0),
     )
     cleanup()

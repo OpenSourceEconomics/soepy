@@ -56,6 +56,7 @@ def test_simulation_func(input_vault, test_id):
     df_partial_sim = simulate_func(random_model_params_df, model_spec_init_dict)
 
     pd.testing.assert_series_equal(
-        df_sim.sum(axis=0), df_partial_sim.sum(axis=0),
+        df_sim.sum(axis=0),
+        df_partial_sim.sum(axis=0),
     )
     cleanup()
