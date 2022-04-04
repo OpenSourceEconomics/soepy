@@ -32,7 +32,9 @@ def construct_covariates(states, model_spec):
     # 0-2, 3-5, 6-10, 11+
     age_kid = pd.Series(states[:, 6])
     bins = pd.cut(
-        age_kid, bins=[-2, -1, 2, 5, 10, 11], labels=[0, 1, 2, 3, 4],
+        age_kid,
+        bins=[-2, -1, 2, 5, 10, 11],
+        labels=[0, 1, 2, 3, 4],
     ).to_numpy()
 
     # Male wages based on age and education level of the woman

@@ -58,7 +58,7 @@ def piecewise_polynomial(x, thresholds, rates, intercepts_at_lower_thresholds):
     # Now add the evaluation of the increment
     for pol in range(1, degree_polynomial + 1):
         out += binned.replace(dict(enumerate(rates[pol - 1, :]))) * (
-            increment_to_calc ** pol
+            increment_to_calc**pol
         )
 
     # For those in interval zero, the above equations yield wrong results

@@ -43,7 +43,7 @@ def _get_max_aggregated_utilities(
                 max(net_income + child_benefits - child_costs, 1e-14) / equivalence
             )
 
-        consumption_utility = consumption ** mu / mu
+        consumption_utility = consumption**mu / mu
 
         value_function_choice = (
             consumption_utility * non_consumption_utilities[j] + delta * emaxs[j]

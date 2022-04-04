@@ -294,7 +294,9 @@ def random_init(constr=None):
         index_levels = [[0, 1, 2], list(range(-1, child_age_init_max + 1))]
     index = pd.MultiIndex.from_product(index_levels, names=["educ_level", "child_age"])
     exog_child_age_shares = pd.DataFrame(
-        child_age_shares.tolist(), index=index, columns=["child_age_shares"],
+        child_age_shares.tolist(),
+        index=index,
+        columns=["child_age_shares"],
     )
     exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
 
@@ -324,7 +326,9 @@ def random_init(constr=None):
             index_levels, names=["educ_level", label + "_exp"]
         )
         exog_exper_shares = pd.DataFrame(
-            exper_shares.tolist(), index=index, columns=["exper_shares"],
+            exper_shares.tolist(),
+            index=index,
+            columns=["exper_shares"],
         )
         exog_exper_shares.to_pickle("test.soepy." + label + ".exp.shares.pkl")
         if label == "pt":
