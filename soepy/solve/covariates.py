@@ -33,7 +33,7 @@ def construct_covariates(states, model_spec):
     age_kid = pd.Series(states[:, 6])
     bins = pd.cut(
         age_kid,
-        bins=[-2, -1, 2, 5, 10, 11],
+        bins=[-2, -1, 2, 5, 10, model_spec.child_age_max],
         labels=[0, 1, 2, 3, 4],
     ).to_numpy()
 
