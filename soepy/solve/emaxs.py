@@ -4,12 +4,9 @@ import jax.numpy as jnp
 from jax import jit
 from jax import pmap
 from jax import vmap
-from jax.config import config
 
 from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.shared.tax_and_transfers import calculate_net_income
-
-config.update("jax_enable_x64", True)
 
 
 @partial(jit, static_argnums=(1,))
@@ -82,6 +79,11 @@ def weighting_emax(child_emaxs, prob_child, prob_partner):
     weight_10 = prob_child * prob_partner[0] * child_emaxs[1, 0]
     weight_11 = prob_child * prob_partner[1] * child_emaxs[1, 1]
     return weight_11 + weight_10 + weight_00 + weight_01
+
+
+# def get_draw_fucn(draws):
+#     num_draws = draws.shape[0]
+#     def calc_av_contr():
 
 
 @partial(jit, static_argnums=(2,))
@@ -160,9 +162,28 @@ def construct_emax_jax(
     #     https://en.wikipedia.org/wiki/Monte_Carlo_integration
     #
     # """
-
-    partial_max_ut = partial(
-        get_max_aggregated_utilities_jax,
+    emax_3 = vmap(
+        constr_draw_av,
+        in_axes=(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            0,
+            0,
+            None,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ),
+    )(
         delta,
         tax_splitting,
         mu,
@@ -170,14 +191,6 @@ def construct_emax_jax(
         deductions_spec,
         income_tax_spec,
         child_care_costs,
-    )
-    emax_3 = vmap(
-        vmap(
-            partial_max_ut,
-            in_axes=(None, None, 0, None, None, None, None, None, None, None,),
-        ),
-        in_axes=(0, 0, None, 0, 0, 0, 0, 0, 0, 0),
-    )(
         log_wage_systematic,
         non_consumption_utilities,
         draws,
@@ -188,8 +201,67 @@ def construct_emax_jax(
         equivalence,
         index_child_care_costs,
         partner_indicator,
-    ).mean(
-        axis=1
     )
 
     return emax_3
+
+
+def constr_draw_av(
+    delta,
+    tax_splitting,
+    mu,
+    hours,
+    deductions_spec,
+    income_tax_spec,
+    child_care_costs,
+    log_wage_systematic,
+    non_consumption_utilities,
+    draws,
+    continuation_values,
+    non_employment_consumption_resources,
+    male_wage,
+    child_benefits,
+    equivalence,
+    index_child_care_costs,
+    partner_indicator,
+):
+    return vmap(
+        get_max_aggregated_utilities_jax,
+        in_axes=(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            0,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        ),
+    )(
+        delta,
+        tax_splitting,
+        mu,
+        hours,
+        deductions_spec,
+        income_tax_spec,
+        child_care_costs,
+        log_wage_systematic,
+        non_consumption_utilities,
+        draws,
+        continuation_values,
+        non_employment_consumption_resources,
+        male_wage,
+        child_benefits,
+        equivalence,
+        index_child_care_costs,
+        partner_indicator,
+    ).mean()
