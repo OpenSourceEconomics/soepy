@@ -81,11 +81,6 @@ def weighting_emax(child_emaxs, prob_child, prob_partner):
     return weight_11 + weight_10 + weight_00 + weight_01
 
 
-# def get_draw_fucn(draws):
-#     num_draws = draws.shape[0]
-#     def calc_av_contr():
-
-
 @partial(jit, static_argnums=(2,))
 def construct_emax_jax(
     delta,
@@ -225,43 +220,27 @@ def constr_draw_av(
     index_child_care_costs,
     partner_indicator,
 ):
-    return vmap(
-        get_max_aggregated_utilities_jax,
-        in_axes=(
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            0,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        ),
-    )(
-        delta,
-        tax_splitting,
-        mu,
-        hours,
-        deductions_spec,
-        income_tax_spec,
-        child_care_costs,
-        log_wage_systematic,
-        non_consumption_utilities,
-        draws,
-        continuation_values,
-        non_employment_consumption_resources,
-        male_wage,
-        child_benefits,
-        equivalence,
-        index_child_care_costs,
-        partner_indicator,
-    ).mean()
+    out = 0.0
+    num_draws = draws.shape[0]
+    for num_draw in range(num_draws):
+        out += get_max_aggregated_utilities_jax(
+            delta,
+            tax_splitting,
+            mu,
+            hours,
+            deductions_spec,
+            income_tax_spec,
+            child_care_costs,
+            log_wage_systematic,
+            non_consumption_utilities,
+            draws[num_draw, :],
+            continuation_values,
+            non_employment_consumption_resources,
+            male_wage,
+            child_benefits,
+            equivalence,
+            index_child_care_costs,
+            partner_indicator,
+        )
+
+    return out / num_draws
