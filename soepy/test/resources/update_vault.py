@@ -42,42 +42,6 @@ def update_solve_objectes():
             expected_df_sim_func,
             expected_df_sim_sol,
         ) = tests_sim_func[i]
-        #
-        # random_model_params_df.loc[
-        #     ("disutil_work", f"child_0_2_p"), "value"
-        # ] = random_model_params_df.loc[("disutil_work", f"child_02_p"), "value"]
-        # random_model_params_df.loc[
-        #     ("disutil_work", f"child_0_2_f"), "value"
-        # ] = random_model_params_df.loc[("disutil_work", f"child_02_f"), "value"]
-        #
-        # random_model_params_df.loc[
-        #     ("disutil_work", f"child_3_5_p"), "value"
-        # ] = random_model_params_df.loc[("disutil_work", f"child_35_p"), "value"]
-        # random_model_params_df.loc[
-        #     ("disutil_work", f"child_3_5_f"), "value"
-        # ] = random_model_params_df.loc[("disutil_work", f"child_35_f"), "value"]
-        #
-        # random_model_params_df.loc[
-        #     ("disutil_work", f"child_6_10_p"), "value"
-        # ] = random_model_params_df.loc[("disutil_work", f"child_6orolder_p"), "value"]
-        # random_model_params_df.loc[
-        #     ("disutil_work", f"child_6_10_f"), "value"
-        # ] = random_model_params_df.loc[("disutil_work", f"child_6orolder_f"), "value"]
-        #
-        # random_model_params_df.loc[("disutil_work", f"child_11_age_max_p"), "value"] = 0
-        # random_model_params_df.loc[("disutil_work", f"child_11_age_max_f"), "value"] = 0
-        #
-        # for param in [
-        #     "child_02_p",
-        #     "child_02_f",
-        #     "child_35_p",
-        #     "child_35_f",
-        #     "child_6orolder_p",
-        #     "child_6orolder_f",
-        # ]:
-        #     random_model_params_df.drop(("disutil_work", param), inplace=True)
-        #
-        # random_model_params_df.sort_index(inplace=True)
 
         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
