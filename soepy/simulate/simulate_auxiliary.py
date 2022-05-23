@@ -143,11 +143,10 @@ def pyth_simulate(
         current_child_benefits = covariates[idx][:, 3]
 
         current_wages = np.exp(
-            current_log_wage_systematic.reshape(-1, 1)
-            + draws_sim[period, current_states[:, 0]]
+            current_log_wage_systematic + draws_sim[period, current_states[:, 0]]
         )
 
-        current_female_income = HOURS[1:] * current_wages
+        current_female_income = current_wages[:, np.newaxis] * HOURS[np.newaxis, 1:]
 
         current_employment_consumption_resources = (
             calculate_employment_consumption_resources(
@@ -276,15 +275,6 @@ def pyth_simulate(
     dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
         DATA_FORMATS_SIM
     )
-
-    # Determine the period wage given choice in the period
-    dataset["Wage_Observed"] = np.nan
-    dataset.loc[dataset["Choice"] == 1, "Wage_Observed"] = dataset.loc[
-        dataset["Choice"] == 1, "Period_Wage_P"
-    ]
-    dataset.loc[dataset["Choice"] == 2, "Wage_Observed"] = dataset.loc[
-        dataset["Choice"] == 2, "Period_Wage_F"
-    ]
 
     return dataset
 
