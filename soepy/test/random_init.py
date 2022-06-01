@@ -228,10 +228,7 @@ def random_init(constr=None):
         # Assign shares
         model_params_init_dict["share_" + f"{i}"] = shares[i]
 
-    (
-        model_params_init_dict["sigma_1"],
-        model_params_init_dict["sigma_2"],
-    ) = np.random.uniform(0.001, 1.0, 2).tolist()
+    (model_params_init_dict["sigma"]) = np.random.uniform(0.001, 1.0, 1)
 
     # Determine categories
     category = []

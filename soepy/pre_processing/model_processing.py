@@ -42,12 +42,7 @@ def read_model_params_init(model_params_init_file_name):
 
 def expand_model_params_dict(model_params_dict):
     # Calculate covariances of the error terms given standard deviations
-    shocks_cov = [
-        model_params_dict["sd_wage_shock"]["sigma_1"],
-        model_params_dict["sd_wage_shock"]["sigma_2"],
-    ]
-    shocks_cov = [shocks_cov[0] ** 2, shocks_cov[1] ** 2]
-
+    shock_sd = model_params_dict["sd_wage_shock"]["sigma"]
     # Extract the values of the type shares
     try:
         type_shares_non_baseline = [
@@ -67,7 +62,7 @@ def expand_model_params_dict(model_params_dict):
 
     # Append derived attributes to init_dict
     model_params_dict["derived_attr"] = {
-        "shocks_cov": shocks_cov,
+        "shock_sd": shock_sd,
         "type_shares": type_shares,
         "num_types": num_types,
     }
@@ -117,8 +112,8 @@ def group_parameters(model_params_dict_expanded):
                 ],
             ]
 
-    model_params_dict_flat["shocks_cov"] = model_params_dict_expanded["derived_attr"][
-        "shocks_cov"
+    model_params_dict_flat["shock_sd"] = model_params_dict_expanded["derived_attr"][
+        "shock_sd"
     ]
     model_params_dict_flat["type_shares"] = model_params_dict_expanded["derived_attr"][
         "type_shares"

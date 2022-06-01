@@ -11,7 +11,7 @@ def _get_max_aggregated_utilities(
     delta,
     log_wage_systematic,
     non_consumption_utilities,
-    draws,
+    draw,
     emaxs,
     hours,
     mu,
@@ -31,7 +31,7 @@ def _get_max_aggregated_utilities(
         if j == 0:
             consumption = non_employment_consumption_resources / equivalence
         else:
-            female_wage = hours[j] * np.exp(log_wage_systematic + draws[j - 1])
+            female_wage = hours[j] * np.exp(log_wage_systematic + draw)
 
             net_income = calculate_net_income(
                 income_tax_spec, deductions_spec, female_wage, male_wage, tax_splitting
@@ -66,10 +66,10 @@ def do_weighting_emax(child_emaxs, prob_child, prob_partner):
 
 @numba.guvectorize(
     [
-        "f8, f8, f8[:], f8[:, :], f8[:, :, :], f8, f8[:], f8[:], f8, f8, f8[:], "
+        "f8, f8, f8[:], f8[:], f8[:, :, :], f8, f8[:], f8[:], f8, f8, f8[:], "
         "f8[:, :], f8[:, :], i8, f8, f8, f8, b1, f8[:], f8[:]"
     ],
-    "(), (), (n_choices), (n_draws, n_emp_choices), (n_choices, n_children_states, "
+    "(), (), (n_choices), (n_draws), (n_choices, n_children_states, "
     "n_partner_states), (), (n_partner_states), (n_choices), (), "
     "(), (n_ssc_params), (n_tax_params, n_tax_params), (n_choices, "
     "n_age_child_costs), (), (), (), (), (), (num_outputs) -> (num_outputs)",
