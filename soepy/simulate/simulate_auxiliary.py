@@ -275,6 +275,7 @@ def pyth_simulate(
     dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
         DATA_FORMATS_SIM
     )
+    dataset.loc[dataset["Choice"] == 0, "Wage_Observed"] = np.nan
 
     return dataset
 
