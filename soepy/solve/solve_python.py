@@ -86,6 +86,10 @@ def pyth_solve(
         )
     )
 
+    index_child_care_costs = np.where(covariates[:, 0] > 2, 0, covariates[:, 0]).astype(
+        int
+    )
+
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
@@ -97,6 +101,7 @@ def pyth_solve(
         non_consumption_utilities,
         draws_emax,
         covariates,
+        index_child_care_costs,
         prob_child,
         prob_partner,
         non_employment_consumption_resources,
@@ -118,6 +123,7 @@ def pyth_backward_induction(
     non_consumption_utilities,
     draws,
     covariates,
+    index_child_care_costs,
     prob_child,
     prob_partner,
     non_employment_consumption_resources,
@@ -168,11 +174,11 @@ def pyth_backward_induction(
 
     # Loop backwards over all periods
     for period in reversed(range(model_spec.num_periods)):
-        state_period_cond = states[:, 0] == period
+        state_period_index = np.where(states[:, 0] == period)[0]
 
         # Extract period information
         # States
-        states_period = states[state_period_cond]
+        states_period = states[state_period_index]
 
         # Probability that a child arrives
         prob_child_period = prob_child[period][states_period[:, 1]]
@@ -183,18 +189,19 @@ def pyth_backward_induction(
         ]
 
         # Period rewards
-        log_wage_systematic_period = log_wage_systematic[state_period_cond]
-        non_consumption_utilities_period = non_consumption_utilities[state_period_cond]
+        log_wage_systematic_period = log_wage_systematic[state_period_index]
+        non_consumption_utilities_period = non_consumption_utilities[state_period_index]
         non_employment_consumption_resources_period = (
-            non_employment_consumption_resources[state_period_cond]
+            non_employment_consumption_resources[state_period_index]
         )
 
         # Corresponding equivalence scale for period states
-        male_wage_period = covariates[np.where(state_period_cond)][:, 1]
-        equivalence_scale_period = covariates[state_period_cond][:, 2]
-        child_benefits_period = covariates[state_period_cond][:, 3]
-        child_bins_period = covariates[state_period_cond][:, 0].astype(int)
-        index_child_care_costs = np.where(child_bins_period > 2, 0, child_bins_period)
+        covariates_state = covariates[state_period_index]
+        male_wage_period = covariates_state[:, 1]
+        equivalence_scale_period = covariates_state[:, 2]
+        child_benefits_period = covariates_state[:, 3]
+
+        index_child_care_costs_period = index_child_care_costs[state_period_index]
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
@@ -203,7 +210,7 @@ def pyth_backward_induction(
                 shape=(states_period.shape[0], 3, 2, 2), dtype=float
             )
         else:
-            child_states_ind_period = child_state_indexes[state_period_cond]
+            child_states_ind_period = child_state_indexes[state_period_index]
             emaxs_child_states = emaxs[:, 3][child_states_ind_period]
 
         # Calculate emax for current period reached by the loop
@@ -221,7 +228,7 @@ def pyth_backward_induction(
             deductions_spec,
             model_spec.tax_params,
             model_spec.child_care_costs,
-            index_child_care_costs,
+            index_child_care_costs_period,
             male_wage_period,
             child_benefits_period,
             equivalence_scale_period,
@@ -229,6 +236,6 @@ def pyth_backward_induction(
             dummy_array,
         )
 
-        emaxs[state_period_cond] = emaxs_period
+        emaxs[state_period_index] = emaxs_period
 
     return emaxs
