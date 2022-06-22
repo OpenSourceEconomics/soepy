@@ -17,6 +17,7 @@ from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
 from soepy.solve.solve_python import pyth_backward_induction
+from soepy.shared.shared_constants import HOURS
 
 
 @pytest.fixture(scope="module")
@@ -101,21 +102,32 @@ def input_data():
         )
     )
 
+    index_child_care_costs = np.where(covariates[:, 0] > 2, 0, covariates[:, 0]).astype(
+        int
+    )
+
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
     emaxs = pyth_backward_induction(
-        model_spec,
+        model_spec.num_periods,
+        tax_splitting,
+        model_spec.mu,
+        model_spec.delta,
+        model_spec.tax_params,
         states,
+        HOURS,
+        model_spec.child_care_costs,
         child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,
         covariates,
+        index_child_care_costs,
         prob_child,
         prob_partner,
         non_employment_consumption_resources,
-        deductions_spec,
+        model_spec.ssc_deductions,
     )
 
     return (

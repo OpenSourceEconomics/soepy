@@ -6,7 +6,7 @@ from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.shared.tax_and_transfers import calculate_net_income
 
 
-@numba.njit
+@numba.njit(nogil=True)
 def _get_max_aggregated_utilities(
     delta,
     log_wage_systematic,
@@ -74,7 +74,7 @@ def do_weighting_emax(child_emaxs, prob_child, prob_partner):
     "(), (n_ssc_params), (n_tax_params, n_tax_params), (n_choices, "
     "n_age_child_costs), (), (), (), (), (), (num_outputs) -> (num_outputs)",
     nopython=True,
-    # target="parallel",
+    target="parallel",
 )
 def construct_emax(
     delta,

@@ -1,3 +1,4 @@
+import numba
 import numpy as np
 
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
@@ -94,8 +95,14 @@ def pyth_solve(
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
     emaxs = pyth_backward_induction(
-        model_spec,
+        model_spec.num_periods,
+        tax_splitting,
+        model_spec.mu,
+        model_spec.delta,
+        model_spec.tax_params,
         states,
+        HOURS,
+        model_spec.child_care_costs,
         child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
@@ -114,10 +121,16 @@ def pyth_solve(
         emaxs,
     )
 
-
+# @numba.njit
 def pyth_backward_induction(
-    model_spec,
+    num_periods,
+    tax_splitting,
+    mu,
+    delta,
+    tax_params,
     states,
+    hours,
+    child_care_costs,
     child_state_indexes,
     log_wage_systematic,
     non_consumption_utilities,
@@ -167,13 +180,10 @@ def pyth_backward_induction(
     """
     dummy_array = np.zeros(4)  # Need this array to define output for construct_emaxs
 
-    emaxs = np.zeros((states.shape[0], NUM_CHOICES + 1))
-
-    # Set taxing type
-    tax_splitting = model_spec.tax_splitting
+    emaxs = np.zeros((states.shape[0], non_consumption_utilities.shape[1] + 1))
 
     # Loop backwards over all periods
-    for period in reversed(range(model_spec.num_periods)):
+    for period in np.arange(num_periods - 1, -1, -1, dtype=int):
         state_period_index = np.where(states[:, 0] == period)[0]
 
         # Extract period information
@@ -205,7 +215,7 @@ def pyth_backward_induction(
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
-        if period == model_spec.num_periods - 1:
+        if period == num_periods - 1:
             emaxs_child_states = np.zeros(
                 shape=(states_period.shape[0], 3, 2, 2), dtype=float
             )
@@ -215,19 +225,19 @@ def pyth_backward_induction(
 
         # Calculate emax for current period reached by the loop
         emaxs_period = construct_emax(
-            model_spec.delta,
+            delta,
             log_wage_systematic_period,
             non_consumption_utilities_period,
             draws[period],
             emaxs_child_states,
             prob_child_period,
             prob_partner_period,
-            HOURS,
-            model_spec.mu,
+            hours,
+            mu,
             non_employment_consumption_resources_period,
             deductions_spec,
-            model_spec.tax_params,
-            model_spec.child_care_costs,
+            tax_params,
+            child_care_costs,
             index_child_care_costs_period,
             male_wage_period,
             child_benefits_period,
