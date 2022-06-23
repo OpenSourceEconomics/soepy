@@ -22,6 +22,28 @@ from soepy.solve.solve_python import pyth_solve
 
 CASES_TEST = random.sample(range(0, 100), 10)
 
+DATA_LABLES_Check = [
+    "Identifier",
+    "Period",
+    "Education_Level",
+    "Lagged_Choice",
+    "Experience_Part_Time",
+    "Experience_Full_Time",
+    "Type",
+    "Age_Youngest_Child",
+    "Partner_Indicator",
+    "Choice",
+    "Log_Systematic_Wage",
+    "Wage_Observed",
+    "Non_Consumption_Utility_N",
+    "Non_Consumption_Utility_P",
+    "Non_Consumption_Utility_F",
+    "Flow_Utility_N",
+    "Flow_Utility_P",
+    "Flow_Utility_F",
+    "Male_Wages",
+]
+
 
 @pytest.fixture(scope="module")
 def input_vault():
@@ -119,8 +141,8 @@ def test_pyth_simulate(input_vault, test_id):
     )
 
     pd.testing.assert_series_equal(
-        calculated_df.sum(axis=0),
-        expected_df_sim_sol,
+        calculated_df.sum(axis=0).loc[DATA_LABLES_Check],
+        expected_df_sim_sol.loc[DATA_LABLES_Check],
     )
     cleanup()
 

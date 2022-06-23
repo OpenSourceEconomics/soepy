@@ -1,3 +1,4 @@
+import chaospy
 import numba
 import numpy as np
 
@@ -6,7 +7,6 @@ from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_r
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
-from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.solve.emaxs import construct_emax
 
 
@@ -61,11 +61,15 @@ def pyth_solve(
         num_choices contains continuation values of the state space point.
         Lat element contains the expected maximum value function of the state space point.
     """
-
-    attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
-    draws_emax = draw_disturbances(
-        *[getattr(model_spec, attr) for attr in attrs_spec], model_params
+    prob_dist = chaospy.Normal(mu=0, sigma=model_params.shock_sd)
+    draws_emax, draw_weights_emax = chaospy.generate_quadrature(
+        21, prob_dist, rule="gaussian"
     )
+
+    # draws_emax = draw_disturbances(
+    #     model_spec.seed_emax, 1, model_spec.num_draws_emax, model_params
+    # )[0]
+    # draw_weights_emax = np.ones(model_spec.num_draws_emax) / model_spec.num_draws_emax
 
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
         model_params, model_spec, states, covariates, is_expected
@@ -107,6 +111,7 @@ def pyth_solve(
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,
+        draw_weights_emax,
         covariates,
         index_child_care_costs,
         prob_child,
@@ -120,6 +125,7 @@ def pyth_solve(
         non_employment_consumption_resources,
         emaxs,
     )
+
 
 # @numba.njit
 def pyth_backward_induction(
@@ -135,6 +141,7 @@ def pyth_backward_induction(
     log_wage_systematic,
     non_consumption_utilities,
     draws,
+    draw_weights,
     covariates,
     index_child_care_costs,
     prob_child,
@@ -228,7 +235,8 @@ def pyth_backward_induction(
             delta,
             log_wage_systematic_period,
             non_consumption_utilities_period,
-            draws[period],
+            draws,
+            draw_weights,
             emaxs_child_states,
             prob_child_period,
             prob_partner_period,
