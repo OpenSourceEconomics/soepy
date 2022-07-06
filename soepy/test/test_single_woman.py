@@ -118,7 +118,7 @@ def input_data():
         )
 
         out[name] = create_disc_sum_av_utility(
-            calculated_df, model_spec_init_dict["CONSTANTS"]["delta"]
+            calculated_df, model_params_df.loc[("discount", "delta"), "value"]
         )
 
         # Check if really all are single at any time

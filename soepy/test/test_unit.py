@@ -55,7 +55,6 @@ def test_unit_init_print():
     """
     order = [
         "GENERAL",
-        "CONSTANTS",
         "EDUC",
         "SIMULATION",
         "SOLUTION",

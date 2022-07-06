@@ -95,8 +95,8 @@ def pyth_solve(
     emaxs = pyth_backward_induction(
         model_spec.num_periods,
         tax_splitting,
-        model_spec.mu,
-        model_spec.delta,
+        model_params.mu,
+        model_params.delta,
         model_spec.tax_params,
         states,
         HOURS,

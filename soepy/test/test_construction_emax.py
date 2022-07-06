@@ -112,8 +112,8 @@ def input_data():
     emaxs = pyth_backward_induction(
         model_spec.num_periods,
         tax_splitting,
-        model_spec.mu,
-        model_spec.delta,
+        model_params.mu,
+        model_params.delta,
         model_spec.tax_params,
         states,
         HOURS,
@@ -133,6 +133,7 @@ def input_data():
 
     return (
         model_spec,
+        model_params,
         emaxs,
         states,
         indexer,
@@ -146,6 +147,7 @@ def input_data():
 def states_tested(input_data):
     (
         model_spec,
+        model_params,
         emaxs,
         states,
         indexer,
@@ -162,6 +164,7 @@ def states_tested(input_data):
 def test_construct_emax(input_data, states_tested):
     (
         model_spec,
+        model_params,
         emaxs,
         states,
         indexer,
@@ -198,7 +201,7 @@ def test_construct_emax(input_data, states_tested):
         ]
         equ_scale = covariates[ind_state, 2]
         non_employ_cons = non_employment_consumption_resources[ind_state] / equ_scale
-        mu = model_spec.mu
+        mu = model_params.mu
         consumption_utility = non_employ_cons**mu / mu
-        value_func = consumption_utility + model_spec.delta * emaxs[ind_state, 0]
+        value_func = consumption_utility + model_params.delta * emaxs[ind_state, 0]
         np.testing.assert_equal(value_func, emaxs[ind_state, 3])
