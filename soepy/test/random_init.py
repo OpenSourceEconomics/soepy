@@ -92,6 +92,7 @@ def random_init(constr=None):
 
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
+    model_spec_init_dict["SOLUTION"]["integration_method"] = "monte_carlo"
 
     model_spec_init_dict["TAXES_TRANSFERS"]["alg1_replacement_no_child"] = 0.6
     model_spec_init_dict["TAXES_TRANSFERS"]["alg1_replacement_child"] = 0.67

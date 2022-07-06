@@ -12,12 +12,13 @@ from soepy.shared.non_employment_benefits import calculate_non_employment_benefi
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
+from soepy.shared.shared_constants import HOURS
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
+from soepy.solve.solve_python import get_integration_draws_and_weights
 from soepy.solve.solve_python import pyth_backward_induction
-from soepy.shared.shared_constants import HOURS
 
 
 @pytest.fixture(scope="module")
@@ -74,9 +75,8 @@ def input_data():
         states, indexer, model_spec, child_age_update_rule
     )
 
-    attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
-    draws_emax = draw_disturbances(
-        *[getattr(model_spec, attr) for attr in attrs_spec], model_params
+    draws_emax, draw_weights_emax = get_integration_draws_and_weights(
+        model_spec, model_params
     )
 
     draws_emax *= 0
@@ -122,6 +122,7 @@ def input_data():
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,
+        draw_weights_emax,
         covariates,
         index_child_care_costs,
         prob_child,

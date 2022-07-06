@@ -61,16 +61,10 @@ def pyth_solve(
         num_choices contains continuation values of the state space point.
         Lat element contains the expected maximum value function of the state space point.
     """
-    prob_dist = chaospy.Normal(mu=0, sigma=model_params.shock_sd)
-    draws_emax, draw_weights_emax = chaospy.generate_quadrature(
-        21, prob_dist, rule="gaussian"
+
+    draws_emax, draw_weights_emax = get_integration_draws_and_weights(
+        model_spec, model_params
     )
-
-    # draws_emax = draw_disturbances(
-    #     model_spec.seed_emax, 1, model_spec.num_draws_emax, model_params
-    # )[0]
-    # draw_weights_emax = np.ones(model_spec.num_draws_emax) / model_spec.num_draws_emax
-
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
         model_params, model_spec, states, covariates, is_expected
     )
@@ -125,6 +119,27 @@ def pyth_solve(
         non_employment_consumption_resources,
         emaxs,
     )
+
+
+def get_integration_draws_and_weights(model_spec, model_params):
+    if model_spec.integration_method == "quadrature":
+        prob_dist = chaospy.Normal(mu=0, sigma=model_params.shock_sd)
+        draws_emax, draw_weights_emax = chaospy.generate_quadrature(
+            model_spec.num_draws_emax, prob_dist, rule="gaussian"
+        )
+    elif model_spec.integration_method == "monte_carlo":
+        draws_emax = draw_disturbances(
+            model_spec.seed_emax, 1, model_spec.num_draws_emax, model_params
+        )[0]
+        draw_weights_emax = (
+            np.ones(model_spec.num_draws_emax) / model_spec.num_draws_emax
+        )
+    else:
+        raise ValueError(
+            f"Integration method {model_spec.integration_method} not specified."
+        )
+
+    return draws_emax, draw_weights_emax
 
 
 # @numba.njit
