@@ -1,6 +1,5 @@
-import chaospy
-import numba
 import numpy as np
+from scipy.special import roots_hermite
 
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
@@ -123,10 +122,11 @@ def pyth_solve(
 
 def get_integration_draws_and_weights(model_spec, model_params):
     if model_spec.integration_method == "quadrature":
-        prob_dist = chaospy.Normal(mu=0, sigma=model_params.shock_sd)
-        draws_emax, draw_weights_emax = chaospy.generate_quadrature(
-            model_spec.num_draws_emax, prob_dist, rule="gaussian"
-        )
+        # Draw standard points and corresponding weights
+        standard_draws, draw_weights_emax = roots_hermite(model_spec.num_draws_emax)
+        # Rescale draws and weights
+        draws_emax = standard_draws * np.sqrt(2) * model_params.shock_sd
+        draw_weights_emax *= 1 / np.sqrt(np.pi)
     elif model_spec.integration_method == "monte_carlo":
         draws_emax = draw_disturbances(
             model_spec.seed_emax, 1, model_spec.num_draws_emax, model_params
