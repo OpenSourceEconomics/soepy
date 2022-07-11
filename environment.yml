@@ -5,6 +5,7 @@ channels:
 dependencies:
 - numpy
 - numba
+- scipy
 - pandas
 - flake8
 - pytest
