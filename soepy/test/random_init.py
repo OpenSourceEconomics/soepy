@@ -81,9 +81,6 @@ def random_init(constr=None):
 
     model_spec_init_dict["GENERAL"]["num_periods"] = periods
 
-    model_spec_init_dict["CONSTANTS"]["delta"] = np.random.uniform(0.8, 0.99)
-    model_spec_init_dict["CONSTANTS"]["mu"] = np.random.uniform(-0.7, -0.4)
-
     model_spec_init_dict["EDUC"]["educ_years"] = educ_years
     model_spec_init_dict["EXPERIENCE"]["exp_cap"] = exp_cap
 
@@ -92,6 +89,7 @@ def random_init(constr=None):
 
     model_spec_init_dict["SOLUTION"]["seed_emax"] = seed_emax
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = num_draws_emax
+    model_spec_init_dict["SOLUTION"]["integration_method"] = "monte_carlo"
 
     model_spec_init_dict["TAXES_TRANSFERS"]["alg1_replacement_no_child"] = 0.6
     model_spec_init_dict["TAXES_TRANSFERS"]["alg1_replacement_child"] = 0.67
@@ -211,6 +209,9 @@ def random_init(constr=None):
         model_params_init_dict["child_11_age_max_p"],
     ) = np.random.uniform(-1.5, -0.001, 10).tolist()
 
+    model_params_init_dict["delta"] = np.random.uniform(0.8, 0.99)
+    model_params_init_dict["mu"] = np.random.uniform(-0.7, -0.4)
+
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
     # Draw shares that sum up to one
@@ -228,7 +229,7 @@ def random_init(constr=None):
         # Assign shares
         model_params_init_dict["share_" + f"{i}"] = shares[i]
 
-    (model_params_init_dict["sigma"]) = np.random.uniform(0.001, 1.0, 1)
+    model_params_init_dict["sigma"] = np.random.uniform(0.001, 1.0, 1)[0]
 
     # Determine categories
     category = []
@@ -249,6 +250,10 @@ def random_init(constr=None):
             category.append("shares")
         elif "sigma" in key:
             category.append("sd_wage_shock")
+        elif "delta" == key:
+            category.append("discount")
+        elif "mu" == key:
+            category.append("risk")
         elif "kids" or "child" in key:
             category.append("disutil_work")
 
@@ -396,7 +401,6 @@ def print_dict(model_spec_init_dict, file_name="test"):
     ordered_dict = collections.OrderedDict()
     order = [
         "GENERAL",
-        "CONSTANTS",
         "EDUC",
         "EXPERIENCE",
         "SIMULATION",
@@ -428,10 +432,6 @@ def init_dict_flat_to_init_dict(init_dict_flat):
 
     init_dict["GENERAL"] = dict()
     init_dict["GENERAL"]["num_periods"] = init_dict_flat["num_periods"]
-
-    init_dict["CONSTANTS"] = dict()
-    init_dict["CONSTANTS"]["delta"] = init_dict_flat["delta"]
-    init_dict["CONSTANTS"]["mu"] = init_dict_flat["mu"]
 
     init_dict["EDUC"] = dict()
     init_dict["EDUC"]["educ_years"] = init_dict_flat["educ_years"]

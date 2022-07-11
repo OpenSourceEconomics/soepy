@@ -1,11 +1,11 @@
 import numpy as np
+from scipy.special import roots_hermite
 
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
-from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.solve.emaxs import construct_emax
 
 
@@ -61,11 +61,9 @@ def pyth_solve(
         Lat element contains the expected maximum value function of the state space point.
     """
 
-    attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
-    draws_emax = draw_disturbances(
-        *[getattr(model_spec, attr) for attr in attrs_spec], model_params
+    draws_emax, draw_weights_emax = get_integration_draws_and_weights(
+        model_spec, model_params
     )
-
     log_wage_systematic, non_consumption_utilities = calculate_utility_components(
         model_params, model_spec, states, covariates, is_expected
     )
@@ -86,17 +84,29 @@ def pyth_solve(
         )
     )
 
+    index_child_care_costs = np.where(covariates[:, 0] > 2, 0, covariates[:, 0]).astype(
+        int
+    )
+
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
     emaxs = pyth_backward_induction(
-        model_spec,
+        model_spec.num_periods,
+        tax_splitting,
+        model_params.mu,
+        model_params.delta,
+        model_spec.tax_params,
         states,
+        HOURS,
+        model_spec.child_care_costs,
         child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,
+        draw_weights_emax,
         covariates,
+        index_child_care_costs,
         prob_child,
         prob_partner,
         non_employment_consumption_resources,
@@ -110,14 +120,45 @@ def pyth_solve(
     )
 
 
+def get_integration_draws_and_weights(model_spec, model_params):
+    if model_spec.integration_method == "quadrature":
+        # Draw standard points and corresponding weights
+        standard_draws, draw_weights_emax = roots_hermite(model_spec.num_draws_emax)
+        # Rescale draws and weights
+        draws_emax = standard_draws * np.sqrt(2) * model_params.shock_sd
+        draw_weights_emax *= 1 / np.sqrt(np.pi)
+    elif model_spec.integration_method == "monte_carlo":
+        draws_emax = draw_disturbances(
+            model_spec.seed_emax, 1, model_spec.num_draws_emax, model_params
+        )[0]
+        draw_weights_emax = (
+            np.ones(model_spec.num_draws_emax) / model_spec.num_draws_emax
+        )
+    else:
+        raise ValueError(
+            f"Integration method {model_spec.integration_method} not specified."
+        )
+
+    return draws_emax, draw_weights_emax
+
+
+# @numba.njit
 def pyth_backward_induction(
-    model_spec,
+    num_periods,
+    tax_splitting,
+    mu,
+    delta,
+    tax_params,
     states,
+    hours,
+    child_care_costs,
     child_state_indexes,
     log_wage_systematic,
     non_consumption_utilities,
     draws,
+    draw_weights,
     covariates,
+    index_child_care_costs,
     prob_child,
     prob_partner,
     non_employment_consumption_resources,
@@ -161,18 +202,15 @@ def pyth_backward_induction(
     """
     dummy_array = np.zeros(4)  # Need this array to define output for construct_emaxs
 
-    emaxs = np.zeros((states.shape[0], NUM_CHOICES + 1))
-
-    # Set taxing type
-    tax_splitting = model_spec.tax_splitting
+    emaxs = np.zeros((states.shape[0], non_consumption_utilities.shape[1] + 1))
 
     # Loop backwards over all periods
-    for period in reversed(range(model_spec.num_periods)):
-        state_period_cond = states[:, 0] == period
+    for period in np.arange(num_periods - 1, -1, -1, dtype=int):
+        state_period_index = np.where(states[:, 0] == period)[0]
 
         # Extract period information
         # States
-        states_period = states[state_period_cond]
+        states_period = states[state_period_index]
 
         # Probability that a child arrives
         prob_child_period = prob_child[period][states_period[:, 1]]
@@ -183,45 +221,47 @@ def pyth_backward_induction(
         ]
 
         # Period rewards
-        log_wage_systematic_period = log_wage_systematic[state_period_cond]
-        non_consumption_utilities_period = non_consumption_utilities[state_period_cond]
+        log_wage_systematic_period = log_wage_systematic[state_period_index]
+        non_consumption_utilities_period = non_consumption_utilities[state_period_index]
         non_employment_consumption_resources_period = (
-            non_employment_consumption_resources[state_period_cond]
+            non_employment_consumption_resources[state_period_index]
         )
 
         # Corresponding equivalence scale for period states
-        male_wage_period = covariates[np.where(state_period_cond)][:, 1]
-        equivalence_scale_period = covariates[state_period_cond][:, 2]
-        child_benefits_period = covariates[state_period_cond][:, 3]
-        child_bins_period = covariates[state_period_cond][:, 0].astype(int)
-        index_child_care_costs = np.where(child_bins_period > 2, 0, child_bins_period)
+        covariates_state = covariates[state_period_index]
+        male_wage_period = covariates_state[:, 1]
+        equivalence_scale_period = covariates_state[:, 2]
+        child_benefits_period = covariates_state[:, 3]
+
+        index_child_care_costs_period = index_child_care_costs[state_period_index]
 
         # Continuation value calculation not performed for last period
         # since continuation values are known to be zero
-        if period == model_spec.num_periods - 1:
+        if period == num_periods - 1:
             emaxs_child_states = np.zeros(
                 shape=(states_period.shape[0], 3, 2, 2), dtype=float
             )
         else:
-            child_states_ind_period = child_state_indexes[state_period_cond]
+            child_states_ind_period = child_state_indexes[state_period_index]
             emaxs_child_states = emaxs[:, 3][child_states_ind_period]
 
         # Calculate emax for current period reached by the loop
         emaxs_period = construct_emax(
-            model_spec.delta,
+            delta,
             log_wage_systematic_period,
             non_consumption_utilities_period,
-            draws[period],
+            draws,
+            draw_weights,
             emaxs_child_states,
             prob_child_period,
             prob_partner_period,
-            HOURS,
-            model_spec.mu,
+            hours,
+            mu,
             non_employment_consumption_resources_period,
             deductions_spec,
-            model_spec.tax_params,
-            model_spec.child_care_costs,
-            index_child_care_costs,
+            tax_params,
+            child_care_costs,
+            index_child_care_costs_period,
             male_wage_period,
             child_benefits_period,
             equivalence_scale_period,
@@ -229,6 +269,6 @@ def pyth_backward_induction(
             dummy_array,
         )
 
-        emaxs[state_period_cond] = emaxs_period
+        emaxs[state_period_index] = emaxs_period
 
     return emaxs

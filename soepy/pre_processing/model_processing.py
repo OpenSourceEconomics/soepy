@@ -119,6 +119,9 @@ def group_parameters(model_params_dict_expanded):
         "type_shares"
     ]
 
+    model_params_dict_flat["delta"] = model_params_dict_expanded["discount"]["delta"]
+
+    model_params_dict_flat["mu"] = model_params_dict_expanded["risk"]["mu"]
     if model_params_dict_expanded["derived_attr"]["num_types"] > 1:
         for i in ["p", "f"]:
             model_params_dict_flat["theta_" + i] = [
@@ -190,7 +193,6 @@ def flatten_model_spec_dict(model_spec_dict):
 
     groups = [
         "GENERAL",
-        "CONSTANTS",
         "EDUC",
         "EXPERIENCE",
         "SIMULATION",

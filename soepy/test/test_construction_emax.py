@@ -12,10 +12,12 @@ from soepy.shared.non_employment_benefits import calculate_non_employment_benefi
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
+from soepy.shared.shared_constants import HOURS
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
+from soepy.solve.solve_python import get_integration_draws_and_weights
 from soepy.solve.solve_python import pyth_backward_induction
 
 
@@ -73,9 +75,8 @@ def input_data():
         states, indexer, model_spec, child_age_update_rule
     )
 
-    attrs_spec = ["seed_emax", "num_periods", "num_draws_emax"]
-    draws_emax = draw_disturbances(
-        *[getattr(model_spec, attr) for attr in attrs_spec], model_params
+    draws_emax, draw_weights_emax = get_integration_draws_and_weights(
+        model_spec, model_params
     )
 
     draws_emax *= 0
@@ -101,25 +102,38 @@ def input_data():
         )
     )
 
+    index_child_care_costs = np.where(covariates[:, 0] > 2, 0, covariates[:, 0]).astype(
+        int
+    )
+
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
     emaxs = pyth_backward_induction(
-        model_spec,
+        model_spec.num_periods,
+        tax_splitting,
+        model_params.mu,
+        model_params.delta,
+        model_spec.tax_params,
         states,
+        HOURS,
+        model_spec.child_care_costs,
         child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
         draws_emax,
+        draw_weights_emax,
         covariates,
+        index_child_care_costs,
         prob_child,
         prob_partner,
         non_employment_consumption_resources,
-        deductions_spec,
+        model_spec.ssc_deductions,
     )
 
     return (
         model_spec,
+        model_params,
         emaxs,
         states,
         indexer,
@@ -133,6 +147,7 @@ def input_data():
 def states_tested(input_data):
     (
         model_spec,
+        model_params,
         emaxs,
         states,
         indexer,
@@ -149,6 +164,7 @@ def states_tested(input_data):
 def test_construct_emax(input_data, states_tested):
     (
         model_spec,
+        model_params,
         emaxs,
         states,
         indexer,
@@ -185,7 +201,7 @@ def test_construct_emax(input_data, states_tested):
         ]
         equ_scale = covariates[ind_state, 2]
         non_employ_cons = non_employment_consumption_resources[ind_state] / equ_scale
-        mu = model_spec.mu
+        mu = model_params.mu
         consumption_utility = non_employ_cons**mu / mu
-        value_func = consumption_utility + model_spec.delta * emaxs[ind_state, 0]
+        value_func = consumption_utility + model_params.delta * emaxs[ind_state, 0]
         np.testing.assert_equal(value_func, emaxs[ind_state, 3])

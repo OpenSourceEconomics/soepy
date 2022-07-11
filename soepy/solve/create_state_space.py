@@ -26,7 +26,7 @@ def create_state_space_objects(model_spec):
     return states, indexer, covariates, child_age_update_rule, child_state_indexes
 
 
-@numba.jit(nopython=True)
+@numba.njit(nogil=True)
 def pyth_create_state_space(model_spec):
     """Create state space object.
 

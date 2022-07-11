@@ -190,7 +190,7 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
     return non_consumption_utility
 
 
-@numba.jit(nopython=True)
+@numba.njit(nogil=True)
 def calculate_non_employment_consumption_resources(
     deductions_spec,
     income_tax_spec,
@@ -220,7 +220,7 @@ def calculate_non_employment_consumption_resources(
     return non_employment_consumption_resources
 
 
-@numba.jit(nopython=True)
+@numba.njit(nogil=True)
 def calculate_employment_consumption_resources(
     deductions_spec,
     income_tax_spec,

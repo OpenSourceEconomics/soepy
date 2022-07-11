@@ -179,15 +179,15 @@ def pyth_simulate(
         # Calculate total values for all choices
         flow_utilities = (
             (current_consumption_resources / current_equivalence_scale.reshape(-1, 1))
-            ** model_spec.mu
-            / model_spec.mu
+            ** model_params.mu
+            / model_params.mu
             * current_non_consumption_utilities
         )
 
         # Extract continuation values for all choices
         continuation_values = emaxs[idx, :3]
 
-        value_functions = flow_utilities + model_spec.delta * continuation_values
+        value_functions = flow_utilities + model_params.delta * continuation_values
 
         # Determine choice as option with highest choice specific value function
         choice = np.argmax(value_functions, axis=1)

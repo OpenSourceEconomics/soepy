@@ -53,12 +53,13 @@ def input_data():
 
     model_params_df, model_params = read_model_params_init(random_model_params_df)
 
-    for name, tax in [("splitted", True), ("individual", False)]:
+    for name, monte in [("monte-carlo", True), ("quadrature", False)]:
         # Standard tax_spltting is true
-        if tax:
+        if monte:
             pass
         else:
-            model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = tax
+            model_spec_init_dict["SOLUTION"]["integration_method"] = "quadrature"
+            model_spec_init_dict["SOLUTION"]["num_draws_emax"] = 21
 
         model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 
@@ -73,9 +74,6 @@ def input_data():
         )
         prob_child = gen_prob_child_vector(model_spec)
         prob_partner = gen_prob_partner(model_spec)
-        prob_partner[:, :, 0, 1] = 0
-        prob_partner[:, :, 0, 0] = 1
-        prob_partner_present[:] = 0
 
         (
             states,
@@ -121,18 +119,8 @@ def input_data():
             calculated_df, model_params_df.loc[("discount", "delta"), "value"]
         )
 
-        # Check if really all are single at any time
-        assert (calculated_df["Male_Wages"] == 0).all()
-
-    out["regression_disc_sum"] = -0.10754078488166594
     return out
 
 
 def test_single_woman(input_data):
-    np.testing.assert_equal(input_data["splitted"], input_data["individual"])
-
-
-def test_single_woman_regression(input_data):
-    np.testing.assert_almost_equal(
-        input_data["splitted"], input_data["regression_disc_sum"], decimal=12
-    )
+    np.testing.assert_equal(input_data["quadrature"], input_data["monte-carlo"])
