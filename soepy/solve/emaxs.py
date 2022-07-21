@@ -201,6 +201,7 @@ def construct_emax_jax(
     return emax_3
 
 
+@partial(jit, static_argnums=(1,))
 def constr_draw_av(
     delta,
     tax_splitting,
@@ -220,27 +221,43 @@ def constr_draw_av(
     index_child_care_costs,
     partner_indicator,
 ):
-    out = 0.0
-    num_draws = draws.shape[0]
-    for num_draw in range(num_draws):
-        out += get_max_aggregated_utilities_jax(
-            delta,
-            tax_splitting,
-            mu,
-            hours,
-            deductions_spec,
-            income_tax_spec,
-            child_care_costs,
-            log_wage_systematic,
-            non_consumption_utilities,
-            draws[num_draw, :],
-            continuation_values,
-            non_employment_consumption_resources,
-            male_wage,
-            child_benefits,
-            equivalence,
-            index_child_care_costs,
-            partner_indicator,
-        )
-
-    return out / num_draws
+    return vmap(
+        get_max_aggregated_utilities_jax,
+        in_axes=(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            0,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        ),
+    )(
+        delta,
+        tax_splitting,
+        mu,
+        hours,
+        deductions_spec,
+        income_tax_spec,
+        child_care_costs,
+        log_wage_systematic,
+        non_consumption_utilities,
+        draws,
+        continuation_values,
+        non_employment_consumption_resources,
+        male_wage,
+        child_benefits,
+        equivalence,
+        index_child_care_costs,
+        partner_indicator,
+    ).mean()

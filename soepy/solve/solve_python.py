@@ -268,7 +268,7 @@ def pyth_backward_induction(
             child_benefits_period,
             equivalence_scale_period,
             partner_indicator,
-        )
+        ).block_until_ready()
         emaxs[state_period_index, :3] = continuation_values[
             : state_period_index.shape[0], :
         ]
