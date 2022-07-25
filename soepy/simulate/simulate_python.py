@@ -193,6 +193,7 @@ def partiable_simulate(
         prob_child,
         prob_partner,
         is_expected=False,
+        data_sparse=data_sparse,
     )
 
     return df
