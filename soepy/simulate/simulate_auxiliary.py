@@ -5,8 +5,11 @@ from soepy.shared.shared_auxiliary import calculate_employment_consumption_resou
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import DATA_FORMATS_SIM
+from soepy.shared.shared_constants import DATA_FORMATS_SPARSE
 from soepy.shared.shared_constants import DATA_LABLES_SIM
 from soepy.shared.shared_constants import HOURS
+from soepy.shared.shared_constants import IDX_STATES_DATA_SPARSE
+from soepy.shared.shared_constants import LABELS_DATA_SPARSE
 
 
 def pyth_simulate(
@@ -26,6 +29,7 @@ def pyth_simulate(
     prob_child,
     prob_partner,
     is_expected,
+    data_sparse=False,
 ):
     """Simulate agent experiences."""
 
@@ -242,21 +246,30 @@ def pyth_simulate(
             current_partner_status[current_states[:, 8] == 1]
             - partner_separation_current_draw
         )
+        if data_sparse:
 
-        # Record period experiences
-        rows = np.column_stack(
-            (
-                current_states.copy(),
-                choice,
-                current_log_wage_systematic,
-                current_wages,
-                current_non_consumption_utilities,
-                flow_utilities,
-                continuation_values,
-                value_functions,
-                current_male_wages,
+            rows = np.column_stack(
+                (
+                    current_states[:, IDX_STATES_DATA_SPARSE].copy(),
+                    choice,
+                    current_wages,
+                )
             )
-        )
+        else:
+            # Record period experiences
+            rows = np.column_stack(
+                (
+                    current_states.copy(),
+                    choice,
+                    current_log_wage_systematic,
+                    current_wages,
+                    current_non_consumption_utilities,
+                    flow_utilities,
+                    continuation_values,
+                    value_functions,
+                    current_male_wages,
+                )
+            )
 
         data.append(rows)
 
@@ -272,9 +285,14 @@ def pyth_simulate(
         current_states[:, 7] = child_new_age
         current_states[:, 8] = new_partner_status
 
-    dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
-        DATA_FORMATS_SIM
-    )
+    if data_sparse:
+        dataset = pd.DataFrame(np.vstack(data), columns=LABELS_DATA_SPARSE).astype(
+            DATA_FORMATS_SPARSE
+        )
+    else:
+        dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
+            DATA_FORMATS_SIM
+        )
     dataset.loc[dataset["Choice"] == 0, "Wage_Observed"] = np.nan
 
     return dataset

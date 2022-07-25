@@ -13,7 +13,12 @@ from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
 
 
-def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected=True):
+def simulate(
+    model_params_init_file_name,
+    model_spec_init_file_name,
+    is_expected=True,
+    data_sparse=False,
+):
     """Create a data frame of individuals' simulated experiences."""
 
     # Read in model specification from yaml file
@@ -73,12 +78,18 @@ def simulate(model_params_init_file_name, model_spec_init_file_name, is_expected
         prob_child,
         prob_partner,
         is_expected=False,
+        data_sparse=data_sparse,
     )
 
     return df
 
 
-def get_simulate_func(model_params_init_file_name, model_spec_init_file_name):
+def get_simulate_func(
+    model_params_init_file_name,
+    model_spec_init_file_name,
+    is_expected=True,
+    data_sparse=False,
+):
     """Create the simulation function, such that the state space creation is already
     done ."""
 
@@ -123,6 +134,8 @@ def get_simulate_func(model_params_init_file_name, model_spec_init_file_name):
         prob_exp_pt,
         prob_child,
         prob_partner,
+        is_expected,
+        data_sparse,
     )
     return partial_simulate
 
@@ -140,9 +153,10 @@ def partiable_simulate(
     prob_exp_pt,
     prob_child,
     prob_partner,
+    is_expected,
+    data_sparse,
     model_params_init_file_name,
     model_spec_init_file_name,
-    is_expected=True,
 ):
     # Read in model specification from yaml file
     model_params_df, model_params = read_model_params_init(model_params_init_file_name)
