@@ -13,7 +13,7 @@ SIMULATION:
     num_agents_sim: 10000
 SOLUTION:
     seed_emax: 635
-    num_draws_emax: 500
+    num_draws_emax: 21
 TAXES_TRANSFERS:
     alg1_replacement_no_child: 0.6
     alg1_replacement_child: 0.67

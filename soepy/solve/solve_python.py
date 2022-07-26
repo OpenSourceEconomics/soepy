@@ -177,9 +177,7 @@ def pyth_backward_induction(
     hours = jnp.array(HOURS)
     deductions_spec_jax = jnp.array(deductions_spec)
 
-    state_num_last_period = np.where(states[:, 0] == model_spec.num_periods - 1)[
-        0
-    ].shape[0]
+    state_num_largest_period = np.unique(states[:, 0], return_counts=True)[1].max()
     # Loop backwards over all periods
     for period in reversed(range(model_spec.num_periods)):
         state_period_index = np.where(states[:, 0] == period)[0]
@@ -188,34 +186,34 @@ def pyth_backward_induction(
 
         # Periodic ordered objects, of the size of last array
         log_wage_systematic_period = log_wage_systematic[
-            min_state_period : min_state_period + state_num_last_period
+            min_state_period : min_state_period + state_num_largest_period
         ]
         non_consumption_utilities_period = non_consumption_utilities[
-            min_state_period : min_state_period + state_num_last_period
+            min_state_period : min_state_period + state_num_largest_period
         ]
         non_employment_consumption_resources_period = non_employment_consumption_resources[
-            min_state_period : min_state_period + state_num_last_period
+            min_state_period : min_state_period + state_num_largest_period
         ]
 
         # Corresponding equivalence scale for period states
         male_wage_period = covariates[:, 1][
-            min_state_period : min_state_period + state_num_last_period
+            min_state_period : min_state_period + state_num_largest_period
         ]
         equivalence_scale_period = covariates[:, 2][
-            min_state_period : min_state_period + state_num_last_period
+            min_state_period : min_state_period + state_num_largest_period
         ]
         child_benefits_period = covariates[:, 3][
-            min_state_period : min_state_period + state_num_last_period
+            min_state_period : min_state_period + state_num_largest_period
         ]
         child_bins_period = covariates[:, 0].astype(int)[
-            min_state_period : min_state_period + state_num_last_period
+            min_state_period : min_state_period + state_num_largest_period
         ]
         index_child_care_costs = jnp.where(child_bins_period > 2, 0, child_bins_period)
 
         # Extract period information
         # States
         states_period_extended = states[
-            min_state_period : min_state_period + state_num_last_period
+            min_state_period : min_state_period + state_num_largest_period
         ]
 
         # Probability that a child arrives
@@ -233,11 +231,11 @@ def pyth_backward_induction(
         # since continuation values are known to be zero
         if period == model_spec.num_periods - 1:
             continuation_values = jnp.zeros(
-                shape=(state_num_last_period, 3), dtype=float
+                shape=(log_wage_systematic_period.shape[0], 3), dtype=float
             )
         else:
             child_states_ind_period = child_state_indexes[
-                min_state_period : min_state_period + state_num_last_period
+                min_state_period : min_state_period + state_num_largest_period
             ]
             child_states_ind_period_filtered = jnp.where(
                 child_states_ind_period < 0, 0, child_states_ind_period
