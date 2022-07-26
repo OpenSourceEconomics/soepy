@@ -177,10 +177,12 @@ def pyth_backward_induction(
     hours = jnp.array(HOURS)
     deductions_spec_jax = jnp.array(deductions_spec)
 
-    state_num_largest_period = np.unique(states[:, 0], return_counts=True)[1].max()
+    
     # Loop backwards over all periods
     for period in reversed(range(model_spec.num_periods)):
         state_period_index = np.where(states[:, 0] == period)[0]
+        
+        state_num_largest_period = state_period_index.shape[0]
         # States are ordered consecutively by period
         min_state_period = int(state_period_index[0])
 
