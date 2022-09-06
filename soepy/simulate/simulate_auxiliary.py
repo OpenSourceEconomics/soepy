@@ -193,7 +193,7 @@ def pyth_simulate(
 
         value_functions = flow_utilities + model_params.delta * continuation_values
 
-        # Determine choice as option with highest choice specific value function
+        # Determine choice as option with the highest choice specific value function
         choice = np.argmax(value_functions, axis=1)
 
         child_current_age = current_states[:, 7]

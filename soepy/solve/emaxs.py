@@ -74,7 +74,7 @@ def do_weighting_emax(child_emaxs, prob_child, prob_partner):
     "(), (n_ssc_params), (n_tax_params, n_tax_params), (n_choices, "
     "n_age_child_costs), (), (), (), (), (), (num_outputs) -> (num_outputs)",
     nopython=True,
-    target="cpu",
+    target="parallel",
 )
 def construct_emax(
     delta,

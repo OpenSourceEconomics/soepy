@@ -40,8 +40,7 @@ def input_data():
         exog_child_info,
         exog_partner_arrival_info,
         exog_partner_separation_info,
-        expected_df_sim_func,
-        expected_df_sim_sol,
+        expected_df,
     ) = tests[0]
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = 1
 
