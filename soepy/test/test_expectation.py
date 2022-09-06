@@ -38,8 +38,7 @@ def test_simulation_func_exp(input_vault, test_id):
         exog_child_info,
         exog_partner_arrival_info,
         exog_partner_separation_info,
-        expected_df_sim_func,
-        expected_df_sim_sol,
+        expected_df,
     ) = input_vault[test_id]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")

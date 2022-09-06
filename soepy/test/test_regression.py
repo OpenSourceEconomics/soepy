@@ -43,6 +43,9 @@ DATA_LABLES_CHECK = [
     "Flow_Utility_P",
     "Flow_Utility_F",
     "Male_Wages",
+    "Continuation_Value_N",
+    "Continuation_Value_P",
+    "Continuation_Value_F",
 ]
 
 
@@ -73,8 +76,7 @@ def test_pyth_simulate(input_vault, test_id):
         exog_child_info,
         exog_partner_arrival_info,
         exog_partner_separation_info,
-        expected_df_sim_func,
-        expected_df_sim_sol,
+        expected_df,
     ) = input_vault[test_id]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
@@ -118,7 +120,7 @@ def test_pyth_simulate(input_vault, test_id):
         model_spec,
         prob_child,
         prob_partner,
-        False,
+        is_expected=True,
     )
 
     # Simulate
@@ -143,7 +145,7 @@ def test_pyth_simulate(input_vault, test_id):
 
     pd.testing.assert_series_equal(
         calculated_df.sum(axis=0).loc[DATA_LABLES_CHECK],
-        expected_df_sim_sol.loc[DATA_LABLES_CHECK],
+        expected_df.loc[DATA_LABLES_CHECK],
     )
     cleanup()
 
@@ -164,8 +166,7 @@ def test_simulation_func(input_vault, test_id):
         exog_child_info,
         exog_partner_arrival_info,
         exog_partner_separation_info,
-        expected_df_sim_func,
-        expected_df_sim_sol,
+        expected_df,
     ) = input_vault[test_id]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
@@ -180,7 +181,7 @@ def test_simulation_func(input_vault, test_id):
     calculated_df = simulate(random_model_params_df, model_spec_init_dict)
 
     pd.testing.assert_series_equal(
-        expected_df_sim_func.loc[DATA_LABLES_CHECK],
+        expected_df.loc[DATA_LABLES_CHECK],
         calculated_df.sum(axis=0).loc[DATA_LABLES_CHECK],
     )
     cleanup()
@@ -202,8 +203,7 @@ def test_simulation_func_data_sparse(input_vault, test_id):
         exog_child_info,
         exog_partner_arrival_info,
         exog_partner_separation_info,
-        expected_df_sim_func,
-        expected_df_sim_sol,
+        expected_df,
     ) = input_vault[test_id]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
@@ -220,7 +220,7 @@ def test_simulation_func_data_sparse(input_vault, test_id):
     )
 
     pd.testing.assert_series_equal(
-        expected_df_sim_func.loc[LABELS_DATA_SPARSE],
+        expected_df.loc[LABELS_DATA_SPARSE],
         calculated_df.sum(axis=0).loc[LABELS_DATA_SPARSE],
         check_dtype=False,
     )
