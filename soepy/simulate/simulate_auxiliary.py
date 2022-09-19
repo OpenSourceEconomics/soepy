@@ -102,7 +102,7 @@ def pyth_simulate(
                 np.arange(model_spec.num_agents_sim),
                 np.array(model_spec.educ_years)[initial_educ_level],
                 initial_educ_level,
-                np.zeros(model_spec.num_agents_sim),
+                lagged_choice,
                 initial_pt_exp,
                 initial_ft_exp,
                 type_,
