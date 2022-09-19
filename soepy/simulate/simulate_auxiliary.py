@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+from soepy.exogenous_processes.determine_lagged_choice import lagged_choice_initial
 from soepy.shared.shared_auxiliary import calculate_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_utility_components
 from soepy.shared.shared_auxiliary import draw_disturbances
@@ -73,6 +74,9 @@ def pyth_simulate(
             sum(initial_educ_level == educ_level),
             p=prob_exp_ft[educ_level],
         )
+
+    lagged_choice = lagged_choice_initial(initial_ft_exp, initial_pt_exp)
+
     # Draw random type
     type_ = np.random.choice(
         list(np.arange(model_spec.num_types)),
