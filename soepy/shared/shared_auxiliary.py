@@ -82,31 +82,30 @@ def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, model_spec, states)
 
     exp_p_state, exp_f_state = states[:, 3], states[:, 4]
 
-#     log_exp_p = np.log(
-#         np.where(
-#             exp_p_state + exp_f_state > model_spec.exp_cap,
-#             np.around(
-#                 exp_p_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap
-#             ),
-#             exp_p_state,
-#         )
-#         + 1
-#     )
+    # log_exp_p = np.log(
+    #     np.where(
+    #         exp_p_state + exp_f_state > model_spec.exp_cap,
+    #         np.around(
+    #             exp_p_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap
+    #         ),
+    #         exp_p_state,
+    #     )
+    #     + 1
+    # )
+    #
+    # log_exp_f = np.log(
+    #     np.where(
+    #         exp_p_state + exp_f_state > model_spec.exp_cap,
+    #         np.around(
+    #             exp_f_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap
+    #         ),
+    #         exp_f_state,
+    #     )
+    #     + 1
+    # )
 
-#     log_exp_f = np.log(
-#         np.where(
-#             exp_p_state + exp_f_state > model_spec.exp_cap,
-#             np.around(
-#                 exp_f_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap
-#             ),
-#             exp_f_state,
-#         )
-#         + 1
-#     )
-    
     log_exp_p = np.log(exp_p_state + 1)
     log_exp_f = np.log(exp_f_state + 1)
-
 
     # Construct wage components
     gamma_0_edu = gamma_0[states[:, 1]]
@@ -194,61 +193,62 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
     return non_consumption_utility
 
 
-@numba.njit(nogil=True)
+@numba.guvectorize(
+    ["f8[:], f8[:, :], f8, f8[:], b1, f8[:]"],
+    "(n_ssc_params), (n_tax_params, n_tax_params), (), (n_choices), () -> ()",
+    nopython=True,
+    # target="cpu",
+    target="parallel",
+)
 def calculate_non_employment_consumption_resources(
     deductions_spec,
     income_tax_spec,
     male_wage,
     non_employment_benefits,
-    tax_splitting=True,
+    tax_splitting,
+    non_employment_consumption_resources,
 ):
     """This function calculates the resources available to the individual
     to spend on consumption were she to choose to not be employed.
     It adds the components from the budget constraint to the female wage."""
 
-    non_employment_consumption_resources = np.full(male_wage.shape[0], INVALID_FLOAT)
-
-    for i in range(male_wage.shape[0]):
-        # Set female wage to
-        net_income = (
-            calculate_net_income(
-                income_tax_spec, deductions_spec, 0, male_wage[i], tax_splitting
-            )
-            + non_employment_benefits[i, 0]
+    # Set female wage to
+    net_income = (
+        calculate_net_income(
+            income_tax_spec, deductions_spec, 0, male_wage, tax_splitting
         )
+        + non_employment_benefits[0]
+    )
 
-        non_employment_consumption_resources[i] = (
-            net_income + non_employment_benefits[i, 1] + non_employment_benefits[i, 2]
-        )
-
-    return non_employment_consumption_resources
+    non_employment_consumption_resources[0] = (
+        net_income + non_employment_benefits[1] + non_employment_benefits[2]
+    )
 
 
-@numba.njit(nogil=True)
+@numba.guvectorize(
+    ["f8[:], f8[:, :], f8[:], f8, b1, f8[:]"],
+    "(n_ssc_params), (n_tax_params, n_tax_params), (num_work_choices), (), () -> (num_work_choices)",
+    nopython=True,
+    # target="cpu",
+    target="parallel",
+)
 def calculate_employment_consumption_resources(
     deductions_spec,
     income_tax_spec,
     current_female_income,
     male_wage,
-    tax_splitting=True,
+    tax_splitting,
+    employment_consumption_resources,
 ):
     """This function calculates the resources available to the individual
     to spend on consumption were she to choose to be employed.
     It adds the components from the budget constraint to the female wage."""
 
-    employment_consumption_resources = np.full(
-        current_female_income.shape, INVALID_FLOAT
-    )
-
-    for i in range(current_female_income.shape[0]):
-        male_wage_i = male_wage[i]
-        for choice_num in range(current_female_income.shape[1]):
-            employment_consumption_resources[i, choice_num] = calculate_net_income(
-                income_tax_spec,
-                deductions_spec,
-                current_female_income[i, choice_num],
-                male_wage_i,
-                tax_splitting,
-            )
-
-    return employment_consumption_resources
+    for choice_num in range(current_female_income.shape[0]):
+        employment_consumption_resources[choice_num] = calculate_net_income(
+            income_tax_spec,
+            deductions_spec,
+            current_female_income[choice_num],
+            male_wage,
+            tax_splitting,
+        )
