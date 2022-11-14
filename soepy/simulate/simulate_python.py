@@ -194,6 +194,6 @@ def partiable_simulate(
         prob_partner,
         is_expected=False,
         data_sparse=data_sparse,
-    )
+    ).set_index(["Identifier", "Period"])
 
     return df
