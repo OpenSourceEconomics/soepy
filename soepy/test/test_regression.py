@@ -182,7 +182,7 @@ def test_simulation_func(input_vault, test_id):
 
     pd.testing.assert_series_equal(
         expected_df.loc[DATA_LABLES_CHECK],
-        calculated_df.sum(axis=0).loc[DATA_LABLES_CHECK],
+        calculated_df.reset_index().sum(axis=0).loc[DATA_LABLES_CHECK],
     )
     cleanup()
 
@@ -221,7 +221,7 @@ def test_simulation_func_data_sparse(input_vault, test_id):
 
     pd.testing.assert_series_equal(
         expected_df.loc[LABELS_DATA_SPARSE],
-        calculated_df.sum(axis=0).loc[LABELS_DATA_SPARSE],
+        calculated_df.reset_index().sum(axis=0).loc[LABELS_DATA_SPARSE],
         check_dtype=False,
     )
     cleanup()
