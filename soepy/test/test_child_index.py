@@ -74,9 +74,7 @@ def input_data():
         model_spec, model_params
     )
 
-    log_wage_systematic = calculate_log_wage(
-        model_params, model_spec, states, covariates, True
-    )
+    log_wage_systematic = calculate_log_wage(model_params, states, True)
     non_consumption_utilities = calculate_non_consumption_utility(
         model_params, model_spec, states, covariates
     )

@@ -21,7 +21,7 @@ def draw_disturbances(seed, num_periods, num_draws, model_params):
     return draws
 
 
-def calculate_log_wage(model_params, model_spec, states, covariates, is_expected):
+def calculate_log_wage(model_params, states, is_expected):
     """Calculate utility components for all choices given state, period, and shocks.
 
     Parameters
@@ -34,9 +34,6 @@ def calculate_log_wage(model_params, model_spec, states, covariates, is_expected
         Array with shape (num_states, 5) containing period, years of schooling,
         the lagged choice, the years of experience in part-time, and the
         years of experience in full-time employment.
-    covariates: np.ndarray
-        Array with shape (num_states, number of covariates) containing all additional
-        covariates, which depend only on the state space information.
     is_expected: bool
         A boolean indicator that differentiates between the human capital accumulation
         process that agents expect (is_expected = True) and that the market generates

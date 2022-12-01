@@ -65,9 +65,7 @@ def pyth_solve(
     draws_emax, draw_weights_emax = get_integration_draws_and_weights(
         model_spec, model_params
     )
-    log_wage_systematic = calculate_log_wage(
-        model_params, model_spec, states, covariates, is_expected
-    )
+    log_wage_systematic = calculate_log_wage(model_params, states, is_expected)
     non_consumption_utilities = calculate_non_consumption_utility(
         model_params, model_spec, states, covariates
     )
@@ -120,6 +118,7 @@ def pyth_solve(
     # Return function output
     return (
         non_employment_consumption_resources,
+        non_consumption_utilities,
         emaxs,
     )
 
