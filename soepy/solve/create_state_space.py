@@ -151,37 +151,38 @@ def pyth_create_state_space(model_spec):
                                 # for individuals who have just completed education
                                 # and still have no experience in any occupation.
                                 if period == model_spec.educ_years[educ_level]:
+                                    for choice_lagged in range(NUM_CHOICES):
 
-                                    # Assign an additional integer count i
-                                    # for entry state
-                                    indexer[
-                                        period,
-                                        educ_level,
-                                        0,
-                                        exp_p,
-                                        exp_f,
-                                        type_,
-                                        age_kid,
-                                        partner_indicator,
-                                    ] = i
+                                        # Assign an additional integer count i
+                                        # for entry state
+                                        indexer[
+                                            period,
+                                            educ_level,
+                                            choice_lagged,
+                                            exp_p,
+                                            exp_f,
+                                            type_,
+                                            age_kid,
+                                            partner_indicator,
+                                        ] = i
 
-                                    # Record the values of the state space components
-                                    # for the currently reached entry state
-                                    row = [
-                                        period,
-                                        educ_level,
-                                        0,
-                                        exp_p,
-                                        exp_f,
-                                        type_,
-                                        age_kid,
-                                        partner_indicator,
-                                    ]
+                                        # Record the values of the state space components
+                                        # for the currently reached entry state
+                                        row = [
+                                            period,
+                                            educ_level,
+                                            choice_lagged,
+                                            exp_p,
+                                            exp_f,
+                                            type_,
+                                            age_kid,
+                                            partner_indicator,
+                                        ]
 
-                                    # Update count once more
-                                    i += 1
+                                        # Update count once more
+                                        i += 1
 
-                                    data.append(row)
+                                        data.append(row)
 
                                 else:
 
@@ -276,7 +277,7 @@ def pyth_create_state_space(model_spec):
 
                                         data.append(row)
 
-        states = np.array(data)
+    states = np.array(data)
 
     # Return function output
     return states, indexer
