@@ -88,16 +88,17 @@ def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
     return log_wage_systematic
 
 
-def calculate_non_consumption_utility(model_params, model_spec, states, covariates):
+def calculate_non_consumption_utility(model_params, states, covariates):
     """Calculate non-pecuniary utility contribution."""
 
     non_consumption_utility = np.full(
         (states.shape[0], NUM_CHOICES), [0.00] * NUM_CHOICES
     )
+    num_types = len(model_params.theta_p) + 1
 
     # Type contribution
     # TODO: Can I get rid of the 1st zero everywhere?
-    for i in range(1, model_spec.num_types):
+    for i in range(1, num_types):
         non_consumption_utility[np.where(states[:, 5] == i)] += [
             0,
             model_params.theta_p[i - 1],
@@ -158,8 +159,8 @@ def calculate_non_consumption_utility(model_params, model_spec, states, covariat
     ["f8[:], f8[:, :], f8, f8[:], b1, f8[:]"],
     "(n_ssc_params), (n_tax_params, n_tax_params), (), (n_choices), () -> ()",
     nopython=True,
-    # target="cpu",
-    target="parallel",
+    target="cpu",
+    # target="parallel",
 )
 def calculate_non_employment_consumption_resources(
     deductions_spec,
