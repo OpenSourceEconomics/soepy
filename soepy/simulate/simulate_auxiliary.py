@@ -3,7 +3,8 @@ import pandas as pd
 
 from soepy.exogenous_processes.determine_lagged_choice import lagged_choice_initial
 from soepy.shared.shared_auxiliary import calculate_employment_consumption_resources
-from soepy.shared.shared_auxiliary import calculate_utility_components
+from soepy.shared.shared_auxiliary import calculate_log_wage
+from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import DATA_FORMATS_SIM
 from soepy.shared.shared_constants import DATA_FORMATS_SPARSE
@@ -91,8 +92,11 @@ def pyth_simulate(
     )
 
     # Calculate utility components
-    log_wage_systematic, non_consumption_utilities = calculate_utility_components(
+    log_wage_systematic = calculate_log_wage(
         model_params, model_spec, states, covariates, is_expected
+    )
+    non_consumption_utilities = calculate_non_consumption_utility(
+        model_params, model_spec, states, covariates
     )
 
     # Determine initial states according to initial conditions

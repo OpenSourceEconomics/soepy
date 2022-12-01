@@ -21,9 +21,7 @@ def draw_disturbances(seed, num_periods, num_draws, model_params):
     return draws
 
 
-def calculate_utility_components(
-    model_params, model_spec, states, covariates, is_expected
-):
+def calculate_log_wage(model_params, model_spec, states, covariates, is_expected):
     """Calculate utility components for all choices given state, period, and shocks.
 
     Parameters
@@ -66,43 +64,16 @@ def calculate_utility_components(
         gamma_0=model_params.gamma_0,
         gamma_p=gamma_p,
         gamma_f=model_params.gamma_f,
-        model_spec=model_spec,
         states=states,
     )
 
-    non_consumption_utility = calculate_non_consumption_utility(
-        model_params, model_spec, states, covariates
-    )
-
-    return log_wage_systematic, non_consumption_utility
+    return log_wage_systematic
 
 
-def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, model_spec, states):
+def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
     exp_p_state, exp_f_state = states[:, 3], states[:, 4]
-
-    # log_exp_p = np.log(
-    #     np.where(
-    #         exp_p_state + exp_f_state > model_spec.exp_cap,
-    #         np.around(
-    #             exp_p_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap
-    #         ),
-    #         exp_p_state,
-    #     )
-    #     + 1
-    # )
-    #
-    # log_exp_f = np.log(
-    #     np.where(
-    #         exp_p_state + exp_f_state > model_spec.exp_cap,
-    #         np.around(
-    #             exp_f_state / (exp_p_state + exp_f_state + 0.5) * model_spec.exp_cap
-    #         ),
-    #         exp_f_state,
-    #     )
-    #     + 1
-    # )
 
     log_exp_p = np.log(exp_p_state + 1)
     log_exp_f = np.log(exp_f_state + 1)

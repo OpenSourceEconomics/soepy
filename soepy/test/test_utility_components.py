@@ -7,7 +7,8 @@ import pytest
 
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.shared.shared_auxiliary import calculate_utility_components
+from soepy.shared.shared_auxiliary import calculate_log_wage
+from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 
@@ -60,8 +61,12 @@ def test_pyth_simulate(input_vault, test_id, is_expected):
     ) = create_state_space_objects(model_spec)
 
     # Calculate utility components
-    log_wage_systematic, non_consumption_utilities = calculate_utility_components(
+    log_wage_systematic = calculate_log_wage(
         model_params, model_spec, states, covariates, is_expected
+    )
+
+    non_consumption_utilities = calculate_non_consumption_utility(
+        model_params, model_spec, states, covariates
     )
 
     for edu_ind, edu_type in enumerate(["low", "middle", "high"]):

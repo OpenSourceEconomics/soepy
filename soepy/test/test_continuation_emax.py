@@ -9,9 +9,9 @@ from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
+from soepy.shared.shared_auxiliary import calculate_log_wage
+from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
 from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
-from soepy.shared.shared_auxiliary import calculate_utility_components
-from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
@@ -73,8 +73,12 @@ def input_data():
         model_spec, model_params
     )
 
-    log_wage_systematic, non_consumption_utilities = calculate_utility_components(
+    log_wage_systematic = calculate_log_wage(
         model_params, model_spec, states, covariates, True
+    )
+
+    non_consumption_utilities = calculate_non_consumption_utility(
+        model_params, model_spec, states, covariates
     )
 
     non_employment_benefits = calculate_non_employment_benefits(
