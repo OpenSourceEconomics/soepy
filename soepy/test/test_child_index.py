@@ -90,6 +90,7 @@ def input_data():
         model_params.child_6_10_p,
         states,
         covariates,
+        np.array([0, 1, 2], dtype=float),
     )
 
     non_employment_benefits = calculate_non_employment_benefits(

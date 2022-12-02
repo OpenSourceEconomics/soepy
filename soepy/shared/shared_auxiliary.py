@@ -88,6 +88,15 @@ def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
     return log_wage_systematic
 
 
+@numba.guvectorize(
+    ["f8[:],f8[:],f8[:],f8[:],f8[:],f8[:],f8,f8,f8,f8,f8,f8,i8[:], f8, f8[:], f8[:]"],
+    "(num_unobs_types),(num_unobs_types), (num_edu_types),(num_edu_types),"
+    "(num_edu_types),(num_edu_types), (),(),(),(),(),(),(num_state_vars),"
+    "(),(num_choices)->(num_choices)",
+    nopython=True,
+    target="cpu",
+    # target="parallel",
+)
 def calculate_non_consumption_utility(
     theta_p,
     theta_f,
@@ -101,71 +110,49 @@ def calculate_non_consumption_utility(
     child_3_5_p,
     child_6_10_f,
     child_6_10_p,
-    states,
-    covariates,
+    state,
+    child_bin,
+    dummy_output,
+    non_consumption_utility,
 ):
     """Calculate non-pecuniary utility contribution."""
+    non_consumption_utility_state = np.array([0, theta_p[state[5]], theta_f[state[5]]])
+    educ_level = state[1]
+    if child_bin == 0:
+        non_consumption_utility_state[1] += (
+            no_kids_f[educ_level] + no_kids_p[educ_level]
+        )  # part-time alpha_f_no_kids + alpha_p_no_kids
+        non_consumption_utility_state[2] += no_kids_f[educ_level]
+    elif child_bin == 1:
+        non_consumption_utility_state[1] += (
+            yes_kids_f[educ_level] + yes_kids_p[educ_level] + child_0_2_f + child_0_2_p
+        )
 
-    non_consumption_utility = np.full(
-        (states.shape[0], NUM_CHOICES), [0.00] * NUM_CHOICES
-    )
-    num_types = len(theta_p) + 1
+        non_consumption_utility_state[2] += yes_kids_f[educ_level] + child_0_2_f
+    elif child_bin == 2:
+        non_consumption_utility_state[1] += (
+            yes_kids_f[educ_level] + yes_kids_p[educ_level] + child_3_5_f + child_3_5_p
+        )
+        non_consumption_utility_state[2] += yes_kids_f[educ_level] + child_3_5_f
 
-    # Type contribution
-    # TODO: Can I get rid of the 1st zero everywhere?
-    for i in range(1, num_types):
-        non_consumption_utility[np.where(states[:, 5] == i)] += [
-            0,
-            theta_p[i - 1],
-            theta_f[i - 1],
-        ]
+    elif child_bin == 3:
+        non_consumption_utility_state[1] += (
+            yes_kids_f[educ_level]
+            + yes_kids_p[educ_level]
+            + child_6_10_f
+            + child_6_10_p
+        )
+        non_consumption_utility_state[2] += yes_kids_f[educ_level] + child_6_10_f
+    else:  # Mothers with kids older than 10 only get fixed disutility
+        non_consumption_utility_state[1] += (
+            yes_kids_f[educ_level] + yes_kids_p[educ_level]
+        )
 
-    # Children contribution
-    # No children:
-    for educ_level in [0, 1, 2]:
-
-        non_consumption_utility[
-            np.where((covariates[:, 0] == 0) & (states[:, 1] == educ_level))
-        ] += [
-            0,  # non-employed
-            no_kids_f[educ_level]
-            + no_kids_p[educ_level],  # part-time alpha_f_no_kids + alpha_p_no_kids
-            no_kids_f[educ_level],  # full-time alpha_f_no_kids
-        ]
-
-        # Children present:
-        non_consumption_utility[
-            np.where((covariates[:, 0] != 0) & (states[:, 1] == educ_level))
-        ] += [
-            0,
-            yes_kids_f[educ_level] + yes_kids_p[educ_level],
-            yes_kids_f[educ_level],
-        ]
-
-    # Contribution child aged 0-2:
-    non_consumption_utility[np.where(covariates[:, 0] == 1)] += [
-        0,
-        child_0_2_f + child_0_2_p,
-        child_0_2_f,
-    ]
-
-    # Contribution child aged 3-5:
-    non_consumption_utility[np.where(covariates[:, 0] == 2)] += [
-        0,
-        child_3_5_f + child_3_5_p,
-        child_3_5_f,
-    ]
-
-    # Contribution child aged 6-10:
-    non_consumption_utility[np.where(covariates[:, 0] == 3)] += [
-        0,
-        child_6_10_f + child_6_10_p,
-        child_6_10_f,
-    ]
-
-    non_consumption_utility = np.exp(non_consumption_utility)
-
-    return non_consumption_utility
+        non_consumption_utility_state[2] += yes_kids_f[educ_level]
+    out = np.exp(non_consumption_utility_state)
+    non_consumption_utility[0] = out[0]
+    non_consumption_utility[1] = out[1]
+    non_consumption_utility[2] = out[2]
 
 
 @numba.guvectorize(

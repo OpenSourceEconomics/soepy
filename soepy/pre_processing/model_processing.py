@@ -92,9 +92,10 @@ def group_parameters(model_params_dict_expanded):
         )
 
         for educ_ind, educ_type in enumerate(["low", "middle", "high"]):
-            model_params_dict_flat[param][educ_ind] = model_params_dict_expanded[
-                category
-            ][f"{param}_{educ_type}"]
+            model_params_dict_flat[param][educ_ind] = np.array(
+                model_params_dict_expanded[category][f"{param}_{educ_type}"],
+                dtype=float,
+            )
 
     for key_ in list(model_params_dict_expanded["disutil_work"].keys()):
         if "child" in key_:
@@ -105,17 +106,20 @@ def group_parameters(model_params_dict_expanded):
     for i in ["no", "yes"]:
         for j in ["f", "p"]:
 
-            model_params_dict_flat[i + "_kids_" + j] = [
-                model_params_dict_expanded["disutil_work"][
-                    i + "_kids_" + j + "_educ_low"
+            model_params_dict_flat[i + "_kids_" + j] = np.array(
+                [
+                    model_params_dict_expanded["disutil_work"][
+                        i + "_kids_" + j + "_educ_low"
+                    ],
+                    model_params_dict_expanded["disutil_work"][
+                        i + "_kids_" + j + "_educ_middle"
+                    ],
+                    model_params_dict_expanded["disutil_work"][
+                        i + "_kids_" + j + "_educ_high"
+                    ],
                 ],
-                model_params_dict_expanded["disutil_work"][
-                    i + "_kids_" + j + "_educ_middle"
-                ],
-                model_params_dict_expanded["disutil_work"][
-                    i + "_kids_" + j + "_educ_high"
-                ],
-            ]
+                dtype=float,
+            )
 
     model_params_dict_flat["shock_sd"] = model_params_dict_expanded["derived_attr"][
         "shock_sd"
@@ -128,11 +132,14 @@ def group_parameters(model_params_dict_expanded):
 
     model_params_dict_flat["mu"] = model_params_dict_expanded["risk"]["mu"]
     for i in ["p", "f"]:
-        model_params_dict_flat["theta_" + i] = [
-            v
-            for k, v in model_params_dict_expanded["hetrg_unobs"].items()
-            if "{}".format("theta_" + i) in k
-        ]
+        model_params_dict_flat["theta_" + i] = np.array(
+            [
+                v
+                for k, v in sorted(model_params_dict_expanded["hetrg_unobs"].items())
+                if "{}".format("theta_" + i) in k
+            ],
+            dtype=float,
+        )
 
     return model_params_dict_flat
 

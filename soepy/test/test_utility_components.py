@@ -78,6 +78,7 @@ def test_pyth_simulate(input_vault, test_id, is_expected):
         model_params.child_6_10_p,
         states,
         covariates,
+        np.array([0, 1, 2], dtype=float),
     )
 
     for edu_ind, edu_type in enumerate(["low", "middle", "high"]):
