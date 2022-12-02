@@ -110,7 +110,7 @@ def pyth_simulate(
             )
         ),
         columns=DATA_LABLES_SIM[:9],
-    ).astype(np.int)
+    ).astype(int)
 
     tax_splitting = model_spec.tax_splitting
     data = []
