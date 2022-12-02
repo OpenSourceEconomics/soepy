@@ -88,21 +88,36 @@ def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
     return log_wage_systematic
 
 
-def calculate_non_consumption_utility(model_params, states, covariates):
+def calculate_non_consumption_utility(
+    theta_p,
+    theta_f,
+    no_kids_f,
+    no_kids_p,
+    yes_kids_f,
+    yes_kids_p,
+    child_0_2_f,
+    child_0_2_p,
+    child_3_5_f,
+    child_3_5_p,
+    child_6_10_f,
+    child_6_10_p,
+    states,
+    covariates,
+):
     """Calculate non-pecuniary utility contribution."""
 
     non_consumption_utility = np.full(
         (states.shape[0], NUM_CHOICES), [0.00] * NUM_CHOICES
     )
-    num_types = len(model_params.theta_p) + 1
+    num_types = len(theta_p) + 1
 
     # Type contribution
     # TODO: Can I get rid of the 1st zero everywhere?
     for i in range(1, num_types):
         non_consumption_utility[np.where(states[:, 5] == i)] += [
             0,
-            model_params.theta_p[i - 1],
-            model_params.theta_f[i - 1],
+            theta_p[i - 1],
+            theta_f[i - 1],
         ]
 
     # Children contribution
@@ -113,11 +128,9 @@ def calculate_non_consumption_utility(model_params, states, covariates):
             np.where((covariates[:, 0] == 0) & (states[:, 1] == educ_level))
         ] += [
             0,  # non-employed
-            model_params.no_kids_f[educ_level]
-            + model_params.no_kids_p[
-                educ_level
-            ],  # part-time alpha_f_no_kids + alpha_p_no_kids
-            model_params.no_kids_f[educ_level],  # full-time alpha_f_no_kids
+            no_kids_f[educ_level]
+            + no_kids_p[educ_level],  # part-time alpha_f_no_kids + alpha_p_no_kids
+            no_kids_f[educ_level],  # full-time alpha_f_no_kids
         ]
 
         # Children present:
@@ -125,29 +138,29 @@ def calculate_non_consumption_utility(model_params, states, covariates):
             np.where((covariates[:, 0] != 0) & (states[:, 1] == educ_level))
         ] += [
             0,
-            model_params.yes_kids_f[educ_level] + model_params.yes_kids_p[educ_level],
-            model_params.yes_kids_f[educ_level],
+            yes_kids_f[educ_level] + yes_kids_p[educ_level],
+            yes_kids_f[educ_level],
         ]
 
     # Contribution child aged 0-2:
     non_consumption_utility[np.where(covariates[:, 0] == 1)] += [
         0,
-        model_params.child_0_2_f + model_params.child_0_2_p,
-        model_params.child_0_2_f,
+        child_0_2_f + child_0_2_p,
+        child_0_2_f,
     ]
 
     # Contribution child aged 3-5:
     non_consumption_utility[np.where(covariates[:, 0] == 2)] += [
         0,
-        model_params.child_3_5_f + model_params.child_3_5_p,
-        model_params.child_3_5_f,
+        child_3_5_f + child_3_5_p,
+        child_3_5_f,
     ]
 
     # Contribution child aged 6-10:
     non_consumption_utility[np.where(covariates[:, 0] == 3)] += [
         0,
-        model_params.child_6_10_f + model_params.child_6_10_p,
-        model_params.child_6_10_f,
+        child_6_10_f + child_6_10_p,
+        child_6_10_f,
     ]
 
     non_consumption_utility = np.exp(non_consumption_utility)
