@@ -51,41 +51,49 @@ def calculate_log_wage(model_params, states, is_expected):
 
     """
     if is_expected:
-        # Calculate biased part-time expectation by using ratio from expected data and structural paramteters
+        # Calculate biased part-time expectation by using ratio from expected data and
+        # structural paramteters
         gamma_p = (
             model_params.gamma_p_bias / (model_params.gamma_p / model_params.gamma_f)
         ) * model_params.gamma_p
     else:
         gamma_p = model_params.gamma_p
     log_wage_systematic = calculate_log_wage_systematic(
-        gamma_0=model_params.gamma_0,
-        gamma_p=gamma_p,
-        gamma_f=model_params.gamma_f,
-        states=states,
+        model_params.gamma_0,
+        model_params.gamma_f,
+        gamma_p,
+        states,
     )
 
     return log_wage_systematic
 
 
-def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
+@numba.guvectorize(
+    ["f8[:],f8[:],f8[:],i8[:], f8[:]"],
+    "(num_edu_types),(num_edu_types),(num_edu_types),(num_state_vars)->()",
+    nopython=True,
+    # target="cpu",
+    target="parallel",
+)
+def calculate_log_wage_systematic(
+    gamma_0, gamma_f, gamma_p, state, log_wage_systematic
+):
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
-    exp_p_state, exp_f_state = states[:, 3], states[:, 4]
+    exp_p_state, exp_f_state = state[3], state[4]
 
     log_exp_p = np.log(exp_p_state + 1)
     log_exp_f = np.log(exp_f_state + 1)
 
-    # Construct wage components
-    gamma_0_edu = gamma_0[states[:, 1]]
-    gamma_f_edu = gamma_f[states[:, 1]]
-    gamma_p_edu = gamma_p[states[:, 1]]
+    # Assign wage returns
+    gamma_0_edu = gamma_0[state[1]]
+    gamma_f_edu = gamma_f[state[1]]
+    gamma_p_edu = gamma_p[state[1]]
 
     # Calculate wage in the given state
-    log_wage_systematic = (
+    log_wage_systematic[0] = (
         gamma_0_edu + gamma_f_edu * log_exp_f + gamma_p_edu * log_exp_p
     )
-
-    return log_wage_systematic
 
 
 @numba.guvectorize(
@@ -94,8 +102,8 @@ def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
     "(num_edu_types),(num_edu_types), (),(),(),(),(),(),(num_state_vars),"
     "(),(num_choices)->(num_choices)",
     nopython=True,
-    target="cpu",
-    # target="parallel",
+    # target="cpu",
+    target="parallel",
 )
 def calculate_non_consumption_utility(
     theta_p,
@@ -159,8 +167,8 @@ def calculate_non_consumption_utility(
     ["f8[:], f8[:, :], f8, f8[:], b1, f8[:]"],
     "(n_ssc_params), (n_tax_params, n_tax_params), (), (n_choices), () -> ()",
     nopython=True,
-    target="cpu",
-    # target="parallel",
+    # target="cpu",
+    target="parallel",
 )
 def calculate_non_employment_consumption_resources(
     deductions_spec,
@@ -191,8 +199,8 @@ def calculate_non_employment_consumption_resources(
     ["f8[:], f8[:, :], f8[:], f8, b1, f8[:]"],
     "(n_ssc_params), (n_tax_params, n_tax_params), (num_work_choices), (), () -> (num_work_choices)",
     nopython=True,
-    # target="cpu",
-    target="parallel",
+    target="cpu",
+    # target="parallel",
 )
 def calculate_employment_consumption_resources(
     deductions_spec,
