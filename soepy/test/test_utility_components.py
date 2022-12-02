@@ -64,7 +64,20 @@ def test_pyth_simulate(input_vault, test_id, is_expected):
     log_wage_systematic = calculate_log_wage(model_params, states, is_expected)
 
     non_consumption_utilities = calculate_non_consumption_utility(
-        model_params, states, covariates
+        model_params.theta_p,
+        model_params.theta_f,
+        model_params.no_kids_f,
+        model_params.no_kids_p,
+        model_params.yes_kids_f,
+        model_params.yes_kids_p,
+        model_params.child_0_2_f,
+        model_params.child_0_2_p,
+        model_params.child_3_5_f,
+        model_params.child_3_5_p,
+        model_params.child_6_10_f,
+        model_params.child_6_10_p,
+        states,
+        covariates,
     )
 
     for edu_ind, edu_type in enumerate(["low", "middle", "high"]):

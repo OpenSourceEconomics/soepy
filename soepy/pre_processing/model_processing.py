@@ -43,6 +43,7 @@ def read_model_params_init(model_params_init_file_name):
 def expand_model_params_dict(model_params_dict):
     # Calculate covariances of the error terms given standard deviations
     shock_sd = model_params_dict["sd_wage_shock"]["sigma"]
+
     # Extract the values of the type shares
     try:
         type_shares_non_baseline = [
@@ -59,7 +60,11 @@ def expand_model_params_dict(model_params_dict):
 
         type_shares = [1]
         num_types = 1
+        model_params_dict["hetrg_unobs"] = {}
 
+    # Assign 0 disutility to standard unobserved type
+    model_params_dict["hetrg_unobs"]["theta_p0"] = 0
+    model_params_dict["hetrg_unobs"]["theta_f0"] = 0
     # Append derived attributes to init_dict
     model_params_dict["derived_attr"] = {
         "shock_sd": shock_sd,
@@ -122,16 +127,12 @@ def group_parameters(model_params_dict_expanded):
     model_params_dict_flat["delta"] = model_params_dict_expanded["discount"]["delta"]
 
     model_params_dict_flat["mu"] = model_params_dict_expanded["risk"]["mu"]
-    if model_params_dict_expanded["derived_attr"]["num_types"] > 1:
-        for i in ["p", "f"]:
-            model_params_dict_flat["theta_" + i] = [
-                v
-                for k, v in model_params_dict_expanded["hetrg_unobs"].items()
-                if "{}".format("theta_" + i) in k
-            ]
-
-    else:
-        pass
+    for i in ["p", "f"]:
+        model_params_dict_flat["theta_" + i] = [
+            v
+            for k, v in model_params_dict_expanded["hetrg_unobs"].items()
+            if "{}".format("theta_" + i) in k
+        ]
 
     return model_params_dict_flat
 
