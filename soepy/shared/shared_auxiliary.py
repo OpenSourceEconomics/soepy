@@ -72,8 +72,8 @@ def calculate_log_wage(model_params, states, is_expected):
     ["f8[:],f8[:],f8[:],i8[:], f8[:]"],
     "(num_edu_types),(num_edu_types),(num_edu_types),(num_state_vars)->()",
     nopython=True,
-    # target="cpu",
-    target="parallel",
+    target="cpu",
+    # target="parallel",
 )
 def calculate_log_wage_systematic(
     gamma_0, gamma_f, gamma_p, state, log_wage_systematic
@@ -102,8 +102,8 @@ def calculate_log_wage_systematic(
     "(num_edu_types),(num_edu_types), (),(),(),(),(),(),(num_state_vars),"
     "(),(num_choices)->(num_choices)",
     nopython=True,
-    # target="cpu",
-    target="parallel",
+    target="cpu",
+    # target="parallel",
 )
 def calculate_non_consumption_utility(
     theta_p,
@@ -167,8 +167,8 @@ def calculate_non_consumption_utility(
     ["f8[:], f8[:, :], f8, f8[:], b1, f8[:]"],
     "(n_ssc_params), (n_tax_params, n_tax_params), (), (n_choices), () -> ()",
     nopython=True,
-    # target="cpu",
-    target="parallel",
+    target="cpu",
+    # target="parallel",
 )
 def calculate_non_employment_consumption_resources(
     deductions_spec,
