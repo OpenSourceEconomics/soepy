@@ -59,11 +59,11 @@ def pyth_simulate(
         non_consumption_utilities,
         non_employment_consumption_resources,
         covariates,
-        tax_splitting,
         draws_sim,
         prob_child,
         child_age_update_rule,
         prob_partner,
+        tax_splitting,
         data_sparse,
     )
     if data_sparse:
@@ -89,11 +89,11 @@ def simulate_agents_over_periods(
     non_consumption_utilities,
     non_employment_consumption_resources,
     covariates,
-    tax_splitting,
     draws_sim,
     prob_child,
     child_age_update_rule,
     prob_partner,
+    tax_splitting,
     data_sparse,
 ):
     data = []
