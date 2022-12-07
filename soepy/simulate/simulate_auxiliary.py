@@ -36,85 +36,67 @@ def pyth_simulate(
     """Simulate agent experiences."""
 
     np.random.seed(model_spec.seed_sim)
-
-    # Draw initial condition: education level
-    initial_educ_level = np.random.choice(
-        model_spec.num_educ_levels, model_spec.num_agents_sim, p=prob_educ_level
+    initial_states, draws_sim, log_wage_systematic = prepare_simulation_data(
+        model_params,
+        model_spec,
+        prob_educ_level,
+        prob_child_age,
+        prob_partner_present,
+        prob_exp_ft,
+        prob_exp_pt,
+        states,
+        is_expected,
     )
-
-    # Draw initial conditions: age of youngest child, partner status,
-    # experience full-time and experience part-time
-    initial_child_age = np.full(model_spec.num_agents_sim, np.nan)
-    initial_partner_status = np.full(model_spec.num_agents_sim, np.nan)
-    initial_pt_exp = np.full(model_spec.num_agents_sim, np.nan)
-    initial_ft_exp = np.full(model_spec.num_agents_sim, np.nan)
-
-    for educ_level in range(model_spec.num_educ_levels):
-        # Child
-        initial_child_age[initial_educ_level == educ_level] = np.random.choice(
-            list(range(-1, model_spec.child_age_init_max + 1)),
-            sum(initial_educ_level == educ_level),
-            p=prob_child_age[educ_level],
-        )
-        # Partner
-        initial_partner_status[initial_educ_level == educ_level] = np.random.binomial(
-            size=sum(initial_educ_level == educ_level),
-            n=1,
-            p=prob_partner_present[educ_level],
-        )
-
-        # Part-time experience
-        initial_pt_exp[initial_educ_level == educ_level] = np.random.choice(
-            list(range(0, model_spec.init_exp_max + 1)),
-            sum(initial_educ_level == educ_level),
-            p=prob_exp_pt[educ_level],
-        )
-        # Full-time experience
-        initial_ft_exp[initial_educ_level == educ_level] = np.random.choice(
-            list(range(0, model_spec.init_exp_max + 1)),
-            sum(initial_educ_level == educ_level),
-            p=prob_exp_ft[educ_level],
-        )
-
-    lagged_choice = lagged_choice_initial(initial_ft_exp, initial_pt_exp)
-
-    # Draw random type
-    type_ = np.random.choice(
-        list(np.arange(model_spec.num_types)),
-        model_spec.num_agents_sim,
-        p=model_params.type_shares,
-    )
-
-    # Draw shocks
-    attrs_spec = ["seed_sim", "num_periods", "num_agents_sim"]
-    draws_sim = draw_disturbances(
-        *[getattr(model_spec, attr) for attr in attrs_spec], model_params
-    )
-
-    # Calculate utility components
-    log_wage_systematic = calculate_log_wage(model_params, states, is_expected)
-
-    # Determine initial states according to initial conditions
-    initial_states = pd.DataFrame(
-        np.column_stack(
-            (
-                np.arange(model_spec.num_agents_sim),
-                np.array(model_spec.educ_years)[initial_educ_level],
-                initial_educ_level,
-                lagged_choice,
-                initial_pt_exp,
-                initial_ft_exp,
-                type_,
-                initial_child_age,
-                initial_partner_status,
-            )
-        ),
-        columns=DATA_LABLES_SIM[:9],
-    ).astype(int)
 
     tax_splitting = model_spec.tax_splitting
-    data = []
+    data = simulate_agents_over_periods(
+        model_spec,
+        emaxs,
+        model_params,
+        initial_states,
+        indexer,
+        log_wage_systematic,
+        non_consumption_utilities,
+        non_employment_consumption_resources,
+        covariates,
+        tax_splitting,
+        draws_sim,
+        prob_child,
+        child_age_update_rule,
+        prob_partner,
+        data_sparse,
+    )
+    if data_sparse:
+        dataset = pd.DataFrame(np.vstack(data), columns=LABELS_DATA_SPARSE).astype(
+            DATA_FORMATS_SPARSE
+        )
+    else:
+        dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
+            DATA_FORMATS_SIM
+        )
+    dataset.loc[dataset["Choice"] == 0, "Wage_Observed"] = np.nan
 
+    return dataset
+
+
+def simulate_agents_over_periods(
+    model_spec,
+    emaxs,
+    model_params,
+    initial_states,
+    indexer,
+    log_wage_systematic,
+    non_consumption_utilities,
+    non_employment_consumption_resources,
+    covariates,
+    tax_splitting,
+    draws_sim,
+    prob_child,
+    child_age_update_rule,
+    prob_partner,
+    data_sparse,
+):
+    data = []
     # Loop over all periods
     for period in range(model_spec.num_periods):
 
@@ -287,18 +269,95 @@ def pyth_simulate(
         )
         current_states[:, 7] = child_new_age
         current_states[:, 8] = new_partner_status
+    return data
 
-    if data_sparse:
-        dataset = pd.DataFrame(np.vstack(data), columns=LABELS_DATA_SPARSE).astype(
-            DATA_FORMATS_SPARSE
-        )
-    else:
-        dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
-            DATA_FORMATS_SIM
-        )
-    dataset.loc[dataset["Choice"] == 0, "Wage_Observed"] = np.nan
 
-    return dataset
+def prepare_simulation_data(
+    model_params,
+    model_spec,
+    prob_educ_level,
+    prob_child_age,
+    prob_partner_present,
+    prob_exp_ft,
+    prob_exp_pt,
+    states,
+    is_expected,
+):
+    # Draw initial condition: education level
+    initial_educ_level = np.random.choice(
+        model_spec.num_educ_levels, model_spec.num_agents_sim, p=prob_educ_level
+    )
+
+    # Draw initial conditions: age of youngest child, partner status,
+    # experience full-time and experience part-time
+    initial_child_age = np.full(model_spec.num_agents_sim, np.nan)
+    initial_partner_status = np.full(model_spec.num_agents_sim, np.nan)
+    initial_pt_exp = np.full(model_spec.num_agents_sim, np.nan)
+    initial_ft_exp = np.full(model_spec.num_agents_sim, np.nan)
+
+    for educ_level in range(model_spec.num_educ_levels):
+        # Child
+        initial_child_age[initial_educ_level == educ_level] = np.random.choice(
+            list(range(-1, model_spec.child_age_init_max + 1)),
+            sum(initial_educ_level == educ_level),
+            p=prob_child_age[educ_level],
+        )
+        # Partner
+        initial_partner_status[initial_educ_level == educ_level] = np.random.binomial(
+            size=sum(initial_educ_level == educ_level),
+            n=1,
+            p=prob_partner_present[educ_level],
+        )
+
+        # Part-time experience
+        initial_pt_exp[initial_educ_level == educ_level] = np.random.choice(
+            list(range(0, model_spec.init_exp_max + 1)),
+            sum(initial_educ_level == educ_level),
+            p=prob_exp_pt[educ_level],
+        )
+        # Full-time experience
+        initial_ft_exp[initial_educ_level == educ_level] = np.random.choice(
+            list(range(0, model_spec.init_exp_max + 1)),
+            sum(initial_educ_level == educ_level),
+            p=prob_exp_ft[educ_level],
+        )
+
+    lagged_choice = lagged_choice_initial(initial_ft_exp, initial_pt_exp)
+
+    # Draw random type
+    type_ = np.random.choice(
+        list(np.arange(model_spec.num_types)),
+        model_spec.num_agents_sim,
+        p=model_params.type_shares,
+    )
+
+    # Draw shocks
+    attrs_spec = ["seed_sim", "num_periods", "num_agents_sim"]
+    draws_sim = draw_disturbances(
+        *[getattr(model_spec, attr) for attr in attrs_spec], model_params
+    )
+
+    # Calculate utility components
+    log_wage_systematic = calculate_log_wage(model_params, states, is_expected)
+
+    # Determine initial states according to initial conditions
+    initial_states = pd.DataFrame(
+        np.column_stack(
+            (
+                np.arange(model_spec.num_agents_sim),
+                np.array(model_spec.educ_years)[initial_educ_level],
+                initial_educ_level,
+                lagged_choice,
+                initial_pt_exp,
+                initial_ft_exp,
+                type_,
+                initial_child_age,
+                initial_partner_status,
+            )
+        ),
+        columns=DATA_LABLES_SIM[:9],
+    ).astype(int)
+    return initial_states, draws_sim, log_wage_systematic
 
 
 def get_child_care_cost_for_choice(child_bins, child_care_costs):
