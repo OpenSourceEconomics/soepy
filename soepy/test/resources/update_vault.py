@@ -27,6 +27,7 @@ def update_sim_objectes():
             exog_partner_arrival_info,
             exog_partner_separation_info,
             expected_df,
+            expected_df_unbiased,
         ) = tests_sim_func[i]
 
         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
@@ -54,8 +55,8 @@ def update_sim_objectes():
             exog_child_info,
             exog_partner_arrival_info,
             exog_partner_separation_info,
-            calculated_df_sim.sum(axis=0),
-            unbiased_calc_df.sum(axis=0),
+            calculated_df_sim.reset_index().sum(axis=0),
+            unbiased_calc_df.reset_index().sum(axis=0),
         )
 
     with open(vault_file, "wb") as file:
