@@ -1,8 +1,6 @@
 import numba
 import numpy as np
 
-from soepy.shared.shared_constants import INVALID_FLOAT
-from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.shared.tax_and_transfers import calculate_net_income
 
 
@@ -161,38 +159,6 @@ def calculate_non_consumption_utility(
     non_consumption_utility[0] = out[0]
     non_consumption_utility[1] = out[1]
     non_consumption_utility[2] = out[2]
-
-
-@numba.guvectorize(
-    ["f8[:], f8[:, :], f8, f8[:], b1, f8[:]"],
-    "(n_ssc_params), (n_tax_params, n_tax_params), (), (n_choices), () -> ()",
-    nopython=True,
-    target="cpu",
-    # target="parallel",
-)
-def calculate_non_employment_consumption_resources(
-    deductions_spec,
-    income_tax_spec,
-    male_wage,
-    non_employment_benefits,
-    tax_splitting,
-    non_employment_consumption_resources,
-):
-    """This function calculates the resources available to the individual
-    to spend on consumption were she to choose to not be employed.
-    It adds the components from the budget constraint to the female wage."""
-
-    # Set female wage to
-    net_income = (
-        calculate_net_income(
-            income_tax_spec, deductions_spec, 0, male_wage, tax_splitting
-        )
-        + non_employment_benefits[0]
-    )
-
-    non_employment_consumption_resources[0] = (
-        net_income + non_employment_benefits[1] + non_employment_benefits[2]
-    )
 
 
 @numba.guvectorize(

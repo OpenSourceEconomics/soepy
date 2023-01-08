@@ -3,10 +3,10 @@ from functools import partial
 import numpy as np
 from scipy.special import roots_hermite
 
-from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
+from soepy.shared.non_employment import calculate_non_employment_benefits
+from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_log_wage
 from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
-from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.solve.emaxs import construct_emax
