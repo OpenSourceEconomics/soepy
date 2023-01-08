@@ -87,18 +87,16 @@ def pyth_solve(
         np.array([0, 1, 2], dtype=float),
     )
 
-    non_employment_benefits = calculate_non_employment_benefits(
-        model_spec, states, log_wage_systematic
-    )
-
     tax_splitting = model_spec.tax_splitting
 
     non_employment_consumption_resources = (
         calculate_non_employment_consumption_resources(
             model_spec.ssc_deductions,
             model_spec.tax_params,
+            model_spec,
+            states,
+            log_wage_systematic,
             covariates[:, 1],
-            non_employment_benefits,
             tax_splitting,
         )
     )

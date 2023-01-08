@@ -93,10 +93,6 @@ def input_data():
         np.array([0, 1, 2], dtype=float),
     )
 
-    non_employment_benefits = calculate_non_employment_benefits(
-        model_spec, states, log_wage_systematic
-    )
-
     deductions_spec = np.array(model_spec.ssc_deductions)
     tax_splitting = model_spec.tax_splitting
 
@@ -104,8 +100,10 @@ def input_data():
         calculate_non_employment_consumption_resources(
             deductions_spec,
             model_spec.tax_params,
+            model_spec,
+            states,
+            log_wage_systematic,
             covariates[:, 1],
-            non_employment_benefits,
             tax_splitting,
         )
     )

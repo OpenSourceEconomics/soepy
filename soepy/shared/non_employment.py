@@ -149,6 +149,28 @@ def calculate_alg1(
     return alg1
 
 
+def calculate_non_employment_consumption_resources(
+    deductions_spec,
+    income_tax_spec,
+    model_spec,
+    states,
+    log_wage_systematic,
+    male_wage,
+    tax_splitting,
+):
+    non_employment_benefits = calculate_non_employment_benefits(
+        model_spec, states, log_wage_systematic
+    )
+
+    return calc_resources(
+        deductions_spec,
+        income_tax_spec,
+        male_wage,
+        non_employment_benefits,
+        tax_splitting,
+    )
+
+
 @numba.guvectorize(
     ["f8[:], f8[:, :], f8, f8[:], b1, f8[:]"],
     "(n_ssc_params), (n_tax_params, n_tax_params), (), (n_choices), () -> ()",
@@ -156,7 +178,7 @@ def calculate_alg1(
     target="cpu",
     # target="parallel",
 )
-def calculate_non_employment_consumption_resources(
+def calc_resources(
     deductions_spec,
     income_tax_spec,
     male_wage,
