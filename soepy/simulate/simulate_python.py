@@ -49,7 +49,7 @@ def simulate(
     ) = create_state_space_objects(model_spec)
 
     # Obtain model solution
-    non_employment_consumption_resources, non_consumption_utilities, emaxs = pyth_solve(
+    non_consumption_utilities, emaxs = pyth_solve(
         states,
         covariates,
         child_state_indexes,
@@ -69,7 +69,6 @@ def simulate(
         emaxs,
         covariates,
         non_consumption_utilities,
-        non_employment_consumption_resources,
         child_age_update_rule,
         prob_educ_level,
         prob_child_age,
@@ -165,7 +164,7 @@ def partiable_simulate(
     model_spec = read_model_spec_init(model_spec_init_file_name, model_params_df)
 
     # Obtain model solution
-    non_employment_consumption_resources, non_consumption_utilities, emaxs = pyth_solve(
+    non_consumption_utilities, emaxs = pyth_solve(
         states,
         covariates,
         child_state_indexes,
@@ -185,7 +184,6 @@ def partiable_simulate(
         emaxs,
         covariates,
         non_consumption_utilities,
-        non_employment_consumption_resources,
         child_age_update_rule,
         prob_educ_level,
         prob_child_age,
