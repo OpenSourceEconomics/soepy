@@ -8,7 +8,6 @@ from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.shared.non_employment import calculate_non_employment_benefits
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_log_wage
 from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
@@ -91,10 +90,6 @@ def input_data():
         states,
         covariates[:, 0],
         np.array([0, 1, 2], dtype=float),
-    )
-
-    non_employment_benefits = calculate_non_employment_benefits(
-        model_spec, states, log_wage_systematic
     )
 
     deductions_spec = np.array(model_spec.ssc_deductions)
