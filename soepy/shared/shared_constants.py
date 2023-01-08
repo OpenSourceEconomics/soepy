@@ -35,8 +35,7 @@ DATA_LABLES_SIM = [
     "Male_Wages",
 ]
 DATA_FORMATS_SIM = {
-    key: (np.int if key in DATA_LABLES_SIM[:10] else np.float)
-    for key in DATA_LABLES_SIM
+    key: (int if key in DATA_LABLES_SIM[:10] else float) for key in DATA_LABLES_SIM
 }
 
 IDX_STATES_DATA_SPARSE = np.array(
@@ -57,8 +56,8 @@ LABELS_DATA_SPARSE = [
 ] + ["Choice", "Wage_Observed"]
 
 DATA_FORMATS_SPARSE_1 = {
-    "Identifier": np.int,
-    "Wage_Observed": np.float,
+    "Identifier": int,
+    "Wage_Observed": float,
 }
 
 DATA_FORMATS_SPARSE_2 = {key: np.int8 for key in LABELS_DATA_SPARSE[1:-1]}

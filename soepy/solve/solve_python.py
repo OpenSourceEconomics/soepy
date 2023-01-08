@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.special import roots_hermite
 
-from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
-from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
-from soepy.shared.shared_auxiliary import calculate_utility_components
+from soepy.shared.non_employment import calculate_non_employment_consumption_resources
+from soepy.shared.shared_auxiliary import calculate_log_wage
+from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.solve.emaxs import construct_emax
@@ -64,12 +64,24 @@ def pyth_solve(
     draws_emax, draw_weights_emax = get_integration_draws_and_weights(
         model_spec, model_params
     )
-    log_wage_systematic, non_consumption_utilities = calculate_utility_components(
-        model_params, model_spec, states, covariates, is_expected
-    )
+    log_wage_systematic = calculate_log_wage(model_params, states, is_expected)
 
-    non_employment_benefits = calculate_non_employment_benefits(
-        model_spec, states, log_wage_systematic
+    non_consumption_utilities = calculate_non_consumption_utility(
+        model_params.theta_p,
+        model_params.theta_f,
+        model_params.no_kids_f,
+        model_params.no_kids_p,
+        model_params.yes_kids_f,
+        model_params.yes_kids_p,
+        model_params.child_0_2_f,
+        model_params.child_0_2_p,
+        model_params.child_3_5_f,
+        model_params.child_3_5_p,
+        model_params.child_6_10_f,
+        model_params.child_6_10_p,
+        states,
+        covariates[:, 0],
+        np.array([0, 1, 2], dtype=float),
     )
 
     tax_splitting = model_spec.tax_splitting
@@ -78,8 +90,10 @@ def pyth_solve(
         calculate_non_employment_consumption_resources(
             model_spec.ssc_deductions,
             model_spec.tax_params,
+            model_spec,
+            states,
+            log_wage_systematic,
             covariates[:, 1],
-            non_employment_benefits,
             tax_splitting,
         )
     )
@@ -116,6 +130,7 @@ def pyth_solve(
     # Return function output
     return (
         non_employment_consumption_resources,
+        non_consumption_utilities,
         emaxs,
     )
 

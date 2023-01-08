@@ -85,7 +85,11 @@ def input_data():
         ) = create_state_space_objects(model_spec)
 
         # Obtain model solution
-        non_employment_consumption_resources, emaxs = pyth_solve(
+        (
+            non_employment_consumption_resources,
+            non_consumption_utilities,
+            emaxs,
+        ) = pyth_solve(
             states,
             covariates,
             child_state_indexes,
@@ -104,6 +108,7 @@ def input_data():
             indexer,
             emaxs,
             covariates,
+            non_consumption_utilities,
             non_employment_consumption_resources,
             child_age_update_rule,
             prob_educ_level,

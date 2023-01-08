@@ -8,10 +8,9 @@ from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.shared.non_employment_benefits import calculate_non_employment_benefits
-from soepy.shared.shared_auxiliary import calculate_non_employment_consumption_resources
-from soepy.shared.shared_auxiliary import calculate_utility_components
-from soepy.shared.shared_auxiliary import draw_disturbances
+from soepy.shared.non_employment import calculate_non_employment_consumption_resources
+from soepy.shared.shared_auxiliary import calculate_log_wage
+from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
 from soepy.shared.shared_constants import HOURS
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
@@ -80,12 +79,24 @@ def input_data():
 
     draws_emax *= 0
 
-    log_wage_systematic, non_consumption_utilities = calculate_utility_components(
-        model_params, model_spec, states, covariates, True
-    )
+    log_wage_systematic = calculate_log_wage(model_params, states, True)
 
-    non_employment_benefits = calculate_non_employment_benefits(
-        model_spec, states, log_wage_systematic
+    non_consumption_utilities = calculate_non_consumption_utility(
+        model_params.theta_p,
+        model_params.theta_f,
+        model_params.no_kids_f,
+        model_params.no_kids_p,
+        model_params.yes_kids_f,
+        model_params.yes_kids_p,
+        model_params.child_0_2_f,
+        model_params.child_0_2_p,
+        model_params.child_3_5_f,
+        model_params.child_3_5_p,
+        model_params.child_6_10_f,
+        model_params.child_6_10_p,
+        states,
+        covariates[:, 0],
+        np.array([0, 1, 2], dtype=float),
     )
 
     deductions_spec = np.array(model_spec.ssc_deductions)
@@ -95,8 +106,10 @@ def input_data():
         calculate_non_employment_consumption_resources(
             deductions_spec,
             model_spec.tax_params,
+            model_spec,
+            states,
+            log_wage_systematic,
             covariates[:, 1],
-            non_employment_benefits,
             tax_splitting,
         )
     )
