@@ -14,8 +14,33 @@ def calculate_non_employment_consumption_resources(
     male_wage,
     tax_splitting,
 ):
+    """This function calculates the non employment consumption resources. It first
+    calcultes the non employment benefits before using them to calculate the resources."""
+
+    alg1_replacement_no_child = model_spec.alg1_replacement_no_child
+    alg1_replacement_child = model_spec.alg1_replacement_child
+    regelsatz_single = model_spec.regelsatz_single
+    housing_single = model_spec.housing_single
+    housing_addtion = model_spec.housing_addtion
+    regelsatz_child = model_spec.regelsatz_child
+    addition_child_single = model_spec.addition_child_single
+    motherhood_replacement = model_spec.motherhood_replacement
+    elterngeld_min = model_spec.elterngeld_min
+    elterngeld_max = model_spec.elterngeld_max
+
     non_employment_benefits = calculate_non_employment_benefits(
-        model_spec, states, log_wage_systematic
+        states,
+        log_wage_systematic,
+        alg1_replacement_no_child,
+        alg1_replacement_child,
+        regelsatz_single,
+        housing_single,
+        housing_addtion,
+        regelsatz_child,
+        addition_child_single,
+        motherhood_replacement,
+        elterngeld_min,
+        elterngeld_max,
     )
 
     return calc_resources(
@@ -59,7 +84,20 @@ def calc_resources(
     )
 
 
-def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
+def calculate_non_employment_benefits(
+    states,
+    log_wage_systematic,
+    alg1_replacement_no_child,
+    alg1_replacement_child,
+    regelsatz_single,
+    housing_single,
+    housing_addtion,
+    regelsatz_child,
+    addition_child_single,
+    motherhood_replacement,
+    elterngeld_min,
+    elterngeld_max,
+):
     """This function calculates the benefits an individual would receive if they were
     to choose to be non-employed in the period"""
 
@@ -72,17 +110,6 @@ def calculate_non_employment_benefits(model_spec, states, log_wage_systematic):
     married = states[:, 7] == 1
 
     prox_net_wage_systematic = 0.65 * np.exp(log_wage_systematic)
-
-    alg1_replacement_no_child = model_spec.alg1_replacement_no_child
-    alg1_replacement_child = model_spec.alg1_replacement_child
-    regelsatz_single = model_spec.regelsatz_single
-    housing_single = model_spec.housing_single
-    housing_addtion = model_spec.housing_addtion
-    regelsatz_child = model_spec.regelsatz_child
-    addition_child_single = model_spec.addition_child_single
-    motherhood_replacement = model_spec.motherhood_replacement
-    elterngeld_min = model_spec.elterngeld_min
-    elterngeld_max = model_spec.elterngeld_max
 
     alg2_single = regelsatz_single + housing_single
     alg_2_alleinerziehend = (
