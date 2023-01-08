@@ -6,3 +6,4 @@ doc/build/
 .coverage
 *.egg-info/
 Speed_test.ipynb
+*.prof
