@@ -39,6 +39,9 @@ def update_sim_objectes():
         exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
         calculated_df_sim = simulate(random_model_params_df, model_spec_init_dict)
+        unbiased_calc_df = simulate(
+            random_model_params_df, model_spec_init_dict, is_expected=False
+        )
 
         vault[i] = (
             model_spec_init_dict,
@@ -52,6 +55,7 @@ def update_sim_objectes():
             exog_partner_arrival_info,
             exog_partner_separation_info,
             calculated_df_sim.sum(axis=0),
+            unbiased_calc_df.sum(axis=0),
         )
 
     with open(vault_file, "wb") as file:

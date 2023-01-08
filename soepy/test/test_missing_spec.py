@@ -28,6 +28,7 @@ def input_data():
         exog_partner_arrival_info,
         exog_partner_separation_info,
         expected_df,
+        expected_df_unbiased,
     ) = tests[0]
 
     return model_spec_init_dict, random_model_params_df

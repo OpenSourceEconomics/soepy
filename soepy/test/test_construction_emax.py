@@ -40,6 +40,7 @@ def input_data():
         exog_partner_arrival_info,
         exog_partner_separation_info,
         expected_df,
+        expected_df_unbiased,
     ) = tests[0]
     model_spec_init_dict["SOLUTION"]["num_draws_emax"] = 1
 

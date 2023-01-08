@@ -47,6 +47,7 @@ def test_pyth_simulate(input_vault, test_id, is_expected):
         exog_partner_arrival_info,
         exog_partner_separation_info,
         expected_df,
+        expected_df_unbiased,
     ) = input_vault[test_id]
 
     model_params_df, model_params = read_model_params_init(random_model_params_df)

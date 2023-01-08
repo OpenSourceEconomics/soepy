@@ -77,6 +77,7 @@ def test_pyth_simulate(input_vault, test_id):
         exog_partner_arrival_info,
         exog_partner_separation_info,
         expected_df,
+        expected_df_unbiased,
     ) = input_vault[test_id]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
@@ -168,6 +169,7 @@ def test_simulation_func(input_vault, test_id):
         exog_partner_arrival_info,
         exog_partner_separation_info,
         expected_df,
+        expected_df_unbiased,
     ) = input_vault[test_id]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
@@ -205,6 +207,7 @@ def test_simulation_func_data_sparse(input_vault, test_id):
         exog_partner_arrival_info,
         exog_partner_separation_info,
         expected_df,
+        expected_df_unbiased,
     ) = input_vault[test_id]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
