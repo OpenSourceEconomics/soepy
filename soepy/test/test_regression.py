@@ -77,6 +77,7 @@ def test_pyth_simulate(input_vault, test_id):
         exog_partner_arrival_info,
         exog_partner_separation_info,
         expected_df,
+        expected_df_unbiased,
     ) = input_vault[test_id]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
@@ -112,7 +113,7 @@ def test_pyth_simulate(input_vault, test_id):
     ) = create_state_space_objects(model_spec)
 
     # Obtain model solution
-    non_employment_consumption_resources, non_consumption_utilities, emaxs = pyth_solve(
+    non_consumption_utilities, emaxs = pyth_solve(
         states,
         covariates,
         child_state_indexes,
@@ -132,7 +133,6 @@ def test_pyth_simulate(input_vault, test_id):
         emaxs,
         covariates,
         non_consumption_utilities,
-        non_employment_consumption_resources,
         child_age_update_rule,
         prob_educ_level,
         prob_child_age,
@@ -168,6 +168,7 @@ def test_simulation_func(input_vault, test_id):
         exog_partner_arrival_info,
         exog_partner_separation_info,
         expected_df,
+        expected_df_unbiased,
     ) = input_vault[test_id]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
@@ -183,6 +184,46 @@ def test_simulation_func(input_vault, test_id):
 
     pd.testing.assert_series_equal(
         expected_df.loc[DATA_LABLES_CHECK],
+        calculated_df.reset_index().sum(axis=0).loc[DATA_LABLES_CHECK],
+    )
+    cleanup()
+
+
+@pytest.mark.parametrize("test_id", CASES_TEST)
+def test_simulation_func_unbiased(input_vault, test_id):
+    """This test runs a random selection of test regression tests from
+    our regression test battery.
+    """
+    (
+        model_spec_init_dict,
+        random_model_params_df,
+        exog_educ_shares,
+        exog_child_age_shares,
+        exog_partner_shares,
+        exog_exper_shares_pt,
+        exog_exper_shares_ft,
+        exog_child_info,
+        exog_partner_arrival_info,
+        exog_partner_separation_info,
+        expected_df,
+        expected_df_unbiased,
+    ) = input_vault[test_id]
+
+    exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
+    exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
+    exog_child_info.to_pickle("test.soepy.child.pkl")
+    exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
+    exog_exper_shares_pt.to_pickle("test.soepy.pt.exp.shares.pkl")
+    exog_exper_shares_ft.to_pickle("test.soepy.ft.exp.shares.pkl")
+    exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
+    exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
+
+    calculated_df = simulate(
+        random_model_params_df, model_spec_init_dict, is_expected=False
+    )
+
+    pd.testing.assert_series_equal(
+        expected_df_unbiased.loc[DATA_LABLES_CHECK],
         calculated_df.reset_index().sum(axis=0).loc[DATA_LABLES_CHECK],
     )
     cleanup()
@@ -205,6 +246,7 @@ def test_simulation_func_data_sparse(input_vault, test_id):
         exog_partner_arrival_info,
         exog_partner_separation_info,
         expected_df,
+        expected_df_unbiased,
     ) = input_vault[test_id]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")

@@ -111,11 +111,7 @@ def test_unit_data_frame_shape():
         ) = create_state_space_objects(model_spec)
 
         # Obtain model solution
-        (
-            non_employment_consumption_resources,
-            non_consumption_utilities,
-            emaxs,
-        ) = pyth_solve(
+        (non_consumption_utilities, emaxs,) = pyth_solve(
             states,
             covariates,
             child_state_indexes,
@@ -135,7 +131,6 @@ def test_unit_data_frame_shape():
             emaxs,
             covariates,
             non_consumption_utilities,
-            non_employment_consumption_resources,
             child_age_update_rule,
             prob_educ_level,
             prob_child_age,
@@ -232,7 +227,7 @@ def test_no_children_no_exp():
     ) = create_state_space_objects(model_spec)
 
     # Obtain model solution
-    non_employment_consumption_resources, non_consumption_utilities, emaxs = pyth_solve(
+    non_consumption_utilities, emaxs = pyth_solve(
         states,
         covariates,
         child_state_indexes,
@@ -252,7 +247,6 @@ def test_no_children_no_exp():
         emaxs,
         covariates,
         non_consumption_utilities,
-        non_employment_consumption_resources,
         child_age_update_rule,
         prob_educ_level,
         prob_child_age,
@@ -312,7 +306,7 @@ def test_shares_according_to_initial_conditions():
     ) = create_state_space_objects(model_spec)
 
     # Obtain model solution
-    non_employment_consumption_resources, non_consumption_utilities, emaxs = pyth_solve(
+    non_consumption_utilities, emaxs = pyth_solve(
         states,
         covariates,
         child_state_indexes,
@@ -332,7 +326,6 @@ def test_shares_according_to_initial_conditions():
         emaxs,
         covariates,
         non_consumption_utilities,
-        non_employment_consumption_resources,
         child_age_update_rule,
         prob_educ_level,
         prob_child_age,
@@ -462,11 +455,7 @@ def test_coef_educ_level_specificity():
         ) = create_state_space_objects(model_spec)
 
         # Obtain model solution
-        (
-            non_employment_consumption_resources,
-            non_consumption_utilities,
-            emaxs,
-        ) = pyth_solve(
+        (non_consumption_utilities, emaxs,) = pyth_solve(
             states,
             covariates,
             child_state_indexes,
@@ -485,7 +474,6 @@ def test_coef_educ_level_specificity():
             emaxs,
             covariates,
             non_consumption_utilities,
-            non_employment_consumption_resources,
             child_age_update_rule,
             prob_educ_level,
             prob_child_age,

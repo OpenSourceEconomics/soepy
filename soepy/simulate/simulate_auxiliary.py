@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from soepy.exogenous_processes.determine_lagged_choice import lagged_choice_initial
+from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_log_wage
 from soepy.shared.shared_auxiliary import draw_disturbances
@@ -21,7 +22,6 @@ def pyth_simulate(
     emaxs,
     covariates,
     non_consumption_utilities,
-    non_employment_consumption_resources,
     child_age_update_rule,
     prob_educ_level,
     prob_child_age,
@@ -36,7 +36,13 @@ def pyth_simulate(
     """Simulate agent experiences."""
 
     np.random.seed(model_spec.seed_sim)
-    initial_states, draws_sim, log_wage_systematic = prepare_simulation_data(
+    tax_splitting = model_spec.tax_splitting
+    (
+        initial_states,
+        draws_sim,
+        log_wage_systematic,
+        non_employment_consumption_resources,
+    ) = prepare_simulation_data(
         model_params,
         model_spec,
         prob_educ_level,
@@ -44,11 +50,12 @@ def pyth_simulate(
         prob_partner_present,
         prob_exp_ft,
         prob_exp_pt,
+        covariates,
         states,
+        tax_splitting,
         is_expected,
     )
 
-    tax_splitting = model_spec.tax_splitting
     data = simulate_agents_over_periods(
         model_spec,
         emaxs,
@@ -280,7 +287,9 @@ def prepare_simulation_data(
     prob_partner_present,
     prob_exp_ft,
     prob_exp_pt,
+    covariates,
     states,
+    tax_splitting,
     is_expected,
 ):
     # Draw initial condition: education level
@@ -340,6 +349,18 @@ def prepare_simulation_data(
     # Calculate utility components
     log_wage_systematic = calculate_log_wage(model_params, states, is_expected)
 
+    non_employment_consumption_resources = (
+        calculate_non_employment_consumption_resources(
+            model_spec.ssc_deductions,
+            model_spec.tax_params,
+            model_spec,
+            states,
+            log_wage_systematic,
+            covariates[:, 1],
+            tax_splitting,
+        )
+    )
+
     # Determine initial states according to initial conditions
     initial_states = pd.DataFrame(
         np.column_stack(
@@ -357,7 +378,12 @@ def prepare_simulation_data(
         ),
         columns=DATA_LABLES_SIM[:9],
     ).astype(int)
-    return initial_states, draws_sim, log_wage_systematic
+    return (
+        initial_states,
+        draws_sim,
+        log_wage_systematic,
+        non_employment_consumption_resources,
+    )
 
 
 def get_child_care_cost_for_choice(child_bins, child_care_costs):
