@@ -2,7 +2,7 @@
 GENERAL:
     num_periods: 28
 EDUC:
-    educ_years: [0, 0, 3]
+    educ_years: [0, 0, 0]
 EXPERIENCE:
     exp_cap: 15
 SIMULATION:
