@@ -182,10 +182,16 @@ def expand_model_spec_dict(model_spec_init_dict, model_params_df):
     except KeyError:
         num_types = 1
 
+    if "elasticity_scale" not in model_spec_init_dict.keys():
+        elasticity_scale = 1
+    else:
+        elasticity_scale = model_spec_init_dict["elasticity_scale"]
+
     # Append derived attributes to init_dict
     model_spec_init_dict["DERIVED_ATTR"] = {
         "num_educ_levels": num_educ_levels,
         "num_types": num_types,
+        "elasticity_scale": elasticity_scale,
     }
 
     model_spec_init_dict = process_tax_system(model_spec_init_dict)

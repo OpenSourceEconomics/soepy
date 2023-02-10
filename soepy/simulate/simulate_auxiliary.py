@@ -56,6 +56,8 @@ def pyth_simulate(
         is_expected,
     )
 
+    log_wage_systematic *= model_spec.elasticity_scale
+
     data = simulate_agents_over_periods(
         model_spec,
         emaxs,
