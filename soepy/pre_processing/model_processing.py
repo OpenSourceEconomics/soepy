@@ -182,6 +182,9 @@ def expand_model_spec_dict(model_spec_init_dict, model_params_df):
     except KeyError:
         num_types = 1
 
+    if "elasticity_scale" not in model_spec_init_dict["SIMULATION"].keys():
+        model_spec_init_dict["SIMULATION"]["elasticity_scale"] = 1
+
     # Append derived attributes to init_dict
     model_spec_init_dict["DERIVED_ATTR"] = {
         "num_educ_levels": num_educ_levels,
