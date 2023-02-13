@@ -56,8 +56,6 @@ def pyth_simulate(
         is_expected,
     )
 
-    log_wage_systematic *= model_spec.elasticity_scale
-
     data = simulate_agents_over_periods(
         model_spec,
         emaxs,
@@ -140,8 +138,11 @@ def simulate_agents_over_periods(
         current_male_wages = covariates[idx][:, 1]
         current_child_benefits = covariates[idx][:, 3]
 
-        current_wages = np.exp(
-            current_log_wage_systematic + draws_sim[period, current_states[:, 0]]
+        current_wages = (
+            np.exp(
+                current_log_wage_systematic + draws_sim[period, current_states[:, 0]]
+            )
+            * model_spec.elasticity_scale
         )
 
         current_female_income = current_wages[:, np.newaxis] * HOURS[np.newaxis, 1:]
