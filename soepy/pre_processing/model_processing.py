@@ -205,7 +205,6 @@ def flatten_model_spec_dict(model_spec_dict):
     groups = [
         "GENERAL",
         "EDUC",
-        "EXPERIENCE",
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",
