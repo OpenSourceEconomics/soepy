@@ -83,7 +83,9 @@ def pyth_solve(
         np.array([0, 1, 2], dtype=float),
     )
 
-    log_wage_systematic = calculate_log_wage(model_params, states, is_expected)
+    log_wage_systematic = calculate_log_wage(
+        model_params, states, is_expected
+    ) + np.log(model_spec.elasticity_scale)
 
     tax_splitting = model_spec.tax_splitting
 
