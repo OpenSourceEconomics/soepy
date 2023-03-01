@@ -24,7 +24,7 @@ def calculate_non_employment_consumption_resources(
     housing_addtion = model_spec.housing_addtion
     regelsatz_child = model_spec.regelsatz_child
     addition_child_single = model_spec.addition_child_single
-    motherhood_replacement = model_spec.motherhood_replacement
+    elterngeld_replacement = model_spec.elterngeld_replacement
     elterngeld_min = model_spec.elterngeld_min
     elterngeld_max = model_spec.elterngeld_max
 
@@ -42,7 +42,7 @@ def calculate_non_employment_consumption_resources(
         housing_addtion,
         regelsatz_child,
         addition_child_single,
-        motherhood_replacement,
+        elterngeld_replacement,
         elterngeld_min,
         elterngeld_max,
         tax_splitting,
@@ -61,7 +61,7 @@ def calculate_non_employment_benefits(
     housing_addtion,
     regelsatz_child,
     addition_child_single,
-    motherhood_replacement,
+    elterngeld_replacement,
     elterngeld_min,
     elterngeld_max,
 ):
@@ -109,7 +109,7 @@ def calculate_non_employment_benefits(
         working_pt_last_period,
         newborn_child,
         prox_net_wage_systematic,
-        motherhood_replacement,
+        elterngeld_replacement,
         elterngeld_min,
         elterngeld_max,
     )
@@ -139,7 +139,7 @@ def calculate_elterngeld(
     working_pt_last_period,
     newborn_child,
     prox_net_wage_systematic,
-    motherhood_replacement,
+    elterngeld_replacement,
     elterngeld_min,
     elterngeld_max,
 ):
@@ -147,7 +147,7 @@ def calculate_elterngeld(
     if working_ft_last_period & newborn_child:
         return np.minimum(
             np.maximum(
-                motherhood_replacement * prox_net_wage_systematic * hours[2],
+                elterngeld_replacement * prox_net_wage_systematic * hours[2],
                 elterngeld_min,
             ),
             elterngeld_max,
@@ -155,7 +155,7 @@ def calculate_elterngeld(
     elif working_pt_last_period & newborn_child:
         return np.minimum(
             np.maximum(
-                motherhood_replacement * prox_net_wage_systematic * hours[1],
+                elterngeld_replacement * prox_net_wage_systematic * hours[1],
                 elterngeld_min,
             ),
             elterngeld_max,
@@ -217,7 +217,7 @@ def calc_resources(
     housing_addtion,
     regelsatz_child,
     addition_child_single,
-    motherhood_replacement,
+    elterngeld_replacement,
     elterngeld_min,
     elterngeld_max,
     tax_splitting,
@@ -238,7 +238,7 @@ def calc_resources(
         housing_addtion,
         regelsatz_child,
         addition_child_single,
-        motherhood_replacement,
+        elterngeld_replacement,
         elterngeld_min,
         elterngeld_max,
     )

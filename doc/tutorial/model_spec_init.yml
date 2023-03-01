@@ -17,7 +17,7 @@ TAXES_TRANSFERS:
     regelsatz_single: 91
     regelsatz_partner: 82
     regelsatz_child: 59
-    motherhood_replacement: 0.67
+    elterngeld_replacement: 0.67
     elterngeld_min: 300
     elterngeld_max: 1800
     addition_child_single: 33
