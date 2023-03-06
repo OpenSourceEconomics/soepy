@@ -97,6 +97,7 @@ def pyth_solve(
             states,
             log_wage_systematic,
             covariates[:, 1],
+            covariates[:, 3],
             tax_splitting,
         )
     )

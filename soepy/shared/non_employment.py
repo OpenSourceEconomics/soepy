@@ -102,13 +102,13 @@ def calculate_non_employment_benefits(
         alg1_replacement_child,
     )
 
-    # We deduct the child benefit as it is added for all three unemployment benefits
-    # in the last step.
-    non_employment_benefits[1] = (
-        calculate_alg2(
-            working_last_period, no_child, married, alg2_single, alg_2_alleinerziehend
-        )
-        - child_benefit
+    non_employment_benefits[1] = calculate_alg2(
+        working_last_period,
+        no_child,
+        married,
+        alg2_single,
+        alg_2_alleinerziehend,
+        child_benefit,
     )
 
     non_employment_benefits[2] = calculate_elterngeld(
@@ -127,15 +127,22 @@ def calculate_non_employment_benefits(
 
 @numba.njit(nogil=True)
 def calculate_alg2(
-    working_last_period, no_child, married, alg2_single, alg_2_alleinerziehend
+    working_last_period,
+    no_child,
+    married,
+    alg2_single,
+    alg_2_alleinerziehend,
+    child_benefit,
 ):
     # Individual did not work last period: Social assistance if not married.
+
     # No child:
     if ~working_last_period & no_child & ~married:
         return alg2_single
-    # Has a child
+    # Has a child. We deduct the child benefit as it is added for all three unemployment
+    # benefits in the last step and you don't get it in alg2.
     elif ~working_last_period & ~no_child & ~married:
-        return alg_2_alleinerziehend
+        return alg_2_alleinerziehend - child_benefit
     else:
         return 0
 
