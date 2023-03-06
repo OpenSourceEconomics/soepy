@@ -101,14 +101,15 @@ def test_married_no_newborn(input_data):
     relevant_male_wages = covariates[:, 1][subgroup_check]
 
     for i in range(transfers_check.shape[0]):
+        male_net_wage = calculate_net_income(
+            np.array(model_spec.tax_params),
+            np.array(model_spec.ssc_deductions),
+            0,
+            relevant_male_wages[i],
+            model_spec.tax_splitting,
+        )
         assert_allclose(
-            calculate_net_income(
-                np.array(model_spec.tax_params),
-                np.array(model_spec.ssc_deductions),
-                0,
-                relevant_male_wages[i],
-                model_spec.tax_splitting,
-            ),
+            male_net_wage,
             transfers_check[i],
         )
 
@@ -194,14 +195,15 @@ def test_alg1_no_child(input_data, work_choice):
     relevant_male_wages = covariates[:, 1][subgroup_check]
 
     for i in range(transfers_check.shape[0]):
+        male_net_wage = calculate_net_income(
+            np.array(model_spec.tax_params),
+            np.array(model_spec.ssc_deductions),
+            0,
+            relevant_male_wages[i],
+            model_spec.tax_splitting,
+        )
         assert_allclose(
-            calculate_net_income(
-                np.array(model_spec.tax_params),
-                np.array(model_spec.ssc_deductions),
-                0,
-                relevant_male_wages[i],
-                model_spec.tax_splitting,
-            )
+            male_net_wage
             + model_spec.alg1_replacement_no_child
             * prox_net_wage_systematic[i]
             * HOURS[work_choice],
@@ -222,7 +224,7 @@ def test_alg1_child(input_data, work_choice):
 
     working_ft_last_period = states[:, 2] == work_choice
 
-    child = states[:, 6] == -1
+    child = states[:, 6] > -1
     new_born_child = states[:, 6] == 0
     subgroup_check = working_ft_last_period & child & ~new_born_child
 
@@ -232,14 +234,15 @@ def test_alg1_child(input_data, work_choice):
     relevant_male_wages = covariates[:, 1][subgroup_check]
 
     for i in range(transfers_check.shape[0]):
+        male_net_wage = calculate_net_income(
+            np.array(model_spec.tax_params),
+            np.array(model_spec.ssc_deductions),
+            0,
+            relevant_male_wages[i],
+            model_spec.tax_splitting,
+        )
         assert_allclose(
-            calculate_net_income(
-                np.array(model_spec.tax_params),
-                np.array(model_spec.ssc_deductions),
-                0,
-                relevant_male_wages[i],
-                model_spec.tax_splitting,
-            )
+            male_net_wage
             + model_spec.alg1_replacement_child
             * prox_net_wage_systematic[i]
             * HOURS[work_choice]
@@ -248,39 +251,48 @@ def test_alg1_child(input_data, work_choice):
         )
 
 
-# @pytest.mark.parametrize("work_choice", [1, 2])
-# def test_elterngeld(input_data, work_choice):
-#     (
-#         covariates,
-#         log_wage_systematic,
-#         states,
-#         non_employment_consumption_resources,
-#         model_spec,
-#         child_age_update_rule,
-#     ) = input_data
-#
-#     working_ft_last_period = states[:, 2] == work_choice
-#
-#     new_born_child = states[:, 6] == -1
-#     subgroup_check = working_ft_last_period & child & ~new_born_child
-#
-#     transfers_check = non_employment_consumption_resources[subgroup_check]
-#
-#     prox_net_wage_systematic = (0.65 * np.exp(log_wage_systematic))[subgroup_check]
-#     relevant_male_wages = covariates[:, 1][subgroup_check]
-#
-#     for i in range(transfers_check.shape[0]):
-#         assert_allclose(
-#             calculate_net_income(
-#                 np.array(model_spec.tax_params),
-#                 np.array(model_spec.ssc_deductions),
-#                 0,
-#                 relevant_male_wages[i],
-#                 model_spec.tax_splitting,
-#             )
-#             + model_spec.alg1_replacement_child
-#             * prox_net_wage_systematic[i]
-#             * HOURS[work_choice]
-#             + model_spec.child_benefits,
-#             transfers_check[i],
-#         )
+@pytest.mark.parametrize("work_choice", [1, 2])
+def test_elterngeld(input_data, work_choice):
+    (
+        covariates,
+        log_wage_systematic,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
+
+    working_choice_last_period = states[:, 2] == work_choice
+
+    new_born_child = states[:, 6] == 0
+    subgroup_check = working_choice_last_period & new_born_child
+
+    transfers_check = non_employment_consumption_resources[subgroup_check]
+
+    prox_net_wage_systematic = (0.65 * np.exp(log_wage_systematic))[subgroup_check]
+    relevant_male_wages = covariates[:, 1][subgroup_check]
+
+    for i in range(transfers_check.shape[0]):
+
+        elterngeld_without_child_benefits = np.minimum(
+            np.maximum(
+                model_spec.elterngeld_replacement
+                * prox_net_wage_systematic[i]
+                * HOURS[work_choice],
+                model_spec.elterngeld_min,
+            ),
+            model_spec.elterngeld_max,
+        )
+        male_net_wage = calculate_net_income(
+            np.array(model_spec.tax_params),
+            np.array(model_spec.ssc_deductions),
+            0,
+            relevant_male_wages[i],
+            model_spec.tax_splitting,
+        )
+        assert_allclose(
+            male_net_wage
+            + elterngeld_without_child_benefits
+            + model_spec.child_benefits,
+            transfers_check[i],
+        )
