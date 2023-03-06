@@ -95,6 +95,14 @@ def random_init(constr=None):
     model_spec_init_dict["TAXES_TRANSFERS"]["elterngeld_max"] = 1800
     model_spec_init_dict["TAXES_TRANSFERS"]["parental_leave_regime"] = "elterngeld"
 
+    model_spec_init_dict["TAXES_TRANSFERS"][
+        "erziehungsgeld_income_threshold_single"
+    ] = 23_000
+    model_spec_init_dict["TAXES_TRANSFERS"][
+        "erziehungsgeld_income_threshold_married"
+    ] = 30_000
+    model_spec_init_dict["TAXES_TRANSFERS"]["erziehungsgeld"] = 300
+
     model_spec_init_dict["TAXES_TRANSFERS"]["addition_child_single"] = 33
     model_spec_init_dict["TAXES_TRANSFERS"]["housing_single"] = 77.5
     model_spec_init_dict["TAXES_TRANSFERS"]["housing_addtion"] = 15
