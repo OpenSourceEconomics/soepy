@@ -8,6 +8,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_log_wage
+from soepy.shared.shared_constants import HOURS
 from soepy.shared.tax_and_transfers import calculate_net_income
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
@@ -73,6 +74,7 @@ def input_data():
     )
     return (
         covariates,
+        log_wage_systematic,
         states,
         non_employment_consumption_resources,
         model_spec,
@@ -83,6 +85,7 @@ def input_data():
 def test_married_no_newborn(input_data):
     (
         covariates,
+        log_wage_systematic,
         states,
         non_employment_consumption_resources,
         model_spec,
@@ -94,10 +97,10 @@ def test_married_no_newborn(input_data):
     working_last_period = working_ft_last_period | working_pt_last_period
     newborn_child = states[:, 6] == 0
     subgroup_check = married & ~working_last_period & ~newborn_child
-    married_non_emplyed = non_employment_consumption_resources[subgroup_check]
+    transfers_check = non_employment_consumption_resources[subgroup_check]
     relevant_male_wages = covariates[:, 1][subgroup_check]
 
-    for i in range(married_non_emplyed.shape[0]):
+    for i in range(transfers_check.shape[0]):
         assert_allclose(
             calculate_net_income(
                 np.array(model_spec.tax_params),
@@ -106,36 +109,179 @@ def test_married_no_newborn(input_data):
                 relevant_male_wages[i],
                 model_spec.tax_splitting,
             ),
-            married_non_emplyed[i],
+            transfers_check[i],
         )
 
 
-# def test_not_married_no_newborn(input_data):
-#     (
-#         covariates,
-#         states,
-#         non_employment_consumption_resources,
-#         model_spec,
-#         child_age_update_rule,
-#     ) = input_data
-#     married = states[:, 7] == 1
-#     working_ft_last_period = states[:, 2] == 2
-#     working_pt_last_period = states[:, 2] == 1
-#     working_last_period = working_ft_last_period | working_pt_last_period
-#     newborn_child = states[:, 6] == 0
-#     subgroup_check = ~married & ~working_last_period & ~newborn_child
-#
-#     married_non_emplyed = non_employment_consumption_resources[subgroup_check]
-#     relevant_male_wages = covariates[:, 1][subgroup_check]
-#
-#     for i in range(married_non_emplyed.shape[0]):
-#         assert (
-#             calculate_net_income(
-#                 np.array(model_spec.tax_params),
-#                 np.array(model_spec.ssc_deductions),
-#                 0,
-#                 relevant_male_wages[i],
-#                 model_spec.tax_splitting,
-#             )
-#             == married_non_emplyed[i]
-#         )
+def test_not_married_no_newborn_allerziehend(input_data):
+    (
+        covariates,
+        log_wage_systematic,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
+    married = states[:, 7] == 1
+    working_ft_last_period = states[:, 2] == 2
+    working_pt_last_period = states[:, 2] == 1
+    working_last_period = working_ft_last_period | working_pt_last_period
+    newborn_child = states[:, 6] == 0
+    child = states[:, 6] > -1
+    subgroup_check = ~married & ~working_last_period & ~newborn_child & child
+
+    transfers_check = non_employment_consumption_resources[subgroup_check]
+
+    alg_2_alleinerziehend = (
+        model_spec.regelsatz_single
+        + model_spec.regelsatz_child
+        + model_spec.addition_child_single
+        + model_spec.housing_single
+        + model_spec.housing_addtion
+    )
+
+    assert_allclose(
+        alg_2_alleinerziehend,
+        transfers_check,
+    )
+
+
+def test_alg2_single(input_data):
+    (
+        covariates,
+        log_wage_systematic,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
+    married = states[:, 7] == 1
+    working_ft_last_period = states[:, 2] == 2
+    working_pt_last_period = states[:, 2] == 1
+    working_last_period = working_ft_last_period | working_pt_last_period
+    child = states[:, 6] > -1
+    subgroup_check = ~married & ~working_last_period & ~child
+
+    transfers_check = non_employment_consumption_resources[subgroup_check]
+
+    alg2_single = model_spec.regelsatz_single + model_spec.housing_single
+
+    assert_allclose(
+        alg2_single,
+        transfers_check,
+    )
+
+
+@pytest.mark.parametrize("work_choice", [1, 2])
+def test_alg1_no_child(input_data, work_choice):
+    (
+        covariates,
+        log_wage_systematic,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
+
+    working_ft_last_period = states[:, 2] == work_choice
+
+    no_child = states[:, 6] == -1
+    subgroup_check = working_ft_last_period & no_child
+
+    transfers_check = non_employment_consumption_resources[subgroup_check]
+
+    prox_net_wage_systematic = (0.65 * np.exp(log_wage_systematic))[subgroup_check]
+    relevant_male_wages = covariates[:, 1][subgroup_check]
+
+    for i in range(transfers_check.shape[0]):
+        assert_allclose(
+            calculate_net_income(
+                np.array(model_spec.tax_params),
+                np.array(model_spec.ssc_deductions),
+                0,
+                relevant_male_wages[i],
+                model_spec.tax_splitting,
+            )
+            + model_spec.alg1_replacement_no_child
+            * prox_net_wage_systematic[i]
+            * HOURS[work_choice],
+            transfers_check[i],
+        )
+
+
+@pytest.mark.parametrize("work_choice", [1, 2])
+def test_alg1_child(input_data, work_choice):
+    (
+        covariates,
+        log_wage_systematic,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
+
+    working_ft_last_period = states[:, 2] == work_choice
+
+    child = states[:, 6] == -1
+    new_born_child = states[:, 6] == -1
+    subgroup_check = working_ft_last_period & child & ~new_born_child
+
+    transfers_check = non_employment_consumption_resources[subgroup_check]
+
+    prox_net_wage_systematic = (0.65 * np.exp(log_wage_systematic))[subgroup_check]
+    relevant_male_wages = covariates[:, 1][subgroup_check]
+
+    for i in range(transfers_check.shape[0]):
+        assert_allclose(
+            calculate_net_income(
+                np.array(model_spec.tax_params),
+                np.array(model_spec.ssc_deductions),
+                0,
+                relevant_male_wages[i],
+                model_spec.tax_splitting,
+            )
+            + model_spec.alg1_replacement_child
+            * prox_net_wage_systematic[i]
+            * HOURS[work_choice]
+            + model_spec.child_benefits,
+            transfers_check[i],
+        )
+
+
+@pytest.mark.parametrize("work_choice", [1, 2])
+def test_elterngeld(input_data, work_choice):
+    (
+        covariates,
+        log_wage_systematic,
+        states,
+        non_employment_consumption_resources,
+        model_spec,
+        child_age_update_rule,
+    ) = input_data
+
+    working_ft_last_period = states[:, 2] == work_choice
+
+    child = states[:, 6] == -1
+    new_born_child = states[:, 6] == -1
+    subgroup_check = working_ft_last_period & child & ~new_born_child
+
+    transfers_check = non_employment_consumption_resources[subgroup_check]
+
+    prox_net_wage_systematic = (0.65 * np.exp(log_wage_systematic))[subgroup_check]
+    relevant_male_wages = covariates[:, 1][subgroup_check]
+
+    for i in range(transfers_check.shape[0]):
+        assert_allclose(
+            calculate_net_income(
+                np.array(model_spec.tax_params),
+                np.array(model_spec.ssc_deductions),
+                0,
+                relevant_male_wages[i],
+                model_spec.tax_splitting,
+            )
+            + model_spec.alg1_replacement_child
+            * prox_net_wage_systematic[i]
+            * HOURS[work_choice]
+            + model_spec.child_benefits,
+            transfers_check[i],
+        )
