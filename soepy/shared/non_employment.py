@@ -100,6 +100,7 @@ def calculate_non_employment_benefits(
         prox_net_wage_systematic,
         alg1_replacement_no_child,
         alg1_replacement_child,
+        child_benefit,
     )
 
     non_employment_benefits[1] = calculate_alg2(
@@ -108,7 +109,6 @@ def calculate_non_employment_benefits(
         married,
         alg2_single,
         alg_2_alleinerziehend,
-        child_benefit,
     )
 
     non_employment_benefits[2] = calculate_elterngeld(
@@ -120,6 +120,7 @@ def calculate_non_employment_benefits(
         elterngeld_replacement,
         elterngeld_min,
         elterngeld_max,
+        child_benefit,
     )
 
     return non_employment_benefits
@@ -132,7 +133,6 @@ def calculate_alg2(
     married,
     alg2_single,
     alg_2_alleinerziehend,
-    child_benefit,
 ):
     # Individual did not work last period: Social assistance if not married.
 
@@ -142,7 +142,7 @@ def calculate_alg2(
     # Has a child. We deduct the child benefit as it is added for all three unemployment
     # benefits in the last step and you don't get it in alg2.
     elif ~working_last_period & ~no_child & ~married:
-        return alg_2_alleinerziehend - child_benefit
+        return alg_2_alleinerziehend
     else:
         return 0
 
@@ -157,26 +157,33 @@ def calculate_elterngeld(
     elterngeld_replacement,
     elterngeld_min,
     elterngeld_max,
+    child_benefit,
 ):
     """This implements the 2007 elterngeld regime."""
     if working_ft_last_period & newborn_child:
-        return np.minimum(
-            np.maximum(
-                elterngeld_replacement * prox_net_wage_systematic * hours[2],
-                elterngeld_min,
-            ),
-            elterngeld_max,
+        return (
+            np.minimum(
+                np.maximum(
+                    elterngeld_replacement * prox_net_wage_systematic * hours[2],
+                    elterngeld_min,
+                ),
+                elterngeld_max,
+            )
+            + child_benefit
         )
     elif working_pt_last_period & newborn_child:
-        return np.minimum(
-            np.maximum(
-                elterngeld_replacement * prox_net_wage_systematic * hours[1],
-                elterngeld_min,
-            ),
-            elterngeld_max,
+        return (
+            np.minimum(
+                np.maximum(
+                    elterngeld_replacement * prox_net_wage_systematic * hours[1],
+                    elterngeld_min,
+                ),
+                elterngeld_max,
+            )
+            + child_benefit
         )
     else:
-        return hours[0]
+        return 0
 
 
 @numba.njit(nogil=True)
@@ -189,6 +196,7 @@ def calculate_alg1(
     prox_net_wage_systematic,
     alg1_replacement_no_child,
     alg1_replacement_child,
+    child_benefit,
 ):
 
     """Individual worked last period: ALG I based on labor income the individual
@@ -201,11 +209,15 @@ def calculate_alg1(
 
     # 67% if child
     elif working_ft_last_period & ~no_child & ~newborn_child:
-        return alg1_replacement_child * prox_net_wage_systematic * hours[2]
+        return (
+            alg1_replacement_child * prox_net_wage_systematic * hours[2] + child_benefit
+        )
     elif working_pt_last_period & ~no_child & ~newborn_child:
-        return alg1_replacement_child * prox_net_wage_systematic * hours[1]
+        return (
+            alg1_replacement_child * prox_net_wage_systematic * hours[1] + child_benefit
+        )
     else:
-        return hours[0]
+        return 0
 
 
 @numba.guvectorize(
@@ -271,5 +283,4 @@ def calc_resources(
         + non_employment_benefits[0]
         + non_employment_benefits[1]
         + non_employment_benefits[2]
-        + child_benefit
     )

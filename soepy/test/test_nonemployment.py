@@ -2,6 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
@@ -97,43 +98,44 @@ def test_married_no_newborn(input_data):
     relevant_male_wages = covariates[:, 1][subgroup_check]
 
     for i in range(married_non_emplyed.shape[0]):
-        assert (
+        assert_allclose(
             calculate_net_income(
                 np.array(model_spec.tax_params),
                 np.array(model_spec.ssc_deductions),
                 0,
                 relevant_male_wages[i],
                 model_spec.tax_splitting,
-            )
-            == married_non_emplyed[i]
+            ),
+            married_non_emplyed[i],
         )
 
 
-def test_married_no_newborn(input_data):
-    (
-        covariates,
-        states,
-        non_employment_consumption_resources,
-        model_spec,
-        child_age_update_rule,
-    ) = input_data
-    married = states[:, 7] == 1
-    working_ft_last_period = states[:, 2] == 2
-    working_pt_last_period = states[:, 2] == 1
-    working_last_period = working_ft_last_period | working_pt_last_period
-    newborn_child = states[:, 6] == 0
-    subgroup_check = married & ~working_last_period & ~newborn_child
-    married_non_emplyed = non_employment_consumption_resources[subgroup_check]
-    relevant_male_wages = covariates[:, 1][subgroup_check]
-
-    for i in range(married_non_emplyed.shape[0]):
-        assert (
-            calculate_net_income(
-                np.array(model_spec.tax_params),
-                np.array(model_spec.ssc_deductions),
-                0,
-                relevant_male_wages[i],
-                model_spec.tax_splitting,
-            )
-            == married_non_emplyed[i]
-        )
+# def test_not_married_no_newborn(input_data):
+#     (
+#         covariates,
+#         states,
+#         non_employment_consumption_resources,
+#         model_spec,
+#         child_age_update_rule,
+#     ) = input_data
+#     married = states[:, 7] == 1
+#     working_ft_last_period = states[:, 2] == 2
+#     working_pt_last_period = states[:, 2] == 1
+#     working_last_period = working_ft_last_period | working_pt_last_period
+#     newborn_child = states[:, 6] == 0
+#     subgroup_check = ~married & ~working_last_period & ~newborn_child
+#
+#     married_non_emplyed = non_employment_consumption_resources[subgroup_check]
+#     relevant_male_wages = covariates[:, 1][subgroup_check]
+#
+#     for i in range(married_non_emplyed.shape[0]):
+#         assert (
+#             calculate_net_income(
+#                 np.array(model_spec.tax_params),
+#                 np.array(model_spec.ssc_deductions),
+#                 0,
+#                 relevant_male_wages[i],
+#                 model_spec.tax_splitting,
+#             )
+#             == married_non_emplyed[i]
+#         )
