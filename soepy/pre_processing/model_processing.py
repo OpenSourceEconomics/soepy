@@ -7,6 +7,7 @@ import yaml
 
 from soepy.pre_processing.tax_and_transfers_params import create_child_care_costs
 from soepy.pre_processing.tax_and_transfers_params import process_elterngeld
+from soepy.pre_processing.tax_and_transfers_params import process_erziehungsgeld
 from soepy.pre_processing.tax_and_transfers_params import process_ssc
 from soepy.pre_processing.tax_and_transfers_params import process_tax_system
 
@@ -195,6 +196,7 @@ def expand_model_spec_dict(model_spec_init_dict, model_params_df):
     model_spec_init_dict = create_child_care_costs(model_spec_init_dict)
     model_spec_init_dict = process_ssc(model_spec_init_dict)
     model_spec_init_dict = process_elterngeld(model_spec_init_dict)
+    model_spec_init_dict = process_erziehungsgeld(model_spec_init_dict)
 
     return model_spec_init_dict
 

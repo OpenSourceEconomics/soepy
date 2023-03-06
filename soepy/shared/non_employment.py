@@ -28,6 +28,11 @@ def calculate_non_employment_consumption_resources(
     elterngeld_replacement = model_spec.elterngeld_replacement
     elterngeld_min = model_spec.elterngeld_min
     elterngeld_max = model_spec.elterngeld_max
+    elterngeld_regime = model_spec.parental_leave_regime == "elterngeld"
+
+    erziehungsgeld_inc_single = model_spec.erziehungsgeld_income_threshold_single
+    erziehungsgeld_inc_married = model_spec.erziehungsgeld_income_threshold_married
+    erziehungsgeld = model_spec.erziehungsgeld
 
     return calc_resources(
         deductions_spec,
@@ -47,7 +52,11 @@ def calculate_non_employment_consumption_resources(
         elterngeld_replacement,
         elterngeld_min,
         elterngeld_max,
+        erziehungsgeld_inc_single,
+        erziehungsgeld_inc_married,
+        erziehungsgeld,
         tax_splitting,
+        elterngeld_regime,
     )
 
 
@@ -57,6 +66,7 @@ def calculate_non_employment_benefits(
     state,
     log_wage_systematic,
     child_benefit,
+    male_wage,
     alg1_replacement_no_child,
     alg1_replacement_child,
     regelsatz_single,
@@ -67,6 +77,10 @@ def calculate_non_employment_benefits(
     elterngeld_replacement,
     elterngeld_min,
     elterngeld_max,
+    erziehungsgeld_inc_single,
+    erziehungsgeld_inc_married,
+    erziehungsgeld,
+    elterngeld_regime,
 ):
     """This function calculates the benefits an individual would receive if they were
     to choose to be non-employed in the period"""
@@ -111,19 +125,51 @@ def calculate_non_employment_benefits(
         alg_2_alleinerziehend,
     )
 
-    non_employment_benefits[2] = calculate_elterngeld(
-        hours,
-        working_ft_last_period,
-        working_pt_last_period,
-        newborn_child,
-        prox_net_wage_systematic,
-        elterngeld_replacement,
-        elterngeld_min,
-        elterngeld_max,
-        child_benefit,
-    )
+    if elterngeld_regime:
+        non_employment_benefits[2] = calculate_elterngeld(
+            hours,
+            working_ft_last_period,
+            working_pt_last_period,
+            newborn_child,
+            prox_net_wage_systematic,
+            elterngeld_replacement,
+            elterngeld_min,
+            elterngeld_max,
+            child_benefit,
+        )
+    else:
+        non_employment_benefits[2] = calc_erziehungsgeld(
+            male_wage,
+            non_employment_benefits[0],
+            married,
+            erziehungsgeld_inc_single,
+            erziehungsgeld_inc_married,
+            erziehungsgeld,
+        )
 
     return non_employment_benefits
+
+
+@numba.njit(nogil=True)
+def calc_erziehungsgeld(
+    male_wage,
+    alg1,
+    married,
+    erziehungsgeld_inc_single,
+    erziehungsgeld_inc_married,
+    erziehungsgeld,
+):
+    relevant_income = male_wage + alg1
+    if married:
+        if relevant_income <= erziehungsgeld_inc_married:
+            return erziehungsgeld
+        else:
+            return 0
+    else:
+        if relevant_income <= erziehungsgeld_inc_single:
+            return erziehungsgeld
+        else:
+            return 0
 
 
 @numba.njit(nogil=True)
@@ -223,10 +269,10 @@ def calculate_alg1(
 @numba.guvectorize(
     [
         "f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8, "
-        "f8,f8,f8,f8,f8,f8,f8,f8,f8,f8, b1, f8[:]"
+        "f8,f8,f8,f8,f8,f8,f8,f8,f8,f8,f8,f8,f8, b1, b1, f8[:]"
     ],
     "(n_ssc_params), (n_tax_params, n_tax_params), (n_choices), (n_state_vars), (), (),"
-    " (), (),(),(),(),(),(),(),(),(),(),() -> ()",
+    " (), (),(),(),(),(),(),(),(),(),(),(), (),(),(), () -> ()",
     nopython=True,
     target="cpu",
     # target="parallel",
@@ -249,7 +295,11 @@ def calc_resources(
     elterngeld_replacement,
     elterngeld_min,
     elterngeld_max,
+    erziehungsgeld_inc_single,
+    erziehungsgeld_inc_married,
+    erziehungsgeld,
     tax_splitting,
+    elterngeld_regime,
     non_employment_consumption_resources,
 ):
     """This function calculates the resources available to the individual
@@ -261,6 +311,7 @@ def calc_resources(
         state,
         log_wage_systematic,
         child_benefit,
+        male_wage,
         alg1_replacement_no_child,
         alg1_replacement_child,
         regelsatz_single,
@@ -271,6 +322,10 @@ def calc_resources(
         elterngeld_replacement,
         elterngeld_min,
         elterngeld_max,
+        erziehungsgeld_inc_single,
+        erziehungsgeld_inc_married,
+        erziehungsgeld,
+        elterngeld_regime,
     )
 
     # Set female wage to 0
