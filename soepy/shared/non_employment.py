@@ -12,6 +12,7 @@ def calculate_non_employment_consumption_resources(
     states,
     log_wage_systematic,
     male_wage,
+    child_benefits,
     tax_splitting,
 ):
     """This function calculates the non employment consumption resources. It first
@@ -35,6 +36,7 @@ def calculate_non_employment_consumption_resources(
         states,
         log_wage_systematic,
         male_wage,
+        child_benefits,
         alg1_replacement_no_child,
         alg1_replacement_child,
         regelsatz_single,
@@ -54,6 +56,7 @@ def calculate_non_employment_benefits(
     hours,
     state,
     log_wage_systematic,
+    child_benefit,
     alg1_replacement_no_child,
     alg1_replacement_child,
     regelsatz_single,
@@ -99,8 +102,13 @@ def calculate_non_employment_benefits(
         alg1_replacement_child,
     )
 
-    non_employment_benefits[1] = calculate_alg2(
-        working_last_period, no_child, married, alg2_single, alg_2_alleinerziehend
+    # We deduct the child benefit as it is added for all three unemployment benefits
+    # in the last step.
+    non_employment_benefits[1] = (
+        calculate_alg2(
+            working_last_period, no_child, married, alg2_single, alg_2_alleinerziehend
+        )
+        - child_benefit
     )
 
     non_employment_benefits[2] = calculate_elterngeld(
@@ -195,10 +203,11 @@ def calculate_alg1(
 
 @numba.guvectorize(
     [
-        "f8[:], f8[:, :], f8[:], f8[:], f8, f8,"
+        "f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8, "
         "f8,f8,f8,f8,f8,f8,f8,f8,f8,f8, b1, f8[:]"
     ],
-    "(n_ssc_params), (n_tax_params, n_tax_params), (n_choices), (n_state_vars), (), (), (),(),(),(),(),(),(),(),(),(),() -> ()",
+    "(n_ssc_params), (n_tax_params, n_tax_params), (n_choices), (n_state_vars), (), (),"
+    " (), (),(),(),(),(),(),(),(),(),(),() -> ()",
     nopython=True,
     target="cpu",
     # target="parallel",
@@ -210,6 +219,7 @@ def calc_resources(
     state,
     log_wage_systematic,
     male_wage,
+    child_benefit,
     alg1_replacement_no_child,
     alg1_replacement_child,
     regelsatz_single,
@@ -231,6 +241,7 @@ def calc_resources(
         hours,
         state,
         log_wage_systematic,
+        child_benefit,
         alg1_replacement_no_child,
         alg1_replacement_child,
         regelsatz_single,
@@ -243,14 +254,15 @@ def calc_resources(
         elterngeld_max,
     )
 
-    # Set female wage to
-    net_income = (
-        calculate_net_income(
-            income_tax_spec, deductions_spec, 0, male_wage, tax_splitting
-        )
-        + non_employment_benefits[0]
+    # Set female wage to 0
+    male_net_income = calculate_net_income(
+        income_tax_spec, deductions_spec, 0, male_wage, tax_splitting
     )
 
     non_employment_consumption_resources[0] = (
-        net_income + non_employment_benefits[1] + non_employment_benefits[2]
+        male_net_income
+        + non_employment_benefits[0]
+        + non_employment_benefits[1]
+        + non_employment_benefits[2]
+        + child_benefit
     )
