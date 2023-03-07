@@ -5,8 +5,69 @@ from soepy.shared.non_employment import calc_erziehungsgeld
 from soepy.shared.shared_constants import INVALID_FLOAT
 from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.shared.tax_and_transfers import calculate_net_income
-from soepy.solve.emaxs import _get_max_aggregated_utilities
 from soepy.solve.emaxs import do_weighting_emax
+
+
+@numba.njit(nogil=True)
+def _get_max_aggregated_utilities_validation(
+    delta,
+    log_wage_systematic,
+    non_consumption_utilities,
+    draw,
+    emaxs,
+    hours,
+    mu,
+    non_employment_consumption_resources,
+    deductions_spec,
+    income_tax_spec,
+    male_wage,
+    child_benefits,
+    equivalence,
+    tax_splitting,
+    child_care_costs,
+    child_care_bin,
+    erziehungsgeld_inc_single,
+    erziehungsgeld_inc_married,
+    erziehungsgeld,
+):
+    current_max_value_function = INVALID_FLOAT
+
+    for j in range(NUM_CHOICES):
+        if j == 0:
+            consumption = non_employment_consumption_resources / equivalence
+        else:
+            female_wage = hours[j] * np.exp(log_wage_systematic + draw)
+
+            net_income = calculate_net_income(
+                income_tax_spec, deductions_spec, female_wage, male_wage, tax_splitting
+            )
+            if child_benefits > 0:
+                if j == 1:
+                    net_income += calc_erziehungsgeld(
+                        male_wage,
+                        female_wage,
+                        male_wage > 0,
+                        erziehungsgeld_inc_single,
+                        erziehungsgeld_inc_married,
+                        erziehungsgeld,
+                    )
+
+            child_costs = child_care_costs[child_care_bin, j - 1]
+
+            consumption = (
+                max(net_income + child_benefits - child_costs, 1e-14) / equivalence
+            )
+
+        consumption_utility = consumption**mu / mu
+
+        value_function_choice = (
+            consumption_utility * non_consumption_utilities[j] + delta * emaxs[j]
+        )
+
+        if value_function_choice > current_max_value_function:
+            current_max_value_function = value_function_choice
+
+    return current_max_value_function
 
 
 @numba.guvectorize(
@@ -113,7 +174,7 @@ def construct_emax_validation(
     emax[3] = 0.0
 
     for i in range(num_draws):
-        max_total_utility = _get_max_aggregated_utilities(
+        max_total_utility = _get_max_aggregated_utilities_validation(
             delta,
             log_wage_systematic,
             non_consumption_utilities,
@@ -136,65 +197,3 @@ def construct_emax_validation(
         )
 
         emax[3] += max_total_utility * draw_weights[i]
-
-
-@numba.njit(nogil=True)
-def _get_max_aggregated_utilities_validation(
-    delta,
-    log_wage_systematic,
-    non_consumption_utilities,
-    draw,
-    emaxs,
-    hours,
-    mu,
-    non_employment_consumption_resources,
-    deductions_spec,
-    income_tax_spec,
-    male_wage,
-    child_benefits,
-    equivalence,
-    tax_splitting,
-    child_care_costs,
-    child_care_bin,
-    erziehungsgeld_inc_single,
-    erziehungsgeld_inc_married,
-    erziehungsgeld,
-):
-    current_max_value_function = INVALID_FLOAT
-
-    for j in range(NUM_CHOICES):
-        if j == 0:
-            consumption = non_employment_consumption_resources / equivalence
-        else:
-            female_wage = hours[j] * np.exp(log_wage_systematic + draw)
-
-            net_income = calculate_net_income(
-                income_tax_spec, deductions_spec, female_wage, male_wage, tax_splitting
-            )
-            if child_benefits > 0:
-                if j == 1:
-                    net_income += calc_erziehungsgeld(
-                        male_wage,
-                        female_wage,
-                        male_wage > 0,
-                        erziehungsgeld_inc_single,
-                        erziehungsgeld_inc_married,
-                        erziehungsgeld,
-                    )
-
-            child_costs = child_care_costs[child_care_bin, j - 1]
-
-            consumption = (
-                max(net_income + child_benefits - child_costs, 1e-14) / equivalence
-            )
-
-        consumption_utility = consumption**mu / mu
-
-        value_function_choice = (
-            consumption_utility * non_consumption_utilities[j] + delta * emaxs[j]
-        )
-
-        if value_function_choice > current_max_value_function:
-            current_max_value_function = value_function_choice
-
-    return current_max_value_function
