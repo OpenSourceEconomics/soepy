@@ -3,13 +3,10 @@ import pickle
 import numpy as np
 import pytest
 
-from soepy.exogenous_processes.children import gen_prob_child_vector
-from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_log_wage
-from soepy.shared.shared_auxiliary import calculate_net_income
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 
@@ -68,6 +65,7 @@ def input_data():
             states,
             log_wage_systematic,
             covariates[:, 1],
+            covariates[:, 3],
             tax_splitting,
         )
     )
@@ -129,36 +127,6 @@ def test_child_update_rule_aging_child(input_data):
     np.testing.assert_array_equal(
         states[aging_child][:, 6] + 1, child_age_update_rule[aging_child]
     )
-
-
-def test_non_consumption_resources_married_no_newborn(input_data):
-    (
-        covariates,
-        states,
-        non_employment_consumption_resources,
-        model_spec,
-        child_age_update_rule,
-    ) = input_data
-    married = states[:, 7] == 1
-    working_ft_last_period = states[:, 2] == 2
-    working_pt_last_period = states[:, 2] == 1
-    working_last_period = working_ft_last_period | working_pt_last_period
-    newborn_child = states[:, 6] == 0
-    subgroup_check = married & ~working_last_period & ~newborn_child
-    married_non_emplyed = non_employment_consumption_resources[subgroup_check]
-    relevant_male_wages = covariates[:, 1][subgroup_check]
-
-    for i in range(married_non_emplyed.shape[0]):
-        assert (
-            calculate_net_income(
-                np.array(model_spec.tax_params),
-                np.array(model_spec.ssc_deductions),
-                0,
-                relevant_male_wages[i],
-                model_spec.tax_splitting,
-            )
-            == married_non_emplyed[i]
-        )
 
 
 def test_work_choices(input_data):

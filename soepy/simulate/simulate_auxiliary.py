@@ -360,6 +360,7 @@ def prepare_simulation_data(
             states,
             log_wage_systematic,
             covariates[:, 1],
+            covariates[:, 3],
             tax_splitting,
         )
     )

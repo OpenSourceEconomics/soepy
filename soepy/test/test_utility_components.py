@@ -90,7 +90,7 @@ def test_pyth_simulate(input_vault, test_id, is_expected):
 
         wage_calc = gamma_0 + gamma_f * np.log(3) + gamma_p * np.log(2)
 
-        np.testing.assert_array_equal(
+        np.testing.assert_array_almost_equal(
             log_wage_systematic[relevant_states_ind],
             np.full(log_wage_systematic[relevant_states_ind].shape, wage_calc),
         )

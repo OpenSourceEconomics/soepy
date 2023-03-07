@@ -92,7 +92,19 @@ def process_ssc(model_dict):
 
 
 def process_elterngeld(model_dict):
-    """THis function scales the elterngeld from montly to weekly values."""
+    """This function scales the elterngeld from montly to weekly values."""
     model_dict["TAXES_TRANSFERS"]["elterngeld_min"] /= M_FACTOR
     model_dict["TAXES_TRANSFERS"]["elterngeld_max"] /= M_FACTOR
+    return model_dict
+
+
+def process_erziehungsgeld(model_dict):
+    """This function scales the elterngeld from montly to weekly values."""
+    model_dict["TAXES_TRANSFERS"]["erziehungsgeld_income_threshold_single"] /= (
+        M_FACTOR * Y_FACTOR
+    )
+    model_dict["TAXES_TRANSFERS"]["erziehungsgeld_income_threshold_married"] /= (
+        M_FACTOR * Y_FACTOR
+    )
+    model_dict["TAXES_TRANSFERS"]["erziehungsgeld"] /= M_FACTOR
     return model_dict
