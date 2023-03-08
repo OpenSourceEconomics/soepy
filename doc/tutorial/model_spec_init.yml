@@ -20,6 +20,7 @@ TAXES_TRANSFERS:
     elterngeld_replacement: 0.67
     elterngeld_min: 300
     elterngeld_max: 1800
+    parental_leave_regime: 'elterngeld'
     erziehungsgeld_income_threshold_single: 23_000
     erziehungsgeld_income_threshold_married: 30_000
     erziehungsgeld: 300
