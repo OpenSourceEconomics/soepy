@@ -28,7 +28,13 @@ def calculate_non_employment_consumption_resources(
     elterngeld_replacement = model_spec.elterngeld_replacement
     elterngeld_min = model_spec.elterngeld_min
     elterngeld_max = model_spec.elterngeld_max
-    elterngeld_regime = model_spec.parental_leave_regime == "elterngeld"
+
+    if model_spec.parental_leave_regime == "elterngeld":
+        elterngeld_regime = True
+    elif model_spec.parental_leave_regime == "erziehungsgeld":
+        elterngeld_regime = False
+    else:
+        raise ValueError("Parental leave regime not specified correctly.")
 
     erziehungsgeld_inc_single = model_spec.erziehungsgeld_income_threshold_single
     erziehungsgeld_inc_married = model_spec.erziehungsgeld_income_threshold_married
@@ -87,7 +93,6 @@ def calculate_non_employment_benefits(
 
     non_employment_benefits = np.full((3,), np.nan)
     no_child = state[6] == -1
-    newborn_child = state[6] == 0
     working_ft_last_period = state[2] == 2
     working_pt_last_period = state[2] == 1
     working_last_period = working_ft_last_period | working_pt_last_period
@@ -105,18 +110,6 @@ def calculate_non_employment_benefits(
         + housing_addtion
     )
 
-    non_employment_benefits[0] = calculate_alg1(
-        hours,
-        working_ft_last_period,
-        working_pt_last_period,
-        no_child,
-        newborn_child,
-        prox_net_wage_systematic,
-        alg1_replacement_no_child,
-        alg1_replacement_child,
-        child_benefit,
-    )
-
     non_employment_benefits[1] = calculate_alg2(
         working_last_period,
         no_child,
@@ -126,22 +119,51 @@ def calculate_non_employment_benefits(
     )
 
     if elterngeld_regime:
-        non_employment_benefits[2] = calculate_elterngeld(
+        newborn_child = state[6] == 0
+
+        if newborn_child:
+            non_employment_benefits[0] = 0
+
+            non_employment_benefits[2] = calculate_elterngeld(
+                hours,
+                working_ft_last_period,
+                working_pt_last_period,
+                prox_net_wage_systematic,
+                elterngeld_replacement,
+                elterngeld_min,
+                elterngeld_max,
+                child_benefit,
+            )
+        else:
+            non_employment_benefits[0] = calculate_alg1(
+                hours,
+                working_ft_last_period,
+                working_pt_last_period,
+                no_child,
+                prox_net_wage_systematic,
+                alg1_replacement_no_child,
+                alg1_replacement_child,
+                child_benefit,
+            )
+            non_employment_benefits[2] = 0
+
+    else:
+        non_employment_benefits[0] = calculate_alg1(
             hours,
             working_ft_last_period,
             working_pt_last_period,
-            newborn_child,
+            no_child,
             prox_net_wage_systematic,
-            elterngeld_replacement,
-            elterngeld_min,
-            elterngeld_max,
+            alg1_replacement_no_child,
+            alg1_replacement_child,
             child_benefit,
         )
-    else:
+        baby_child = (state[6] == 0) | (state[6] == 1)
         non_employment_benefits[2] = calc_erziehungsgeld(
             male_wage,
             non_employment_benefits[0],
             married,
+            baby_child,
             erziehungsgeld_inc_single,
             erziehungsgeld_inc_married,
             erziehungsgeld,
@@ -155,18 +177,19 @@ def calc_erziehungsgeld(
     male_wage,
     alg1,
     married,
+    baby_child,
     erziehungsgeld_inc_single,
     erziehungsgeld_inc_married,
     erziehungsgeld,
 ):
     relevant_income = male_wage + alg1
     if married:
-        if relevant_income <= erziehungsgeld_inc_married:
+        if (relevant_income <= erziehungsgeld_inc_married) & baby_child:
             return erziehungsgeld
         else:
             return 0
     else:
-        if relevant_income <= erziehungsgeld_inc_single:
+        if (relevant_income <= erziehungsgeld_inc_single) & baby_child:
             return erziehungsgeld
         else:
             return 0
@@ -198,7 +221,6 @@ def calculate_elterngeld(
     hours,
     working_ft_last_period,
     working_pt_last_period,
-    newborn_child,
     prox_net_wage_systematic,
     elterngeld_replacement,
     elterngeld_min,
@@ -206,7 +228,7 @@ def calculate_elterngeld(
     child_benefit,
 ):
     """This implements the 2007 elterngeld regime."""
-    if working_ft_last_period & newborn_child:
+    if working_ft_last_period:
         return (
             np.minimum(
                 np.maximum(
@@ -217,7 +239,7 @@ def calculate_elterngeld(
             )
             + child_benefit
         )
-    elif working_pt_last_period & newborn_child:
+    elif working_pt_last_period:
         return (
             np.minimum(
                 np.maximum(
@@ -238,7 +260,6 @@ def calculate_alg1(
     working_ft_last_period,
     working_pt_last_period,
     no_child,
-    newborn_child,
     prox_net_wage_systematic,
     alg1_replacement_no_child,
     alg1_replacement_child,
@@ -254,11 +275,11 @@ def calculate_alg1(
         return alg1_replacement_no_child * prox_net_wage_systematic * hours[1]
 
     # 67% if child
-    elif working_ft_last_period & ~no_child & ~newborn_child:
+    elif working_ft_last_period & ~no_child:
         return (
             alg1_replacement_child * prox_net_wage_systematic * hours[2] + child_benefit
         )
-    elif working_pt_last_period & ~no_child & ~newborn_child:
+    elif working_pt_last_period & ~no_child:
         return (
             alg1_replacement_child * prox_net_wage_systematic * hours[1] + child_benefit
         )

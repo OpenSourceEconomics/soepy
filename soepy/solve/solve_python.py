@@ -292,9 +292,12 @@ def pyth_backward_induction(
                 dummy_array,
             )
         elif model_spec.parental_leave_regime == "erziehungsgeld":
+
+            baby_child_period = (states_period[:, 6] == 0) | (states_period[:, 6] == 1)
             # Calculate emax for current period reached by the loop
             emaxs_period = construct_emax_validation(
                 delta,
+                baby_child_period,
                 log_wage_systematic_period,
                 non_consumption_utilities_period,
                 draws,

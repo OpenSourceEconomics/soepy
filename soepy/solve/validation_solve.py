@@ -11,6 +11,7 @@ from soepy.solve.emaxs import do_weighting_emax
 @numba.njit(nogil=True)
 def _get_max_aggregated_utilities_validation(
     delta,
+    baby_child,
     log_wage_systematic,
     non_consumption_utilities,
     draw,
@@ -47,6 +48,7 @@ def _get_max_aggregated_utilities_validation(
                         male_wage,
                         female_wage,
                         male_wage > 0,
+                        baby_child,
                         erziehungsgeld_inc_single,
                         erziehungsgeld_inc_married,
                         erziehungsgeld,
@@ -72,10 +74,10 @@ def _get_max_aggregated_utilities_validation(
 
 @numba.guvectorize(
     [
-        "f8, f8, f8[:], f8[:], f8[:], f8[:, :, :], f8, f8[:], f8[:], f8, f8, f8[:], "
+        "f8, b1, f8, f8[:], f8[:], f8[:], f8[:, :, :], f8, f8[:], f8[:], f8, f8, f8[:], "
         "f8[:, :], f8[:, :], i8, f8, f8, f8, f8, f8, f8, b1, f8[:], f8[:]"
     ],
-    "(), (), (n_choices), (n_draws), (n_draws), (n_choices, n_children_states, "
+    "(), (), (), (n_choices), (n_draws), (n_draws), (n_choices, n_children_states, "
     "n_partner_states), (), (n_partner_states), (n_choices), (), "
     "(), (n_ssc_params), (n_tax_params, n_tax_params), (n_choices, "
     "n_age_child_costs), (), (), (), (), (), (), (), (), (num_outputs) -> (num_outputs)",
@@ -85,6 +87,7 @@ def _get_max_aggregated_utilities_validation(
 )
 def construct_emax_validation(
     delta,
+    baby_child,
     log_wage_systematic,
     non_consumption_utilities,
     draws,
@@ -176,6 +179,7 @@ def construct_emax_validation(
     for i in range(num_draws):
         max_total_utility = _get_max_aggregated_utilities_validation(
             delta,
+            baby_child,
             log_wage_systematic,
             non_consumption_utilities,
             draws[i],
