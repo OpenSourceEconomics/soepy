@@ -175,14 +175,14 @@ def calculate_non_employment_benefits(
 @numba.njit(nogil=True)
 def calc_erziehungsgeld(
     male_wage,
-    alg1,
+    female_income,
     married,
     baby_child,
     erziehungsgeld_inc_single,
     erziehungsgeld_inc_married,
     erziehungsgeld,
 ):
-    relevant_income = male_wage + alg1
+    relevant_income = male_wage + female_income
     if married:
         if (relevant_income <= erziehungsgeld_inc_married) & baby_child:
             return erziehungsgeld
