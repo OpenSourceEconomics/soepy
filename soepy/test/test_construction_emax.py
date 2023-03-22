@@ -124,14 +124,11 @@ def input_data():
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
     emaxs = pyth_backward_induction(
-        model_spec.num_periods,
+        model_spec,
         tax_splitting,
         model_params.mu,
         model_params.delta,
-        model_spec.tax_params,
         states,
-        HOURS,
-        model_spec.child_care_costs,
         child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
@@ -142,7 +139,6 @@ def input_data():
         prob_child,
         prob_partner,
         non_employment_consumption_resources,
-        model_spec.ssc_deductions,
     )
 
     return (
