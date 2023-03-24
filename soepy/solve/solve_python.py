@@ -7,6 +7,7 @@ from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
 from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.solve.emaxs import construct_emax
+from soepy.solve.validation_solve import construct_emax_validation
 
 
 def pyth_solve(
@@ -110,14 +111,11 @@ def pyth_solve(
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
     emaxs = pyth_backward_induction(
-        model_spec.num_periods,
+        model_spec,
         tax_splitting,
         model_params.mu,
         model_params.delta,
-        model_spec.tax_params,
         states,
-        HOURS,
-        model_spec.child_care_costs,
         child_state_indexes,
         log_wage_systematic,
         non_consumption_utilities,
@@ -128,7 +126,6 @@ def pyth_solve(
         prob_child,
         prob_partner,
         non_employment_consumption_resources,
-        model_spec.ssc_deductions,
     )
 
     # Return function output
@@ -162,14 +159,11 @@ def get_integration_draws_and_weights(model_spec, model_params):
 
 # @numba.njit
 def pyth_backward_induction(
-    num_periods,
+    model_spec,
     tax_splitting,
     mu,
     delta,
-    tax_params,
     states,
-    hours,
-    child_care_costs,
     child_state_indexes,
     log_wage_systematic,
     non_consumption_utilities,
@@ -180,7 +174,6 @@ def pyth_backward_induction(
     prob_child,
     prob_partner,
     non_employment_consumption_resources,
-    deductions_spec,
 ):
     """Get expected maximum value function at every state space point.
     Backward induction is performed all at once for all states in a given period.
@@ -221,6 +214,17 @@ def pyth_backward_induction(
     dummy_array = np.zeros(4)  # Need this array to define output for construct_emaxs
 
     emaxs = np.zeros((states.shape[0], non_consumption_utilities.shape[1] + 1))
+
+    hours = np.array(HOURS)
+    deductions_spec = model_spec.ssc_deductions
+    tax_params = model_spec.tax_params
+    child_care_costs = model_spec.child_care_costs
+
+    erziehungsgeld_inc_single = model_spec.erziehungsgeld_income_threshold_single
+    erziehungsgeld_inc_married = model_spec.erziehungsgeld_income_threshold_married
+    erziehungsgeld = model_spec.erziehungsgeld
+
+    num_periods = model_spec.num_periods
 
     # Loop backwards over all periods
     for period in np.arange(num_periods - 1, -1, -1, dtype=int):
@@ -263,29 +267,65 @@ def pyth_backward_induction(
             child_states_ind_period = child_state_indexes[state_period_index]
             emaxs_child_states = emaxs[:, 3][child_states_ind_period]
 
-        # Calculate emax for current period reached by the loop
-        emaxs_period = construct_emax(
-            delta,
-            log_wage_systematic_period,
-            non_consumption_utilities_period,
-            draws,
-            draw_weights,
-            emaxs_child_states,
-            prob_child_period,
-            prob_partner_period,
-            hours,
-            mu,
-            non_employment_consumption_resources_period,
-            deductions_spec,
-            tax_params,
-            child_care_costs,
-            index_child_care_costs_period,
-            male_wage_period,
-            child_benefits_period,
-            equivalence_scale_period,
-            tax_splitting,
-            dummy_array,
-        )
+        if model_spec.parental_leave_regime == "elterngeld":
+            # Calculate emax for current period reached by the loop
+            emaxs_period = construct_emax(
+                delta,
+                log_wage_systematic_period,
+                non_consumption_utilities_period,
+                draws,
+                draw_weights,
+                emaxs_child_states,
+                prob_child_period,
+                prob_partner_period,
+                hours,
+                mu,
+                non_employment_consumption_resources_period,
+                deductions_spec,
+                tax_params,
+                child_care_costs,
+                index_child_care_costs_period,
+                male_wage_period,
+                child_benefits_period,
+                equivalence_scale_period,
+                tax_splitting,
+                dummy_array,
+            )
+        elif model_spec.parental_leave_regime == "erziehungsgeld":
+
+            baby_child_period = (states_period[:, 6] == 0) | (states_period[:, 6] == 1)
+            # Calculate emax for current period reached by the loop
+            emaxs_period = construct_emax_validation(
+                delta,
+                baby_child_period,
+                log_wage_systematic_period,
+                non_consumption_utilities_period,
+                draws,
+                draw_weights,
+                emaxs_child_states,
+                prob_child_period,
+                prob_partner_period,
+                hours,
+                mu,
+                non_employment_consumption_resources_period,
+                deductions_spec,
+                tax_params,
+                child_care_costs,
+                index_child_care_costs_period,
+                male_wage_period,
+                child_benefits_period,
+                equivalence_scale_period,
+                erziehungsgeld_inc_single,
+                erziehungsgeld_inc_married,
+                erziehungsgeld,
+                tax_splitting,
+                dummy_array,
+            )
+
+        else:
+            raise ValueError(
+                f"Parental leave regime {model_spec.parental_leave_regime} not specified."
+            )
 
         emaxs[state_period_index] = emaxs_period
 

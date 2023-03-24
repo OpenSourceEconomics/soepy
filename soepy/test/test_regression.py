@@ -13,7 +13,7 @@ from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.shared.shared_constants import LABELS_DATA_SPARSE
+from soepy.simulate.constants_sim import LABELS_DATA_SPARSE
 from soepy.simulate.simulate_auxiliary import pyth_simulate
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR

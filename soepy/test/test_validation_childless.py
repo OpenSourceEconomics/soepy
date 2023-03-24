@@ -2,6 +2,7 @@
 import pickle
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
@@ -16,7 +17,6 @@ from soepy.simulate.simulate_auxiliary import pyth_simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
-from soepy.test.resources.aux_funcs import create_disc_sum_av_utility
 
 
 @pytest.fixture(scope="module")
@@ -40,7 +40,7 @@ def input_data():
         exog_partner_separation_info,
         expected_df,
         expected_df_unbiased,
-    ) = tests[0]
+    ) = tests[6]
 
     exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
     exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
@@ -52,18 +52,27 @@ def input_data():
     exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
     model_params_df, model_params = read_model_params_init(random_model_params_df)
+    ccc_under_3 = np.array(
+        model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["under_3"]
+    )
+    ccc_3_to_6 = np.array(
+        model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["3_to_6"]
+    )
 
-    for name, tax in [("splitted", True), ("individual", False)]:
-        # Standard tax_spltting is true
-        if tax:
-            pass
-        else:
-            model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = tax
+    for name, regime in [("original", "elterngeld"), ("validation", "erziehungsgeld")]:
+
+        model_spec_init_dict["TAXES_TRANSFERS"]["parental_leave_regime"] = regime
 
         model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 
         prob_educ_level = gen_prob_educ_level_vector(model_spec)
-        prob_child_age = gen_prob_child_init_age_vector(model_spec)
+        prob_child_age = []
+        prob_child_age_old = gen_prob_child_init_age_vector(model_spec)
+        for educ_level_list in prob_child_age_old:
+            educ_level_array = np.array(educ_level_list)
+            educ_level_array[0] = 1
+            educ_level_array[1:] = 0
+            prob_child_age += [educ_level_array]
         prob_partner_present = gen_prob_partner_present_vector(model_spec)
         prob_exp_ft = gen_prob_init_exp_vector(
             model_spec, model_spec.ft_exp_shares_file_name
@@ -72,11 +81,13 @@ def input_data():
             model_spec, model_spec.pt_exp_shares_file_name
         )
         prob_child = gen_prob_child_vector(model_spec)
+        prob_child[:, :] = 0
         prob_partner = gen_prob_partner(model_spec)
-        prob_partner[:, :, 0, 1] = 0
-        prob_partner[:, :, 0, 0] = 1
+        prob_partner[:, 0, 1] = 0
+        prob_partner[:, 0, 0] = 1
         prob_partner_present[:] = 0
 
+        # Create state space
         (
             states,
             indexer,
@@ -117,22 +128,19 @@ def input_data():
             is_expected=False,
         )
 
-        out[name] = create_disc_sum_av_utility(
-            calculated_df, model_params_df.loc[("discount", "delta"), "value"]
-        )
-
-        # Check if really all are single at any time
-        assert (calculated_df["Male_Wages"] == 0).all()
-
-    out["regression_disc_sum"] = -0.10843159499754612
+        out[name] = calculated_df
+        out[f"{name}_emax"] = emaxs
+        out[f"{name}_covs"] = covariates
     return out
 
 
-def test_single_woman(input_data):
-    np.testing.assert_equal(input_data["splitted"], input_data["individual"])
+def test_childless(input_data):
+    pd.testing.assert_frame_equal(input_data["original"], input_data["validation"])
 
 
-def test_single_woman_regression(input_data):
+def test_childless_emax(input_data):
+    not_having_kids = input_data["original_covs"][:, 3] == 0
     np.testing.assert_almost_equal(
-        input_data["splitted"], input_data["regression_disc_sum"], decimal=12
+        input_data["original_emax"][not_having_kids, :],
+        input_data["validation_emax"][not_having_kids, :],
     )

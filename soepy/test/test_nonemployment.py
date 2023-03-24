@@ -192,6 +192,8 @@ def test_alg1_no_child(input_data, work_choice):
     transfers_check = non_employment_consumption_resources[subgroup_check]
 
     prox_net_wage_systematic = (0.65 * np.exp(log_wage_systematic))[subgroup_check]
+    alg2_single = model_spec.regelsatz_single + model_spec.housing_single
+
     relevant_male_wages = covariates[:, 1][subgroup_check]
 
     for i in range(transfers_check.shape[0]):
@@ -203,10 +205,13 @@ def test_alg1_no_child(input_data, work_choice):
             model_spec.tax_splitting,
         )
         assert_allclose(
-            male_net_wage
-            + model_spec.alg1_replacement_no_child
-            * prox_net_wage_systematic[i]
-            * HOURS[work_choice],
+            max(
+                male_net_wage
+                + model_spec.alg1_replacement_no_child
+                * prox_net_wage_systematic[i]
+                * HOURS[work_choice],
+                alg2_single,
+            ),
             transfers_check[i],
         )
 
@@ -231,7 +236,15 @@ def test_alg1_child(input_data, work_choice):
     transfers_check = non_employment_consumption_resources[subgroup_check]
 
     prox_net_wage_systematic = (0.65 * np.exp(log_wage_systematic))[subgroup_check]
+
     relevant_male_wages = covariates[:, 1][subgroup_check]
+    alg_2_alleinerziehend = (
+        model_spec.regelsatz_single
+        + model_spec.regelsatz_child
+        + model_spec.addition_child_single
+        + model_spec.housing_single
+        + model_spec.housing_addtion
+    )
 
     for i in range(transfers_check.shape[0]):
         male_net_wage = calculate_net_income(
@@ -242,11 +255,14 @@ def test_alg1_child(input_data, work_choice):
             model_spec.tax_splitting,
         )
         assert_allclose(
-            male_net_wage
-            + model_spec.alg1_replacement_child
-            * prox_net_wage_systematic[i]
-            * HOURS[work_choice]
-            + model_spec.child_benefits,
+            max(
+                male_net_wage
+                + model_spec.alg1_replacement_child
+                * prox_net_wage_systematic[i]
+                * HOURS[work_choice]
+                + model_spec.child_benefits,
+                alg_2_alleinerziehend,
+            ),
             transfers_check[i],
         )
 
@@ -271,6 +287,13 @@ def test_elterngeld(input_data, work_choice):
 
     prox_net_wage_systematic = (0.65 * np.exp(log_wage_systematic))[subgroup_check]
     relevant_male_wages = covariates[:, 1][subgroup_check]
+    alg_2_alleinerziehend = (
+        model_spec.regelsatz_single
+        + model_spec.regelsatz_child
+        + model_spec.addition_child_single
+        + model_spec.housing_single
+        + model_spec.housing_addtion
+    )
 
     for i in range(transfers_check.shape[0]):
 
@@ -291,8 +314,11 @@ def test_elterngeld(input_data, work_choice):
             model_spec.tax_splitting,
         )
         assert_allclose(
-            male_net_wage
-            + elterngeld_without_child_benefits
-            + model_spec.child_benefits,
+            max(
+                male_net_wage
+                + elterngeld_without_child_benefits
+                + model_spec.child_benefits,
+                alg_2_alleinerziehend,
+            ),
             transfers_check[i],
         )
