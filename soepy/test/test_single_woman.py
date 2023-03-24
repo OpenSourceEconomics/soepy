@@ -124,7 +124,7 @@ def input_data():
         # Check if really all are single at any time
         assert (calculated_df["Male_Wages"] == 0).all()
 
-    out["regression_disc_sum"] = -0.10852477269979306
+    out["regression_disc_sum"] = -0.10843159499754612
     return out
 
 
