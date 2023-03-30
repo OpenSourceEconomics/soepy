@@ -98,11 +98,16 @@ def group_parameters(model_params_dict_expanded):
                 dtype=float,
             )
 
-    for key_ in list(model_params_dict_expanded["disutil_work"].keys()):
-        if "child" in key_:
-            model_params_dict_flat[key_] = model_params_dict_expanded["disutil_work"][
-                key_
-            ]
+    for i in ["child_0_2_", "child_3_5_", "child_6_10_"]:
+        for j in ["f", "p"]:
+            model_params_dict_flat[i + j] = np.array(
+                [
+                    model_params_dict_expanded["disutil_work"][i + j + "_educ_low"],
+                    model_params_dict_expanded["disutil_work"][i + j + "_educ_middle"],
+                    model_params_dict_expanded["disutil_work"][i + j + "_educ_high"],
+                ],
+                dtype=float,
+            )
 
     for i in ["no", "yes"]:
         for j in ["f", "p"]:

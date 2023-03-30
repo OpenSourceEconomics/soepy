@@ -30,6 +30,74 @@ def update_sim_objectes():
             expected_df_unbiased,
         ) = tests_sim_func[i]
 
+        random_model_params_df.loc[
+            ("disutil_work", "child_0_2_f_educ_high"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_0_2_f"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_0_2_p_educ_high"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_0_2_p"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_3_5_f_educ_high"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_3_5_f"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_3_5_p_educ_high"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_3_5_p"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_6_10_f_educ_high"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_6_10_f"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_6_10_p_educ_high"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_6_10_p"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_0_2_f_educ_middle"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_0_2_f"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_0_2_p_educ_middle"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_0_2_p"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_3_5_f_educ_middle"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_3_5_f"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_3_5_p_educ_middle"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_3_5_p"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_6_10_f_educ_middle"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_6_10_f"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_6_10_p_educ_middle"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_6_10_p"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_0_2_f_educ_low"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_0_2_f"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_0_2_p_educ_low"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_0_2_p"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_3_5_f_educ_low"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_3_5_f"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_3_5_p_educ_low"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_3_5_p"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_6_10_f_educ_low"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_6_10_f"), :]
+        random_model_params_df.loc[
+            ("disutil_work", "child_6_10_p_educ_low"), :
+        ] = random_model_params_df.loc[("disutil_work", "child_6_10_p"), :]
+
+        random_model_params_df.drop(index=("disutil_work", "child_0_2_f"), inplace=True)
+        random_model_params_df.drop(index=("disutil_work", "child_0_2_p"), inplace=True)
+        random_model_params_df.drop(index=("disutil_work", "child_3_5_f"), inplace=True)
+        random_model_params_df.drop(index=("disutil_work", "child_3_5_p"), inplace=True)
+        random_model_params_df.drop(
+            index=("disutil_work", "child_6_10_f"), inplace=True
+        )
+        random_model_params_df.drop(
+            index=("disutil_work", "child_6_10_p"), inplace=True
+        )
+
+        random_model_params_df.sort_index(inplace=True)
+
         exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
         exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
         exog_child_info.to_pickle("test.soepy.child.pkl")
@@ -39,10 +107,10 @@ def update_sim_objectes():
         exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
         exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
-        calculated_df_sim = simulate(random_model_params_df, model_spec_init_dict)
-        unbiased_calc_df = simulate(
-            random_model_params_df, model_spec_init_dict, is_expected=False
-        )
+        # calculated_df_sim = simulate(random_model_params_df, model_spec_init_dict)
+        # unbiased_calc_df = simulate(
+        #     random_model_params_df, model_spec_init_dict, is_expected=False
+        # )
 
         vault[i] = (
             model_spec_init_dict,
@@ -55,8 +123,8 @@ def update_sim_objectes():
             exog_child_info,
             exog_partner_arrival_info,
             exog_partner_separation_info,
-            calculated_df_sim.reset_index().sum(axis=0),
-            unbiased_calc_df.reset_index().sum(axis=0),
+            expected_df,
+            expected_df_unbiased,
         )
 
     with open(vault_file, "wb") as file:

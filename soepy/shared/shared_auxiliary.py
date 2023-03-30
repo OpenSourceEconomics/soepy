@@ -93,9 +93,11 @@ def calculate_log_wage_systematic(
 
 
 @numba.guvectorize(
-    ["f8[:],f8[:],f8[:],f8[:],f8[:],f8[:],f8,f8,f8,f8,f8,f8,i8[:], f8, f8[:], f8[:]"],
+    [
+        "f8[:],f8[:],f8[:],f8[:],f8[:],f8[:],f8[:],f8[:],f8[:],f8[:],f8[:],f8[:],i8[:], f8, f8[:], f8[:]"
+    ],
     "(num_unobs_types),(num_unobs_types), (num_edu_types),(num_edu_types),"
-    "(num_edu_types),(num_edu_types), (),(),(),(),(),(),(num_state_vars),"
+    "(num_edu_types),(num_edu_types), (num_edu_types),(num_edu_types),(num_edu_types),(num_edu_types),(num_edu_types),(num_edu_types),(num_state_vars),"
     "(),(num_choices)->(num_choices)",
     nopython=True,
     target="cpu",
@@ -129,24 +131,36 @@ def calculate_non_consumption_utility(
         non_consumption_utility_state[2] += no_kids_f[educ_level]
     elif child_bin == 1:
         non_consumption_utility_state[1] += (
-            yes_kids_f[educ_level] + yes_kids_p[educ_level] + child_0_2_f + child_0_2_p
+            yes_kids_f[educ_level]
+            + yes_kids_p[educ_level]
+            + child_0_2_f[educ_level]
+            + child_0_2_p[educ_level]
         )
 
-        non_consumption_utility_state[2] += yes_kids_f[educ_level] + child_0_2_f
+        non_consumption_utility_state[2] += (
+            yes_kids_f[educ_level] + child_0_2_f[educ_level]
+        )
     elif child_bin == 2:
         non_consumption_utility_state[1] += (
-            yes_kids_f[educ_level] + yes_kids_p[educ_level] + child_3_5_f + child_3_5_p
+            yes_kids_f[educ_level]
+            + yes_kids_p[educ_level]
+            + child_3_5_f[educ_level]
+            + child_3_5_p[educ_level]
         )
-        non_consumption_utility_state[2] += yes_kids_f[educ_level] + child_3_5_f
+        non_consumption_utility_state[2] += (
+            yes_kids_f[educ_level] + child_3_5_f[educ_level]
+        )
 
     elif child_bin == 3:
         non_consumption_utility_state[1] += (
             yes_kids_f[educ_level]
             + yes_kids_p[educ_level]
-            + child_6_10_f
-            + child_6_10_p
+            + child_6_10_f[educ_level]
+            + child_6_10_p[educ_level]
         )
-        non_consumption_utility_state[2] += yes_kids_f[educ_level] + child_6_10_f
+        non_consumption_utility_state[2] += (
+            yes_kids_f[educ_level] + child_6_10_f[educ_level]
+        )
     else:  # Mothers with kids older than 10 only get fixed disutility
         non_consumption_utility_state[1] += (
             yes_kids_f[educ_level] + yes_kids_p[educ_level]
