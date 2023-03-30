@@ -69,16 +69,21 @@ def input_data():
         )
 
         params_ind_list = [
-            ("disutil_work", "yes_kids_f_educ_middle"),
-            ("disutil_work", "yes_kids_p_educ_middle"),
-            ("disutil_work", "yes_kids_p_educ_low"),
-            ("disutil_work", "yes_kids_p_educ_high"),
-            ("disutil_work", "child_0_2_f"),
-            ("disutil_work", "child_3_5_f"),
+            ("disutil_work", "yes_kids_f_educ_"),
+            ("disutil_work", "yes_kids_p_educ_"),
+            ("disutil_work", "child_0_2_f_educ_"),
+            ("disutil_work", "child_3_5_f_educ_"),
+            ("disutil_work", "child_6_10_f_educ_"),
+            ("disutil_work", "child_0_2_p_educ_"),
+            ("disutil_work", "child_3_5_p_educ_"),
+            ("disutil_work", "child_6_10_p_educ_"),
         ]
 
         for param_ind in params_ind_list:
-            model_params_df.loc[param_ind, "value"] *= factor
+            for educ in ["low", "middle", "high"]:
+                model_params_df.loc[
+                    (param_ind[0], param_ind[1] + educ), "value"
+                ] *= factor
 
         model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 

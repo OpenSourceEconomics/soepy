@@ -192,10 +192,16 @@ def random_init(constr=None):
         model_params_init_dict["yes_kids_f_educ_low"],
         model_params_init_dict["yes_kids_f_educ_middle"],
         model_params_init_dict["yes_kids_f_educ_high"],
-        model_params_init_dict["child_0_2_f"],
-        model_params_init_dict["child_3_5_f"],
-        model_params_init_dict["child_6_10_f"],
-    ) = np.random.uniform(0.001, 0.2, 9).tolist()
+        model_params_init_dict["child_0_2_f_educ_high"],
+        model_params_init_dict["child_3_5_f_educ_high"],
+        model_params_init_dict["child_6_10_f_educ_high"],
+        model_params_init_dict["child_0_2_f_educ_middle"],
+        model_params_init_dict["child_3_5_f_educ_middle"],
+        model_params_init_dict["child_6_10_f_educ_middle"],
+        model_params_init_dict["child_0_2_f_educ_low"],
+        model_params_init_dict["child_3_5_f_educ_low"],
+        model_params_init_dict["child_6_10_f_educ_low"],
+    ) = np.random.uniform(0.001, 0.2, 15).tolist()
 
     (
         model_params_init_dict["no_kids_p_educ_low"],
@@ -204,10 +210,16 @@ def random_init(constr=None):
         model_params_init_dict["yes_kids_p_educ_low"],
         model_params_init_dict["yes_kids_p_educ_middle"],
         model_params_init_dict["yes_kids_p_educ_high"],
-        model_params_init_dict["child_0_2_p"],
-        model_params_init_dict["child_3_5_p"],
-        model_params_init_dict["child_6_10_p"],
-    ) = np.random.uniform(-1.5, -0.001, 9).tolist()
+        model_params_init_dict["child_0_2_p_educ_high"],
+        model_params_init_dict["child_3_5_p_educ_high"],
+        model_params_init_dict["child_6_10_p_educ_high"],
+        model_params_init_dict["child_0_2_p_educ_middle"],
+        model_params_init_dict["child_3_5_p_educ_middle"],
+        model_params_init_dict["child_6_10_p_educ_middle"],
+        model_params_init_dict["child_0_2_p_educ_low"],
+        model_params_init_dict["child_3_5_p_educ_low"],
+        model_params_init_dict["child_6_10_p_educ_low"],
+    ) = np.random.uniform(-1.5, -0.001, 15).tolist()
 
     model_params_init_dict["delta"] = np.random.uniform(0.8, 0.99)
     model_params_init_dict["mu"] = np.random.uniform(-0.7, -0.4)
