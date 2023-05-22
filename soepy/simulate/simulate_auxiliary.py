@@ -165,9 +165,7 @@ def simulate_agents_over_periods(
             married = states_period[:, 7] == 1
             baby_child = (states_period[:, 6] == 0) | (states_period[:, 6] == 1)
 
-            current_employment_consumption_resources[
-                :, 0
-            ] += calculate_erziehungsgeld_vector(
+            erziehgeld = calculate_erziehungsgeld_vector(
                 current_male_wages,
                 current_female_income[:, 0],
                 married,
@@ -176,6 +174,7 @@ def simulate_agents_over_periods(
                 model_spec.erziehungsgeld_income_threshold_married,
                 model_spec.erziehungsgeld,
             )
+            current_employment_consumption_resources[:, 0] += erziehgeld
 
         current_employment_consumption_resources += current_child_benefits.reshape(
             -1, 1
