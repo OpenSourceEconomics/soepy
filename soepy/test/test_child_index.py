@@ -90,7 +90,6 @@ def input_data():
         model_params.child_6_10_p,
         states,
         covariates[:, 0],
-        np.array([0, 1, 2], dtype=float),
     )
 
     deductions_spec = np.array(model_spec.ssc_deductions)

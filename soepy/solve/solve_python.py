@@ -81,7 +81,6 @@ def pyth_solve(
         model_params.child_6_10_p,
         states,
         covariates[:, 0],
-        np.array([0, 1, 2], dtype=float),
     )
 
     log_wage_systematic = calculate_log_wage(
