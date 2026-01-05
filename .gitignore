@@ -7,3 +7,5 @@ doc/build/
 *.egg-info/
 Speed_test.ipynb
 *.prof
+.DS_Store
+vault_migration/
