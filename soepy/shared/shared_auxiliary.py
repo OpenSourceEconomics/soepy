@@ -54,6 +54,7 @@ def calculate_log_wage(model_params, states, is_expected):
         ) * model_params.gamma_p
     else:
         gamma_p = model_params.gamma_p
+
     log_wage_systematic = calculate_log_wage_systematic(
         model_params.gamma_0,
         model_params.gamma_f,
@@ -64,32 +65,24 @@ def calculate_log_wage(model_params, states, is_expected):
     return log_wage_systematic
 
 
-@numba.guvectorize(
-    ["f8[:],f8[:],f8[:],i8[:], f8[:]"],
-    "(num_edu_types),(num_edu_types),(num_edu_types),(num_state_vars)->()",
-    nopython=True,
-    target="cpu",
-    # target="parallel",
-)
-def calculate_log_wage_systematic(
-    gamma_0, gamma_f, gamma_p, state, log_wage_systematic
-):
+def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
-    exp_p_state, exp_f_state = state[3], state[4]
+    exp_p_states, exp_f_states = states[:, 3], states[:, 4]
 
-    log_exp_p = np.log(exp_p_state + 1)
-    log_exp_f = np.log(exp_f_state + 1)
+    log_exp_p = np.log(exp_p_states + 1)
+    log_exp_f = np.log(exp_f_states + 1)
 
     # Assign wage returns
-    gamma_0_edu = gamma_0[state[1]]
-    gamma_f_edu = gamma_f[state[1]]
-    gamma_p_edu = gamma_p[state[1]]
+    gamma_0_edu = gamma_0[states[:, 1]]
+    gamma_f_edu = gamma_f[states[:, 1]]
+    gamma_p_edu = gamma_p[states[:, 1]]
 
     # Calculate wage in the given state
-    log_wage_systematic[0] = (
+    log_wage_systematic = (
         gamma_0_edu + gamma_f_edu * log_exp_f + gamma_p_edu * log_exp_p
     )
+    return log_wage_systematic
 
 
 @numba.guvectorize(

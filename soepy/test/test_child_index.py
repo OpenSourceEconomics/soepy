@@ -11,7 +11,6 @@ from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_log_wage
 from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
-from soepy.shared.shared_constants import HOURS
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
@@ -75,6 +74,7 @@ def input_data():
     )
 
     log_wage_systematic = calculate_log_wage(model_params, states, True)
+
     non_consumption_utilities = calculate_non_consumption_utility(
         model_params.theta_p,
         model_params.theta_f,
