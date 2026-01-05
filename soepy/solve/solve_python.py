@@ -156,7 +156,6 @@ def get_integration_draws_and_weights(model_spec, model_params):
     return draws_emax, draw_weights_emax
 
 
-# @numba.njit
 def pyth_backward_induction(
     model_spec,
     tax_splitting,
