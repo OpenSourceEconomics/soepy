@@ -1,8 +1,8 @@
 import pickle
 
-from development.tests.auxiliary.auxiliary import cleanup
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
+from soepy.test.resources.aux_funcs import cleanup
 
 
 def update_sim_objectes():

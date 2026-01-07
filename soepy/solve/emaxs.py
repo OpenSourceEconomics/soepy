@@ -1,8 +1,6 @@
 import numba
 import numpy as np
 
-from soepy.shared.shared_constants import INVALID_FLOAT
-from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.shared.tax_and_transfers import calculate_net_income
 
 
@@ -25,23 +23,24 @@ def _get_max_aggregated_utilities(
     child_care_costs,
     child_care_bin,
 ):
-    current_max_value_function = INVALID_FLOAT
+    consumption_0 = non_employment_consumption_resources / equivalence
 
-    for j in range(NUM_CHOICES):
-        if j == 0:
-            consumption = non_employment_consumption_resources / equivalence
-        else:
-            female_wage = hours[j] * np.exp(log_wage_systematic + draw)
+    current_max_value_function = (consumption_0**mu / mu) * non_consumption_utilities[
+        0
+    ] + delta * emaxs[0]
 
-            net_income = calculate_net_income(
-                income_tax_spec, deductions_spec, female_wage, male_wage, tax_splitting
-            )
+    for j in range(1, 3):
+        female_wage = hours[j] * np.exp(log_wage_systematic + draw)
 
-            child_costs = child_care_costs[child_care_bin, j - 1]
+        net_income = calculate_net_income(
+            income_tax_spec, deductions_spec, female_wage, male_wage, tax_splitting
+        )
 
-            consumption = (
-                max(net_income + child_benefits - child_costs, 1e-14) / equivalence
-            )
+        child_costs = child_care_costs[child_care_bin, j - 1]
+
+        consumption = (
+            max(net_income + child_benefits - child_costs, 1e-14) / equivalence
+        )
 
         consumption_utility = consumption**mu / mu
 
@@ -49,8 +48,9 @@ def _get_max_aggregated_utilities(
             consumption_utility * non_consumption_utilities[j] + delta * emaxs[j]
         )
 
-        if value_function_choice > current_max_value_function:
-            current_max_value_function = value_function_choice
+        current_max_value_function = np.maximum(
+            current_max_value_function, value_function_choice
+        )
 
     return current_max_value_function
 

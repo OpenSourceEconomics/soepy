@@ -1,4 +1,3 @@
-import numba
 import numpy as np
 
 from soepy.exogenous_processes.children import define_child_age_update_rule

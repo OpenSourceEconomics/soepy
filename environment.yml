@@ -21,3 +21,5 @@ dependencies:
 - pip:
   - pre-commit
   - black
+  - jax
+  - jaxlib

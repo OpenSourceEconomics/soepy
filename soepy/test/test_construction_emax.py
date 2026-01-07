@@ -213,4 +213,4 @@ def test_construct_emax(input_data, states_tested):
         mu = model_params.mu
         consumption_utility = non_employ_cons**mu / mu
         value_func = consumption_utility + model_params.delta * emaxs[ind_state, 0]
-        np.testing.assert_equal(value_func, emaxs[ind_state, 3])
+        np.testing.assert_equal(float(value_func), emaxs[ind_state, 3])
