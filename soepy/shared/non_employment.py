@@ -181,16 +181,11 @@ def calc_erziehungsgeld(
     erziehungsgeld,
 ):
     relevant_income = male_wage + female_income
-    if married:
-        if (relevant_income <= erziehungsgeld_inc_married) & baby_child:
-            return erziehungsgeld
-        else:
-            return 0
-    else:
-        if (relevant_income <= erziehungsgeld_inc_single) & baby_child:
-            return erziehungsgeld
-        else:
-            return 0
+    inc_threshold = erziehungsgeld_inc_married * married + erziehungsgeld_inc_single * (
+        1 - married
+    )
+    erz_geld_claim = (relevant_income <= inc_threshold) & baby_child
+    return erz_geld_claim * erziehungsgeld
 
 
 @numba.njit(nogil=True)
@@ -201,15 +196,8 @@ def calculate_alg2(
     alg_2_alleinerziehend,
 ):
     # All partners work full-time so there exists only a claim if not married.
-    if not married:
-        # No child:
-        if no_child:
-            return alg2_single
-        # With child
-        else:
-            return alg_2_alleinerziehend
-    else:
-        return 0
+    alg2_claim = no_child * alg2_single + (1 - no_child) * alg_2_alleinerziehend
+    return alg2_claim * (1 - married)
 
 
 @numba.njit(nogil=True)
@@ -224,30 +212,18 @@ def calculate_elterngeld(
     child_benefit,
 ):
     """This implements the 2007 elterngeld regime."""
-    if working_ft_last_period:
-        return (
-            np.minimum(
-                np.maximum(
-                    elterngeld_replacement * prox_net_wage_systematic * hours[2],
-                    elterngeld_min,
-                ),
-                elterngeld_max,
-            )
-            + child_benefit
+    hours_worked = hours[2] * working_ft_last_period + hours[1] * working_pt_last_period
+    elterngeld_claim = working_ft_last_period | working_pt_last_period
+    return elterngeld_claim * (
+        np.minimum(
+            np.maximum(
+                elterngeld_replacement * prox_net_wage_systematic * hours_worked,
+                elterngeld_min,
+            ),
+            elterngeld_max,
         )
-    elif working_pt_last_period:
-        return (
-            np.minimum(
-                np.maximum(
-                    elterngeld_replacement * prox_net_wage_systematic * hours[1],
-                    elterngeld_min,
-                ),
-                elterngeld_max,
-            )
-            + child_benefit
-        )
-    else:
-        return 0
+        + child_benefit
+    )
 
 
 @numba.njit(nogil=True)
@@ -265,19 +241,16 @@ def calculate_alg1(
     """Individual worked last period: ALG I based on labor income the individual
     would have earned working full-time in the period (excluding wage shock)
     for a person who worked last period 60% if no child"""
-    if no_child:
-        replacement = alg1_replacement_no_child
-        child_benefits = 0
-    else:
-        replacement = alg1_replacement_child
-        child_benefits = child_benefit_if_child
+    child_benefits = (1 - no_child) * child_benefit_if_child
+    replacement_rate = alg1_replacement_no_child * no_child + alg1_replacement_child * (
+        1 - no_child
+    )
 
-    if working_ft_last_period:
-        return replacement * prox_net_wage_systematic * hours[2] + child_benefits
-    elif working_pt_last_period:
-        return replacement * prox_net_wage_systematic * hours[1] + child_benefits
-    else:
-        return 0
+    hours_worked = hours[2] * working_ft_last_period + hours[1] * working_pt_last_period
+    alg_1 = working_ft_last_period | working_pt_last_period
+    return alg_1 * (
+        replacement_rate * prox_net_wage_systematic * hours_worked + child_benefits
+    )
 
 
 @numba.guvectorize(
