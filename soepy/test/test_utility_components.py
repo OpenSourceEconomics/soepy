@@ -7,7 +7,7 @@ import pytest
 
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.shared.shared_auxiliary import calculate_log_wage
+from soepy.shared.wages import calculate_log_wage
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 

@@ -84,32 +84,34 @@ def pyth_create_state_space(model_spec):
                     # Assumption: 1st kid is born no earlier than age 17.
                     # Can be relaxed, e.g., we assume that 1st kid can arrive earliest when
                     # a woman is 16 years old, the condition becomes:
-                    if age_kid - model_spec.child_age_init_max > period:
-                        continue
-
-                    if (
-                        period > model_spec.last_child_bearing_period
-                        and 0
-                        <= age_kid
-                        <= min(period - (model_spec.last_child_bearing_period + 1), 10)
-                    ):
-                        continue
+                    # if age_kid - model_spec.child_age_init_max > period:
+                    #     continue
+                    #
+                    # if (
+                    #     period > model_spec.last_child_bearing_period
+                    #     and 0
+                    #     <= age_kid
+                    #     <= min(period - (model_spec.last_child_bearing_period + 1), 10)
+                    # ):
+                    #     continue
 
                     age_idx = _kid_age_to_index(age_kid, n_kids_ages)
 
                     for educ_level in range(model_spec.num_educ_levels):
-                        edu_years = model_spec.educ_years[educ_level]
+                        # edu_years = model_spec.educ_years[educ_level]
 
-                        # has she completed education already?
-                        if edu_years > period:
-                            continue
+                        # # has she completed education already?
+                        # if edu_years > period:
+                        #     continue
+
+                        last_period = model_spec.num_periods - 1
 
                         # Basic feasibility region for experiences (vectorized):
-                        # exp_f + exp_p <= period + 2*init_exp_max - edu_years
-                        max_total = period + 2 * model_spec.init_exp_max - edu_years
-                        # also must be <= period + init_exp_max individually (this is already implied by max_exp axis),
+                        # exp_f + exp_p <= period + 2*init_exp_max
+                        max_total = last_period + 2 * model_spec.init_exp_max
+                        # also must be <= period + init_exp_max individually,
                         # but original additionally checks exp_f > period + init_exp_max etc.
-                        max_ind = period + model_spec.init_exp_max
+                        max_ind = last_period + model_spec.init_exp_max
 
                         feasible = (EP + EF) <= max_total
                         feasible &= (EF <= max_ind) & (EP <= max_ind)
@@ -118,50 +120,47 @@ def pyth_create_state_space(model_spec):
                         fp = EP[feasible]
                         ff = EF[feasible]
 
-                        if fp.size == 0:
+                        # if period == edu_years:
+                        #     # Entry-period: original code adds states for ALL lagged choices, no extra restrictions.
+                        #     lagged = np.tile(
+                        #         np.arange(NUM_CHOICES, dtype=np.int32), fp.size
+                        #     )
+                        #     exp_p_rep = np.repeat(fp, NUM_CHOICES)
+                        #     exp_f_rep = np.repeat(ff, NUM_CHOICES)
+                        #
+                        # else:
+                        # Non-entry periods: apply the lagged-choice restrictions (vectorized).
+                        # max_ft = period + model_spec.init_exp_max - edu_years
+                        # max_pt = period + model_spec.init_exp_max - edu_years
+
+                        # allowed[c, j] means for pair c (fp[c], ff[c]) lagged choice j is allowed
+                        allowed = np.ones((fp.size, NUM_CHOICES), dtype=bool)
+
+                        # # only worked full-time -> lagged must be 2
+                        # mask_only_ft = ff == max_ft
+                        # allowed[mask_only_ft, :] = False
+                        # allowed[mask_only_ft, 2] = True
+                        #
+                        # # only worked part-time -> lagged must be 1
+                        # mask_only_pt = fp == max_pt
+                        # allowed[mask_only_pt, :] = False
+                        # allowed[mask_only_pt, 1] = True
+                        #
+                        # # never worked full-time -> cannot have lagged 2
+                        # allowed[(ff == 0), 2] = False
+                        # # never worked part-time -> cannot have lagged 1
+                        # allowed[(fp == 0), 1] = False
+
+                        # always employed -> cannot have lagged 0
+                        # allowed[(fp + ff == max_total), 0] = False
+
+                        # Build rows by expanding only allowed (pair, lagged) combinations
+                        pair_idx, lagged = np.nonzero(allowed)
+                        if lagged.size == 0:
                             continue
-
-                        if period == edu_years:
-                            # Entry-period: original code adds states for ALL lagged choices, no extra restrictions.
-                            lagged = np.tile(
-                                np.arange(NUM_CHOICES, dtype=np.int32), fp.size
-                            )
-                            exp_p_rep = np.repeat(fp, NUM_CHOICES)
-                            exp_f_rep = np.repeat(ff, NUM_CHOICES)
-
-                        else:
-                            # Non-entry periods: apply the lagged-choice restrictions (vectorized).
-                            max_ft = period + model_spec.init_exp_max - edu_years
-                            max_pt = period + model_spec.init_exp_max - edu_years
-
-                            # allowed[c, j] means for pair c (fp[c], ff[c]) lagged choice j is allowed
-                            allowed = np.ones((fp.size, NUM_CHOICES), dtype=bool)
-
-                            # only worked full-time -> lagged must be 2
-                            mask_only_ft = ff == max_ft
-                            allowed[mask_only_ft, :] = False
-                            allowed[mask_only_ft, 2] = True
-
-                            # only worked part-time -> lagged must be 1
-                            mask_only_pt = fp == max_pt
-                            allowed[mask_only_pt, :] = False
-                            allowed[mask_only_pt, 1] = True
-
-                            # never worked full-time -> cannot have lagged 2
-                            allowed[(ff == 0), 2] = False
-                            # never worked part-time -> cannot have lagged 1
-                            allowed[(fp == 0), 1] = False
-
-                            # always employed -> cannot have lagged 0
-                            allowed[(fp + ff == max_total), 0] = False
-
-                            # Build rows by expanding only allowed (pair, lagged) combinations
-                            pair_idx, lagged = np.nonzero(allowed)
-                            if lagged.size == 0:
-                                continue
-                            exp_p_rep = fp[pair_idx]
-                            exp_f_rep = ff[pair_idx]
-                            lagged = lagged.astype(np.int32, copy=False)
+                        exp_p_rep = fp[pair_idx]
+                        exp_f_rep = ff[pair_idx]
+                        lagged = lagged.astype(np.int32, copy=False)
 
                         n = lagged.size
 
@@ -222,11 +221,14 @@ def create_child_indexes(states, indexer, model_spec, child_age_update_rule):
     type_ = states[:, 5]
     age_kid_val = states[:, 6]
     partner = states[:, 7]
+    max_exp = np.max(exp_p)
 
     n_kid_ages = indexer.shape[6]  # kid-age axis length
     age_idx = np.where(age_kid_val == -1, n_kid_ages - 1, age_kid_val)
 
-    parent_idx = np.where(period < (model_spec.num_periods - 1))
+    parent_idx = np.where(
+        (period < (model_spec.num_periods - 1)) & (exp_p < max_exp) & (exp_f < max_exp)
+    )[0]
 
     next_period = period[parent_idx] + 1
 

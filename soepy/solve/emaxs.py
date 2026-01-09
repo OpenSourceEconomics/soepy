@@ -81,13 +81,8 @@ def construct_emax(
     hours,
     mu,
     non_employment_consumption_resources,
-    deductions_spec,
-    income_tax_spec,
-    child_care_costs,
-    index_child_care_costs,
-    male_wages,
-    child_benefits,
-    equivalence_scales,
+    covariates,
+    model_spec,
     tax_splitting,
 ):
     """Simulate expected maximum utility for a given distribution of the unobservables.
@@ -154,13 +149,17 @@ def construct_emax(
         non_consumption_utilities_choices,
         emax_choices,
         non_employment_consumption_resources_choices,
-        male_wage,
-        child_benefit,
-        equivalence,
-        index_child_care_cost,
+        covariate,
         draw,
         draw_weight,
     ):
+        # Corresponding equivalence scale for period states
+        male_wage = covariate[1]
+        equivalence_scale = covariate[2]
+        child_benefit = covariate[3]
+
+        index_child_care_cost = jnp.where(covariate[0] > 2, 0, covariate[0]).astype(int)
+
         return _get_max_aggregated_utilities(
             delta=delta,
             log_wage_systematic=log_wage_systematic_choices,
@@ -171,31 +170,28 @@ def construct_emax(
             hours=hours,
             mu=mu,
             non_employment_consumption_resources=non_employment_consumption_resources_choices,
-            deductions_spec=deductions_spec,
-            income_tax_spec=income_tax_spec,
+            deductions_spec=model_spec.ssc_deductions,
+            income_tax_spec=model_spec.tax_params,
             male_wage=male_wage,
             child_benefits=child_benefit,
-            equivalence=equivalence,
+            equivalence=equivalence_scale,
             tax_splitting=tax_splitting,
-            child_care_costs=jnp.asarray(child_care_costs),
+            child_care_costs=model_spec.child_care_costs,
             child_care_bin=index_child_care_cost,
         )
 
     emaxs_current_states = jax.vmap(
         jax.vmap(
             max_aggregated_utilities_broadcast,
-            in_axes=(None, None, None, None, None, None, None, None, 0, 0),
+            in_axes=(None, None, None, None, None, 0, 0),
         ),
-        in_axes=(0, 0, 0, 0, 0, 0, 0, 0, None, None),
+        in_axes=(0, 0, 0, 0, 0, None, None),
     )(
         log_wages_systematic,
         non_consumption_utilities,
         emax,
         non_employment_consumption_resources,
-        male_wages,
-        child_benefits,
-        equivalence_scales,
-        index_child_care_costs,
+        covariates,
         draws,
         draw_weights,
     )

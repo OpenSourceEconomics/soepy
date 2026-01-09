@@ -108,16 +108,8 @@ def construct_emax_validation(
     hours,
     mu,
     non_employment_consumption_resources,
-    deductions_spec,
-    income_tax_spec,
-    child_care_costs,
-    index_child_care_costs,
-    male_wages,
-    child_benefits,
-    equivalence_scales,
-    erziehungsgeld_inc_single,
-    erziehungsgeld_inc_married,
-    erziehungsgeld,
+    model_spec,
+    covariates,
     tax_splitting,
 ):
     """Simulate expected maximum utility for a given distribution of the unobservables. The function calculates the
@@ -132,21 +124,23 @@ def construct_emax_validation(
         emaxs_child_states, prob_child, prob_partner
     )  # (num_states, 3)
 
-    child_care_costs_j = jnp.asarray(child_care_costs)
-
     def max_aggregated_utilities_broadcast(
         log_wage_systematic_choices,
         non_consumption_utilities_choices,
         emax_choices,
         non_employment_consumption_resources_choice,
-        male_wage,
-        child_benefit,
-        equivalence,
-        index_child_care_cost,
+        covariate,
         baby_child_scalar,
         draw,
         draw_weight,
     ):
+        # Corresponding equivalence scale for period states
+        male_wage = covariate[1]
+        equivalence_scale = covariate[2]
+        child_benefit = covariate[3]
+
+        index_child_care_cost = jnp.where(covariate[0] > 2, 0, covariate[0]).astype(int)
+
         return _get_max_aggregated_utilities_validation(
             delta=delta,
             baby_child=baby_child_scalar,
@@ -158,17 +152,17 @@ def construct_emax_validation(
             hours=hours,
             mu=mu,
             non_employment_consumption_resources=non_employment_consumption_resources_choice,
-            deductions_spec=deductions_spec,
-            income_tax_spec=income_tax_spec,
+            deductions_spec=model_spec.ssc_deductions,
+            income_tax_spec=model_spec.tax_params,
             male_wage=male_wage,
             child_benefits=child_benefit,
-            equivalence=equivalence,
+            equivalence=equivalence_scale,
             tax_splitting=tax_splitting,
-            child_care_costs=child_care_costs_j,
+            child_care_costs=model_spec.child_care_costs,
             child_care_bin=index_child_care_cost,
-            erziehungsgeld_inc_single=erziehungsgeld_inc_single,
-            erziehungsgeld_inc_married=erziehungsgeld_inc_married,
-            erziehungsgeld=erziehungsgeld,
+            erziehungsgeld_inc_single=model_spec.erziehungsgeld_income_threshold_single,
+            erziehungsgeld_inc_married=model_spec.erziehungsgeld_income_threshold_married,
+            erziehungsgeld=model_spec.erziehungsgeld,
         )
 
     # Shape expectations matching your previous rewrite:
@@ -176,18 +170,15 @@ def construct_emax_validation(
     emaxs_current_states = jax.vmap(
         jax.vmap(
             max_aggregated_utilities_broadcast,
-            in_axes=(None, None, None, None, None, None, None, None, None, 0, 0),
+            in_axes=(None, None, None, None, None, None, 0, 0),
         ),
-        in_axes=(0, 0, 0, 0, 0, 0, 0, 0, 0, None, None),
+        in_axes=(0, 0, 0, 0, 0, 0, None, None),
     )(
         log_wages_systematic,
         non_consumption_utilities,
         emax,
         non_employment_consumption_resources,
-        male_wages,
-        child_benefits,
-        equivalence_scales,
-        index_child_care_costs,
+        covariates,
         baby_child,
         draws,
         draw_weights,
