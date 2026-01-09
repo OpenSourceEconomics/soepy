@@ -168,6 +168,7 @@ def pyth_backward_induction(
             tax_splitting=tax_splitting,
         )
     )
+    min_ind_child_period = 0
 
     # Loop backwards over all periods
     for period in np.arange(model_spec.num_periods - 1, -1, -1, dtype=int):
@@ -179,9 +180,15 @@ def pyth_backward_induction(
             emaxs_child_states = jnp.zeros(
                 shape=(state_period_index.shape[0], 3, 2, 2), dtype=float
             )
+            # Assign for next period the min index of current period^as the min index of the child period
+            min_ind_child_period = state_period_index[0]
         else:
             child_states_ind_period = child_state_indexes[state_period_index]
-            emaxs_child_states = emaxs[:, 3][child_states_ind_period]
+            emaxs_child_states = emaxs_period[:, 3][
+                child_states_ind_period - min_ind_child_period
+            ]
+            # Assign for next period the min index of current period^as the min index of the child period
+            min_ind_child_period = state_period_index[0]
 
         emaxs_period = partial_body(
             params=model_params,
