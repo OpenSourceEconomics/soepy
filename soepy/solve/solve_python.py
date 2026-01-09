@@ -209,8 +209,6 @@ def pyth_backward_induction(
         as its first elements. The last row element corresponds to the maximum
         expected value function of the state.
     """
-    dummy_array = np.zeros(4)  # Need this array to define output for construct_emaxs
-
     emaxs = np.zeros((states.shape[0], non_consumption_utilities.shape[1] + 1))
 
     hours = np.array(HOURS)
@@ -287,7 +285,6 @@ def pyth_backward_induction(
                 child_benefits_period,
                 equivalence_scale_period,
                 tax_splitting,
-                dummy_array,
             )
         elif model_spec.parental_leave_regime == "erziehungsgeld":
 
@@ -317,7 +314,6 @@ def pyth_backward_induction(
                 erziehungsgeld_inc_married,
                 erziehungsgeld,
                 tax_splitting,
-                dummy_array,
             )
 
         else:

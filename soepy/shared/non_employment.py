@@ -1,4 +1,3 @@
-import numba
 import numpy as np
 
 from soepy.shared.shared_constants import HOURS
@@ -176,7 +175,6 @@ def calculate_non_employment_benefits(
     return non_employment_benefits
 
 
-@numba.njit
 def calc_erziehungsgeld(
     male_wage,
     female_income,

@@ -15,7 +15,7 @@ from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
-from soepy.solve.emaxs import do_weighting_emax
+from soepy.solve.emaxs import do_weighting_emax_scalar
 from soepy.solve.solve_python import get_integration_draws_and_weights
 from soepy.solve.solve_python import pyth_backward_induction
 
@@ -152,7 +152,7 @@ def test_child_state_index(input_data):
     child_index = child_state_indexes[10, 1, :, :]
     child_emax = emaxs[:, 3][child_index]
 
-    weighted_emax = do_weighting_emax(
+    weighted_emax = do_weighting_emax_scalar(
         child_emax,
         prob_child[period, educ_level],
         prob_partner[period, educ_level, partner_indicator, :],
