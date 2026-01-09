@@ -8,10 +8,10 @@ from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
+from soepy.shared.non_consumption_utility import calculate_non_consumption_utility
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.numerical_integration import get_integration_draws_and_weights
-from soepy.shared.shared_auxiliary import calculate_log_wage
-from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
+from soepy.shared.wages import calculate_log_wage
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
@@ -69,9 +69,8 @@ def input_data():
         states, indexer, model_spec, child_age_update_rule
     )
 
-    draws_emax, draw_weights_emax = get_integration_draws_and_weights(
-        model_spec, model_params
-    )
+    draws_emax, draw_weights_emax = get_integration_draws_and_weights(model_spec)
+    draws_emax = model_params.shock_sd
     # Set draws to zero to isolate the effect of child indexing
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out

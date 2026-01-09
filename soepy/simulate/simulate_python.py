@@ -10,6 +10,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.simulate.simulate_auxiliary import pyth_simulate
 from soepy.solve.create_state_space import create_state_space_objects
+from soepy.solve.solve_python import get_solve_function
 from soepy.solve.solve_python import pyth_solve
 
 
@@ -62,21 +63,21 @@ def simulate(
 
     # Simulate agents experiences according to parameters in the model specification
     df = pyth_simulate(
-        model_params,
-        model_spec,
-        states,
-        indexer,
-        emaxs,
-        covariates,
-        non_consumption_utilities,
-        child_age_update_rule,
-        prob_educ_level,
-        prob_child_age,
-        prob_partner_present,
-        prob_exp_ft,
-        prob_exp_pt,
-        prob_child,
-        prob_partner,
+        model_params=model_params,
+        model_spec=model_spec,
+        states=states,
+        indexer=indexer,
+        emaxs=emaxs,
+        covariates=covariates,
+        non_consumption_utilities=non_consumption_utilities,
+        child_age_update_rule=child_age_update_rule,
+        prob_educ_level=prob_educ_level,
+        prob_child_age=prob_child_age,
+        prob_partner_present=prob_partner_present,
+        prob_exp_ft=prob_exp_ft,
+        prob_exp_pt=prob_exp_pt,
+        prob_child=prob_child,
+        prob_partner=prob_partner,
         is_expected=False,
         data_sparse=data_sparse,
     ).set_index(["Identifier", "Period"])
@@ -120,32 +121,59 @@ def get_simulate_func(
         child_state_indexes,
     ) = create_state_space_objects(model_spec)
 
-    partial_simulate = partial(
-        partiable_simulate,
-        states,
-        indexer,
-        covariates,
-        child_age_update_rule,
-        child_state_indexes,
-        prob_educ_level,
-        prob_child_age,
-        prob_partner_present,
-        prob_exp_ft,
-        prob_exp_pt,
-        prob_child,
-        prob_partner,
-        is_expected,
-        data_sparse,
+    solve_func = get_solve_function(
+        states=states,
+        covariates=covariates,
+        child_state_indexes=child_state_indexes,
+        model_spec=model_spec,
+        prob_child=prob_child,
+        prob_partner=prob_partner,
+        is_expected=is_expected,
     )
-    return partial_simulate
+
+    def simulate_func(model_params_init_file_name, model_spec_init_file_name):
+        # Read in model specification from yaml file
+        model_params_df, model_params = read_model_params_init(
+            model_params_init_file_name
+        )
+
+        model_spec = read_model_spec_init(model_spec_init_file_name, model_params_df)
+
+        # Obtain model solution
+        non_consumption_utilities, emaxs = solve_func(model_params)
+
+        # Simulate agents experiences according to parameters in the model specification
+        df = pyth_simulate(
+            model_params=model_params,
+            model_spec=model_spec,
+            states=states,
+            indexer=indexer,
+            emaxs=emaxs,
+            covariates=covariates,
+            non_consumption_utilities=non_consumption_utilities,
+            child_age_update_rule=child_age_update_rule,
+            prob_educ_level=prob_educ_level,
+            prob_child_age=prob_child_age,
+            prob_partner_present=prob_partner_present,
+            prob_exp_ft=prob_exp_ft,
+            prob_exp_pt=prob_exp_pt,
+            prob_child=prob_child,
+            prob_partner=prob_partner,
+            is_expected=False,
+            data_sparse=data_sparse,
+        ).set_index(["Identifier", "Period"])
+
+        return df
+
+    return simulate_func
 
 
 def partiable_simulate(
+    solve_func,
     states,
     indexer,
     covariates,
     child_age_update_rule,
-    child_state_indexes,
     prob_educ_level,
     prob_child_age,
     prob_partner_present,
@@ -153,7 +181,6 @@ def partiable_simulate(
     prob_exp_pt,
     prob_child,
     prob_partner,
-    is_expected,
     data_sparse,
     model_params_init_file_name,
     model_spec_init_file_name,
@@ -164,16 +191,7 @@ def partiable_simulate(
     model_spec = read_model_spec_init(model_spec_init_file_name, model_params_df)
 
     # Obtain model solution
-    non_consumption_utilities, emaxs = pyth_solve(
-        states,
-        covariates,
-        child_state_indexes,
-        model_params,
-        model_spec,
-        prob_child,
-        prob_partner,
-        is_expected,
-    )
+    non_consumption_utilities, emaxs = solve_func(model_params)
 
     # Simulate agents experiences according to parameters in the model specification
     df = pyth_simulate(

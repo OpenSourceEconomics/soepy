@@ -2,11 +2,12 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+from soepy.shared.non_consumption_utility import calculate_non_consumption_utility
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.numerical_integration import get_integration_draws_and_weights
-from soepy.shared.shared_auxiliary import calculate_log_wage
-from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
 from soepy.shared.shared_constants import HOURS
+from soepy.shared.shared_constants import NUM_CHOICES
+from soepy.shared.wages import calculate_log_wage
 from soepy.solve.emaxs import construct_emax
 from soepy.solve.validation_solve import construct_emax_validation
 
@@ -62,27 +63,16 @@ def pyth_solve(
         num_choices contains continuation values of the state space point.
         Lat element contains the expected maximum value function of the state space point.
     """
-
-    draws_emax, draw_weights_emax = get_integration_draws_and_weights(
-        model_spec, model_params
+    solve_func = get_solve_function(
+        states=states,
+        covariates=covariates,
+        child_state_indexes=child_state_indexes,
+        model_spec=model_spec,
+        prob_child=prob_child,
+        prob_partner=prob_partner,
+        is_expected=is_expected,
     )
-
-    # Solve the model in a backward induction procedure
-    # Error term for continuation values is integrated out
-    # numerically in a Monte Carlo procedure
-    emaxs, non_consumption_utilities = pyth_backward_induction(
-        model_spec,
-        model_spec.tax_splitting,
-        model_params,
-        states,
-        child_state_indexes,
-        draws_emax,
-        draw_weights_emax,
-        covariates,
-        prob_child,
-        prob_partner,
-        is_expected,
-    )
+    non_consumption_utilities, emaxs = solve_func(model_params)
 
     # Return function output
     return (
@@ -91,18 +81,95 @@ def pyth_solve(
     )
 
 
-def pyth_backward_induction(
-    model_spec,
-    tax_splitting,
-    model_params,
+def get_solve_function(
     states,
-    child_state_indexes,
-    draws,
-    draw_weights,
     covariates,
+    child_state_indexes,
+    model_spec,
     prob_child,
     prob_partner,
     is_expected,
+):
+    """Return the solve function used in the model."""
+    # Draw integration draws and weights for EMAX calculation
+    unscaled_draws_emax, draw_weights_emax = get_integration_draws_and_weights(
+        model_spec
+    )
+
+    tax_splitting = model_spec.tax_splitting
+
+    # Make all arrays in model params jax arrays
+    # Transform model specs and model params to jax arrays
+    model_spec = jax.tree_util.tree_map(lambda x: try_array(x), model_spec)
+
+    hours = jnp.array(HOURS)
+
+    n_periods = model_spec.num_periods
+    n_states_per_period = int(states.shape[0] / n_periods)
+
+    # Reshape into period-major blocks.
+    states_pp = jnp.asarray(
+        states.reshape(n_periods, n_states_per_period, states.shape[1])
+    )
+    covariates_pp = jnp.asarray(
+        covariates.reshape(n_periods, n_states_per_period, covariates.shape[1])
+    )
+
+    child_state_indexes_pp = jnp.asarray(
+        child_state_indexes.reshape(
+            n_periods,
+            n_states_per_period,
+            child_state_indexes.shape[1],
+            child_state_indexes.shape[2],
+            child_state_indexes.shape[3],
+        )
+    )
+
+    # Convert global child indices to *local indices of the next-period block*.
+    # This keeps the scan step free of any state-space indexing logic.
+    #
+    # For period t, child states live in period t+1 whose block starts at (t+1)*n_states_per_period.
+    child_state_indexes_local_pp = jnp.asarray(
+        child_state_indexes_pp
+        - (np.arange(n_periods)[:, None, None, None, None] + 1) * n_states_per_period
+    )
+
+    # Create solve function to jit
+    def solve_function(params):
+        params_int = jax.tree_util.tree_map(lambda x: jnp.asarray(x), params)
+
+        non_consumption_utilities, emaxs = pyth_backward_induction(
+            model_params=params_int,
+            model_spec=model_spec,
+            states_per_period=states_pp,
+            covariates_per_period=covariates_pp,
+            child_state_indexes_local_per_period=child_state_indexes_local_pp,
+            draws=jnp.asarray(unscaled_draws_emax) * params_int.shock_sd,
+            draw_weights=jnp.asarray(draw_weights_emax),
+            prob_child=jnp.asarray(prob_child),
+            prob_partner=jnp.asarray(prob_partner),
+            hours=jnp.asarray(hours),
+            is_expected=is_expected,
+            tax_splitting=tax_splitting,
+        )
+        return non_consumption_utilities, emaxs
+
+    return solve_function
+
+
+def pyth_backward_induction(
+    model_params,
+    model_spec,
+    states_per_period,
+    covariates_per_period,
+    child_state_indexes_local_per_period,
+    draws,
+    draw_weights,
+    prob_child,
+    prob_partner,
+    hours,
+    is_expected,
+    tax_splitting,
 ):
     """Get expected maximum value function at every state space point.
     Backward induction is performed all at once for all states in a given period.
@@ -140,192 +207,155 @@ def pyth_backward_induction(
         as its first elements. The last row element corresponds to the maximum
         expected value function of the state.
     """
+    # Convert inputs once to JAX arrays (scan body stays pure and compilation-friendly).
+    period_specific_objects = {
+        "states": states_per_period,
+        "covariates": covariates_per_period,
+        "child_state_indexes_local": child_state_indexes_local_per_period,
+        "prob_child": prob_child,
+        "prob_partner": prob_partner,
+    }
 
-    hours = np.array(HOURS)
-    non_consumption_utilities = calculate_non_consumption_utility(
-        model_params,
-        states,
-        covariates[:, 0],
+    # Reverse time for backward induction (scan goes forward over reversed time).
+    period_specific_objects_rev = jax.tree_util.tree_map(
+        lambda a: a[::-1], period_specific_objects
     )
 
-    emaxs = np.zeros((states.shape[0], non_consumption_utilities.shape[1] + 1))
+    # Initial "next-period" emaxs: terminal continuation values are zero.
+    emaxs_next_init = jnp.zeros(
+        (states_per_period.shape[1], NUM_CHOICES + 1), dtype=float
+    )
 
-    partial_body = jax.jit(
-        lambda params, period_index, emaxs_childs, prob_child_period, prob_partner_period: period_body_backward_induction(
-            model_params=params,
-            state_period_index=period_index,
-            emaxs_child_states=emaxs_childs,
-            states=jnp.asarray(states),
-            covariates=jnp.asarray(covariates),
-            non_consumption_utilities=jnp.asarray(non_consumption_utilities),
-            prob_child_period=prob_child_period,
-            prob_partner_period=prob_partner_period,
-            draws=jnp.asarray(draws),
-            draw_weights=jnp.asarray(draw_weights),
-            model_spec=model_spec,
-            is_expected=is_expected,
-            hours=jnp.asarray(hours),
-            tax_splitting=tax_splitting,
+    def _scan_step(emaxs_next, period_data):
+        """One backward-induction step over a single period block.
+
+        Carry
+        -----
+        emaxs_next : array
+            Emax array for the next period in time (already computed in the scan).
+
+        period_data : dict (pytree)
+            Period-specific arrays for states, covariates, transition indices, and
+            probability objects.
+
+        Returns
+        -------
+        carry : array
+            The current period's emax array (becomes next carry).
+        out : array
+            The current period's emax array (collected over time by scan).
+        """
+        states_period = period_data["states"]
+        covariates_period = period_data["covariates"]
+        child_state_indexes_local = period_data["child_state_indexes_local"]
+        prob_child_period = period_data["prob_child"]
+        prob_partner_period = period_data["prob_partner"]
+
+        # Continuation values are the maximum value function of child states.
+        # The child maximum value function lives in the last column (index 3).
+        emaxs_child_states = emaxs_next[:, 3][child_state_indexes_local]
+        # ---------------------------------------------------------------------
+        # Period reward and expectation computation.
+        # ---------------------------------------------------------------------
+        # Probability that a child arrives
+        prob_child_period_states = prob_child_period[states_period[:, 1]]
+
+        # Probability of partner states.
+        prob_partner_period_states = prob_partner_period[
+            states_period[:, 1], states_period[:, 7]
+        ]
+
+        # Period rewards
+        log_wage_systematic_period = calculate_log_wage(
+            model_params, states_period, is_expected
+        ) + np.log(model_spec.elasticity_scale)
+
+        non_consumption_utilities_period = calculate_non_consumption_utility(
+            model_params,
+            states_period,
+            covariates_period[:, 0],
         )
-    )
-    min_ind_child_period = 0
 
-    # Loop backwards over all periods
-    for period in np.arange(model_spec.num_periods - 1, -1, -1, dtype=int):
-        bool_ind = states[:, 0] == period
-        state_period_index = np.where(bool_ind)[0]
-        # Continuation value calculation not performed for last period
-        # since continuation values are known to be zero
-        if period == model_spec.num_periods - 1:
-            emaxs_child_states = jnp.zeros(
-                shape=(state_period_index.shape[0], 3, 2, 2), dtype=float
+        non_employment_consumption_resources_period = (
+            calculate_non_employment_consumption_resources(
+                deductions_spec=model_spec.ssc_deductions,
+                income_tax_spec=model_spec.tax_params,
+                model_spec=model_spec,
+                states=states_period,
+                log_wage_systematic=log_wage_systematic_period,
+                male_wage=covariates_period[:, 1],
+                child_benefits=covariates_period[:, 3],
+                tax_splitting=model_spec.tax_splitting,
+                hours=hours,
             )
-            # Assign for next period the min index of current period^as the min index of the child period
-            min_ind_child_period = state_period_index[0]
+        )
+
+        if model_spec.parental_leave_regime == "elterngeld":
+            emaxs_curr = construct_emax(
+                delta=model_params.delta,
+                log_wages_systematic=log_wage_systematic_period,
+                non_consumption_utilities=non_consumption_utilities_period,
+                draws=draws,
+                draw_weights=draw_weights,
+                emaxs_child_states=emaxs_child_states,
+                prob_child=prob_child_period_states,
+                prob_partner=prob_partner_period_states,
+                hours=hours,
+                mu=model_params.mu,
+                non_employment_consumption_resources=non_employment_consumption_resources_period,
+                covariates=covariates_period,
+                model_spec=model_spec,
+                tax_splitting=tax_splitting,
+            )
+        elif model_spec.parental_leave_regime == "erziehungsgeld":
+            baby_child_period = (states_period[:, 6] == 0) | (states_period[:, 6] == 1)
+
+            emaxs_curr = construct_emax_validation(
+                delta=model_params.delta,
+                baby_child=baby_child_period,
+                log_wages_systematic=log_wage_systematic_period,
+                non_consumption_utilities=non_consumption_utilities_period,
+                draws=draws,
+                draw_weights=draw_weights,
+                emaxs_child_states=emaxs_child_states,
+                prob_child=prob_child_period_states,
+                prob_partner=prob_partner_period_states,
+                hours=hours,
+                mu=model_params.mu,
+                non_employment_consumption_resources=non_employment_consumption_resources_period,
+                model_spec=model_spec,
+                covariates=covariates_period,
+                tax_splitting=tax_splitting,
+            )
         else:
-            child_states_ind_period = child_state_indexes[state_period_index]
-            emaxs_child_states = emaxs_period[:, 3][
-                child_states_ind_period - min_ind_child_period
-            ]
-            # Assign for next period the min index of current period^as the min index of the child period
-            min_ind_child_period = state_period_index[0]
+            raise ValueError(
+                f"Parental leave regime {model_spec.parental_leave_regime} not specified."
+            )
 
-        emaxs_period = partial_body(
-            params=model_params,
-            period_index=state_period_index,
-            emaxs_childs=emaxs_child_states,
-            prob_child_period=prob_child[period],
-            prob_partner_period=prob_partner[period],
-        )
+        # Current period becomes the next-period carry for the following (earlier) step.
+        return emaxs_curr, (emaxs_curr, non_consumption_utilities_period)
 
-        emaxs[state_period_index] = emaxs_period
+    # Compile the scan step; the dictionary input is a pytree and works with lax.scan.
+    scan_step = jax.jit(_scan_step)
 
-    return emaxs, non_consumption_utilities
-
-
-def period_body_backward_induction(
-    model_params,
-    state_period_index,
-    emaxs_child_states,
-    states,
-    covariates,
-    non_consumption_utilities,
-    prob_child_period,
-    prob_partner_period,
-    draws,
-    draw_weights,
-    model_spec,
-    is_expected,
-    hours,
-    tax_splitting,
-):
-
-    deductions_spec = model_spec.ssc_deductions
-    tax_params = model_spec.tax_params
-    child_care_costs = model_spec.child_care_costs
-
-    erziehungsgeld_inc_single = model_spec.erziehungsgeld_income_threshold_single
-    erziehungsgeld_inc_married = model_spec.erziehungsgeld_income_threshold_married
-    erziehungsgeld = model_spec.erziehungsgeld
-
-    # Extract period information
-    # States and covariates
-    states_period = states[state_period_index]
-    covariates_period = covariates[state_period_index]
-    non_consumption_utilities_period = non_consumption_utilities[state_period_index]
-
-    # Corresponding equivalence scale for period states
-    male_wage_period = covariates_period[:, 1]
-    equivalence_scale_period = covariates_period[:, 2]
-    child_benefits_period = covariates_period[:, 3]
-
-    index_child_care_costs_period = jnp.where(
-        covariates_period[:, 0] > 2, 0, covariates_period[:, 0]
-    ).astype(int)
-
-    # Probability that a child arrives
-    prob_child_period_states = prob_child_period[states_period[:, 1]]
-
-    # Probability of partner states.
-    prob_partner_period_states = prob_partner_period[
-        states_period[:, 1], states_period[:, 7]
-    ]
-
-    # Period rewards
-    log_wage_systematic_period = calculate_log_wage(
-        model_params, states_period, is_expected
-    ) + np.log(model_spec.elasticity_scale)
-
-    non_employment_consumption_resources_period = (
-        calculate_non_employment_consumption_resources(
-            deductions_spec=model_spec.ssc_deductions,
-            income_tax_spec=model_spec.tax_params,
-            model_spec=model_spec,
-            states=states_period,
-            log_wage_systematic=log_wage_systematic_period,
-            male_wage=male_wage_period,
-            child_benefits=child_benefits_period,
-            tax_splitting=model_spec.tax_splitting,
-            hours=hours,
-        )
+    # Run backward induction: outputs are in reverse time order (terminal -> first).
+    _, (emaxs_rev, non_consumption_utilities_rev) = jax.lax.scan(
+        scan_step, emaxs_next_init, period_specific_objects_rev
     )
 
-    if model_spec.parental_leave_regime == "elterngeld":
-        # Calculate emax for current period reached by the loop
-        emaxs_period = construct_emax(
-            model_params.delta,
-            log_wage_systematic_period,
-            non_consumption_utilities_period,
-            draws,
-            draw_weights,
-            emaxs_child_states,
-            prob_child_period_states,
-            prob_partner_period_states,
-            hours,
-            model_params.mu,
-            non_employment_consumption_resources_period,
-            deductions_spec,
-            tax_params,
-            child_care_costs,
-            index_child_care_costs_period,
-            male_wage_period,
-            child_benefits_period,
-            equivalence_scale_period,
-            tax_splitting,
-        )
-    elif model_spec.parental_leave_regime == "erziehungsgeld":
+    # Flip back to chronological order and flatten to (num_states, NUM_CHOICES + 1).
+    emaxs_flat = jnp.flip(emaxs_rev, axis=0).reshape(-1, emaxs_rev.shape[-1])
+    non_consumption_utilities = jnp.flip(non_consumption_utilities_rev, axis=0).reshape(
+        -1,
+        non_consumption_utilities_rev.shape[2],
+    )
 
-        baby_child_period = (states_period[:, 6] == 0) | (states_period[:, 6] == 1)
-        # Calculate emax for current period reached by the loop
-        emaxs_period = construct_emax_validation(
-            model_params.delta,
-            baby_child_period,
-            log_wage_systematic_period,
-            non_consumption_utilities_period,
-            draws,
-            draw_weights,
-            emaxs_child_states,
-            prob_child_period_states,
-            prob_partner_period_states,
-            hours,
-            model_params.mu,
-            non_employment_consumption_resources_period,
-            deductions_spec,
-            tax_params,
-            child_care_costs,
-            index_child_care_costs_period,
-            male_wage_period,
-            child_benefits_period,
-            equivalence_scale_period,
-            erziehungsgeld_inc_single,
-            erziehungsgeld_inc_married,
-            erziehungsgeld,
-            tax_splitting,
-        )
+    return non_consumption_utilities, emaxs_flat
 
-    else:
-        raise ValueError(
-            f"Parental leave regime {model_spec.parental_leave_regime} not specified."
-        )
 
-    return emaxs_period
+def try_array(x):
+    """Try to convert x to a jax array, otherwise return x unchanged."""
+    try:
+        return jnp.asarray(x)
+    except Exception:
+        return x
