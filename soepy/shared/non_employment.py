@@ -1,6 +1,5 @@
-import numpy as np
+import jax.numpy as jnp
 
-from soepy.shared.shared_constants import HOURS
 from soepy.shared.tax_and_transfers_jax import calculate_net_income
 
 
@@ -13,6 +12,7 @@ def calculate_non_employment_consumption_resources(
     male_wage,
     child_benefits,
     tax_splitting,
+    hours,
 ):
     """This function calculates the non employment consumption resources. It first
     calcultes the non employment benefits before using them to calculate the resources."""
@@ -42,7 +42,7 @@ def calculate_non_employment_consumption_resources(
     return calc_resources(
         deductions_spec,
         income_tax_spec,
-        np.array(HOURS),
+        hours,
         states,
         log_wage_systematic,
         male_wage,
@@ -94,7 +94,7 @@ def calculate_non_employment_benefits(
     working_pt_last_period = states[:, 2] == 1
     married = states[:, 7] == 1
 
-    prox_net_wage_systematic = 0.65 * np.exp(log_wage_systematic)
+    prox_net_wage_systematic = 0.65 * jnp.exp(log_wage_systematic)
 
     alg2_single = regelsatz_single + housing_single
 
@@ -114,8 +114,6 @@ def calculate_non_employment_benefits(
     )
     if elterngeld_regime:
         newborn_child = states[:, 6] == 0
-
-        last_working_non_employment_benefits = np.zeros(states.shape[0])
 
         elterngeld = calculate_elterngeld(
             hours,
@@ -143,24 +141,18 @@ def calculate_non_employment_benefits(
             1 - newborn_child
         ) * alg1 + newborn_child * elterngeld
 
-        non_employment_benefits = np.maximum(
-            last_working_non_employment_benefits,
-            alg2,
-        )
+        non_employment_benefits = last_working_non_employment_benefits.clip(min=alg2)
     else:
-        non_employment_benefits = np.maximum(
-            calculate_alg1(
-                hours,
-                working_ft_last_period,
-                working_pt_last_period,
-                no_child,
-                prox_net_wage_systematic,
-                alg1_replacement_no_child,
-                alg1_replacement_child,
-                child_benefit,
-            ),
-            alg2,
-        )
+        non_employment_benefits = calculate_alg1(
+            hours,
+            working_ft_last_period,
+            working_pt_last_period,
+            no_child,
+            prox_net_wage_systematic,
+            alg1_replacement_no_child,
+            alg1_replacement_child,
+            child_benefit,
+        ).clip(min=alg2)
         baby_child = (states[:, 6] == 0) | (states[:, 6] == 1)
         non_employment_benefits += calc_erziehungsgeld(
             male_wage,
@@ -217,8 +209,8 @@ def calculate_elterngeld(
     hours_worked = hours[2] * working_ft_last_period + hours[1] * working_pt_last_period
     elterngeld_claim = working_ft_last_period | working_pt_last_period
     return elterngeld_claim * (
-        np.minimum(
-            np.maximum(
+        jnp.minimum(
+            jnp.maximum(
                 elterngeld_replacement * prox_net_wage_systematic * hours_worked,
                 elterngeld_min,
             ),

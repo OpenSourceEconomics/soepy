@@ -1,3 +1,4 @@
+import jax.numpy as jnp
 import numpy as np
 
 
@@ -69,8 +70,8 @@ def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
 
     exp_p_states, exp_f_states = states[:, 3], states[:, 4]
 
-    log_exp_p = np.log(exp_p_states + 1)
-    log_exp_f = np.log(exp_f_states + 1)
+    log_exp_p = jnp.log(exp_p_states + 1)
+    log_exp_f = jnp.log(exp_f_states + 1)
 
     # Assign wage returns
     gamma_0_edu = gamma_0[states[:, 1]]
@@ -85,18 +86,7 @@ def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
 
 
 def calculate_non_consumption_utility(
-    theta_p,
-    theta_f,
-    no_kids_f,
-    no_kids_p,
-    yes_kids_f,
-    yes_kids_p,
-    child_0_2_f,
-    child_0_2_p,
-    child_3_5_f,
-    child_3_5_p,
-    child_6_10_f,
-    child_6_10_p,
+    model_params,
     states,
     child_bins,
 ):
@@ -114,6 +104,19 @@ def calculate_non_consumption_utility(
     non_consumption_utility : np.ndarray
         Shape (n_states, 3) matrix with utilities for [no work, part-time, full-time]
     """
+    theta_p = model_params.theta_p
+    theta_f = model_params.theta_f
+    no_kids_f = model_params.no_kids_f
+    no_kids_p = model_params.no_kids_p
+    yes_kids_f = model_params.yes_kids_f
+    yes_kids_p = model_params.yes_kids_p
+    child_0_2_f = model_params.child_0_2_f
+    child_0_2_p = model_params.child_0_2_p
+    child_3_5_f = model_params.child_3_5_f
+    child_3_5_p = model_params.child_3_5_p
+    child_6_10_f = model_params.child_6_10_f
+    child_6_10_p = model_params.child_6_10_p
+
     n_states = states.shape[0]
     educ_levels = states[:, 1]  # Extract education level for all states
 

@@ -9,6 +9,7 @@ from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
+from soepy.shared.numerical_integration import get_integration_draws_and_weights
 from soepy.shared.shared_auxiliary import calculate_log_wage
 from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
 from soepy.shared.shared_constants import HOURS
@@ -16,7 +17,6 @@ from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
-from soepy.solve.solve_python import get_integration_draws_and_weights
 from soepy.solve.solve_python import pyth_backward_induction
 
 
@@ -73,64 +73,21 @@ def input_data():
         model_spec, model_params
     )
 
-    log_wage_systematic = calculate_log_wage(model_params, states, True)
-
-    non_consumption_utilities = calculate_non_consumption_utility(
-        model_params.theta_p,
-        model_params.theta_f,
-        model_params.no_kids_f,
-        model_params.no_kids_p,
-        model_params.yes_kids_f,
-        model_params.yes_kids_p,
-        model_params.child_0_2_f,
-        model_params.child_0_2_p,
-        model_params.child_3_5_f,
-        model_params.child_3_5_p,
-        model_params.child_6_10_f,
-        model_params.child_6_10_p,
-        states,
-        covariates[:, 0],
-    )
-
-    deductions_spec = np.array(model_spec.ssc_deductions)
-    tax_splitting = model_spec.tax_splitting
-
-    non_employment_consumption_resources = (
-        calculate_non_employment_consumption_resources(
-            deductions_spec,
-            model_spec.tax_params,
-            model_spec,
-            states,
-            log_wage_systematic,
-            covariates[:, 1],
-            covariates[:, 3],
-            tax_splitting,
-        )
-    )
-
-    index_child_care_costs = np.where(covariates[:, 0] > 2, 0, covariates[:, 0]).astype(
-        int
-    )
-
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
-    emaxs = pyth_backward_induction(
-        model_spec,
-        tax_splitting,
-        model_params.mu,
-        model_params.delta,
-        states,
-        child_state_indexes,
-        log_wage_systematic,
-        non_consumption_utilities,
-        draws_emax,
-        draw_weights_emax,
-        covariates,
-        index_child_care_costs,
-        prob_child,
-        prob_partner,
-        non_employment_consumption_resources,
+    emaxs, _ = pyth_backward_induction(
+        model_spec=model_spec,
+        tax_splitting=model_spec.tax_splitting,
+        model_params=model_params,
+        states=states,
+        child_state_indexes=child_state_indexes,
+        draws=draws_emax,
+        draw_weights=draw_weights_emax,
+        covariates=covariates,
+        prob_child=prob_child,
+        prob_partner=prob_partner,
+        is_expected=True,
     )
 
     return (

@@ -70,6 +70,7 @@ def input_data():
             covariates[:, 1],
             covariates[:, 3],
             tax_splitting,
+            HOURS,
         )
     )
     return (

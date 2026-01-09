@@ -380,6 +380,7 @@ def prepare_simulation_data(
             covariates[:, 1],
             covariates[:, 3],
             tax_splitting,
+            HOURS,
         )
     )
 
