@@ -134,23 +134,50 @@ def get_solve_function(
         - (np.arange(n_periods)[:, None, None, None, None] + 1) * n_states_per_period
     )
 
+    unscaled_draws_emax = jnp.asarray(unscaled_draws_emax)
+    draw_weights_emax = jnp.asarray(draw_weights_emax)
+    prob_child = jnp.asarray(prob_child)
+    prob_partner = jnp.asarray(prob_partner)
+
+    # Generate closure
+    def func_to_jit(
+        params_arg,
+        states_arg,
+        covariates_arg,
+        child_state_indexes_local_arg,
+        unscaled_draws_emax_arg,
+        draw_weights_emax_arg,
+        prob_child_arg,
+        prob_partner_arg,
+    ):
+        return pyth_backward_induction(
+            model_params=params_arg,
+            states_per_period=states_arg,
+            covariates_per_period=covariates_arg,
+            child_state_indexes_local_per_period=child_state_indexes_local_arg,
+            draws=unscaled_draws_emax_arg * params_arg.shock_sd,
+            draw_weights=draw_weights_emax_arg,
+            prob_child=prob_child_arg,
+            prob_partner=prob_partner_arg,
+            model_spec=model_spec,
+            hours=hours,
+            is_expected=is_expected,
+            tax_splitting=tax_splitting,
+        )
+
     # Create solve function to jit
     def solve_function(params):
         params_int = jax.tree_util.tree_map(lambda x: jnp.asarray(x), params)
 
-        non_consumption_utilities, emaxs = pyth_backward_induction(
-            model_params=params_int,
-            model_spec=model_spec,
-            states_per_period=states_pp,
-            covariates_per_period=covariates_pp,
-            child_state_indexes_local_per_period=child_state_indexes_local_pp,
-            draws=jnp.asarray(unscaled_draws_emax) * params_int.shock_sd,
-            draw_weights=jnp.asarray(draw_weights_emax),
-            prob_child=jnp.asarray(prob_child),
-            prob_partner=jnp.asarray(prob_partner),
-            hours=jnp.asarray(hours),
-            is_expected=is_expected,
-            tax_splitting=tax_splitting,
+        non_consumption_utilities, emaxs = jax.jit(func_to_jit)(
+            params_arg=params_int,
+            states_arg=states_pp,
+            covariates_arg=covariates_pp,
+            child_state_indexes_local_arg=child_state_indexes_local_pp,
+            unscaled_draws_emax_arg=unscaled_draws_emax,
+            draw_weights_emax_arg=draw_weights_emax,
+            prob_child_arg=prob_child,
+            prob_partner_arg=prob_partner,
         )
         return non_consumption_utilities, emaxs
 
@@ -159,7 +186,6 @@ def get_solve_function(
 
 def pyth_backward_induction(
     model_params,
-    model_spec,
     states_per_period,
     covariates_per_period,
     child_state_indexes_local_per_period,
@@ -167,6 +193,7 @@ def pyth_backward_induction(
     draw_weights,
     prob_child,
     prob_partner,
+    model_spec,
     hours,
     is_expected,
     tax_splitting,
@@ -226,7 +253,7 @@ def pyth_backward_induction(
         (states_per_period.shape[1], NUM_CHOICES + 1), dtype=float
     )
 
-    def _scan_step(emaxs_next, period_data):
+    def scan_step(emaxs_next, period_data):
         """One backward-induction step over a single period block.
 
         Carry
@@ -334,9 +361,6 @@ def pyth_backward_induction(
 
         # Current period becomes the next-period carry for the following (earlier) step.
         return emaxs_curr, (emaxs_curr, non_consumption_utilities_period)
-
-    # Compile the scan step; the dictionary input is a pytree and works with lax.scan.
-    scan_step = jax.jit(_scan_step)
 
     # Run backward induction: outputs are in reverse time order (terminal -> first).
     _, (emaxs_rev, non_consumption_utilities_rev) = jax.lax.scan(
