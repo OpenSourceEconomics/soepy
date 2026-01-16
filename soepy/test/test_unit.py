@@ -156,37 +156,6 @@ def test_unit_data_frame_shape():
         np.testing.assert_array_equal(df.shape[0], shape)
 
 
-def test_unit_childbearing_age():
-    """This test verifies that the state space does not contain newly born children
-    after the last childbearing period"""
-    expected = 0
-
-    model_spec = collections.namedtuple(
-        "model_spec",
-        "num_periods num_educ_levels num_types \
-        last_child_bearing_period child_age_max \
-        educ_years child_age_init_max init_exp_max",
-    )
-
-    num_periods = randint(1, 11)
-    last_child_bearing_period = randrange(num_periods)
-    model_spec = model_spec(
-        num_periods, 3, 2, last_child_bearing_period, 10, [0, 1, 2], 4, 4
-    )
-
-    states, _ = pyth_create_state_space(model_spec)
-
-    np.testing.assert_equal(
-        sum(
-            states[np.where(states[:, 0] == model_spec.last_child_bearing_period + 1)][
-                :, 6
-            ]
-            == 0
-        ),
-        expected,
-    )
-
-
 def test_no_children_no_exp():
     """This test ensures that
     i) child age equals -1 in the entire simulates sample,

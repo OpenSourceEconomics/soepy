@@ -143,7 +143,7 @@ def test_childless(input_data):
 
 def test_childless_emax(input_data):
     not_having_kids = input_data["original_covs"][:, 3] == 0
-    np.testing.assert_almost_equal(
+    np.testing.assert_array_almost_equal(
         input_data["original_emax"][not_having_kids, :],
         input_data["validation_emax"][not_having_kids, :],
     )

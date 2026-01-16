@@ -180,9 +180,6 @@ def pyth_create_state_space(model_spec):
                         # Fill indexer with consecutive ids [i, i+n)
                         ids = np.arange(i, i + n, dtype=np.int32)
 
-                        # IMPORTANT: age axis index must follow the original -1 -> last convention
-                        age_index_for_indexer = age_idx  # already mapped
-
                         indexer[
                             period,
                             educ_level,
@@ -190,7 +187,7 @@ def pyth_create_state_space(model_spec):
                             exp_p_rep,
                             exp_f_rep,
                             type_,
-                            age_index_for_indexer,
+                            age_idx,
                             partner,
                         ] = ids
 
@@ -226,9 +223,7 @@ def create_child_indexes(states, indexer, model_spec, child_age_update_rule):
     n_kid_ages = indexer.shape[6]  # kid-age axis length
     age_idx = np.where(age_kid_val == -1, n_kid_ages - 1, age_kid_val)
 
-    parent_idx = np.where(
-        (period < (model_spec.num_periods - 1)) & (exp_p < max_exp) & (exp_f < max_exp)
-    )[0]
+    parent_idx = np.where(period < (model_spec.num_periods - 1))[0]
 
     next_period = period[parent_idx] + 1
 
@@ -250,8 +245,8 @@ def create_child_indexes(states, indexer, model_spec, child_age_update_rule):
     # - choice 1: exp_p + 1
     # - choice 2: exp_f + 1
     for choice in range(NUM_CHOICES):
-        exp_part = exp_p[parent_idx] + (choice == 1)
-        exp_full = exp_f[parent_idx] + (choice == 2)
+        exp_part = np.minimum(exp_p[parent_idx] + (choice == 1), max_exp)
+        exp_full = np.minimum(exp_f[parent_idx] + (choice == 2), max_exp)
 
         # branch 0: use updated child age (rule), partner shock in {0,1}
         child_indexes[parent_idx, choice, 0, 0] = indexer[
