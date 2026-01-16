@@ -135,7 +135,10 @@ def input_data():
 
 
 def test_childless(input_data):
-    pd.testing.assert_frame_equal(input_data["original"], input_data["validation"])
+    for column_name in input_data["original"].columns:
+        np.testing.assert_array_almost_equal(
+            input_data["original"][column_name], input_data["validation"][column_name]
+        )
 
 
 def test_childless_emax(input_data):

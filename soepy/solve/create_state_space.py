@@ -1,4 +1,3 @@
-import numba
 import numpy as np
 
 from soepy.exogenous_processes.children import define_child_age_update_rule
@@ -8,16 +7,10 @@ from soepy.solve.covariates import construct_covariates
 
 
 def create_state_space_objects(model_spec):
-    """This function creates all necessary objects of the state space. This function
-    could be refactored out of the solve functions. The objects do not change if
-    the parameters in the params dataframe are changed."""
-    # Create all necessary grids and objects related to the state space
+    """This function creates all necessary objects of the state space."""
     states, indexer = pyth_create_state_space(model_spec)
-
-    # Create objects that depend only on the state space
     covariates = construct_covariates(states, model_spec)
 
-    # Define child update rule
     child_age_update_rule = define_child_age_update_rule(model_spec, states)
 
     child_state_indexes = create_child_indexes(
@@ -26,14 +19,11 @@ def create_state_space_objects(model_spec):
     return states, indexer, covariates, child_age_update_rule, child_state_indexes
 
 
-@numba.njit(nogil=True)
 def pyth_create_state_space(model_spec):
     """Create state space object.
-
     The state space consists of all admissible combinations of the following components:
     period, years of education, lagged choice, full-time experience (F),
     and part-time experience (P).
-
     :data:`states` stores the information on states in a tabular format.
     Each row of the table corresponds to one admissible state space point
     and contains the values of the state space components listed above.
@@ -42,13 +32,11 @@ def pyth_create_state_space(model_spec):
     index the corresponding state space point in :data:`states`.
     Traversing the state space requires incrementing the indices of :data:`indexer`
     and selecting the corresponding state space point component values in :data:`states`.
-
     Parameters
     ----------
     model_spec: namedtuple
         Namedtuple containing all fixed parameters describing the model and its
          state space that are relevant for running a simulation.
-
     Returns
     -------
     states : np.ndarray
@@ -60,48 +48,45 @@ def pyth_create_state_space(model_spec):
         A matrix where each dimension represents a characteristic of the state space.
         Switching from one state is possible via incrementing appropriate indices by 1.
     """
-    data = []
     kids_ages = np.arange(-1, model_spec.child_age_max + 1)
+    n_kids_ages = kids_ages.shape[0]
 
-    # Array for mapping the state space points (states) to indices
+    max_exp = (
+        model_spec.num_periods + model_spec.init_exp_max
+    )  # inclusive max exp value allowed by indexer dims
+
     shape = (
         model_spec.num_periods,
         model_spec.num_educ_levels,
         NUM_CHOICES,
-        model_spec.num_periods + model_spec.init_exp_max,
-        model_spec.num_periods + model_spec.init_exp_max,
+        max_exp,
+        max_exp,
         model_spec.num_types,
-        kids_ages.shape[0],
+        n_kids_ages,
         2,
     )
+    indexer = np.full(shape, MISSING_INT, dtype=np.int32)
 
-    indexer = np.full(shape, MISSING_INT)
+    # Precompute full experience grid once; we’ll filter it per (period, educ)
+    exp_vals = np.arange(max_exp, dtype=np.int32)
+    EP, EF = np.meshgrid(
+        exp_vals, exp_vals, indexing="ij"
+    )  # EP: (max_exp,max_exp), EF: same
 
-    # Initialize counter for admissible state space points
+    blocks = []
     i = 0
 
-    # Loop over all periods / all ages
     for period in range(model_spec.num_periods):
-
-        # Loop over all types
         for type_ in range(model_spec.num_types):
-
-            for partner_indicator in range(2):
-
-                # Loop over all kids ages that are recorded
+            for partner in range(2):
+                # Loop over possible ages of the youngest child
                 for age_kid in kids_ages:
-                    # Assumption: 1st kid is born no earlier than in period zero,
-                    # i.e., in the current setup, no earlier than age 17.
+                    # Assumption: 1st kid is born no earlier than age 17.
                     # Can be relaxed, e.g., we assume that 1st kid can arrive earliest when
                     # a woman is 16 years old, the condition becomes:
-                    # if age_kid > period + 1.
                     if age_kid - model_spec.child_age_init_max > period:
                         continue
-                    # Make sure that women above 42 do not get kids
-                    # For periods corresponding to ages > 40, the `age_kid`
-                    # state space component can only take values -1, for no child ever,
-                    # 11, for a child above 11, and 0 - 10 in such a fashion that no
-                    # birth after 40 years of age is possible.
+
                     if (
                         period > model_spec.last_child_bearing_period
                         and 0
@@ -110,295 +95,215 @@ def pyth_create_state_space(model_spec):
                     ):
                         continue
 
-                    # Loop over all possible initial conditions for education
-                    for educ_level in range(model_spec.num_educ_levels):
+                    age_idx = _kid_age_to_index(age_kid, n_kids_ages)
 
-                        # Check if individual has already completed education
-                        # and will make a labor supply choice in the period
-                        if model_spec.educ_years[educ_level] > period:
+                    for educ_level in range(model_spec.num_educ_levels):
+                        edu_years = model_spec.educ_years[educ_level]
+
+                        # has she completed education already?
+                        if edu_years > period:
                             continue
 
-                        # Loop over all admissible years of experience
-                        # accumulated in full-time
-                        for exp_f in range(
-                            model_spec.num_periods + model_spec.init_exp_max + 1
-                        ):
+                        # Basic feasibility region for experiences (vectorized):
+                        # exp_f + exp_p <= period + 2*init_exp_max - edu_years
+                        max_total = period + 2 * model_spec.init_exp_max - edu_years
+                        # also must be <= period + init_exp_max individually (this is already implied by max_exp axis),
+                        # but original additionally checks exp_f > period + init_exp_max etc.
+                        max_ind = period + model_spec.init_exp_max
 
-                            # Loop over all admissible years of experience accumulated
-                            # in part-time
-                            for exp_p in range(
-                                model_spec.num_periods + model_spec.init_exp_max + 1
-                            ):
+                        feasible = (EP + EF) <= max_total
+                        feasible &= (EF <= max_ind) & (EP <= max_ind)
 
-                                # The accumulation of experience cannot exceed time elapsed
-                                # since individual entered the model
-                                if (
-                                    exp_f + exp_p
-                                    > period
-                                    + model_spec.init_exp_max * 2
-                                    - model_spec.educ_years[educ_level]
-                                ):
-                                    continue
+                        # Extract feasible pairs as 1D arrays
+                        fp = EP[feasible]
+                        ff = EF[feasible]
 
-                                if exp_f > period + model_spec.init_exp_max:
-                                    continue
+                        if fp.size == 0:
+                            continue
 
-                                if exp_p > period + model_spec.init_exp_max:
-                                    continue
+                        if period == edu_years:
+                            # Entry-period: original code adds states for ALL lagged choices, no extra restrictions.
+                            lagged = np.tile(
+                                np.arange(NUM_CHOICES, dtype=np.int32), fp.size
+                            )
+                            exp_p_rep = np.repeat(fp, NUM_CHOICES)
+                            exp_f_rep = np.repeat(ff, NUM_CHOICES)
 
-                                # Add an additional entry state
-                                # [educ_years + model_params.educ_min, 0, 0, 0]
-                                # for individuals who have just completed education
-                                # and still have no experience in any occupation.
-                                if period == model_spec.educ_years[educ_level]:
-                                    for choice_lagged in range(NUM_CHOICES):
+                        else:
+                            # Non-entry periods: apply the lagged-choice restrictions (vectorized).
+                            max_ft = period + model_spec.init_exp_max - edu_years
+                            max_pt = period + model_spec.init_exp_max - edu_years
 
-                                        # Assign an additional integer count i
-                                        # for entry state
-                                        indexer[
-                                            period,
-                                            educ_level,
-                                            choice_lagged,
-                                            exp_p,
-                                            exp_f,
-                                            type_,
-                                            age_kid,
-                                            partner_indicator,
-                                        ] = i
+                            # allowed[c, j] means for pair c (fp[c], ff[c]) lagged choice j is allowed
+                            allowed = np.ones((fp.size, NUM_CHOICES), dtype=bool)
 
-                                        # Record the values of the state space components
-                                        # for the currently reached entry state
-                                        row = [
-                                            period,
-                                            educ_level,
-                                            choice_lagged,
-                                            exp_p,
-                                            exp_f,
-                                            type_,
-                                            age_kid,
-                                            partner_indicator,
-                                        ]
+                            # only worked full-time -> lagged must be 2
+                            mask_only_ft = ff == max_ft
+                            allowed[mask_only_ft, :] = False
+                            allowed[mask_only_ft, 2] = True
 
-                                        # Update count once more
-                                        i += 1
+                            # only worked part-time -> lagged must be 1
+                            mask_only_pt = fp == max_pt
+                            allowed[mask_only_pt, :] = False
+                            allowed[mask_only_pt, 1] = True
 
-                                        data.append(row)
+                            # never worked full-time -> cannot have lagged 2
+                            allowed[(ff == 0), 2] = False
+                            # never worked part-time -> cannot have lagged 1
+                            allowed[(fp == 0), 1] = False
 
-                                else:
+                            # always employed -> cannot have lagged 0
+                            allowed[(fp + ff == max_total), 0] = False
 
-                                    # Loop over the three labor market choices, N, P, F
-                                    for choice_lagged in range(NUM_CHOICES):
+                            # Build rows by expanding only allowed (pair, lagged) combinations
+                            pair_idx, lagged = np.nonzero(allowed)
+                            if lagged.size == 0:
+                                continue
+                            exp_p_rep = fp[pair_idx]
+                            exp_f_rep = ff[pair_idx]
+                            lagged = lagged.astype(np.int32, copy=False)
 
-                                        # If individual has only worked full-time in the past,
-                                        # she can only have full-time (2) as lagged choice
-                                        if (choice_lagged != 2) and (
-                                            exp_f
-                                            == period
-                                            + model_spec.init_exp_max
-                                            - model_spec.educ_years[educ_level]
-                                        ):
-                                            continue
+                        n = lagged.size
 
-                                        # If individual has only worked part-time in the past,
-                                        # she can only have part-time (1) as lagged choice
-                                        if (choice_lagged != 1) and (
-                                            exp_p
-                                            == period
-                                            + model_spec.init_exp_max
-                                            - model_spec.educ_years[educ_level]
-                                        ):
-                                            continue
+                        # Create block of states (N,8)
+                        block = np.empty((n, 8), dtype=np.int32)
+                        block[:, 0] = period
+                        block[:, 1] = educ_level
+                        block[:, 2] = lagged
+                        block[:, 3] = exp_p_rep
+                        block[:, 4] = exp_f_rep
+                        block[:, 5] = type_
+                        block[:, 6] = age_kid  # keep original "value", including -1
+                        block[:, 7] = partner
 
-                                        # If an individual has never worked full-time,
-                                        # she cannot have that lagged activity
-                                        if (choice_lagged == 2) and (exp_f == 0):
-                                            continue
+                        blocks.append(block)
 
-                                        # If an individual has never worked part-time,
-                                        # she cannot have that lagged activity
-                                        if (choice_lagged == 1) and (exp_p == 0):
-                                            continue
+                        # Fill indexer with consecutive ids [i, i+n)
+                        ids = np.arange(i, i + n, dtype=np.int32)
 
-                                        # If an individual has always been employed,
-                                        # she cannot have non-employment (0) as lagged choice
-                                        if (choice_lagged == 0) and (
-                                            exp_f + exp_p
-                                            == period
-                                            + 2 * model_spec.init_exp_max
-                                            - model_spec.educ_years[educ_level]
-                                        ):
-                                            continue
+                        # IMPORTANT: age axis index must follow the original -1 -> last convention
+                        age_index_for_indexer = age_idx  # already mapped
 
-                                        # Check for duplicate states
-                                        if (
-                                            indexer[
-                                                period,
-                                                educ_level,
-                                                choice_lagged,
-                                                exp_p,
-                                                exp_f,
-                                                type_,
-                                                age_kid,
-                                                partner_indicator,
-                                            ]
-                                            != MISSING_INT
-                                        ):
-                                            continue
+                        indexer[
+                            period,
+                            educ_level,
+                            lagged,
+                            exp_p_rep,
+                            exp_f_rep,
+                            type_,
+                            age_index_for_indexer,
+                            partner,
+                        ] = ids
 
-                                        # Assign the integer count i as an indicator for the
-                                        # currently reached admissible state space point
-                                        indexer[
-                                            period,
-                                            educ_level,
-                                            choice_lagged,
-                                            exp_p,
-                                            exp_f,
-                                            type_,
-                                            age_kid,
-                                            partner_indicator,
-                                        ] = i
+                        i += n
 
-                                        # Update count
-                                        i += 1
-
-                                        # Record the values of the state space components
-                                        # for the currently reached admissible
-                                        # state space point
-                                        row = [
-                                            period,
-                                            educ_level,
-                                            choice_lagged,
-                                            exp_p,
-                                            exp_f,
-                                            type_,
-                                            age_kid,
-                                            partner_indicator,
-                                        ]
-
-                                        data.append(row)
-
-    states = np.array(data)
-
-    # Return function output
+    states = (
+        np.concatenate(blocks, axis=0) if blocks else np.empty((0, 8), dtype=np.int32)
+    )
     return states, indexer
 
 
-@numba.njit(nogil=True)
 def create_child_indexes(states, indexer, model_spec, child_age_update_rule):
-    child_indexes = np.full((states.shape[0], NUM_CHOICES, 2, 2), MISSING_INT)
+    """
+    Vectorized replacement for create_child_indexes + get_child_states_index.
+    Output shape: (num_states, NUM_CHOICES, 2, 2) filled with MISSING_INT where invalid.
+    """
+    child_indexes = np.full(
+        (states.shape[0], NUM_CHOICES, 2, 2), MISSING_INT, dtype=np.int32
+    )
+    if states.shape[0] == 0:
+        return child_indexes
 
-    for num_state in range(states.shape[0]):
-        (
-            period,
-            educ_level,
-            choice_lagged,
-            exp_p,
-            exp_f,
-            disutil_type,
-            age_kid,
-            partner_indicator,
-        ) = states[num_state]
+    period = states[:, 0]
+    educ = states[:, 1]
+    lag0 = states[:, 2]
+    exp_p = states[:, 3]
+    exp_f = states[:, 4]
+    type_ = states[:, 5]
+    age_kid_val = states[:, 6]
+    partner = states[:, 7]
 
-        if period < model_spec.num_periods - 1:
+    n_kid_ages = indexer.shape[6]  # kid-age axis length
+    age_idx = np.where(age_kid_val == -1, n_kid_ages - 1, age_kid_val)
 
-            k_parent = indexer[
-                period,
-                educ_level,
-                choice_lagged,
-                exp_p,
-                exp_f,
-                disutil_type,
-                age_kid,
-                partner_indicator,
-            ]
+    parent_idx = np.where(period < (model_spec.num_periods - 1))
 
-            child_indexes[num_state, 0, :, :] = get_child_states_index(
-                indexer=indexer,
-                next_period=period + 1,
-                educ_level=educ_level,
-                child_lagged_choice=0,
-                child_exp_p=exp_p,
-                child_exp_f=exp_f,
-                disutil_type=disutil_type,
-                child_age_update_rule_current_state=child_age_update_rule[k_parent],
-            )
+    next_period = period[parent_idx] + 1
 
-            child_indexes[num_state, 1, :, :] = get_child_states_index(
-                indexer=indexer,
-                next_period=period + 1,
-                educ_level=educ_level,
-                child_lagged_choice=1,
-                child_exp_p=exp_p + 1,
-                child_exp_f=exp_f,
-                disutil_type=disutil_type,
-                child_age_update_rule_current_state=child_age_update_rule[k_parent],
-            )
+    # Find parent index k_parent and implied child age update rule for "no new child" branch
+    k_parent = indexer[
+        period[parent_idx],
+        educ[parent_idx],
+        lag0[parent_idx],
+        exp_p[parent_idx],
+        exp_f[parent_idx],
+        type_[parent_idx],
+        age_idx[parent_idx],
+        partner[parent_idx],
+    ]
+    update_rule = child_age_update_rule[k_parent]
 
-            child_indexes[num_state, 2, :, :] = get_child_states_index(
-                indexer=indexer,
-                next_period=period + 1,
-                educ_level=educ_level,
-                child_lagged_choice=2,
-                child_exp_p=exp_p,
-                child_exp_f=exp_f + 1,
-                disutil_type=disutil_type,
-                child_age_update_rule_current_state=child_age_update_rule[k_parent],
-            )
+    # Helper to fill for choice a:
+    # - choice 0: exp doesn't change
+    # - choice 1: exp_p + 1
+    # - choice 2: exp_f + 1
+    for choice in range(NUM_CHOICES):
+        exp_part = exp_p[parent_idx] + (choice == 1)
+        exp_full = exp_f[parent_idx] + (choice == 2)
+
+        # branch 0: use updated child age (rule), partner shock in {0,1}
+        child_indexes[parent_idx, choice, 0, 0] = indexer[
+            next_period,
+            educ[parent_idx],
+            choice,
+            exp_part,
+            exp_full,
+            type_[parent_idx],
+            update_rule,
+            0,
+        ]
+        child_indexes[parent_idx, choice, 0, 1] = indexer[
+            next_period,
+            educ[parent_idx],
+            choice,
+            exp_part,
+            exp_full,
+            type_[parent_idx],
+            update_rule,
+            1,
+        ]
+
+        # branch 1: child arrives -> kid age resets to 0, partner shock in {0,1}
+        child_indexes[parent_idx, choice, 1, 0] = indexer[
+            next_period,
+            educ[parent_idx],
+            choice,
+            exp_part,
+            exp_full,
+            type_[parent_idx],
+            0,
+            0,
+        ]
+        child_indexes[parent_idx, choice, 1, 1] = indexer[
+            next_period,
+            educ[parent_idx],
+            choice,
+            exp_part,
+            exp_full,
+            type_[parent_idx],
+            0,
+            1,
+        ]
+
     return child_indexes
 
 
-@numba.njit(nogil=True)
-def get_child_states_index(
-    indexer,
-    next_period,
-    educ_level,
-    child_lagged_choice,
-    child_exp_p,
-    child_exp_f,
-    disutil_type,
-    child_age_update_rule_current_state,
-):
-    child_indexes = np.full(shape=(2, 2), fill_value=MISSING_INT)
-
-    child_indexes[0, 1] = indexer[
-        next_period,
-        educ_level,
-        child_lagged_choice,
-        child_exp_p,
-        child_exp_f,
-        disutil_type,
-        child_age_update_rule_current_state,
-        1,
-    ]
-    child_indexes[0, 0] = indexer[
-        next_period,
-        educ_level,
-        child_lagged_choice,
-        child_exp_p,
-        child_exp_f,
-        disutil_type,
-        child_age_update_rule_current_state,
-        0,
-    ]
-    child_indexes[1, 1] = indexer[
-        next_period,
-        educ_level,
-        child_lagged_choice,
-        child_exp_p,
-        child_exp_f,
-        disutil_type,
-        0,
-        1,
-    ]
-
-    child_indexes[1, 0] = indexer[
-        next_period,
-        educ_level,
-        child_lagged_choice,
-        child_exp_p,
-        child_exp_f,
-        disutil_type,
-        0,
-        0,
-    ]
-    return child_indexes
+def _kid_age_to_index(age_kid: int, kids_ages_len: int) -> int:
+    """
+    Original code indexes indexer[..., age_kid, ...] where age_kid can be -1.
+    In NumPy, -1 means "last element". That is what the original does.
+    We preserve that convention:
+      - age_kid == -1 -> index kids_ages_len - 1
+      - else -> index age_kid
+    """
+    return kids_ages_len - 1 if age_kid == -1 else age_kid

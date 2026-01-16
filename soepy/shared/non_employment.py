@@ -1,8 +1,6 @@
-import numba
-import numpy as np
+import jax.numpy as jnp
 
-from soepy.shared.shared_constants import HOURS
-from soepy.shared.tax_and_transfers import calculate_net_income
+from soepy.shared.tax_and_transfers_jax import calculate_net_income
 
 
 def calculate_non_employment_consumption_resources(
@@ -14,6 +12,7 @@ def calculate_non_employment_consumption_resources(
     male_wage,
     child_benefits,
     tax_splitting,
+    hours,
 ):
     """This function calculates the non employment consumption resources. It first
     calcultes the non employment benefits before using them to calculate the resources."""
@@ -43,7 +42,7 @@ def calculate_non_employment_consumption_resources(
     return calc_resources(
         deductions_spec,
         income_tax_spec,
-        np.array(HOURS),
+        hours,
         states,
         log_wage_systematic,
         male_wage,
@@ -66,10 +65,9 @@ def calculate_non_employment_consumption_resources(
     )
 
 
-@numba.njit(nogil=True)
 def calculate_non_employment_benefits(
     hours,
-    state,
+    states,
     log_wage_systematic,
     child_benefit,
     male_wage,
@@ -91,13 +89,12 @@ def calculate_non_employment_benefits(
     """This function calculates the benefits an individual would receive if they were
     to choose to be non-employed in the period"""
 
-    no_child = state[6] == -1
-    working_ft_last_period = state[2] == 2
-    working_pt_last_period = state[2] == 1
-    working_last_period = working_ft_last_period | working_pt_last_period
-    married = state[7] == 1
+    no_child = states[:, 6] == -1
+    working_ft_last_period = states[:, 2] == 2
+    working_pt_last_period = states[:, 2] == 1
+    married = states[:, 7] == 1
 
-    prox_net_wage_systematic = 0.65 * np.exp(log_wage_systematic)
+    prox_net_wage_systematic = 0.65 * jnp.exp(log_wage_systematic)
 
     alg2_single = regelsatz_single + housing_single
 
@@ -116,47 +113,47 @@ def calculate_non_employment_benefits(
         alg_2_alleinerziehend,
     )
     if elterngeld_regime:
-        newborn_child = state[6] == 0
+        newborn_child = states[:, 6] == 0
 
-        if newborn_child:
-            last_working_non_employment_benefits = calculate_elterngeld(
-                hours,
-                working_ft_last_period,
-                working_pt_last_period,
-                prox_net_wage_systematic,
-                elterngeld_replacement,
-                elterngeld_min,
-                elterngeld_max,
-                child_benefit,
-            )
-        else:
-            last_working_non_employment_benefits = calculate_alg1(
-                hours,
-                working_ft_last_period,
-                working_pt_last_period,
-                no_child,
-                prox_net_wage_systematic,
-                alg1_replacement_no_child,
-                alg1_replacement_child,
-                child_benefit,
-            )
-
-        non_employment_benefits = max(last_working_non_employment_benefits, alg2)
-    else:
-        non_employment_benefits = max(
-            calculate_alg1(
-                hours,
-                working_ft_last_period,
-                working_pt_last_period,
-                no_child,
-                prox_net_wage_systematic,
-                alg1_replacement_no_child,
-                alg1_replacement_child,
-                child_benefit,
-            ),
-            alg2,
+        elterngeld = calculate_elterngeld(
+            hours,
+            working_ft_last_period,
+            working_pt_last_period,
+            prox_net_wage_systematic,
+            elterngeld_replacement,
+            elterngeld_min,
+            elterngeld_max,
+            child_benefit,
         )
-        baby_child = (state[6] == 0) | (state[6] == 1)
+
+        alg1 = calculate_alg1(
+            hours,
+            working_ft_last_period,
+            working_pt_last_period,
+            no_child,
+            prox_net_wage_systematic,
+            alg1_replacement_no_child,
+            alg1_replacement_child,
+            child_benefit,
+        )
+
+        last_working_non_employment_benefits = (
+            1 - newborn_child
+        ) * alg1 + newborn_child * elterngeld
+
+        non_employment_benefits = last_working_non_employment_benefits.clip(min=alg2)
+    else:
+        non_employment_benefits = calculate_alg1(
+            hours,
+            working_ft_last_period,
+            working_pt_last_period,
+            no_child,
+            prox_net_wage_systematic,
+            alg1_replacement_no_child,
+            alg1_replacement_child,
+            child_benefit,
+        ).clip(min=alg2)
+        baby_child = (states[:, 6] == 0) | (states[:, 6] == 1)
         non_employment_benefits += calc_erziehungsgeld(
             male_wage,
             non_employment_benefits,
@@ -170,7 +167,6 @@ def calculate_non_employment_benefits(
     return non_employment_benefits
 
 
-@numba.njit(nogil=True)
 def calc_erziehungsgeld(
     male_wage,
     female_income,
@@ -181,19 +177,13 @@ def calc_erziehungsgeld(
     erziehungsgeld,
 ):
     relevant_income = male_wage + female_income
-    if married:
-        if (relevant_income <= erziehungsgeld_inc_married) & baby_child:
-            return erziehungsgeld
-        else:
-            return 0
-    else:
-        if (relevant_income <= erziehungsgeld_inc_single) & baby_child:
-            return erziehungsgeld
-        else:
-            return 0
+    inc_threshold = erziehungsgeld_inc_married * married + erziehungsgeld_inc_single * (
+        1 - married
+    )
+    erz_geld_claim = (relevant_income <= inc_threshold) & baby_child
+    return erz_geld_claim * erziehungsgeld
 
 
-@numba.njit(nogil=True)
 def calculate_alg2(
     no_child,
     married,
@@ -201,18 +191,10 @@ def calculate_alg2(
     alg_2_alleinerziehend,
 ):
     # All partners work full-time so there exists only a claim if not married.
-    if not married:
-        # No child:
-        if no_child:
-            return alg2_single
-        # With child
-        else:
-            return alg_2_alleinerziehend
-    else:
-        return 0
+    alg2_claim = no_child * alg2_single + (1 - no_child) * alg_2_alleinerziehend
+    return alg2_claim * (1 - married)
 
 
-@numba.njit(nogil=True)
 def calculate_elterngeld(
     hours,
     working_ft_last_period,
@@ -224,33 +206,20 @@ def calculate_elterngeld(
     child_benefit,
 ):
     """This implements the 2007 elterngeld regime."""
-    if working_ft_last_period:
-        return (
-            np.minimum(
-                np.maximum(
-                    elterngeld_replacement * prox_net_wage_systematic * hours[2],
-                    elterngeld_min,
-                ),
-                elterngeld_max,
-            )
-            + child_benefit
+    hours_worked = hours[2] * working_ft_last_period + hours[1] * working_pt_last_period
+    elterngeld_claim = working_ft_last_period | working_pt_last_period
+    return elterngeld_claim * (
+        jnp.minimum(
+            jnp.maximum(
+                elterngeld_replacement * prox_net_wage_systematic * hours_worked,
+                elterngeld_min,
+            ),
+            elterngeld_max,
         )
-    elif working_pt_last_period:
-        return (
-            np.minimum(
-                np.maximum(
-                    elterngeld_replacement * prox_net_wage_systematic * hours[1],
-                    elterngeld_min,
-                ),
-                elterngeld_max,
-            )
-            + child_benefit
-        )
-    else:
-        return 0
+        + child_benefit
+    )
 
 
-@numba.njit(nogil=True)
 def calculate_alg1(
     hours,
     working_ft_last_period,
@@ -265,32 +234,18 @@ def calculate_alg1(
     """Individual worked last period: ALG I based on labor income the individual
     would have earned working full-time in the period (excluding wage shock)
     for a person who worked last period 60% if no child"""
-    if no_child:
-        replacement = alg1_replacement_no_child
-        child_benefits = 0
-    else:
-        replacement = alg1_replacement_child
-        child_benefits = child_benefit_if_child
+    child_benefits = (1 - no_child) * child_benefit_if_child
+    replacement_rate = alg1_replacement_no_child * no_child + alg1_replacement_child * (
+        1 - no_child
+    )
 
-    if working_ft_last_period:
-        return replacement * prox_net_wage_systematic * hours[2] + child_benefits
-    elif working_pt_last_period:
-        return replacement * prox_net_wage_systematic * hours[1] + child_benefits
-    else:
-        return 0
+    hours_worked = hours[2] * working_ft_last_period + hours[1] * working_pt_last_period
+    alg_1 = working_ft_last_period | working_pt_last_period
+    return alg_1 * (
+        replacement_rate * prox_net_wage_systematic * hours_worked + child_benefits
+    )
 
 
-@numba.guvectorize(
-    [
-        "f8[:], f8[:, :], f8[:], f8[:], f8, f8, f8, "
-        "f8,f8,f8,f8,f8,f8,f8,f8,f8,f8,f8,f8,f8, b1, b1, f8[:]"
-    ],
-    "(n_ssc_params), (n_tax_params, n_tax_params), (n_choices), (n_state_vars), (), (),"
-    " (), (),(),(),(),(),(),(),(),(),(),(), (),(),(), () -> ()",
-    nopython=True,
-    target="cpu",
-    # target="parallel",
-)
 def calc_resources(
     deductions_spec,
     income_tax_spec,
@@ -314,7 +269,6 @@ def calc_resources(
     erziehungsgeld,
     tax_splitting,
     elterngeld_regime,
-    non_employment_consumption_resources,
 ):
     """This function calculates the resources available to the individual
     to spend on consumption were she to choose to not be employed.
@@ -347,4 +301,4 @@ def calc_resources(
         income_tax_spec, deductions_spec, 0, male_wage, tax_splitting
     )
 
-    non_employment_consumption_resources[0] = male_net_income + non_employment_benefits
+    return male_net_income + non_employment_benefits

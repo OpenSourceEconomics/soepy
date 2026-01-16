@@ -7,6 +7,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_log_wage
+from soepy.shared.shared_constants import HOURS
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 
@@ -67,6 +68,7 @@ def input_data():
             covariates[:, 1],
             covariates[:, 3],
             tax_splitting,
+            HOURS,
         )
     )
     return (

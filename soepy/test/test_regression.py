@@ -4,7 +4,6 @@ import random
 import pandas as pd
 import pytest
 
-from development.tests.auxiliary.auxiliary import cleanup
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
@@ -19,6 +18,7 @@ from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
+from soepy.test.resources.aux_funcs import cleanup
 
 
 CASES_TEST = random.sample(range(0, 100), 10)

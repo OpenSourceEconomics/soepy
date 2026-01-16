@@ -1,17 +1,16 @@
-import numba
+import jax
+import jax.numpy as jnp
 import numpy as np
 
-from soepy.shared.shared_constants import INVALID_FLOAT
-from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.shared.tax_and_transfers import calculate_net_income
+from soepy.shared.tax_and_transfers_jax import calculate_net_income
 
 
-@numba.njit(nogil=True)
 def _get_max_aggregated_utilities(
     delta,
     log_wage_systematic,
     non_consumption_utilities,
     draw,
+    draw_weight,
     emaxs,
     hours,
     mu,
@@ -25,23 +24,24 @@ def _get_max_aggregated_utilities(
     child_care_costs,
     child_care_bin,
 ):
-    current_max_value_function = INVALID_FLOAT
+    consumption_0 = non_employment_consumption_resources / equivalence
 
-    for j in range(NUM_CHOICES):
-        if j == 0:
-            consumption = non_employment_consumption_resources / equivalence
-        else:
-            female_wage = hours[j] * np.exp(log_wage_systematic + draw)
+    current_max_value_function = (consumption_0**mu / mu) * non_consumption_utilities[
+        0
+    ] + delta * emaxs[0]
 
-            net_income = calculate_net_income(
-                income_tax_spec, deductions_spec, female_wage, male_wage, tax_splitting
-            )
+    for j in range(1, 3):
+        female_wage = hours[j] * jnp.exp(log_wage_systematic + draw)
 
-            child_costs = child_care_costs[child_care_bin, j - 1]
+        net_income = calculate_net_income(
+            income_tax_spec, deductions_spec, female_wage, male_wage, tax_splitting
+        )
 
-            consumption = (
-                max(net_income + child_benefits - child_costs, 1e-14) / equivalence
-            )
+        child_costs = child_care_costs[child_care_bin, j - 1]
+
+        consumption = (net_income + child_benefits - child_costs).clip(
+            min=1e-14
+        ) / equivalence
 
         consumption_utility = consumption**mu / mu
 
@@ -49,14 +49,13 @@ def _get_max_aggregated_utilities(
             consumption_utility * non_consumption_utilities[j] + delta * emaxs[j]
         )
 
-        if value_function_choice > current_max_value_function:
-            current_max_value_function = value_function_choice
+        current_max_value_function = jnp.maximum(
+            current_max_value_function, value_function_choice
+        )
+    return current_max_value_function * draw_weight
 
-    return current_max_value_function
 
-
-@numba.njit(nogil=True)
-def do_weighting_emax(child_emaxs, prob_child, prob_partner):
+def do_weighting_emax_scalar(child_emaxs, prob_child, prob_partner):
     weight_01 = (1 - prob_child) * prob_partner[1] * child_emaxs[0, 1]
     weight_00 = (1 - prob_child) * prob_partner[0] * child_emaxs[0, 0]
     weight_10 = prob_child * prob_partner[0] * child_emaxs[1, 0]
@@ -64,22 +63,15 @@ def do_weighting_emax(child_emaxs, prob_child, prob_partner):
     return weight_11 + weight_10 + weight_00 + weight_01
 
 
-@numba.guvectorize(
-    [
-        "f8, f8, f8[:], f8[:], f8[:], f8[:, :, :], f8, f8[:], f8[:], f8, f8, f8[:], "
-        "f8[:, :], f8[:, :], i8, f8, f8, f8, b1, f8[:], f8[:]"
-    ],
-    "(), (), (n_choices), (n_draws), (n_draws), (n_choices, n_children_states, "
-    "n_partner_states), (), (n_partner_states), (n_choices), (), "
-    "(), (n_ssc_params), (n_tax_params, n_tax_params), (n_choices, "
-    "n_age_child_costs), (), (), (), (), (), (num_outputs) -> (num_outputs)",
-    nopython=True,
-    # target="cpu",
-    target="parallel",
-)
+def emax_weighting(emaxs_child_states, prob_child, prob_partner):
+    return jax.vmap(
+        jax.vmap(do_weighting_emax_scalar, in_axes=(0, None, None)), in_axes=(0, 0, 0)
+    )(emaxs_child_states, prob_child, prob_partner)
+
+
 def construct_emax(
     delta,
-    log_wage_systematic,
+    log_wages_systematic,
     non_consumption_utilities,
     draws,
     draw_weights,
@@ -93,12 +85,10 @@ def construct_emax(
     income_tax_spec,
     child_care_costs,
     index_child_care_costs,
-    male_wage,
+    male_wages,
     child_benefits,
-    equivalence,
+    equivalence_scales,
     tax_splitting,
-    dummy_array,
-    emax,
 ):
     """Simulate expected maximum utility for a given distribution of the unobservables.
 
@@ -156,32 +146,60 @@ def construct_emax(
         https://en.wikipedia.org/wiki/Monte_Carlo_integration
 
     """
-    num_draws = draws.shape[0]
 
-    emax[0] = do_weighting_emax(emaxs_child_states[0, :, :], prob_child, prob_partner)
-    emax[1] = do_weighting_emax(emaxs_child_states[1, :, :], prob_child, prob_partner)
-    emax[2] = do_weighting_emax(emaxs_child_states[2, :, :], prob_child, prob_partner)
+    emax = emax_weighting(emaxs_child_states, prob_child, prob_partner)
 
-    emax[3] = 0.0
-
-    for i in range(num_draws):
-        max_total_utility = _get_max_aggregated_utilities(
-            delta,
-            log_wage_systematic,
-            non_consumption_utilities,
-            draws[i],
-            emax[:3],
-            hours,
-            mu,
-            non_employment_consumption_resources,
-            deductions_spec,
-            income_tax_spec,
-            male_wage,
-            child_benefits,
-            equivalence,
-            tax_splitting,
-            child_care_costs,
-            index_child_care_costs,
+    def max_aggregated_utilities_broadcast(
+        log_wage_systematic_choices,
+        non_consumption_utilities_choices,
+        emax_choices,
+        non_employment_consumption_resources_choices,
+        male_wage,
+        child_benefit,
+        equivalence,
+        index_child_care_cost,
+        draw,
+        draw_weight,
+    ):
+        return _get_max_aggregated_utilities(
+            delta=delta,
+            log_wage_systematic=log_wage_systematic_choices,
+            non_consumption_utilities=non_consumption_utilities_choices,
+            draw=draw,
+            draw_weight=draw_weight,
+            emaxs=emax_choices,
+            hours=hours,
+            mu=mu,
+            non_employment_consumption_resources=non_employment_consumption_resources_choices,
+            deductions_spec=deductions_spec,
+            income_tax_spec=income_tax_spec,
+            male_wage=male_wage,
+            child_benefits=child_benefit,
+            equivalence=equivalence,
+            tax_splitting=tax_splitting,
+            child_care_costs=jnp.asarray(child_care_costs),
+            child_care_bin=index_child_care_cost,
         )
 
-        emax[3] += max_total_utility * draw_weights[i]
+    emaxs_current_states = jax.vmap(
+        jax.vmap(
+            max_aggregated_utilities_broadcast,
+            in_axes=(None, None, None, None, None, None, None, None, 0, 0),
+        ),
+        in_axes=(0, 0, 0, 0, 0, 0, 0, 0, None, None),
+    )(
+        log_wages_systematic,
+        non_consumption_utilities,
+        emax,
+        non_employment_consumption_resources,
+        male_wages,
+        child_benefits,
+        equivalence_scales,
+        index_child_care_costs,
+        draws,
+        draw_weights,
+    )
+    emax_expected = emaxs_current_states.sum(axis=1)
+    # Add emax expected as last column
+    emaxs_with_expected = jnp.concatenate([emax, emax_expected[:, None]], axis=1)
+    return emaxs_with_expected

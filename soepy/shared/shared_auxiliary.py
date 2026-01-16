@@ -1,4 +1,4 @@
-import numba
+import jax.numpy as jnp
 import numpy as np
 
 
@@ -54,6 +54,7 @@ def calculate_log_wage(model_params, states, is_expected):
         ) * model_params.gamma_p
     else:
         gamma_p = model_params.gamma_p
+
     log_wage_systematic = calculate_log_wage_systematic(
         model_params.gamma_0,
         model_params.gamma_f,
@@ -64,96 +65,122 @@ def calculate_log_wage(model_params, states, is_expected):
     return log_wage_systematic
 
 
-@numba.guvectorize(
-    ["f8[:],f8[:],f8[:],i8[:], f8[:]"],
-    "(num_edu_types),(num_edu_types),(num_edu_types),(num_state_vars)->()",
-    nopython=True,
-    target="cpu",
-    # target="parallel",
-)
-def calculate_log_wage_systematic(
-    gamma_0, gamma_f, gamma_p, state, log_wage_systematic
-):
+def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
     """Calculate systematic wages, i.e., wages net of shock, for all states."""
 
-    exp_p_state, exp_f_state = state[3], state[4]
+    exp_p_states, exp_f_states = states[:, 3], states[:, 4]
 
-    log_exp_p = np.log(exp_p_state + 1)
-    log_exp_f = np.log(exp_f_state + 1)
+    log_exp_p = jnp.log(exp_p_states + 1)
+    log_exp_f = jnp.log(exp_f_states + 1)
 
     # Assign wage returns
-    gamma_0_edu = gamma_0[state[1]]
-    gamma_f_edu = gamma_f[state[1]]
-    gamma_p_edu = gamma_p[state[1]]
+    gamma_0_edu = gamma_0[states[:, 1]]
+    gamma_f_edu = gamma_f[states[:, 1]]
+    gamma_p_edu = gamma_p[states[:, 1]]
 
     # Calculate wage in the given state
-    log_wage_systematic[0] = (
+    log_wage_systematic = (
         gamma_0_edu + gamma_f_edu * log_exp_f + gamma_p_edu * log_exp_p
     )
+    return log_wage_systematic
 
 
-@numba.guvectorize(
-    ["f8[:],f8[:],f8[:],f8[:],f8[:],f8[:],f8,f8,f8,f8,f8,f8,i8[:], f8, f8[:], f8[:]"],
-    "(num_unobs_types),(num_unobs_types), (num_edu_types),(num_edu_types),"
-    "(num_edu_types),(num_edu_types), (),(),(),(),(),(),(num_state_vars),"
-    "(),(num_choices)->(num_choices)",
-    nopython=True,
-    target="cpu",
-    # target="parallel",
-)
 def calculate_non_consumption_utility(
-    theta_p,
-    theta_f,
-    no_kids_f,
-    no_kids_p,
-    yes_kids_f,
-    yes_kids_p,
-    child_0_2_f,
-    child_0_2_p,
-    child_3_5_f,
-    child_3_5_p,
-    child_6_10_f,
-    child_6_10_p,
-    state,
-    child_bin,
-    dummy_output,
-    non_consumption_utility,
+    model_params,
+    states,
+    child_bins,
 ):
-    """Calculate non-pecuniary utility contribution."""
-    non_consumption_utility_state = np.array([0, theta_p[state[5]], theta_f[state[5]]])
-    educ_level = state[1]
-    if child_bin == 0:
-        non_consumption_utility_state[1] += (
-            no_kids_f[educ_level] + no_kids_p[educ_level]
-        )  # part-time alpha_f_no_kids + alpha_p_no_kids
-        non_consumption_utility_state[2] += no_kids_f[educ_level]
-    elif child_bin == 1:
-        non_consumption_utility_state[1] += (
-            yes_kids_f[educ_level] + yes_kids_p[educ_level] + child_0_2_f + child_0_2_p
-        )
+    """Calculate non-pecuniary utility contribution.
 
-        non_consumption_utility_state[2] += yes_kids_f[educ_level] + child_0_2_f
-    elif child_bin == 2:
-        non_consumption_utility_state[1] += (
-            yes_kids_f[educ_level] + yes_kids_p[educ_level] + child_3_5_f + child_3_5_p
-        )
-        non_consumption_utility_state[2] += yes_kids_f[educ_level] + child_3_5_f
+    Parameters
+    ----------
+    states : np.ndarray
+        Shape (n_states, n_state_vars) matrix of states
+    child_bins : np.ndarray
+        Shape (n_states,) array with child bin indices for each state
 
-    elif child_bin == 3:
-        non_consumption_utility_state[1] += (
-            yes_kids_f[educ_level]
-            + yes_kids_p[educ_level]
-            + child_6_10_f
-            + child_6_10_p
-        )
-        non_consumption_utility_state[2] += yes_kids_f[educ_level] + child_6_10_f
-    else:  # Mothers with kids older than 10 only get fixed disutility
-        non_consumption_utility_state[1] += (
-            yes_kids_f[educ_level] + yes_kids_p[educ_level]
-        )
+    Returns
+    -------
+    non_consumption_utility : np.ndarray
+        Shape (n_states, 3) matrix with utilities for [no work, part-time, full-time]
+    """
+    theta_p = model_params.theta_p
+    theta_f = model_params.theta_f
+    no_kids_f = model_params.no_kids_f
+    no_kids_p = model_params.no_kids_p
+    yes_kids_f = model_params.yes_kids_f
+    yes_kids_p = model_params.yes_kids_p
+    child_0_2_f = model_params.child_0_2_f
+    child_0_2_p = model_params.child_0_2_p
+    child_3_5_f = model_params.child_3_5_f
+    child_3_5_p = model_params.child_3_5_p
+    child_6_10_f = model_params.child_6_10_f
+    child_6_10_p = model_params.child_6_10_p
 
-        non_consumption_utility_state[2] += yes_kids_f[educ_level]
-    out = np.exp(non_consumption_utility_state)
-    non_consumption_utility[0] = out[0]
-    non_consumption_utility[1] = out[1]
-    non_consumption_utility[2] = out[2]
+    n_states = states.shape[0]
+    educ_levels = states[:, 1]  # Extract education level for all states
+
+    # Initialize output: column 0 (no work) = 0, columns 1-2 get theta values
+    non_consumption_utility = np.zeros((n_states, 3))
+    non_consumption_utility[:, 1] = theta_p[states[:, 5]]  # part-time base utility
+    non_consumption_utility[:, 2] = theta_f[states[:, 5]]  # full-time base utility
+
+    # Create masks for each child bin
+    no_kids_mask = child_bins == 0
+    child_0_2_mask = child_bins == 1
+    child_3_5_mask = child_bins == 2
+    child_6_10_mask = child_bins == 3
+    older_kids_mask = child_bins > 3
+
+    # No kids (child_bin == 0)
+    non_consumption_utility[no_kids_mask, 1] += (
+        no_kids_f[educ_levels[no_kids_mask]] + no_kids_p[educ_levels[no_kids_mask]]
+    )
+    non_consumption_utility[no_kids_mask, 2] += no_kids_f[educ_levels[no_kids_mask]]
+
+    # Child 0-2 (child_bin == 1)
+    non_consumption_utility[child_0_2_mask, 1] += (
+        yes_kids_f[educ_levels[child_0_2_mask]]
+        + yes_kids_p[educ_levels[child_0_2_mask]]
+        + child_0_2_f
+        + child_0_2_p
+    )
+    non_consumption_utility[child_0_2_mask, 2] += (
+        yes_kids_f[educ_levels[child_0_2_mask]] + child_0_2_f
+    )
+
+    # Child 3-5 (child_bin == 2)
+    non_consumption_utility[child_3_5_mask, 1] += (
+        yes_kids_f[educ_levels[child_3_5_mask]]
+        + yes_kids_p[educ_levels[child_3_5_mask]]
+        + child_3_5_f
+        + child_3_5_p
+    )
+    non_consumption_utility[child_3_5_mask, 2] += (
+        yes_kids_f[educ_levels[child_3_5_mask]] + child_3_5_f
+    )
+
+    # Child 6-10 (child_bin == 3)
+    non_consumption_utility[child_6_10_mask, 1] += (
+        yes_kids_f[educ_levels[child_6_10_mask]]
+        + yes_kids_p[educ_levels[child_6_10_mask]]
+        + child_6_10_f
+        + child_6_10_p
+    )
+    non_consumption_utility[child_6_10_mask, 2] += (
+        yes_kids_f[educ_levels[child_6_10_mask]] + child_6_10_f
+    )
+
+    # Older kids (child_bin > 3)
+    non_consumption_utility[older_kids_mask, 1] += (
+        yes_kids_f[educ_levels[older_kids_mask]]
+        + yes_kids_p[educ_levels[older_kids_mask]]
+    )
+    non_consumption_utility[older_kids_mask, 2] += yes_kids_f[
+        educ_levels[older_kids_mask]
+    ]
+
+    # Apply exponential transformation
+    non_consumption_utility = np.exp(non_consumption_utility)
+
+    return non_consumption_utility

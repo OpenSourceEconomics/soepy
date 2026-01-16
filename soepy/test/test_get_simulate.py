@@ -4,10 +4,10 @@ import random
 import pandas as pd
 import pytest
 
-from development.tests.auxiliary.auxiliary import cleanup
 from soepy.simulate.simulate_python import get_simulate_func
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
+from soepy.test.resources.aux_funcs import cleanup
 
 CASES_TEST = random.sample(range(0, 100), 10)
 

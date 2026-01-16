@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from soepy.exogenous_processes.determine_lagged_choice import lagged_choice_initial
+from soepy.shared.non_employment import calc_erziehungsgeld
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.shared_auxiliary import calculate_log_wage
 from soepy.shared.shared_auxiliary import draw_disturbances
@@ -12,7 +13,6 @@ from soepy.simulate.constants_sim import DATA_LABLES_SIM
 from soepy.simulate.constants_sim import IDX_STATES_DATA_SPARSE
 from soepy.simulate.constants_sim import LABELS_DATA_SPARSE
 from soepy.simulate.income_sim import calculate_employment_consumption_resources
-from soepy.simulate.income_sim import calculate_erziehungsgeld_vector
 
 
 def pyth_simulate(
@@ -152,8 +152,7 @@ def simulate_agents_over_periods(
 
         current_employment_consumption_resources = (
             calculate_employment_consumption_resources(
-                model_spec.ssc_deductions,
-                model_spec.tax_params,
+                model_spec,
                 current_female_income,
                 current_male_wages,
                 tax_splitting,
@@ -165,14 +164,14 @@ def simulate_agents_over_periods(
             married = states_period[:, 7] == 1
             baby_child = (states_period[:, 6] == 0) | (states_period[:, 6] == 1)
 
-            erziehgeld = calculate_erziehungsgeld_vector(
-                current_male_wages,
-                current_female_income[:, 0],
-                married,
-                baby_child,
-                model_spec.erziehungsgeld_income_threshold_single,
-                model_spec.erziehungsgeld_income_threshold_married,
-                model_spec.erziehungsgeld,
+            erziehgeld = calc_erziehungsgeld(
+                male_wage=current_male_wages,
+                female_income=current_female_income[:, 0],
+                married=married,
+                baby_child=baby_child,
+                erziehungsgeld_inc_single=model_spec.erziehungsgeld_income_threshold_single,
+                erziehungsgeld_inc_married=model_spec.erziehungsgeld_income_threshold_married,
+                erziehungsgeld=model_spec.erziehungsgeld,
             )
             current_employment_consumption_resources[:, 0] += erziehgeld
 
@@ -381,6 +380,7 @@ def prepare_simulation_data(
             covariates[:, 1],
             covariates[:, 3],
             tax_splitting,
+            HOURS,
         )
     )
 

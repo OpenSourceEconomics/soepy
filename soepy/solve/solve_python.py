@@ -1,10 +1,11 @@
+import jax
+import jax.numpy as jnp
 import numpy as np
-from scipy.special import roots_hermite
 
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
+from soepy.shared.numerical_integration import get_integration_draws_and_weights
 from soepy.shared.shared_auxiliary import calculate_log_wage
 from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
-from soepy.shared.shared_auxiliary import draw_disturbances
 from soepy.shared.shared_constants import HOURS
 from soepy.solve.emaxs import construct_emax
 from soepy.solve.validation_solve import construct_emax_validation
@@ -66,66 +67,21 @@ def pyth_solve(
         model_spec, model_params
     )
 
-    non_consumption_utilities = calculate_non_consumption_utility(
-        model_params.theta_p,
-        model_params.theta_f,
-        model_params.no_kids_f,
-        model_params.no_kids_p,
-        model_params.yes_kids_f,
-        model_params.yes_kids_p,
-        model_params.child_0_2_f,
-        model_params.child_0_2_p,
-        model_params.child_3_5_f,
-        model_params.child_3_5_p,
-        model_params.child_6_10_f,
-        model_params.child_6_10_p,
-        states,
-        covariates[:, 0],
-        np.array([0, 1, 2], dtype=float),
-    )
-
-    log_wage_systematic = calculate_log_wage(
-        model_params, states, is_expected
-    ) + np.log(model_spec.elasticity_scale)
-
-    tax_splitting = model_spec.tax_splitting
-
-    non_employment_consumption_resources = (
-        calculate_non_employment_consumption_resources(
-            model_spec.ssc_deductions,
-            model_spec.tax_params,
-            model_spec,
-            states,
-            log_wage_systematic,
-            covariates[:, 1],
-            covariates[:, 3],
-            tax_splitting,
-        )
-    )
-
-    index_child_care_costs = np.where(covariates[:, 0] > 2, 0, covariates[:, 0]).astype(
-        int
-    )
-
     # Solve the model in a backward induction procedure
     # Error term for continuation values is integrated out
     # numerically in a Monte Carlo procedure
-    emaxs = pyth_backward_induction(
+    emaxs, non_consumption_utilities = pyth_backward_induction(
         model_spec,
-        tax_splitting,
-        model_params.mu,
-        model_params.delta,
+        model_spec.tax_splitting,
+        model_params,
         states,
         child_state_indexes,
-        log_wage_systematic,
-        non_consumption_utilities,
         draws_emax,
         draw_weights_emax,
         covariates,
-        index_child_care_costs,
         prob_child,
         prob_partner,
-        non_employment_consumption_resources,
+        is_expected,
     )
 
     # Return function output
@@ -135,45 +91,18 @@ def pyth_solve(
     )
 
 
-def get_integration_draws_and_weights(model_spec, model_params):
-    if model_spec.integration_method == "quadrature":
-        # Draw standard points and corresponding weights
-        standard_draws, draw_weights_emax = roots_hermite(model_spec.num_draws_emax)
-        # Rescale draws and weights
-        draws_emax = standard_draws * np.sqrt(2) * model_params.shock_sd
-        draw_weights_emax *= 1 / np.sqrt(np.pi)
-    elif model_spec.integration_method == "monte_carlo":
-        draws_emax = draw_disturbances(
-            model_spec.seed_emax, 1, model_spec.num_draws_emax, model_params
-        )[0]
-        draw_weights_emax = (
-            np.ones(model_spec.num_draws_emax) / model_spec.num_draws_emax
-        )
-    else:
-        raise ValueError(
-            f"Integration method {model_spec.integration_method} not specified."
-        )
-
-    return draws_emax, draw_weights_emax
-
-
-# @numba.njit
 def pyth_backward_induction(
     model_spec,
     tax_splitting,
-    mu,
-    delta,
+    model_params,
     states,
     child_state_indexes,
-    log_wage_systematic,
-    non_consumption_utilities,
     draws,
     draw_weights,
     covariates,
-    index_child_care_costs,
     prob_child,
     prob_partner,
-    non_employment_consumption_resources,
+    is_expected,
 ):
     """Get expected maximum value function at every state space point.
     Backward induction is performed all at once for all states in a given period.
@@ -211,11 +140,86 @@ def pyth_backward_induction(
         as its first elements. The last row element corresponds to the maximum
         expected value function of the state.
     """
-    dummy_array = np.zeros(4)  # Need this array to define output for construct_emaxs
+
+    hours = np.array(HOURS)
+    non_consumption_utilities = calculate_non_consumption_utility(
+        model_params,
+        states,
+        covariates[:, 0],
+    )
 
     emaxs = np.zeros((states.shape[0], non_consumption_utilities.shape[1] + 1))
 
-    hours = np.array(HOURS)
+    partial_body = jax.jit(
+        lambda params, period_index, emaxs_childs, prob_child_period, prob_partner_period: period_body_backward_induction(
+            model_params=params,
+            state_period_index=period_index,
+            emaxs_child_states=emaxs_childs,
+            states=jnp.asarray(states),
+            covariates=jnp.asarray(covariates),
+            non_consumption_utilities=jnp.asarray(non_consumption_utilities),
+            prob_child_period=prob_child_period,
+            prob_partner_period=prob_partner_period,
+            draws=jnp.asarray(draws),
+            draw_weights=jnp.asarray(draw_weights),
+            model_spec=model_spec,
+            is_expected=is_expected,
+            hours=jnp.asarray(hours),
+            tax_splitting=tax_splitting,
+        )
+    )
+    min_ind_child_period = 0
+
+    # Loop backwards over all periods
+    for period in np.arange(model_spec.num_periods - 1, -1, -1, dtype=int):
+        bool_ind = states[:, 0] == period
+        state_period_index = np.where(bool_ind)[0]
+        # Continuation value calculation not performed for last period
+        # since continuation values are known to be zero
+        if period == model_spec.num_periods - 1:
+            emaxs_child_states = jnp.zeros(
+                shape=(state_period_index.shape[0], 3, 2, 2), dtype=float
+            )
+            # Assign for next period the min index of current period^as the min index of the child period
+            min_ind_child_period = state_period_index[0]
+        else:
+            child_states_ind_period = child_state_indexes[state_period_index]
+            emaxs_child_states = emaxs_period[:, 3][
+                child_states_ind_period - min_ind_child_period
+            ]
+            # Assign for next period the min index of current period^as the min index of the child period
+            min_ind_child_period = state_period_index[0]
+
+        emaxs_period = partial_body(
+            params=model_params,
+            period_index=state_period_index,
+            emaxs_childs=emaxs_child_states,
+            prob_child_period=prob_child[period],
+            prob_partner_period=prob_partner[period],
+        )
+
+        emaxs[state_period_index] = emaxs_period
+
+    return emaxs, non_consumption_utilities
+
+
+def period_body_backward_induction(
+    model_params,
+    state_period_index,
+    emaxs_child_states,
+    states,
+    covariates,
+    non_consumption_utilities,
+    prob_child_period,
+    prob_partner_period,
+    draws,
+    draw_weights,
+    model_spec,
+    is_expected,
+    hours,
+    tax_splitting,
+):
+
     deductions_spec = model_spec.ssc_deductions
     tax_params = model_spec.tax_params
     child_care_costs = model_spec.child_care_costs
@@ -224,109 +228,104 @@ def pyth_backward_induction(
     erziehungsgeld_inc_married = model_spec.erziehungsgeld_income_threshold_married
     erziehungsgeld = model_spec.erziehungsgeld
 
-    num_periods = model_spec.num_periods
+    # Extract period information
+    # States and covariates
+    states_period = states[state_period_index]
+    covariates_period = covariates[state_period_index]
+    non_consumption_utilities_period = non_consumption_utilities[state_period_index]
 
-    # Loop backwards over all periods
-    for period in np.arange(num_periods - 1, -1, -1, dtype=int):
-        state_period_index = np.where(states[:, 0] == period)[0]
+    # Corresponding equivalence scale for period states
+    male_wage_period = covariates_period[:, 1]
+    equivalence_scale_period = covariates_period[:, 2]
+    child_benefits_period = covariates_period[:, 3]
 
-        # Extract period information
-        # States
-        states_period = states[state_period_index]
+    index_child_care_costs_period = jnp.where(
+        covariates_period[:, 0] > 2, 0, covariates_period[:, 0]
+    ).astype(int)
 
-        # Probability that a child arrives
-        prob_child_period = prob_child[period][states_period[:, 1]]
+    # Probability that a child arrives
+    prob_child_period_states = prob_child_period[states_period[:, 1]]
 
-        # Probability of partner states.
-        prob_partner_period = prob_partner[period][
-            states_period[:, 1], states_period[:, 7]
-        ]
+    # Probability of partner states.
+    prob_partner_period_states = prob_partner_period[
+        states_period[:, 1], states_period[:, 7]
+    ]
 
-        # Period rewards
-        log_wage_systematic_period = log_wage_systematic[state_period_index]
-        non_consumption_utilities_period = non_consumption_utilities[state_period_index]
-        non_employment_consumption_resources_period = (
-            non_employment_consumption_resources[state_period_index]
+    # Period rewards
+    log_wage_systematic_period = calculate_log_wage(
+        model_params, states_period, is_expected
+    ) + np.log(model_spec.elasticity_scale)
+
+    non_employment_consumption_resources_period = (
+        calculate_non_employment_consumption_resources(
+            deductions_spec=model_spec.ssc_deductions,
+            income_tax_spec=model_spec.tax_params,
+            model_spec=model_spec,
+            states=states_period,
+            log_wage_systematic=log_wage_systematic_period,
+            male_wage=male_wage_period,
+            child_benefits=child_benefits_period,
+            tax_splitting=model_spec.tax_splitting,
+            hours=hours,
+        )
+    )
+
+    if model_spec.parental_leave_regime == "elterngeld":
+        # Calculate emax for current period reached by the loop
+        emaxs_period = construct_emax(
+            model_params.delta,
+            log_wage_systematic_period,
+            non_consumption_utilities_period,
+            draws,
+            draw_weights,
+            emaxs_child_states,
+            prob_child_period_states,
+            prob_partner_period_states,
+            hours,
+            model_params.mu,
+            non_employment_consumption_resources_period,
+            deductions_spec,
+            tax_params,
+            child_care_costs,
+            index_child_care_costs_period,
+            male_wage_period,
+            child_benefits_period,
+            equivalence_scale_period,
+            tax_splitting,
+        )
+    elif model_spec.parental_leave_regime == "erziehungsgeld":
+
+        baby_child_period = (states_period[:, 6] == 0) | (states_period[:, 6] == 1)
+        # Calculate emax for current period reached by the loop
+        emaxs_period = construct_emax_validation(
+            model_params.delta,
+            baby_child_period,
+            log_wage_systematic_period,
+            non_consumption_utilities_period,
+            draws,
+            draw_weights,
+            emaxs_child_states,
+            prob_child_period_states,
+            prob_partner_period_states,
+            hours,
+            model_params.mu,
+            non_employment_consumption_resources_period,
+            deductions_spec,
+            tax_params,
+            child_care_costs,
+            index_child_care_costs_period,
+            male_wage_period,
+            child_benefits_period,
+            equivalence_scale_period,
+            erziehungsgeld_inc_single,
+            erziehungsgeld_inc_married,
+            erziehungsgeld,
+            tax_splitting,
         )
 
-        # Corresponding equivalence scale for period states
-        covariates_state = covariates[state_period_index]
-        male_wage_period = covariates_state[:, 1]
-        equivalence_scale_period = covariates_state[:, 2]
-        child_benefits_period = covariates_state[:, 3]
+    else:
+        raise ValueError(
+            f"Parental leave regime {model_spec.parental_leave_regime} not specified."
+        )
 
-        index_child_care_costs_period = index_child_care_costs[state_period_index]
-
-        # Continuation value calculation not performed for last period
-        # since continuation values are known to be zero
-        if period == num_periods - 1:
-            emaxs_child_states = np.zeros(
-                shape=(states_period.shape[0], 3, 2, 2), dtype=float
-            )
-        else:
-            child_states_ind_period = child_state_indexes[state_period_index]
-            emaxs_child_states = emaxs[:, 3][child_states_ind_period]
-
-        if model_spec.parental_leave_regime == "elterngeld":
-            # Calculate emax for current period reached by the loop
-            emaxs_period = construct_emax(
-                delta,
-                log_wage_systematic_period,
-                non_consumption_utilities_period,
-                draws,
-                draw_weights,
-                emaxs_child_states,
-                prob_child_period,
-                prob_partner_period,
-                hours,
-                mu,
-                non_employment_consumption_resources_period,
-                deductions_spec,
-                tax_params,
-                child_care_costs,
-                index_child_care_costs_period,
-                male_wage_period,
-                child_benefits_period,
-                equivalence_scale_period,
-                tax_splitting,
-                dummy_array,
-            )
-        elif model_spec.parental_leave_regime == "erziehungsgeld":
-
-            baby_child_period = (states_period[:, 6] == 0) | (states_period[:, 6] == 1)
-            # Calculate emax for current period reached by the loop
-            emaxs_period = construct_emax_validation(
-                delta,
-                baby_child_period,
-                log_wage_systematic_period,
-                non_consumption_utilities_period,
-                draws,
-                draw_weights,
-                emaxs_child_states,
-                prob_child_period,
-                prob_partner_period,
-                hours,
-                mu,
-                non_employment_consumption_resources_period,
-                deductions_spec,
-                tax_params,
-                child_care_costs,
-                index_child_care_costs_period,
-                male_wage_period,
-                child_benefits_period,
-                equivalence_scale_period,
-                erziehungsgeld_inc_single,
-                erziehungsgeld_inc_married,
-                erziehungsgeld,
-                tax_splitting,
-                dummy_array,
-            )
-
-        else:
-            raise ValueError(
-                f"Parental leave regime {model_spec.parental_leave_regime} not specified."
-            )
-
-        emaxs[state_period_index] = emaxs_period
-
-    return emaxs
+    return emaxs_period

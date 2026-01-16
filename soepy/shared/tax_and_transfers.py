@@ -1,7 +1,3 @@
-import numba
-
-
-@numba.njit(nogil=True)
 def calculate_net_income(
     income_tax_spec, deductions_spec, female_wage, male_wage, tax_splitting=True
 ):
@@ -34,7 +30,6 @@ def calculate_net_income(
     return net_income
 
 
-@numba.njit(nogil=True)
 def calculate_inc_tax(tax_params, taxable_income):
     """Calculates the income tax."""
     thresholds = tax_params[0, :]
@@ -60,7 +55,6 @@ def calculate_inc_tax(tax_params, taxable_income):
     return tax_rate
 
 
-@numba.njit(nogil=True)
 def calculate_ssc_deductions(deductions_spec, gross_labor_income):
     """Determines the social security contribution amount
     to be deduced from the individuals gross labor income"""
