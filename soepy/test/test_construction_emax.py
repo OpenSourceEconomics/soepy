@@ -9,15 +9,13 @@ from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
-from soepy.shared.numerical_integration import get_integration_draws_and_weights
-from soepy.shared.shared_auxiliary import calculate_log_wage
-from soepy.shared.shared_auxiliary import calculate_non_consumption_utility
 from soepy.shared.shared_constants import HOURS
+from soepy.shared.wages import calculate_log_wage
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.covariates import construct_covariates
 from soepy.solve.create_state_space import create_child_indexes
 from soepy.solve.create_state_space import pyth_create_state_space
-from soepy.solve.solve_python import pyth_backward_induction
+from soepy.solve.solve_python import get_solve_function
 
 
 @pytest.fixture(scope="module")
@@ -74,28 +72,17 @@ def input_data():
         states, indexer, model_spec, child_age_update_rule
     )
 
-    draws_emax, draw_weights_emax = get_integration_draws_and_weights(
-        model_spec, model_params
-    )
-
-    draws_emax *= 0
-
-    # Solve the model in a backward induction procedure
-    # Error term for continuation values is integrated out
-    # numerically in a Monte Carlo procedure
-    emaxs, non_consumption_utilities = pyth_backward_induction(
-        model_spec=model_spec,
-        tax_splitting=model_spec.tax_splitting,
-        model_params=model_params,
-        states=states,
-        child_state_indexes=child_state_indexes,
-        draws=draws_emax,
-        draw_weights=draw_weights_emax,
-        covariates=covariates,
-        prob_child=prob_child,
-        prob_partner=prob_partner,
+    # Solve function
+    solve_func = get_solve_function(
+        states,
+        covariates,
+        child_state_indexes,
+        model_spec,
+        prob_child,
+        prob_partner,
         is_expected=True,
     )
+    non_consumption_utilities, emaxs = solve_func(model_params)
     log_wage_systematic = calculate_log_wage(model_params, states, True)
 
     non_employment_consumption_resources = (

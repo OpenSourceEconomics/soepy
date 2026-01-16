@@ -4,9 +4,9 @@ import pandas as pd
 from soepy.exogenous_processes.determine_lagged_choice import lagged_choice_initial
 from soepy.shared.non_employment import calc_erziehungsgeld
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
-from soepy.shared.shared_auxiliary import calculate_log_wage
-from soepy.shared.shared_auxiliary import draw_disturbances
+from soepy.shared.numerical_integration import draw_zero_one_distributed_shocks
 from soepy.shared.shared_constants import HOURS
+from soepy.shared.wages import calculate_log_wage
 from soepy.simulate.constants_sim import DATA_FORMATS_SIM
 from soepy.simulate.constants_sim import DATA_FORMATS_SPARSE
 from soepy.simulate.constants_sim import DATA_LABLES_SIM
@@ -362,10 +362,10 @@ def prepare_simulation_data(
     )
 
     # Draw shocks
-    attrs_spec = ["seed_sim", "num_periods", "num_agents_sim"]
-    draws_sim = draw_disturbances(
-        *[getattr(model_spec, attr) for attr in attrs_spec], model_params
+    draws_sim = draw_zero_one_distributed_shocks(
+        model_spec.seed_sim, model_spec.num_periods, model_spec.num_agents_sim
     )
+    draws_sim *= model_params.shock_sd
 
     # Calculate utility components
     log_wage_systematic = calculate_log_wage(model_params, states, is_expected)

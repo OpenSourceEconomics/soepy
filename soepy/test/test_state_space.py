@@ -6,8 +6,8 @@ import pytest
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
-from soepy.shared.shared_auxiliary import calculate_log_wage
 from soepy.shared.shared_constants import HOURS
+from soepy.shared.wages import calculate_log_wage
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 
@@ -126,9 +126,10 @@ def test_child_update_rule_aging_child(input_data):
         child_age_update_rule,
     ) = input_data
     aging_child = (states[:, 6] > -1) & (states[:, 6] <= model_spec.child_age_max)
-    np.testing.assert_array_equal(
-        states[aging_child][:, 6] + 1, child_age_update_rule[aging_child]
-    )
+    new_age = states[aging_child][:, 6] + 1
+    # Children that are in the last tracked age are not there any more in the next period
+    new_age[new_age == model_spec.child_age_max + 1] = -1
+    np.testing.assert_array_equal(new_age, child_age_update_rule[aging_child])
 
 
 def test_work_choices(input_data):
