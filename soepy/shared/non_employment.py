@@ -1,5 +1,8 @@
 import jax.numpy as jnp
 
+from soepy.shared.state_space_indices import AGE_YOUNGEST_CHILD
+from soepy.shared.state_space_indices import LAGGED_CHOICE
+from soepy.shared.state_space_indices import PARTNER
 from soepy.shared.tax_and_transfers_jax import calculate_net_income
 
 
@@ -14,9 +17,6 @@ def calculate_non_employment_consumption_resources(
     tax_splitting,
     hours,
 ):
-    """This function calculates the non employment consumption resources. It first
-    calcultes the non employment benefits before using them to calculate the resources."""
-
     alg1_replacement_no_child = model_spec.alg1_replacement_no_child
     alg1_replacement_child = model_spec.alg1_replacement_child
     regelsatz_single = model_spec.regelsatz_single
@@ -86,15 +86,21 @@ def calculate_non_employment_benefits(
     erziehungsgeld,
     elterngeld_regime,
 ):
-    """This function calculates the benefits an individual would receive if they were
-    to choose to be non-employed in the period"""
-
-    no_child = states[:, 6] == -1
-    working_ft_last_period = states[:, 2] == 2
-    working_pt_last_period = states[:, 2] == 1
-    married = states[:, 7] == 1
+    no_child = states[:, AGE_YOUNGEST_CHILD] == -1
+    working_ft_last_period = states[:, LAGGED_CHOICE] == 2
+    working_pt_last_period = states[:, LAGGED_CHOICE] == 1
+    married = states[:, PARTNER] == 1
 
     prox_net_wage_systematic = 0.65 * jnp.exp(log_wage_systematic)
+
+    if prox_net_wage_systematic.ndim == 2:
+        # Broadcast state-dependent scalars to (n_states, 1).
+        no_child = no_child[:, None]
+        working_ft_last_period = working_ft_last_period[:, None]
+        working_pt_last_period = working_pt_last_period[:, None]
+        married = married[:, None]
+        male_wage = male_wage[:, None]
+        child_benefit = child_benefit[:, None]
 
     alg2_single = regelsatz_single + housing_single
 
@@ -106,14 +112,12 @@ def calculate_non_employment_benefits(
         + housing_addtion
     )
 
-    alg2 = calculate_alg2(
-        no_child,
-        married,
-        alg2_single,
-        alg_2_alleinerziehend,
-    )
+    alg2 = calculate_alg2(no_child, married, alg2_single, alg_2_alleinerziehend)
+
     if elterngeld_regime:
-        newborn_child = states[:, 6] == 0
+        newborn_child = states[:, AGE_YOUNGEST_CHILD] == 0
+        if prox_net_wage_systematic.ndim == 2:
+            newborn_child = newborn_child[:, None]
 
         elterngeld = calculate_elterngeld(
             hours,
@@ -140,7 +144,6 @@ def calculate_non_employment_benefits(
         last_working_non_employment_benefits = (
             1 - newborn_child
         ) * alg1 + newborn_child * elterngeld
-
         non_employment_benefits = last_working_non_employment_benefits.clip(min=alg2)
     else:
         non_employment_benefits = calculate_alg1(
@@ -153,7 +156,12 @@ def calculate_non_employment_benefits(
             alg1_replacement_child,
             child_benefit,
         ).clip(min=alg2)
-        baby_child = (states[:, 6] == 0) | (states[:, 6] == 1)
+
+        baby_child = (states[:, AGE_YOUNGEST_CHILD] == 0) | (
+            states[:, AGE_YOUNGEST_CHILD] == 1
+        )
+        if prox_net_wage_systematic.ndim == 2:
+            baby_child = baby_child[:, None]
         non_employment_benefits += calc_erziehungsgeld(
             male_wage,
             non_employment_benefits,
@@ -184,13 +192,7 @@ def calc_erziehungsgeld(
     return erz_geld_claim * erziehungsgeld
 
 
-def calculate_alg2(
-    no_child,
-    married,
-    alg2_single,
-    alg_2_alleinerziehend,
-):
-    # All partners work full-time so there exists only a claim if not married.
+def calculate_alg2(no_child, married, alg2_single, alg_2_alleinerziehend):
     alg2_claim = no_child * alg2_single + (1 - no_child) * alg_2_alleinerziehend
     return alg2_claim * (1 - married)
 
@@ -205,7 +207,6 @@ def calculate_elterngeld(
     elterngeld_max,
     child_benefit,
 ):
-    """This implements the 2007 elterngeld regime."""
     hours_worked = hours[2] * working_ft_last_period + hours[1] * working_pt_last_period
     elterngeld_claim = working_ft_last_period | working_pt_last_period
     return elterngeld_claim * (
@@ -230,10 +231,6 @@ def calculate_alg1(
     alg1_replacement_child,
     child_benefit_if_child,
 ):
-
-    """Individual worked last period: ALG I based on labor income the individual
-    would have earned working full-time in the period (excluding wage shock)
-    for a person who worked last period 60% if no child"""
     child_benefits = (1 - no_child) * child_benefit_if_child
     replacement_rate = alg1_replacement_no_child * no_child + alg1_replacement_child * (
         1 - no_child
@@ -250,7 +247,7 @@ def calc_resources(
     deductions_spec,
     income_tax_spec,
     hours,
-    state,
+    states,
     log_wage_systematic,
     male_wage,
     child_benefit,
@@ -270,13 +267,9 @@ def calc_resources(
     tax_splitting,
     elterngeld_regime,
 ):
-    """This function calculates the resources available to the individual
-    to spend on consumption were she to choose to not be employed.
-    It adds the components from the budget constraint to the female wage."""
-
     non_employment_benefits = calculate_non_employment_benefits(
         hours,
-        state,
+        states,
         log_wage_systematic,
         child_benefit,
         male_wage,
@@ -296,9 +289,18 @@ def calc_resources(
         elterngeld_regime,
     )
 
-    # Set female wage to 0
+    if non_employment_benefits.ndim == 2:
+        male_wage = male_wage[:, None]
+        female_wage = jnp.zeros_like(male_wage)
+    else:
+        female_wage = 0
+
     male_net_income = calculate_net_income(
-        income_tax_spec, deductions_spec, 0, male_wage, tax_splitting
+        income_tax_spec,
+        deductions_spec,
+        female_wage,
+        male_wage,
+        tax_splitting,
     )
 
     return male_net_income + non_employment_benefits

@@ -24,8 +24,10 @@ def input_vault():
 
 @pytest.mark.parametrize("test_id", CASES_TEST)
 def test_simulation_func(input_vault, test_id):
-    """This test runs a random selection of test regression tests from
-    our regression test battery.
+    """Check that simulate() and get_simulate_func() agree.
+
+    This is an API-consistency test; it does not validate levels against regression
+    targets.
     """
     (
         model_spec_init_dict,

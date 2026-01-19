@@ -3,34 +3,24 @@ process of childbirth."""
 import numpy as np
 import pandas as pd
 
+from soepy.shared.state_space_indices import AGE_YOUNGEST_CHILD
+
 
 def define_child_age_update_rule(model_spec, states):
-    """Defines a vector with the length of the number of states that contains the
-    value the state space component `age_kid` should take depending on whether or not
-     a child arrives in the period.
-     The purpose of this object is to facilitate easy child-parent state look-up
-     in the backward induction."""
+    """Define next-period child age under the no-new-child branch."""
 
-    # Child arrives is equivalent to new child age = 0
-    # If no child arrives we need to specify an update rule
+    child_age_update_rule = np.full(states.shape[0], -1, dtype=np.int32)
 
-    # Age stays at -1 if no kids so far
-    child_age_update_rule = np.full(states.shape[0], -1)
-    # Age increases by one, if there is a kid
-    child_age_update_rule[states[:, 6] != -1] = states[states[:, 6] != -1][:, 6] + 1
-    # Age does not exceed 10. We assume that the moment the youngest child reaches age 10
-    # individuals behave as if they do not have children
+    has_kid = states[:, AGE_YOUNGEST_CHILD] != -1
+    child_age_update_rule[has_kid] = states[has_kid][:, AGE_YOUNGEST_CHILD] + 1
+
     child_age_update_rule[child_age_update_rule > model_spec.child_age_max] = -1
-
     return child_age_update_rule
 
 
 def gen_prob_child_vector(model_spec):
-    """Generates a vector with length `num_periods` which contains
-    the probability to get a child in the corresponding period."""
+    """Generate probability of childbirth for each period and lagged choice."""
 
-    # Read data frame with information on probability to get a child
-    # in every period
     exog_child_info_df = pd.read_pickle(model_spec.child_info_file_name)
 
     exog_child_info_df = exog_child_info_df.iloc[
@@ -46,18 +36,12 @@ def gen_prob_child_vector(model_spec):
         0 : min(model_spec.last_child_bearing_period + 1, model_spec.num_periods)
     ]
 
-    # Assert length of array equals num periods
-    assert (
-        len(prob_child) == model_spec.num_periods
-    ), "Probability of childbirth and number of periods length mismatch"
-
+    assert len(prob_child) == model_spec.num_periods
     return prob_child
 
 
 def gen_prob_child_init_age_vector(model_spec):
-    """Generates a list of lists containing the shares of individuals with
-    kids aged -1 (no kids), 0, 1, 2, 3, and 4 in the model's first period.
-    Shares differ by the level of education of the individuals."""
+    """Generate shares of initial child ages by education level."""
 
     child_age_shares = pd.read_pickle(model_spec.child_age_shares_file_name)
 
