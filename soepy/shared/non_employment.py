@@ -1,8 +1,8 @@
 import jax.numpy as jnp
 
-from soepy.shared.state_space_indices import AGE_YOUNGEST_CHILD
-from soepy.shared.state_space_indices import LAGGED_CHOICE
-from soepy.shared.state_space_indices import PARTNER
+from soepy.shared.constants_and_indices import AGE_YOUNGEST_CHILD
+from soepy.shared.constants_and_indices import LAGGED_CHOICE
+from soepy.shared.constants_and_indices import PARTNER
 from soepy.shared.tax_and_transfers_jax import calculate_net_income
 
 
@@ -93,6 +93,8 @@ def calculate_non_employment_benefits(
 
     prox_net_wage_systematic = 0.65 * jnp.exp(log_wage_systematic)
 
+    # We use this check to see if log_wage_systematic is batched (2D) or not (1D), i.e. if it is for each agent/state
+    # or additionally for multiple experience grid points.
     if prox_net_wage_systematic.ndim == 2:
         # Broadcast state-dependent scalars to (n_states, 1).
         no_child = no_child[:, None]

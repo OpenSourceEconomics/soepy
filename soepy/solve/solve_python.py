@@ -2,16 +2,16 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+from soepy.shared.constants_and_indices import EDUC_LEVEL
+from soepy.shared.constants_and_indices import HOURS
+from soepy.shared.constants_and_indices import NUM_CHOICES
+from soepy.shared.constants_and_indices import PARTNER
+from soepy.shared.constants_and_indices import PERIOD
+from soepy.shared.constants_and_indices import TYPE
 from soepy.shared.experience_stock import get_pt_increment
-from soepy.shared.experience_stock import max_exp_years
 from soepy.shared.non_consumption_utility import calculate_non_consumption_utility
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.numerical_integration import get_integration_draws_and_weights
-from soepy.shared.shared_constants import HOURS
-from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.shared.state_space_indices import EDUC_LEVEL
-from soepy.shared.state_space_indices import PARTNER
-from soepy.shared.state_space_indices import PERIOD
 from soepy.shared.wages import calculate_log_wage
 from soepy.solve.continuous_continuation import (
     interpolate_then_weight_continuation_values,
@@ -57,6 +57,7 @@ def get_solve_function(
         ssc_deductions=jnp.asarray(model_spec.ssc_deductions),
         tax_params=jnp.asarray(model_spec.tax_params),
         child_care_costs=jnp.asarray(model_spec.child_care_costs),
+        exp_grid=model_spec.exp_grid,
     )
 
     unscaled_draws_emax, draw_weights_emax = get_integration_draws_and_weights(
@@ -150,8 +151,8 @@ def pyth_backward_induction(
         lambda a: a[::-1], period_specific_objects
     )
 
-    exp_grid_size = int(getattr(model_spec, "experience_grid_points", 10))
-    exp_grid = jnp.linspace(0.0, 1.0, exp_grid_size)
+    exp_grid = model_spec.exp_grid
+    exp_grid_size = exp_grid.shape[0]
 
     emaxs_next_init = jnp.zeros(
         (states_per_period.shape[1], exp_grid_size, NUM_CHOICES + 1), dtype=float
@@ -164,27 +165,27 @@ def pyth_backward_induction(
         prob_child_period = period_data["prob_child"]
         prob_partner_period = period_data["prob_partner"]
 
-        period_scalar = states_period[0, PERIOD]
-        educ_level = states_period[:, EDUC_LEVEL]
+        current_period = states_period[0, PERIOD]
+        edu_state = states_period[:, EDUC_LEVEL]
+        partner_state = states_period[:, PARTNER]
+        unobs_types = states_period[:, TYPE]
 
         pt_increment_states = get_pt_increment(
             model_params=model_params,
-            model_spec=model_spec,
             is_expected=is_expected,
-            educ_level=educ_level,
+            educ_level=edu_state,
         )
 
-        prob_child_period_states = prob_child_period[educ_level]
-        prob_partner_period_states = prob_partner_period[
-            educ_level, states_period[:, PARTNER]
-        ]
+        prob_child_period_states = prob_child_period[edu_state]
+        prob_partner_period_states = prob_partner_period[edu_state, partner_state]
 
-        v_next_grid = emaxs_next[:, :, 3]
+        # Determine continuation values by interpolation on future grid and weighting by exogenous process
+        # probabilities
         continuation_values = interpolate_then_weight_continuation_values(
             exp_grid=exp_grid,
-            v_next_grid=v_next_grid,
+            v_next_grid=emaxs_next[:, :, 3],
             child_state_indexes_local=child_state_indexes_local,
-            period=period_scalar,
+            period=current_period,
             init_exp_max=model_spec.init_exp_max,
             pt_increment_states=pt_increment_states,
             prob_child_states=prob_child_period_states,
@@ -192,23 +193,24 @@ def pyth_backward_induction(
         )
         # continuation_values: (n_states, NUM_CHOICES, n_grid)
 
-        max_years = max_exp_years(
-            period=period_scalar,
-            init_exp_max=model_spec.init_exp_max,
-            pt_increment=pt_increment_states,
-        )
-        exp_years = exp_grid[None, :] * max_years[:, None]
+        # Batch over wage calculation for the experience grid
+        def log_wage_one_exp_grid(exp_stock):
+            return calculate_log_wage(
+                model_params=model_params,
+                educ=edu_state,
+                period=current_period,
+                init_exp_max=model_spec.init_exp_max,
+                pt_increment=pt_increment_states,
+                exp_stock=exp_stock,
+            ) + np.log(model_spec.elasticity_scale)
 
-        log_wage_systematic_period = calculate_log_wage(
-            model_params=model_params,
-            states=states_period,
-            exp_years=exp_years,
-        ) + np.log(model_spec.elasticity_scale)
+        log_wage_systematic_period = jax.vmap(log_wage_one_exp_grid)(exp_grid).T
 
         non_consumption_utilities_period = calculate_non_consumption_utility(
-            model_params,
-            states_period,
-            covariates_period[:, 0],
+            model_params=model_params,
+            educ=edu_state,
+            unobs_type=unobs_types,
+            child_bin=covariates_period[:, 0],
         )
 
         non_employment_consumption_resources_period = (
@@ -242,22 +244,25 @@ def pyth_backward_induction(
                     tax_splitting=model_spec.tax_splitting,
                 )
 
-            baby_child_period = (states_period[:, 4] == 0) | (states_period[:, 4] == 1)
-            return construct_emax_validation(
-                delta=model_params.delta,
-                baby_child=baby_child_period,
-                log_wages_systematic=log_wage_g,
-                non_consumption_utilities=non_consumption_utilities_period,
-                draws=draws,
-                draw_weights=draw_weights,
-                continuation_values=cont_g,
-                hours=hours,
-                mu=model_params.mu,
-                non_employment_consumption_resources=non_emp_g,
-                model_spec=model_spec,
-                covariates=covariates_period,
-                tax_splitting=model_spec.tax_splitting,
-            )
+            else:
+                baby_child_period = (states_period[:, 4] == 0) | (
+                    states_period[:, 4] == 1
+                )
+                return construct_emax_validation(
+                    delta=model_params.delta,
+                    baby_child=baby_child_period,
+                    log_wages_systematic=log_wage_g,
+                    non_consumption_utilities=non_consumption_utilities_period,
+                    draws=draws,
+                    draw_weights=draw_weights,
+                    continuation_values=cont_g,
+                    hours=hours,
+                    mu=model_params.mu,
+                    non_employment_consumption_resources=non_emp_g,
+                    model_spec=model_spec,
+                    covariates=covariates_period,
+                    tax_splitting=model_spec.tax_splitting,
+                )
 
         emaxs_curr = jax.vmap(solve_one_gridpoint, in_axes=(1, 2, 1), out_axes=1,)(
             log_wage_systematic_period,

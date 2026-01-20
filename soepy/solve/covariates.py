@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 
-from soepy.shared.shared_constants import HOURS
-from soepy.shared.state_space_indices import AGE_YOUNGEST_CHILD
-from soepy.shared.state_space_indices import EDUC_LEVEL
-from soepy.shared.state_space_indices import PARTNER
-from soepy.shared.state_space_indices import PERIOD
+from soepy.shared.constants_and_indices import AGE_YOUNGEST_CHILD
+from soepy.shared.constants_and_indices import EDUC_LEVEL
+from soepy.shared.constants_and_indices import HOURS
+from soepy.shared.constants_and_indices import PARTNER
+from soepy.shared.constants_and_indices import PERIOD
 
 
 def construct_covariates(states, model_spec):

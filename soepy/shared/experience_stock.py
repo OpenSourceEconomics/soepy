@@ -17,22 +17,13 @@ from __future__ import annotations
 import jax.numpy as jnp
 
 
-def get_pt_increment(model_params, model_spec, is_expected, educ_level=None):
+def get_pt_increment(model_params, educ_level, is_expected):
     """Return the part-time experience increment.
-
-    Rules:
-
-    - full-time increment is always 1
-    - if ``is_expected`` is True, use ``model_params.gamma_p_bias`` as the part-time
-      increment (can be scalar or education-specific)
-    - otherwise use ``model_spec.pt_exp_ratio`` (scalar)
 
     Parameters
     ----------
     model_params : namedtuple-like
-        Model parameters with attribute ``gamma_p_bias``.
-    model_spec : namedtuple-like
-        Model specification with attribute ``pt_exp_ratio``.
+        Model parameters with attribute ``gamma_p`` or ``gamma_p_bias``.
     is_expected : bool
         Whether to use the expected law of motion.
     educ_level : int | None
@@ -47,22 +38,13 @@ def get_pt_increment(model_params, model_spec, is_expected, educ_level=None):
     if is_expected:
         increment = model_params.gamma_p_bias
     else:
-        increment = model_spec.pt_exp_ratio
+        increment = model_params.gamma_p
 
-    if educ_level is None:
-        return increment
-
-    # Education-specific vector.
-    if hasattr(increment, "__len__"):
-        return increment[educ_level]
-
-    # Scalar increment: broadcast to the state dimension.
-    return jnp.ones_like(educ_level, dtype=float) * increment
+    return increment[educ_level]
 
 
 def max_exp_years(period, init_exp_max, pt_increment):
     """Compute the maximum feasible experience years in a given period."""
-
     return init_exp_max + jnp.maximum(period, period * pt_increment)
 
 

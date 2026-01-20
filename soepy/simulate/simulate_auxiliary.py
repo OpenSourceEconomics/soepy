@@ -1,12 +1,10 @@
 import numpy as np
 import pandas as pd
 
-from soepy.exogenous_processes.determine_lagged_choice import lagged_choice_initial
+from soepy.shared.constants_and_indices import HOURS
+from soepy.shared.constants_and_indices import NUM_CHOICES
 from soepy.shared.non_employment import calc_erziehungsgeld
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
-from soepy.shared.numerical_integration import draw_zero_one_distributed_shocks
-from soepy.shared.shared_constants import HOURS
-from soepy.shared.shared_constants import NUM_CHOICES
 from soepy.shared.wages import calculate_log_wage
 from soepy.simulate.constants_sim import DATA_FORMATS_SIM
 from soepy.simulate.constants_sim import DATA_FORMATS_SPARSE
@@ -14,16 +12,17 @@ from soepy.simulate.constants_sim import DATA_LABLES_SIM
 from soepy.simulate.constants_sim import IDX_STATES_DATA_SPARSE
 from soepy.simulate.constants_sim import LABELS_DATA_SPARSE
 from soepy.simulate.income_sim import calculate_employment_consumption_resources
+from soepy.simulate.initial_states import prepare_simulation_data
 
-
-IDX_ID = 0
 IDX_PERIOD = 1
 IDX_EDUC = 2
 IDX_LAGGED = 3
-IDX_STOCK = 4
-IDX_TYPE = 5
-IDX_CHILD_AGE = 6
-IDX_PARTNER = 7
+IDX_EXP_PT = 4
+IDX_EXP_FT = 5
+IDX_EXP_STOCK = 6
+IDX_TYPE = 7
+IDX_CHILD_AGE = 8
+IDX_PARTNER = 9
 
 
 def pyth_simulate(
@@ -38,7 +37,8 @@ def pyth_simulate(
     prob_educ_level,
     prob_child_age,
     prob_partner_present,
-    prob_exp_years,
+    prob_exp_pt,
+    prob_exp_ft,
     prob_child,
     prob_partner,
     is_expected,
@@ -48,29 +48,20 @@ def pyth_simulate(
 
     np.random.seed(model_spec.seed_sim)
 
-    exp_grid_size = int(getattr(model_spec, "experience_grid_points", 10))
-    exp_grid = np.linspace(0.0, 1.0, exp_grid_size)
+    exp_grid = np.asarray(model_spec.exp_grid)
 
     emaxs = np.asarray(emaxs)
     non_consumption_utilities = np.asarray(non_consumption_utilities)
 
-    (
-        initial_states,
-        draws_sim,
-        log_wage_grid,
-        non_emp_resources_grid,
-    ) = prepare_simulation_data(
+    (initial_states, draws_sim,) = prepare_simulation_data(
         model_params=model_params,
         model_spec=model_spec,
         prob_educ_level=prob_educ_level,
         prob_child_age=prob_child_age,
         prob_partner_present=prob_partner_present,
-        prob_exp_years=prob_exp_years,
-        states=states,
-        covariates=covariates,
-        tax_splitting=model_spec.tax_splitting,
+        prob_exp_pt=prob_exp_pt,
+        prob_exp_ft=prob_exp_ft,
         is_expected=is_expected,
-        exp_grid=exp_grid,
     )
 
     data = simulate_agents_over_periods(
@@ -85,9 +76,6 @@ def pyth_simulate(
         prob_partner=prob_partner,
         draws_sim=draws_sim,
         initial_states=initial_states,
-        log_wage_grid=log_wage_grid,
-        non_emp_resources_grid=non_emp_resources_grid,
-        exp_grid=exp_grid,
         model_params=model_params,
         is_expected=is_expected,
         data_sparse=data_sparse,
@@ -107,185 +95,6 @@ def pyth_simulate(
     return dataset
 
 
-def _get_pt_increment(model_params, model_spec, educ_level, is_expected):
-    if is_expected:
-        inc = model_params.gamma_p_bias
-    else:
-        # Default to 1.0 if not configured in legacy specs.
-        inc = getattr(model_spec, "pt_exp_ratio", 1.0)
-
-    if hasattr(inc, "__len__"):
-        return np.asarray(inc)[educ_level]
-
-    return np.ones_like(educ_level, dtype=float) * float(inc)
-
-
-def _max_exp_years(period, init_exp_max, pt_increment):
-    return init_exp_max + np.maximum(period, period * pt_increment)
-
-
-def _next_stock(stock, period, init_exp_max, pt_increment, choice):
-    max_years_t = _max_exp_years(period, init_exp_max, pt_increment)
-    exp_years = stock * max_years_t
-
-    exp_years_next = exp_years + (choice == 2) * 1.0 + (choice == 1) * pt_increment
-
-    max_years_tp1 = _max_exp_years(period + 1, init_exp_max, pt_increment)
-    denom = np.where(max_years_tp1 > 0, max_years_tp1, 1.0)
-
-    stock_next = exp_years_next / denom
-    return np.clip(stock_next, 0.0, 1.0)
-
-
-def _interp_uniform_grid(values, stock):
-    """Interpolate along the last axis on a uniform [0,1] grid.
-
-    Parameters
-    ----------
-    values : np.ndarray
-        Shape (..., n_grid)
-    stock : np.ndarray
-        Shape (...) matching the leading dimensions of values.
-    """
-
-    n_grid = values.shape[-1]
-    u = np.clip(stock, 0.0, 1.0) * (n_grid - 1)
-
-    idx_lo = np.floor(u).astype(int)
-    idx_hi = np.minimum(idx_lo + 1, n_grid - 1)
-    w = u - idx_lo
-
-    take_lo = np.take_along_axis(values, idx_lo[..., None], axis=-1)[..., 0]
-    take_hi = np.take_along_axis(values, idx_hi[..., None], axis=-1)[..., 0]
-
-    return take_lo + w * (take_hi - take_lo)
-
-
-def prepare_simulation_data(
-    model_params,
-    model_spec,
-    prob_educ_level,
-    prob_child_age,
-    prob_partner_present,
-    prob_exp_years,
-    states,
-    covariates,
-    tax_splitting,
-    is_expected,
-    exp_grid,
-):
-    """Draw initial conditions and precompute grid objects for simulation."""
-
-    initial_educ_level = np.random.choice(
-        model_spec.num_educ_levels, model_spec.num_agents_sim, p=prob_educ_level
-    )
-
-    initial_period = np.asarray(model_spec.educ_years)[initial_educ_level]
-
-    initial_child_age = np.full(model_spec.num_agents_sim, np.nan)
-    initial_partner = np.full(model_spec.num_agents_sim, np.nan)
-    initial_exp_years = np.full(model_spec.num_agents_sim, np.nan)
-
-    for educ_level in range(model_spec.num_educ_levels):
-        mask = initial_educ_level == educ_level
-
-        initial_child_age[mask] = np.random.choice(
-            list(range(-1, model_spec.child_age_init_max + 1)),
-            mask.sum(),
-            p=prob_child_age[educ_level],
-        )
-
-        initial_partner[mask] = np.random.binomial(
-            size=mask.sum(),
-            n=1,
-            p=prob_partner_present[educ_level],
-        )
-
-        initial_exp_years[mask] = np.random.choice(
-            list(range(0, 2 * model_spec.init_exp_max + 1)),
-            mask.sum(),
-            p=prob_exp_years[educ_level],
-        )
-
-    lagged_choice = lagged_choice_initial(initial_exp_years)
-
-    type_ = np.random.choice(
-        np.arange(model_spec.num_types),
-        model_spec.num_agents_sim,
-        p=model_params.type_shares,
-    )
-
-    draws_sim = draw_zero_one_distributed_shocks(
-        model_spec.seed_sim, model_spec.num_periods, model_spec.num_agents_sim
-    )
-    draws_sim = draws_sim * float(model_params.shock_sd)
-
-    pt_increment_init = _get_pt_increment(
-        model_params=model_params,
-        model_spec=model_spec,
-        educ_level=initial_educ_level,
-        is_expected=is_expected,
-    )
-
-    max_years_init = _max_exp_years(
-        period=initial_period,
-        init_exp_max=model_spec.init_exp_max,
-        pt_increment=pt_increment_init,
-    )
-    denom = np.where(max_years_init > 0, max_years_init, 1.0)
-    initial_stock = np.clip(initial_exp_years / denom, 0.0, 1.0)
-
-    initial_states = pd.DataFrame(
-        {
-            "Identifier": np.arange(model_spec.num_agents_sim, dtype=int),
-            "Period": initial_period.astype(int),
-            "Education_Level": initial_educ_level.astype(int),
-            "Lagged_Choice": lagged_choice.astype(int),
-            "Experience_Stock": initial_stock.astype(float),
-            "Type": type_.astype(int),
-            "Age_Youngest_Child": initial_child_age.astype(int),
-            "Partner_Indicator": initial_partner.astype(int),
-        }
-    )
-
-    pt_increment_grid = _get_pt_increment(
-        model_params=model_params,
-        model_spec=model_spec,
-        educ_level=states[:, 1],
-        is_expected=is_expected,
-    )
-
-    max_years = _max_exp_years(
-        period=states[:, 0],
-        init_exp_max=model_spec.init_exp_max,
-        pt_increment=pt_increment_grid,
-    )
-
-    exp_years = exp_grid[None, :] * max_years[:, None]
-
-    log_wage_grid = np.asarray(
-        calculate_log_wage(
-            model_params=model_params, states=states, exp_years=exp_years
-        )
-    )
-
-    non_emp_resources_grid = np.asarray(
-        calculate_non_employment_consumption_resources(
-            deductions_spec=model_spec.ssc_deductions,
-            income_tax_spec=model_spec.tax_params,
-            model_spec=model_spec,
-            states=states,
-            log_wage_systematic=log_wage_grid,
-            male_wage=covariates[:, 1],
-            child_benefits=covariates[:, 3],
-            tax_splitting=tax_splitting,
-            hours=HOURS,
-        )
-    )
-
-    return initial_states, draws_sim, log_wage_grid, non_emp_resources_grid
-
-
 def simulate_agents_over_periods(
     model_spec,
     state_space,
@@ -298,16 +107,12 @@ def simulate_agents_over_periods(
     prob_partner,
     draws_sim,
     initial_states,
-    log_wage_grid,
-    non_emp_resources_grid,
-    exp_grid,
     model_params,
     is_expected,
     data_sparse,
 ):
     data = []
-
-    current_states = np.empty((0, 8), dtype=float)
+    current_states = np.empty((0, 10), dtype=float)
 
     for period in range(model_spec.num_periods):
         entrants = initial_states.loc[initial_states.Period.eq(period)].to_numpy()
@@ -332,22 +137,23 @@ def simulate_agents_over_periods(
             current_states[:, IDX_PARTNER].astype(int),
         ]
 
-        stock = current_states[:, IDX_STOCK].astype(float)
+        stock = current_states[:, IDX_EXP_STOCK].astype(float)
+        breakpoint()
 
-        log_wage_agents = _interp_uniform_grid(log_wage_grid[idx], stock)
-        non_emp_resources_agents = _interp_uniform_grid(
-            non_emp_resources_grid[idx], stock
-        )
-
-        cont_grid = emaxs[idx, :, :NUM_CHOICES]
-        cont_grid = np.transpose(cont_grid, (0, 2, 1))
-        continuation_values = _interp_uniform_grid(cont_grid, stock[:, None])
+        # Interpolate continuation values on the experience grid.
+        continuation_grid = emaxs[idx, :, :NUM_CHOICES]
+        continuation_grid = np.transpose(continuation_grid, (0, 2, 1))
+        continuation_values = _interp_uniform_grid(continuation_grid, stock[:, None])
 
         non_cons_util_agents = non_consumption_utilities[idx]
 
-        wages = np.exp(
-            log_wage_agents + draws_sim[period, current_states[:, IDX_ID].astype(int)]
-        )
+        log_wage_agents = calculate_log_wage(
+            model_params=model_params,
+            educ=state_space[idx],
+            exp_stock=current_states[:, IDX_EXP_STOCK],
+        )[:, 0]
+
+        wages = np.exp(log_wage_agents + draws_sim[period, :])
         wages = wages * float(model_spec.elasticity_scale)
 
         female_income = wages[:, None] * HOURS[None, 1:]
@@ -386,6 +192,21 @@ def simulate_agents_over_periods(
             covariates[idx][:, 0].astype(float), model_spec.child_care_costs
         )
         employment_resources = employment_resources - child_care_costs
+
+        # Compute non-employment resources at current wages.
+        non_emp_resources_agents = np.asarray(
+            calculate_non_employment_consumption_resources(
+                deductions_spec=model_spec.ssc_deductions,
+                income_tax_spec=model_spec.tax_params,
+                model_spec=model_spec,
+                states=state_space[idx],
+                log_wage_systematic=log_wage_agents[:, None],
+                male_wage=male_wage,
+                child_benefits=child_benefits,
+                tax_splitting=model_spec.tax_splitting,
+                hours=HOURS,
+            )
+        )[:, 0]
 
         consumption_resources = np.hstack(
             (non_emp_resources_agents[:, None], employment_resources)
@@ -475,12 +296,24 @@ def simulate_agents_over_periods(
             educ_level=current_states[:, IDX_EDUC].astype(int),
             is_expected=is_expected,
         )
-        current_states[:, IDX_STOCK] = _next_stock(
-            stock=current_states[:, IDX_STOCK].astype(float),
+        current_states[:, IDX_EXP_STOCK] = _next_stock(
+            stock=current_states[:, IDX_EXP_STOCK].astype(float),
             period=current_states[:, IDX_PERIOD].astype(int),
             init_exp_max=model_spec.init_exp_max,
             pt_increment=pt_increment,
             choice=choice,
+        )
+
+        # Bookkeeping for separate PT/FT experience years.
+        current_states[:, IDX_EXP_PT] = np.where(
+            choice == 1,
+            current_states[:, IDX_EXP_PT] + 1,
+            current_states[:, IDX_EXP_PT],
+        )
+        current_states[:, IDX_EXP_FT] = np.where(
+            choice == 2,
+            current_states[:, IDX_EXP_FT] + 1,
+            current_states[:, IDX_EXP_FT],
         )
 
         current_states[:, IDX_PERIOD] = current_states[:, IDX_PERIOD] + 1
@@ -489,6 +322,30 @@ def simulate_agents_over_periods(
         current_states[:, IDX_PARTNER] = new_partner
 
     return data
+
+
+def _interp_uniform_grid(values, stock):
+    """Interpolate along the last axis on a uniform [0,1] grid.
+
+    Parameters
+    ----------
+    values : np.ndarray
+        Shape (..., n_grid)
+    stock : np.ndarray
+        Shape (...) matching the leading dimensions of values.
+    """
+
+    n_grid = values.shape[-1]
+    u = np.clip(stock, 0.0, 1.0) * (n_grid - 1)
+
+    idx_lo = np.floor(u).astype(int)
+    idx_hi = np.minimum(idx_lo + 1, n_grid - 1)
+    w = u - idx_lo
+
+    take_lo = np.take_along_axis(values, idx_lo[..., None], axis=-1)[..., 0]
+    take_hi = np.take_along_axis(values, idx_hi[..., None], axis=-1)[..., 0]
+
+    return take_lo + w * (take_hi - take_lo)
 
 
 def get_child_care_cost_for_choice(child_bins, child_care_costs):

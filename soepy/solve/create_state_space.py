@@ -1,15 +1,15 @@
 import numpy as np
 
 from soepy.exogenous_processes.children import define_child_age_update_rule
-from soepy.shared.shared_constants import MISSING_INT
-from soepy.shared.shared_constants import NUM_CHOICES
-from soepy.shared.state_space_indices import AGE_YOUNGEST_CHILD
-from soepy.shared.state_space_indices import EDUC_LEVEL
-from soepy.shared.state_space_indices import LAGGED_CHOICE
-from soepy.shared.state_space_indices import N_STATE_VARS
-from soepy.shared.state_space_indices import PARTNER
-from soepy.shared.state_space_indices import PERIOD
-from soepy.shared.state_space_indices import TYPE
+from soepy.shared.constants_and_indices import AGE_YOUNGEST_CHILD
+from soepy.shared.constants_and_indices import EDUC_LEVEL
+from soepy.shared.constants_and_indices import LAGGED_CHOICE
+from soepy.shared.constants_and_indices import MISSING_INT
+from soepy.shared.constants_and_indices import N_STATE_VARS
+from soepy.shared.constants_and_indices import NUM_CHOICES
+from soepy.shared.constants_and_indices import PARTNER
+from soepy.shared.constants_and_indices import PERIOD
+from soepy.shared.constants_and_indices import TYPE
 from soepy.solve.covariates import construct_covariates
 
 

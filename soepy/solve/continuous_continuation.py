@@ -13,9 +13,9 @@ from __future__ import annotations
 import jax
 import jax.numpy as jnp
 
+from soepy.shared.constants_and_indices import NUM_CHOICES
 from soepy.shared.experience_stock import next_stock
 from soepy.shared.interpolation import linear_interp_1d
-from soepy.shared.shared_constants import NUM_CHOICES
 
 
 def interpolate_then_weight_continuation_values(

@@ -3,7 +3,7 @@ process of childbirth."""
 import numpy as np
 import pandas as pd
 
-from soepy.shared.state_space_indices import AGE_YOUNGEST_CHILD
+from soepy.shared.constants_and_indices import AGE_YOUNGEST_CHILD
 
 
 def define_child_age_update_rule(model_spec, states):

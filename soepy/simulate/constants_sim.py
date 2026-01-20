@@ -5,6 +5,8 @@ DATA_LABLES_SIM = [
     "Period",
     "Education_Level",
     "Lagged_Choice",
+    "Experience_Part_Time",
+    "Experience_Full_Time",
     "Experience_Stock",
     "Type",
     "Age_Youngest_Child",
@@ -28,7 +30,7 @@ DATA_LABLES_SIM = [
 ]
 
 DATA_FORMATS_SIM = {
-    key: (int if key in DATA_LABLES_SIM[:9] else float) for key in DATA_LABLES_SIM
+    key: (int if key in DATA_LABLES_SIM[:11] else float) for key in DATA_LABLES_SIM
 }
 
 IDX_STATES_DATA_SPARSE = np.array(
@@ -37,8 +39,10 @@ IDX_STATES_DATA_SPARSE = np.array(
         1,  # Period
         2,  # Education_Level
         3,  # Lagged_Choice
-        4,  # Experience_Stock
-        6,  # Age_Youngest_Child
+        4,  # Experience_Part_Time
+        5,  # Experience_Full_Time
+        6,  # Experience_Stock
+        8,  # Age_Youngest_Child
     ],
     dtype=int,
 )
