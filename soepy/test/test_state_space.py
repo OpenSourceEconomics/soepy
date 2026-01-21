@@ -29,7 +29,7 @@ def test_state_space_shapes(model_spec):
         covariates,
         child_age_update_rule,
         child_state_indexes,
-    ) = create_state_space_objects(model_spec)
+    ) = create_state_space_objects(model_spec=model_spec)
 
     assert states.shape[1] == 6
     assert covariates.shape[0] == states.shape[0]

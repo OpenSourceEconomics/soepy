@@ -3,26 +3,35 @@ import pandas as pd
 
 from soepy.shared.constants_and_indices import HOURS
 from soepy.shared.constants_and_indices import NUM_CHOICES
+from soepy.shared.experience_stock import get_pt_increment
+from soepy.shared.experience_stock import next_stock
 from soepy.shared.non_employment import calc_erziehungsgeld
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.wages import calculate_log_wage
 from soepy.simulate.constants_sim import DATA_FORMATS_SIM
 from soepy.simulate.constants_sim import DATA_FORMATS_SPARSE
 from soepy.simulate.constants_sim import DATA_LABLES_SIM
-from soepy.simulate.constants_sim import IDX_STATES_DATA_SPARSE
 from soepy.simulate.constants_sim import LABELS_DATA_SPARSE
 from soepy.simulate.income_sim import calculate_employment_consumption_resources
 from soepy.simulate.initial_states import prepare_simulation_data
 
-IDX_PERIOD = 1
-IDX_EDUC = 2
-IDX_LAGGED = 3
-IDX_EXP_PT = 4
-IDX_EXP_FT = 5
-IDX_EXP_STOCK = 6
-IDX_TYPE = 7
-IDX_CHILD_AGE = 8
-IDX_PARTNER = 9
+
+def _get_state_col_positions():
+    """Return column positions for the state vector stored in `current_states`.
+
+    The simulation uses a NumPy array for speed. Column positions are derived from
+    `DATA_LABLES_SIM` to avoid hard-coded IDX globals.
+    """
+
+    state_labels = DATA_LABLES_SIM[:10]
+    return {label: i for i, label in enumerate(state_labels)}
+
+
+def _get_sparse_state_positions(state_col_positions):
+    labels_sparse_states = LABELS_DATA_SPARSE[:-2]
+    return np.array(
+        [state_col_positions[label] for label in labels_sparse_states], dtype=int
+    )
 
 
 def pyth_simulate(
@@ -48,12 +57,10 @@ def pyth_simulate(
 
     np.random.seed(model_spec.seed_sim)
 
-    exp_grid = np.asarray(model_spec.exp_grid)
-
     emaxs = np.asarray(emaxs)
     non_consumption_utilities = np.asarray(non_consumption_utilities)
 
-    (initial_states, draws_sim,) = prepare_simulation_data(
+    initial_states, draws_sim = prepare_simulation_data(
         model_params=model_params,
         model_spec=model_spec,
         prob_educ_level=prob_educ_level,
@@ -81,16 +88,25 @@ def pyth_simulate(
         data_sparse=data_sparse,
     )
 
+    stacked = np.vstack(data)
+
     if data_sparse:
-        dataset = pd.DataFrame(np.vstack(data), columns=LABELS_DATA_SPARSE).astype(
+        # Ensure sparse state columns are integers (except identifier, wages).
+        dataset = pd.DataFrame(stacked, columns=pd.Index(LABELS_DATA_SPARSE)).astype(
             DATA_FORMATS_SPARSE
         )
+        labels = LABELS_DATA_SPARSE
     else:
-        dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
+        dataset = pd.DataFrame(stacked, columns=pd.Index(DATA_LABLES_SIM)).astype(
             DATA_FORMATS_SIM
         )
+        labels = DATA_LABLES_SIM
 
-    dataset.loc[dataset["Choice"] == 0, "Wage_Observed"] = np.nan
+    # Avoid string-based indexing on the DataFrame.
+    choice_pos = labels.index("Choice")
+    wage_pos = labels.index("Wage_Observed")
+    choice_arr = dataset.iloc[:, choice_pos].to_numpy()
+    dataset.iloc[choice_arr == 0, wage_pos] = np.nan
 
     return dataset
 
@@ -111,34 +127,37 @@ def simulate_agents_over_periods(
     is_expected,
     data_sparse,
 ):
+    state_col = _get_state_col_positions()
+    state_labels = list(state_col)
+
+    sparse_state_labels = LABELS_DATA_SPARSE[:-2]
+
     data = []
-    current_states = np.empty((0, 10), dtype=float)
+    current_states = initial_states[state_labels].iloc[0:0].copy()
 
     for period in range(model_spec.num_periods):
-        entrants = initial_states.loc[initial_states.Period.eq(period)].to_numpy()
-        if entrants.size:
-            current_states = np.vstack((current_states, entrants))
+        entrants = initial_states.loc[initial_states.Period.eq(period), state_labels]
+        current_states = pd.concat([current_states, entrants], ignore_index=True)
 
-        if current_states.size == 0:
-            continue
-
+        age_child = current_states.iloc[:, state_col["Age_Youngest_Child"]].to_numpy()
         age_idx = np.where(
-            current_states[:, IDX_CHILD_AGE] == -1,
+            age_child == -1,
             indexer.shape[4] - 1,
-            current_states[:, IDX_CHILD_AGE],
+            age_child,
         )
 
         idx = indexer[
-            current_states[:, IDX_PERIOD].astype(int),
-            current_states[:, IDX_EDUC].astype(int),
-            current_states[:, IDX_LAGGED].astype(int),
-            current_states[:, IDX_TYPE].astype(int),
-            age_idx.astype(int),
-            current_states[:, IDX_PARTNER].astype(int),
+            current_states.iloc[:, state_col["Period"]].to_numpy(),
+            current_states.iloc[:, state_col["Education_Level"]].to_numpy(),
+            current_states.iloc[:, state_col["Lagged_Choice"]].to_numpy(),
+            current_states.iloc[:, state_col["Type"]].to_numpy(),
+            age_idx,
+            current_states.iloc[:, state_col["Partner_Indicator"]].to_numpy(),
         ]
 
-        stock = current_states[:, IDX_EXP_STOCK].astype(float)
-        breakpoint()
+        stock = current_states.iloc[:, state_col["Experience_Stock"]].to_numpy(
+            dtype=float
+        )
 
         # Interpolate continuation values on the experience grid.
         continuation_grid = emaxs[idx, :, :NUM_CHOICES]
@@ -147,13 +166,25 @@ def simulate_agents_over_periods(
 
         non_cons_util_agents = non_consumption_utilities[idx]
 
-        log_wage_agents = calculate_log_wage(
+        educ_level = current_states.iloc[:, state_col["Education_Level"]].to_numpy()
+        pt_increment = get_pt_increment(
             model_params=model_params,
-            educ=state_space[idx],
-            exp_stock=current_states[:, IDX_EXP_STOCK],
-        )[:, 0]
+            educ_level=educ_level,
+            is_expected=is_expected,
+        )
 
-        wages = np.exp(log_wage_agents + draws_sim[period, :])
+        log_wage_agents = np.asarray(
+            calculate_log_wage(
+                model_params=model_params,
+                educ=educ_level,
+                exp_stock=stock,
+                init_exp_max=model_spec.init_exp_max,
+                pt_increment=pt_increment,
+                period=period,
+            )
+        )
+
+        wages = np.exp(log_wage_agents + draws_sim[period, : len(current_states)])
         wages = wages * float(model_spec.elasticity_scale)
 
         female_income = wages[:, None] * HOURS[None, 1:]
@@ -170,10 +201,10 @@ def simulate_agents_over_periods(
         )
 
         if model_spec.parental_leave_regime == "erziehungsgeld":
-            married = current_states[:, IDX_PARTNER] == 1
-            baby_child = (current_states[:, IDX_CHILD_AGE] == 0) | (
-                current_states[:, IDX_CHILD_AGE] == 1
+            married = (
+                current_states.iloc[:, state_col["Partner_Indicator"]].to_numpy() == 1
             )
+            baby_child = (age_child == 0) | (age_child == 1)
 
             erz = calc_erziehungsgeld(
                 male_wage=male_wage,
@@ -224,10 +255,11 @@ def simulate_agents_over_periods(
         )
         choice = np.argmax(value_functions, axis=1)
 
+        current_states_np = current_states.to_numpy()
         if data_sparse:
             rows = np.column_stack(
                 (
-                    current_states[:, IDX_STATES_DATA_SPARSE].copy(),
+                    current_states.loc[:, sparse_state_labels].to_numpy(),
                     choice,
                     wages,
                 )
@@ -235,7 +267,7 @@ def simulate_agents_over_periods(
         else:
             rows = np.column_stack(
                 (
-                    current_states.copy(),
+                    current_states_np,
                     choice,
                     log_wage_agents,
                     wages,
@@ -250,21 +282,23 @@ def simulate_agents_over_periods(
         data.append(rows)
 
         # --- exogenous updates
-        child_current_age = current_states[:, IDX_CHILD_AGE]
+        child_current_age = age_child
 
         if period == model_spec.num_periods - 1:
             child_new_age = child_current_age
         elif period <= model_spec.last_child_bearing_period:
             kids_draw = np.random.binomial(
-                size=current_states.shape[0],
+                size=len(current_states),
                 n=1,
-                p=prob_child[period + 1, current_states[:, IDX_EDUC].astype(int)],
+                p=prob_child[period + 1, educ_level],
             )
             child_new_age = np.where(kids_draw == 0, child_age_update_rule[idx], 0)
         else:
             child_new_age = child_age_update_rule[idx]
 
-        current_partner = current_states[:, IDX_PARTNER]
+        current_partner = current_states.iloc[
+            :, state_col["Partner_Indicator"]
+        ].to_numpy()
         new_partner = current_partner.copy()
 
         no_partner = current_partner == 0
@@ -272,9 +306,7 @@ def simulate_agents_over_periods(
             arr = np.random.binomial(
                 size=no_partner.sum(),
                 n=1,
-                p=prob_partner[
-                    period, current_states[no_partner, IDX_EDUC].astype(int), 0, 1
-                ],
+                p=prob_partner[period, educ_level[no_partner], 0, 1],
             )
             new_partner[no_partner] = arr
 
@@ -283,43 +315,40 @@ def simulate_agents_over_periods(
             sep = np.random.binomial(
                 size=has_partner.sum(),
                 n=1,
-                p=prob_partner[
-                    period, current_states[has_partner, IDX_EDUC].astype(int), 1, 0
-                ],
+                p=prob_partner[period, educ_level[has_partner], 1, 0],
             )
             new_partner[has_partner] = current_partner[has_partner] - sep
 
         # --- endogenous updates
-        pt_increment = _get_pt_increment(
-            model_params=model_params,
-            model_spec=model_spec,
-            educ_level=current_states[:, IDX_EDUC].astype(int),
-            is_expected=is_expected,
-        )
-        current_states[:, IDX_EXP_STOCK] = _next_stock(
-            stock=current_states[:, IDX_EXP_STOCK].astype(float),
-            period=current_states[:, IDX_PERIOD].astype(int),
-            init_exp_max=model_spec.init_exp_max,
-            pt_increment=pt_increment,
-            choice=choice,
+        stock_next = np.asarray(
+            next_stock(
+                stock=stock,
+                period=current_states.iloc[:, state_col["Period"]].to_numpy(),
+                init_exp_max=model_spec.init_exp_max,
+                pt_increment=pt_increment,
+                choice=choice,
+            )
         )
 
-        # Bookkeeping for separate PT/FT experience years.
-        current_states[:, IDX_EXP_PT] = np.where(
+        current_states.iloc[:, state_col["Experience_Stock"]] = stock_next
+
+        current_states.iloc[:, state_col["Experience_Part_Time"]] = np.where(
             choice == 1,
-            current_states[:, IDX_EXP_PT] + 1,
-            current_states[:, IDX_EXP_PT],
+            current_states.iloc[:, state_col["Experience_Part_Time"]] + 1,
+            current_states.iloc[:, state_col["Experience_Part_Time"]],
         )
-        current_states[:, IDX_EXP_FT] = np.where(
+        current_states.iloc[:, state_col["Experience_Full_Time"]] = np.where(
             choice == 2,
-            current_states[:, IDX_EXP_FT] + 1,
-            current_states[:, IDX_EXP_FT],
+            current_states.iloc[:, state_col["Experience_Full_Time"]] + 1,
+            current_states.iloc[:, state_col["Experience_Full_Time"]],
         )
 
-        current_states[:, IDX_PERIOD] = current_states[:, IDX_PERIOD] + 1
-        current_states[:, IDX_LAGGED] = choice
-        current_states[:, IDX_CHILD_AGE] = child_new_age
-        current_states[:, IDX_PARTNER] = new_partner
+        current_states.iloc[:, state_col["Period"]] = (
+            current_states.iloc[:, state_col["Period"]] + 1
+        )
+        current_states.iloc[:, state_col["Lagged_Choice"]] = choice
+        current_states.iloc[:, state_col["Age_Youngest_Child"]] = child_new_age
+        current_states.iloc[:, state_col["Partner_Indicator"]] = new_partner
 
     return data
 

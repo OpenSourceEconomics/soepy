@@ -153,7 +153,6 @@ def partiable_simulate(
         prob_educ_level,
         prob_child_age,
         prob_partner_present=prob_partner_present,
-        prob_exp_years=prob_exp_years,
         prob_exp_pt=prob_exp_pt,
         prob_exp_ft=prob_exp_ft,
         prob_child=prob_child,

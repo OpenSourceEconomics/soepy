@@ -1,6 +1,7 @@
 import collections
 import copy
 
+import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import yaml
@@ -168,7 +169,7 @@ def read_model_spec_init(model_spec_init_dict, model_params):
     model_spec_dict_flat = flatten_model_spec_dict(model_spec_dict_expand)
 
     # Continuous experience grid (required input).
-    model_spec_dict_flat["exp_grid"] = model_spec_init["exp_grid"]
+    model_spec_dict_flat["exp_grid"] = jnp.asarray(model_spec_init["exp_grid"])
 
     model_spec = dict_to_namedtuple_spec(model_spec_dict_flat)
 

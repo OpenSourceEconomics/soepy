@@ -38,7 +38,6 @@ def calculate_log_wage(
         init_exp_max=init_exp_max,
         pt_increment=pt_increment,
     )
-
     gamma_0_edu = model_params.gamma_0[educ]
     gamma_exp_edu = model_params.gamma_1[educ]
 

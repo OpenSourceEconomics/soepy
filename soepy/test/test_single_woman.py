@@ -1,16 +1,5 @@
-"""This test looks at single women only.
-
-Note: this test depends on the historical regression vault generated under the
-old discrete-experience model. It is skipped under the continuous refactor.
-"""
+"""This test looks at single women only."""
 import pickle
-
-import pytest
-
-pytest.skip(
-    "Regression vault is discrete-experience based; skip under continuous refactor.",
-    allow_module_level=True,
-)
 
 import numpy as np
 import pytest
@@ -18,7 +7,7 @@ import pytest
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
-from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
+from soepy.exogenous_processes.experience import gen_prob_init_exp_component_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 from soepy.pre_processing.model_processing import read_model_params_init
@@ -76,10 +65,10 @@ def input_data():
         prob_educ_level = gen_prob_educ_level_vector(model_spec)
         prob_child_age = gen_prob_child_init_age_vector(model_spec)
         prob_partner_present = gen_prob_partner_present_vector(model_spec)
-        prob_exp_ft = gen_prob_init_exp_vector(
+        prob_exp_ft = gen_prob_init_exp_component_vector(
             model_spec, model_spec.ft_exp_shares_file_name
         )
-        prob_exp_pt = gen_prob_init_exp_vector(
+        prob_exp_pt = gen_prob_init_exp_component_vector(
             model_spec, model_spec.pt_exp_shares_file_name
         )
         prob_child = gen_prob_child_vector(model_spec)

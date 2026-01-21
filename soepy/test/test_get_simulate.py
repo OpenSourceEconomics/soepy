@@ -2,6 +2,7 @@ import pickle
 import random
 
 import jax.numpy as jnp
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -54,29 +55,6 @@ def test_simulation_func(input_vault, test_id):
     exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
     exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
-    # Add new inputs for continuous experience model
-    exp_grid = jnp.linspace(0.0, 1.0, 10)
-    model_spec_init_dict["exp_grid"] = exp_grid
-
-    for old_category, new_category, old_param_name, new_param_name in [
-        ("exp_returns_f", "exp_return", "gamma_f", "gamma_1"),
-        ("exp_returns_p", "exp_increase_p", "gamma_p", "gamma_p"),
-        ("exp_returns_p_bias", "exp_increase_p_bias", "gamma_p_bias", "gamma_p_bias"),
-    ]:
-        for educ_ind, educ_type in enumerate(["low", "middle", "high"]):
-            random_model_params_df.loc[
-                (new_category, f"{new_param_name}_{educ_type}"), "value"
-            ] = random_model_params_df.loc[
-                (old_category, f"{old_param_name}_{educ_type}"), "value"
-            ]
-            # Delete old entry
-            random_model_params_df = random_model_params_df.drop(
-                index=(old_category, f"{old_param_name}_{educ_type}")
-            )
-
-    # Sort index after modifications
-    random_model_params_df = random_model_params_df.sort_index()
-
     df_sim = simulate(random_model_params_df, model_spec_init_dict)
     simulate_func = get_simulate_func(random_model_params_df, model_spec_init_dict)
     df_partial_sim = simulate_func(random_model_params_df, model_spec_init_dict)
@@ -85,4 +63,22 @@ def test_simulation_func(input_vault, test_id):
         df_sim.sum(axis=0),
         df_partial_sim.sum(axis=0),
     )
+
+    # Bellman consistency check at period 0: value functions must equal
+    # flow utility plus discounted continuation value.
+    delta = float(random_model_params_df.loc[("discount", "delta"), "value"])
+    df0 = df_sim.reset_index().loc[lambda x: x["Period"] == 0]
+
+    for suffix in ["N", "P", "F"]:
+        np.testing.assert_allclose(
+            df0[f"Value_Function_{suffix}"].to_numpy(),
+            df0[f"Flow_Utility_{suffix}"].to_numpy()
+            + delta * df0[f"Continuation_Value_{suffix}"].to_numpy(),
+            rtol=1e-10,
+            atol=1e-10,
+        )
+
+    vf = df0[["Value_Function_N", "Value_Function_P", "Value_Function_F"]].to_numpy()
+    np.testing.assert_array_equal(df0["Choice"].to_numpy(), vf.argmax(axis=1))
+
     cleanup()

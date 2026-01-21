@@ -34,7 +34,7 @@ def test_child_state_indexes_match_indexer(model_spec):
         _,
         child_age_update_rule,
         child_state_indexes,
-    ) = create_state_space_objects(model_spec)
+    ) = create_state_space_objects(model_spec=model_spec)
 
     n_kid_ages = indexer.shape[4]
 
@@ -68,7 +68,9 @@ def test_child_state_indexes_match_indexer(model_spec):
 
 
 def test_child_state_indexes_terminal_all_missing(model_spec):
-    states, _, _, _, child_state_indexes = create_state_space_objects(model_spec)
+    states, _, _, _, child_state_indexes = create_state_space_objects(
+        model_spec=model_spec
+    )
 
     terminal = states[:, 0] == model_spec.num_periods - 1
     assert terminal.any()

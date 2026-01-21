@@ -1,4 +1,4 @@
-"""This test looks at single women only."""
+"""This test depends on the regression vault."""
 import pickle
 
 import numpy as np
@@ -8,6 +8,7 @@ import pytest
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
+from soepy.exogenous_processes.experience import gen_prob_init_exp_component_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 from soepy.pre_processing.model_processing import read_model_params_init
@@ -100,6 +101,15 @@ def input_data():
         prob_partner[:, 0, 0] = 1
         prob_partner_present[:] = 0
 
+        prob_exp_pt = gen_prob_init_exp_component_vector(
+            model_spec,
+            model_spec.pt_exp_shares_file_name,
+        )
+        prob_exp_ft = gen_prob_init_exp_component_vector(
+            model_spec,
+            model_spec.ft_exp_shares_file_name,
+        )
+
         # Create state space
         (
             states,
@@ -123,20 +133,23 @@ def input_data():
 
         # Simulate
         calculated_df = pyth_simulate(
-            model_params,
-            model_spec,
-            states,
-            indexer,
-            emaxs,
-            covariates,
-            non_consumption_utilities,
-            child_age_update_rule,
-            prob_educ_level,
-            prob_child_age,
-            prob_partner_present,
-            prob_child,
-            prob_partner,
+            model_params=model_params,
+            model_spec=model_spec,
+            states=states,
+            indexer=indexer,
+            emaxs=emaxs,
+            covariates=covariates,
+            non_consumption_utilities=non_consumption_utilities,
+            child_age_update_rule=child_age_update_rule,
+            prob_educ_level=prob_educ_level,
+            prob_child_age=prob_child_age,
+            prob_partner_present=prob_partner_present,
+            prob_exp_pt=prob_exp_pt,
+            prob_child=prob_child,
+            prob_exp_ft=prob_exp_ft,
+            prob_partner=prob_partner,
             is_expected=False,
+            data_sparse=False,
         )
 
         out[name] = calculated_df

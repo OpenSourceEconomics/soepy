@@ -23,7 +23,7 @@ def model_spec():
 
 
 def test_state_space_basic_smoke(model_spec):
-    states, indexer, covariates, *_ = create_state_space_objects(model_spec)
+    states, indexer, covariates, *_ = create_state_space_objects(model_spec=model_spec)
 
     assert states.shape[1] == 6
     assert covariates.shape[0] == states.shape[0]

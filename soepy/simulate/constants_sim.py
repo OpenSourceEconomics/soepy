@@ -33,23 +33,19 @@ DATA_FORMATS_SIM = {
     key: (int if key in DATA_LABLES_SIM[:11] else float) for key in DATA_LABLES_SIM
 }
 
-IDX_STATES_DATA_SPARSE = np.array(
-    [
-        0,  # Identifier
-        1,  # Period
-        2,  # Education_Level
-        3,  # Lagged_Choice
-        4,  # Experience_Part_Time
-        5,  # Experience_Full_Time
-        6,  # Experience_Stock
-        8,  # Age_Youngest_Child
-    ],
-    dtype=int,
-)
+# Minimal dataset used in estimation/regressions.
+LABELS_STATE_SPARSE = [
+    "Identifier",
+    "Period",
+    "Education_Level",
+    "Lagged_Choice",
+    "Experience_Part_Time",
+    "Experience_Full_Time",
+    "Experience_Stock",
+    "Age_Youngest_Child",
+]
 
-LABELS_DATA_SPARSE = [
-    label for i, label in enumerate(DATA_LABLES_SIM) if i in IDX_STATES_DATA_SPARSE
-] + ["Choice", "Wage_Observed"]
+LABELS_DATA_SPARSE = LABELS_STATE_SPARSE + ["Choice", "Wage_Observed"]
 
 DATA_FORMATS_SPARSE_1 = {
     "Identifier": int,
