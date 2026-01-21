@@ -8,6 +8,7 @@ from soepy.shared.constants_and_indices import EDUC_LEVEL
 from soepy.shared.constants_and_indices import HOURS
 from soepy.shared.constants_and_indices import PARTNER
 from soepy.shared.constants_and_indices import PERIOD
+from soepy.shared.experience_stock import get_pt_increment
 from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
 
@@ -63,6 +64,7 @@ def _make_min_model_spec():
         "erziehungsgeld": 0.0,
         # Wage scaling
         "elasticity_scale": 1.0,
+        "exp_grid": jnp.linspace(0.0, 1.0, 10),
     }
 
     return collections.namedtuple("model_specification", spec.keys())(**spec)
@@ -76,9 +78,10 @@ def _make_min_model_params():
         "mu": 1.0,
         # Wages: log_wage = gamma_0 + gamma_f * log(exp_years + 1)
         "gamma_0": jnp.array([0.0]),
-        "gamma_f": jnp.array([0.5]),
+        "gamma_1": jnp.array([0.5]),
         # Expectation bias is not used in wages; still needed for pt increment if expected.
         "gamma_p_bias": jnp.array([0.5]),
+        "gamma_p": jnp.array([0.3]),
         # Non-consumption utility parameters (set to 0 => exp(0)=1)
         "theta_p": jnp.array([0.0]),
         "theta_f": jnp.array([0.0]),
@@ -163,7 +166,13 @@ def _reference_solve(
             educ = int(states_t[i, EDUC_LEVEL])
             partner = int(states_t[i, PARTNER])
 
-            pt_inc = float(model_spec.pt_exp_ratio)
+            pt_inc = float(
+                get_pt_increment(
+                    model_params=model_params,
+                    educ_level=educ,
+                    is_expected=False,
+                )
+            )
 
             p_child = float(prob_child_t[educ])
             p_partner = prob_partner_t[educ, partner, :].astype(float)
@@ -175,6 +184,8 @@ def _reference_solve(
                 if t == n_periods - 1:
                     continuation_values[choice] = 0.0
                     continue
+
+                assert child_local_t is not None
 
                 x_next = _next_stock_np(
                     x=exp_grid,
@@ -203,8 +214,8 @@ def _reference_solve(
             exp_years = exp_grid * max_years_t
 
             gamma_0 = float(model_params.gamma_0[educ])
-            gamma_f = float(model_params.gamma_f[educ])
-            log_wage = gamma_0 + gamma_f * np.log(exp_years + 1.0)
+            gamma_1 = float(model_params.gamma_1[educ])
+            log_wage = gamma_0 + gamma_1 * np.log(exp_years + 1.0)
 
             female_wage_pt = HOURS[1] * np.exp(log_wage)
             female_wage_ft = HOURS[2] * np.exp(log_wage)

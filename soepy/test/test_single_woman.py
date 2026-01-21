@@ -99,21 +99,21 @@ def input_data():
 
         # Simulate
         calculated_df = pyth_simulate(
-            model_params,
-            model_spec,
-            states,
-            indexer,
-            emaxs,
-            covariates,
-            non_consumption_utilities,
-            child_age_update_rule,
-            prob_educ_level,
-            prob_child_age,
-            prob_partner_present,
-            prob_exp_ft,
-            prob_exp_pt,
-            prob_child,
-            prob_partner,
+            model_params=model_params,
+            model_spec=model_spec,
+            states=states,
+            indexer=indexer,
+            emaxs=emaxs,
+            covariates=covariates,
+            non_consumption_utilities=non_consumption_utilities,
+            child_age_update_rule=child_age_update_rule,
+            prob_educ_level=prob_educ_level,
+            prob_child_age=prob_child_age,
+            prob_partner_present=prob_partner_present,
+            prob_exp_pt=prob_exp_pt,
+            prob_exp_ft=prob_exp_ft,
+            prob_child=prob_child,
+            prob_partner=prob_partner,
             is_expected=False,
         )
 
@@ -124,7 +124,7 @@ def input_data():
         # Check if really all are single at any time
         assert (calculated_df["Male_Wages"] == 0).all()
 
-    out["regression_disc_sum"] = -0.10843159499754612
+    out["regression_disc_sum"] = -0.10901579260541265
     return out
 
 

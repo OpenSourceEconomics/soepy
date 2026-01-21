@@ -54,6 +54,14 @@ def test_simulation_func_exp(input_vault, test_id):
     calculated_df_false = simulate(
         random_model_params_df, model_spec_init_dict, is_expected=False
     )
+
+    for edu_type in ["low", "middle", "high"]:
+        random_model_params_df.loc[
+            ("exp_increase_p_bias", f"gamma_p_bias_{edu_type}"), "value"
+        ] = random_model_params_df.loc[
+            ("exp_increase_p", f"gamma_p_{edu_type}"), "value"
+        ]
+
     calculated_df_true = simulate(
         random_model_params_df, model_spec_init_dict, is_expected=True
     )
