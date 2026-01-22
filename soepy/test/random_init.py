@@ -168,9 +168,9 @@ def random_init(constr=None):
     ) = np.random.uniform(0.5, 4.0, 3).tolist()
 
     (
-        model_params_init_dict["gamma_f_low"],
-        model_params_init_dict["gamma_f_middle"],
-        model_params_init_dict["gamma_f_high"],
+        model_params_init_dict["gamma_1_low"],
+        model_params_init_dict["gamma_1_middle"],
+        model_params_init_dict["gamma_1_high"],
     ) = np.random.uniform(0.001, 0.2, 3).tolist()
 
     (
@@ -238,12 +238,13 @@ def random_init(constr=None):
         # Check if key is even then add pair to new dictionary
         if "gamma_0" in key:
             category.append("const_wage_eq")
-        elif "gamma_f" in key:
-            category.append("exp_returns_f")
+        elif "gamma_1" in key:
+            category.append("exp_return")
         elif ("gamma_p" in key) and ("gamma_p_bias" not in key):
-            category.append("exp_returns_p")
+            category.append("exp_increase_p")
         elif "gamma_p_bias" in key:
-            category.append("exp_returns_p_bias")
+            category.append("exp_increase_p_bias")
+
         elif "theta" in key:
             category.append("hetrg_unobs")
         elif "share" in key:
@@ -410,6 +411,11 @@ def print_dict(model_spec_init_dict, file_name="test"):
     ]
     for key_ in order:
         ordered_dict[key_] = model_spec_init_dict[key_]
+
+    # Continuous experience grid is a required top-level input.
+    ordered_dict["exp_grid"] = model_spec_init_dict.get(
+        "exp_grid", np.linspace(0.0, 1.0, 10).tolist()
+    )
 
     with open(f"{file_name}.soepy.yml", "w") as outfile:
         yaml.dump(ordered_dict, outfile, explicit_start=True, indent=4)
