@@ -1,36 +1,33 @@
 import copy
-import pickle
 
+import pandas as pd
 import pytest
+import yaml
 
 from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.soepy_config import TEST_RESOURCES_DIR
+from soepy.test.random_init import random_init
 
 
 @pytest.fixture(scope="module")
 def input_data():
-    """This test runs a random selection of test regression tests from
-    our regression test battery.
-    """
-    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
+    """Provide a valid baseline spec/params using `random_init`."""
 
-    with open(vault, "rb") as file:
-        tests = pickle.load(file)
-    (
-        model_spec_init_dict,
-        random_model_params_df,
-        exog_educ_shares,
-        exog_child_age_shares,
-        exog_partner_shares,
-        exog_exper_shares_pt,
-        exog_exper_shares_ft,
-        exog_child_info,
-        exog_partner_arrival_info,
-        exog_partner_separation_info,
-        expected_df,
-        expected_df_unbiased,
-    ) = tests[0]
+    random_init(
+        {
+            "AGENTS": 10,
+            "PERIODS": 3,
+            "CHILD_AGE_INIT_MAX": 1,
+            "INIT_EXP_MAX": 1,
+            "SEED_SIM": 1111,
+            "SEED_EMAX": 2222,
+            "NUM_DRAWS_EMAX": 5,
+        }
+    )
 
+    with open("test.soepy.yml") as f:
+        model_spec_init_dict = yaml.load(f, Loader=yaml.Loader)
+
+    random_model_params_df = pd.read_pickle("test.soepy.pkl")
     return model_spec_init_dict, random_model_params_df
 
 

@@ -84,7 +84,7 @@ def _minimal_model_spec_init_dict(*, num_periods: int, num_agents: int) -> dict:
         "SOLUTION": {
             "seed_emax": 123,
             "num_draws_emax": 51,
-            "integration_method": "monte_carlo",
+            "integration_method": "quadrature",
         },
         "TAXES_TRANSFERS": {
             "alg1_replacement_no_child": 0.6,
@@ -170,7 +170,7 @@ def _minimal_model_params_df() -> pd.DataFrame:
 
 def test_value_function_matches_mean_realized_discounted_sum():
     num_periods = 5
-    num_agents = 1000
+    num_agents = 10000
 
     _write_minimal_exog_files(num_periods=num_periods)
 
@@ -217,6 +217,6 @@ def test_value_function_matches_mean_realized_discounted_sum():
     v0 = df0[["Value_Function_N", "Value_Function_P", "Value_Function_F"]].max(axis=1)
     mean_v0 = float(v0.mean())
 
-    np.testing.assert_allclose(mean_disc_sum, mean_v0, rtol=1e-3, atol=1e-3)
+    np.testing.assert_allclose(mean_disc_sum, mean_v0, rtol=1e-5)
 
     cleanup()
