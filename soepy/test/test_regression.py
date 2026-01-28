@@ -34,7 +34,6 @@ DATA_LABLES_CHECK = [
     "Age_Youngest_Child",
     "Partner_Indicator",
     "Choice",
-    "Log_Systematic_Wage",
     "Wage_Observed",
     "Non_Consumption_Utility_N",
     "Non_Consumption_Utility_P",

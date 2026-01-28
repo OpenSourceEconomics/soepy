@@ -12,26 +12,9 @@ from soepy.simulate.constants_sim import DATA_FORMATS_SIM
 from soepy.simulate.constants_sim import DATA_FORMATS_SPARSE
 from soepy.simulate.constants_sim import DATA_LABLES_SIM
 from soepy.simulate.constants_sim import LABELS_DATA_SPARSE
+from soepy.simulate.constants_sim import STATE_LABELS_SIM
 from soepy.simulate.income_sim import calculate_employment_consumption_resources
 from soepy.simulate.initial_states import prepare_simulation_data
-
-
-def _get_state_col_positions():
-    """Return column positions for the state vector stored in `current_states`.
-
-    The simulation uses a NumPy array for speed. Column positions are derived from
-    `DATA_LABLES_SIM` to avoid hard-coded IDX globals.
-    """
-
-    state_labels = DATA_LABLES_SIM[:10]
-    return {label: i for i, label in enumerate(state_labels)}
-
-
-def _get_sparse_state_positions(state_col_positions):
-    labels_sparse_states = LABELS_DATA_SPARSE[:-2]
-    return np.array(
-        [state_col_positions[label] for label in labels_sparse_states], dtype=int
-    )
 
 
 def pyth_simulate(
@@ -71,7 +54,7 @@ def pyth_simulate(
         biased_exp=biased_exp,
     )
 
-    data = simulate_agents_over_periods(
+    data_list = simulate_agents_over_periods(
         model_spec=model_spec,
         state_space=states,
         indexer=indexer,
@@ -88,27 +71,17 @@ def pyth_simulate(
         data_sparse=data_sparse,
     )
 
-    stacked = np.vstack(data)
+    data = pd.concat(data_list)
 
     if data_sparse:
         # Ensure sparse state columns are integers (except identifier, wages).
-        dataset = pd.DataFrame(stacked, columns=pd.Index(LABELS_DATA_SPARSE)).astype(
-            DATA_FORMATS_SPARSE
-        )
-        labels = LABELS_DATA_SPARSE
-    else:
-        dataset = pd.DataFrame(stacked, columns=pd.Index(DATA_LABLES_SIM)).astype(
-            DATA_FORMATS_SIM
-        )
-        labels = DATA_LABLES_SIM
+        data = data.astype(DATA_FORMATS_SPARSE)
 
-    # Avoid string-based indexing on the DataFrame.
-    choice_pos = labels.index("Choice")
-    wage_pos = labels.index("Wage_Observed")
-    choice_arr = dataset.iloc[:, choice_pos].to_numpy()
-    dataset.iloc[choice_arr == 0, wage_pos] = np.nan
+    # Alter observed wage for unemployed to nans
+    choice_arr = data["Choice"].to_numpy()
+    data.loc[choice_arr == 0, "Wage_Observed"] = np.nan
 
-    return dataset
+    return data
 
 
 def simulate_agents_over_periods(
@@ -127,17 +100,18 @@ def simulate_agents_over_periods(
     biased_exp,
     data_sparse,
 ):
-    state_col = _get_state_col_positions()
-    state_labels = list(state_col)
 
-    sparse_state_labels = LABELS_DATA_SPARSE[:-2]
-
+    max_entry_year = np.max(model_spec.educ_years)
     data = []
-    current_states = initial_states[state_labels].iloc[0:0].copy()
+    # Create empty DataFrame with same columns and dtypes as initial_states.
+    current_states = initial_states.iloc[0:0].copy()
+
+    state_col = {label: i for i, label in enumerate(current_states.columns)}
 
     for period in range(model_spec.num_periods):
-        entrants = initial_states.loc[initial_states.Period.eq(period), state_labels]
-        current_states = pd.concat([current_states, entrants], ignore_index=True)
+        if period <= max_entry_year:
+            entrants = initial_states.loc[initial_states.Period.eq(period), :]
+            current_states = pd.concat([current_states, entrants], ignore_index=True)
 
         age_child = current_states.iloc[:, state_col["Age_Youngest_Child"]].to_numpy()
         age_idx = np.where(
@@ -146,18 +120,21 @@ def simulate_agents_over_periods(
             age_child,
         )
 
+        educ_level = current_states.iloc[:, state_col["Education_Level"]].to_numpy()
+        partner_indicator = current_states.iloc[
+            :, state_col["Partner_Indicator"]
+        ].to_numpy()
+
         idx = indexer[
             current_states.iloc[:, state_col["Period"]].to_numpy(),
-            current_states.iloc[:, state_col["Education_Level"]].to_numpy(),
+            educ_level,
             current_states.iloc[:, state_col["Lagged_Choice"]].to_numpy(),
             current_states.iloc[:, state_col["Type"]].to_numpy(),
             age_idx,
-            current_states.iloc[:, state_col["Partner_Indicator"]].to_numpy(),
+            partner_indicator,
         ]
 
-        stock = current_states.iloc[:, state_col["Experience_Stock"]].to_numpy(
-            dtype=float
-        )
+        stock = current_states.iloc[:, state_col["Experience_Stock"]].to_numpy()
 
         # Interpolate continuation values on the experience grid.
         continuation_grid = emaxs[idx, :, :NUM_CHOICES]
@@ -166,7 +143,6 @@ def simulate_agents_over_periods(
 
         non_cons_util_agents = non_consumption_utilities[idx]
 
-        educ_level = current_states.iloc[:, state_col["Education_Level"]].to_numpy()
         pt_increment = get_pt_increment(
             model_params=model_params,
             educ_level=educ_level,
@@ -202,9 +178,7 @@ def simulate_agents_over_periods(
         )
 
         if model_spec.parental_leave_regime == "erziehungsgeld":
-            married = (
-                current_states.iloc[:, state_col["Partner_Indicator"]].to_numpy() == 1
-            )
+            married = partner_indicator == 1
             baby_child = (age_child == 0) | (age_child == 1)
 
             erz = calc_erziehungsgeld(
@@ -257,30 +231,27 @@ def simulate_agents_over_periods(
         choice = np.argmax(value_functions, axis=1)
 
         current_states_np = current_states.to_numpy()
+        # IMPORTANT: The order of the columns here must match DATA_LABLES_SPARSE and SIM.
         if data_sparse:
-            rows = np.column_stack(
-                (
-                    current_states.loc[:, sparse_state_labels].to_numpy(),
-                    choice,
-                    wages,
-                )
-            )
+            this_period_df = current_states.copy()
+            this_period_df["Choice"] = choice
+            this_period_df["Wage_Observed"] = wages
         else:
-            rows = np.column_stack(
-                (
-                    current_states_np,
-                    choice,
-                    log_wage_agents,
-                    wages,
-                    non_cons_util_agents,
-                    flow_utilities,
-                    continuation_values,
-                    value_functions,
-                    male_wage,
-                )
-            )
+            this_period_df = current_states.copy()
+            this_period_df["Choice"] = choice
+            this_period_df["Wage_Observed"] = wages
+            this_period_df["Male_Wages"] = male_wage
+            for i, append in enumerate(["N", "P", "F"]):
+                this_period_df[
+                    f"Non_Consumption_Utility_{append}"
+                ] = non_cons_util_agents[:, i]
+                this_period_df[f"Flow_Utility_{append}"] = flow_utilities[:, i]
+                this_period_df[f"Continuation_Value_{append}"] = continuation_values[
+                    :, i
+                ]
+                this_period_df[f"Value_Function_{append}"] = value_functions[:, i]
 
-        data.append(rows)
+        data.append(this_period_df)
 
         # --- exogenous updates
         child_current_age = age_child
@@ -297,12 +268,9 @@ def simulate_agents_over_periods(
         else:
             child_new_age = child_age_update_rule[idx]
 
-        current_partner = current_states.iloc[
-            :, state_col["Partner_Indicator"]
-        ].to_numpy()
-        new_partner = current_partner.copy()
+        new_partner = partner_indicator.copy()
 
-        no_partner = current_partner == 0
+        no_partner = partner_indicator == 0
         if no_partner.any():
             arr = np.random.binomial(
                 size=no_partner.sum(),
@@ -311,20 +279,20 @@ def simulate_agents_over_periods(
             )
             new_partner[no_partner] = arr
 
-        has_partner = current_partner == 1
+        has_partner = partner_indicator == 1
         if has_partner.any():
             sep = np.random.binomial(
                 size=has_partner.sum(),
                 n=1,
                 p=prob_partner[period, educ_level[has_partner], 1, 0],
             )
-            new_partner[has_partner] = current_partner[has_partner] - sep
+            new_partner[has_partner] = partner_indicator[has_partner] - sep
 
         # --- endogenous updates
         stock_next = np.asarray(
             next_stock(
                 stock=stock,
-                period=current_states.iloc[:, state_col["Period"]].to_numpy(),
+                period=period,
                 init_exp_max=model_spec.init_exp_max,
                 pt_increment=pt_increment,
                 choice=choice,
