@@ -1,6 +1,6 @@
 import numpy as np
 
-DATA_LABLES_SIM = [
+DATA_LABLES_SIM_int = [
     "Identifier",
     "Period",
     "Education_Level",
@@ -11,7 +11,8 @@ DATA_LABLES_SIM = [
     "Age_Youngest_Child",
     "Partner_Indicator",
     "Choice",
-    "Log_Systematic_Wage",
+]
+DATA_LABLES_SIM_float = [
     "Wage_Observed",
     "Non_Consumption_Utility_N",
     "Non_Consumption_Utility_P",
@@ -27,27 +28,42 @@ DATA_LABLES_SIM = [
     "Value_Function_F",
     "Male_Wages",
 ]
+DATA_LABLES_SIM = [*DATA_LABLES_SIM_int, *DATA_LABLES_SIM_float]
+
+STATE_LABELS_SIM = [
+    "Identifier",
+    "Period",
+    "Education_Level",
+    "Lagged_Choice",
+    "Experience_Stock",
+    "Type",
+    "Age_Youngest_Child",
+    "Partner_Indicator",
+]
+
 DATA_FORMATS_SIM = {
-    key: (int if key in DATA_LABLES_SIM[:10] else float) for key in DATA_LABLES_SIM
+    **{key: np.int8 for key in DATA_LABLES_SIM_int},
+    **{key: float for key in DATA_LABLES_SIM_float},
 }
-IDX_STATES_DATA_SPARSE = np.array(
-    [
-        0,  # Agent_ID
-        1,  # Periods
-        2,  # Education Level
-        3,  # Lagged Choice
-        4,  # Exp Part time
-        5,  # Exp Full time
-        7,  # Age_Youngest_Child
-    ],
-    dtype=int,
-)
-LABELS_DATA_SPARSE = [
-    label for i, label in enumerate(DATA_LABLES_SIM) if i in IDX_STATES_DATA_SPARSE
-] + ["Choice", "Wage_Observed"]
-DATA_FORMATS_SPARSE_1 = {
+
+# Minimal dataset used in estimation/regressions.
+LABELS_SPARSE_INT8 = [
+    "Period",
+    "Education_Level",
+    "Lagged_Choice",
+    "Experience_Part_Time",
+    "Experience_Full_Time",
+    "Experience_Stock",
+    "Age_Youngest_Child",
+    "Choice",
+]
+
+DATA_FORMATS_OTHER = {
     "Identifier": int,
     "Wage_Observed": float,
+    "Experience_Stock": float,
 }
-DATA_FORMATS_SPARSE_2 = {key: np.int8 for key in LABELS_DATA_SPARSE[1:-1]}
-DATA_FORMATS_SPARSE = {**DATA_FORMATS_SPARSE_1, **DATA_FORMATS_SPARSE_2}
+LABELS_DATA_SPARSE = [*LABELS_SPARSE_INT8, *DATA_FORMATS_OTHER.keys()]
+
+DATA_FORMATS_INT8 = {key: np.int8 for key in LABELS_SPARSE_INT8}
+DATA_FORMATS_SPARSE = {**DATA_FORMATS_INT8, **DATA_FORMATS_OTHER}

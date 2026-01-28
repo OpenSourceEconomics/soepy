@@ -1,107 +1,77 @@
-import pickle
+import collections
 
 import numpy as np
 import pytest
 
-from soepy.exogenous_processes.children import define_child_age_update_rule
-from soepy.exogenous_processes.children import gen_prob_child_vector
-from soepy.exogenous_processes.partner import gen_prob_partner
-from soepy.pre_processing.model_processing import read_model_params_init
-from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.shared.numerical_integration import get_integration_draws_and_weights
-from soepy.soepy_config import TEST_RESOURCES_DIR
-from soepy.solve.covariates import construct_covariates
-from soepy.solve.create_state_space import create_child_indexes
-from soepy.solve.create_state_space import pyth_create_state_space
-from soepy.solve.emaxs import do_weighting_emax_scalar
-from soepy.solve.solve_python import get_solve_function
+from soepy.shared.constants_and_indices import MISSING_INT
+from soepy.solve.create_state_space import create_state_space_objects
 
 
-@pytest.fixture(scope="module")
-def input_data():
+def _age_to_idx(age, n_kid_ages):
+    return n_kid_ages - 1 if age == -1 else age
 
-    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
 
-    with open(vault, "rb") as file:
-        tests = pickle.load(file)
+@pytest.fixture()
+def model_spec():
+    spec = {
+        "num_periods": 4,
+        "num_educ_levels": 2,
+        "num_types": 2,
+        "child_age_max": 2,
+        "partner_cf_const": 0.0,
+        "partner_cf_age": 0.0,
+        "partner_cf_age_sq": 0.0,
+        "partner_cf_educ": 0.0,
+        "child_benefits": 0.0,
+    }
+    return collections.namedtuple("model_specification", spec.keys())(**spec)
 
+
+def test_child_state_indexes_match_indexer(model_spec):
     (
-        model_spec_init_dict,
-        random_model_params_df,
-        exog_educ_shares,
-        exog_child_age_shares,
-        exog_partner_shares,
-        exog_exper_shares_pt,
-        exog_exper_shares_ft,
-        exog_child_info,
-        exog_partner_arrival_info,
-        exog_partner_separation_info,
-        expected_df,
-        expected_df_unbiased,
-    ) = tests[0]
-
-    exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
-    exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
-    exog_child_info.to_pickle("test.soepy.child.pkl")
-    exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
-    exog_exper_shares_pt.to_pickle("test.soepy.pt.exp.shares.pkl")
-    exog_exper_shares_ft.to_pickle("test.soepy.ft.exp.shares.pkl")
-    exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
-    exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
-
-    model_params_df, model_params = read_model_params_init(random_model_params_df)
-    model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
-
-    prob_child = gen_prob_child_vector(model_spec)
-    prob_partner = gen_prob_partner(model_spec)
-
-    states, indexer = pyth_create_state_space(model_spec)
-
-    # Create objects that depend only on the state space
-    covariates = construct_covariates(states, model_spec)
-
-    child_age_update_rule = define_child_age_update_rule(model_spec, states)
-
-    child_state_indexes = create_child_indexes(
-        states, indexer, model_spec, child_age_update_rule
-    )
-
-    # Solve function
-    solve_func = get_solve_function(
         states,
-        covariates,
+        indexer,
+        _,
+        child_age_update_rule,
         child_state_indexes,
-        model_spec,
-        prob_child,
-        prob_partner,
-        is_expected=True,
+    ) = create_state_space_objects(model_spec=model_spec)
+
+    n_kid_ages = indexer.shape[4]
+
+    # Check mapping for all non-terminal states.
+    for state_idx, state in enumerate(states):
+        period, educ_level, _, type_, age, partner = state
+
+        if period == model_spec.num_periods - 1:
+            assert (child_state_indexes[state_idx] == MISSING_INT).all()
+            continue
+
+        next_period = period + 1
+        next_age_no_child = child_age_update_rule[state_idx]
+
+        for choice in range(3):
+            for child_arrival in [0, 1]:
+                for next_partner in [0, 1]:
+                    expected_age = 0 if child_arrival == 1 else next_age_no_child
+                    expected = indexer[
+                        next_period,
+                        educ_level,
+                        choice,
+                        type_,
+                        _age_to_idx(int(expected_age), n_kid_ages),
+                        next_partner,
+                    ]
+                    got = child_state_indexes[
+                        state_idx, choice, child_arrival, next_partner
+                    ]
+                    assert got == expected
+
+
+def test_child_state_indexes_terminal_all_missing(model_spec):
+    states, _, _, _, child_state_indexes = create_state_space_objects(
+        model_spec=model_spec
     )
-    _, emaxs = solve_func(model_params)
 
-    return states, emaxs, child_state_indexes, prob_child, prob_partner
-
-
-def test_child_state_index(input_data):
-    states, emaxs, child_state_indexes, prob_child, prob_partner = input_data
-
-    (
-        period,
-        educ_level,
-        choice_lagged,
-        exp_p,
-        exp_f,
-        disutil_type,
-        age_kid,
-        partner_indicator,
-    ) = states[10]
-
-    child_index = child_state_indexes[10, 1, :, :]
-    child_emax = emaxs[:, 3][child_index]
-
-    weighted_emax = do_weighting_emax_scalar(
-        child_emax,
-        prob_child[period, educ_level],
-        prob_partner[period, educ_level, partner_indicator, :],
-    )
-
-    np.testing.assert_allclose(weighted_emax, emaxs[10, 1])
+    terminal = states[:, 0] == model_spec.num_periods - 1
+    assert terminal.any()
+    assert (child_state_indexes[terminal] == MISSING_INT).all()

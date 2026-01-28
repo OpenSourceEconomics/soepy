@@ -1,70 +1,45 @@
-import numpy as np
 from jax import numpy as jnp
 
+from soepy.shared.experience_stock import stock_to_exp_years
 
-def calculate_log_wage(model_params, states, is_expected):
-    """Calculate utility components for all choices given state, period, and shocks.
+
+def calculate_log_wage(
+    model_params, educ, exp_stock, init_exp_max, pt_increment, period
+):
+    """Calculate systematic log wages for continuous experience.
+
+    The continuous-experience model uses a single return to experience. Expectation
+    bias is handled in the experience law of motion (pt increment), not in wages.
 
     Parameters
     ----------
     model_params : namedtuple
-        Contains all parameters of the model including information on dimensions
-        (number of periods, agents, random draws, etc.) and coefficients to be
-        estimated.
-    states : np.ndarray
-        Array with shape (num_states, 5) containing period, years of schooling,
-        the lagged choice, the years of experience in part-time, and the
-        years of experience in full-time employment.
-    is_expected: bool
-        A boolean indicator that differentiates between the human capital accumulation
-        process that agents expect (is_expected = True) and that the market generates
-        (is_expected = False)
+        Requires ``gamma_0`` and ``gamma_f`` (used as the single experience return).
+    educ : int
+        Education level index.
+    exp_stock : jax.numpy.ndarray
+        Experience stock between 0 and 1.
+    init_exp_max : float
+        Initial maximum experience years.
+    pt_increment : float
+        Part-time experience increment.
+    period : int
+        Current period.
 
     Returns
     -------
-    log_wage_systematic : array
-        One dimensional array with length num_states containing the part of the wages
-        at the respective state space point that do not depend on the agent's choice,
-        nor on the random shock.
-    non_consumption_utilities : np.ndarray
-        Array of dimension (num_states, num_choices) containing the utility
-        contribution of non-pecuniary factors.
-
+    jax.numpy.ndarray
+        Systematic log wages with shape (n_states, n_grid).
     """
-    if is_expected:
-        # Calculate biased part-time expectation by using ratio from expected data and
-        # structural paramteters
-        gamma_p = (
-            model_params.gamma_p_bias / (model_params.gamma_p / model_params.gamma_f)
-        ) * model_params.gamma_p
-    else:
-        gamma_p = model_params.gamma_p
 
-    log_wage_systematic = calculate_log_wage_systematic(
-        model_params.gamma_0,
-        model_params.gamma_f,
-        gamma_p,
-        states,
+    exp_years = stock_to_exp_years(
+        stock=exp_stock,
+        period=period,
+        init_exp_max=init_exp_max,
+        pt_increment=pt_increment,
     )
+    gamma_0_edu = model_params.gamma_0[educ]
+    gamma_exp_edu = model_params.gamma_1[educ]
 
-    return log_wage_systematic
-
-
-def calculate_log_wage_systematic(gamma_0, gamma_f, gamma_p, states):
-    """Calculate systematic wages, i.e., wages net of shock, for all states."""
-
-    exp_p_states, exp_f_states = states[:, 3], states[:, 4]
-
-    log_exp_p = jnp.log(exp_p_states + 1)
-    log_exp_f = jnp.log(exp_f_states + 1)
-
-    # Assign wage returns
-    gamma_0_edu = jnp.array(gamma_0)[states[:, 1]]
-    gamma_f_edu = jnp.array(gamma_f)[states[:, 1]]
-    gamma_p_edu = jnp.array(gamma_p)[states[:, 1]]
-
-    # Calculate wage in the given state
-    log_wage_systematic = (
-        gamma_0_edu + gamma_f_edu * log_exp_f + gamma_p_edu * log_exp_p
-    )
-    return log_wage_systematic
+    log_exp = jnp.log(exp_years + 1)
+    return gamma_0_edu + gamma_exp_edu * log_exp

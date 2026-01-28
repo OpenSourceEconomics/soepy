@@ -1,3 +1,4 @@
+import jax.numpy as jnp
 import numpy as np
 
 M_FACTOR = 4.3
@@ -76,7 +77,9 @@ def create_child_care_costs(model_dict):
         child_care_costs[2, :] = model_dict["TAXES_TRANSFERS"]["child_care_costs"][
             "3_to_6"
         ]
-        model_dict["TAXES_TRANSFERS"]["child_care_costs"] = child_care_costs / M_FACTOR
+        model_dict["TAXES_TRANSFERS"]["child_care_costs"] = jnp.asarray(
+            child_care_costs / M_FACTOR
+        )
     return model_dict
 
 

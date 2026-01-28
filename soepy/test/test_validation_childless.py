@@ -8,7 +8,7 @@ import pytest
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
-from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
+from soepy.exogenous_processes.experience import gen_prob_init_exp_component_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 from soepy.pre_processing.model_processing import read_model_params_init
@@ -51,6 +51,9 @@ def input_data():
     exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
     exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
+    model_spec_init_dict["exp_grid"] = np.linspace(0.0, 1.0, 10)
+    model_spec_init_dict["SOLUTION"]["pt_exp_ratio"] = 0.5
+
     model_params_df, model_params = read_model_params_init(random_model_params_df)
     ccc_under_3 = np.array(
         model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["under_3"]
@@ -74,11 +77,13 @@ def input_data():
             educ_level_array[1:] = 0
             prob_child_age += [educ_level_array]
         prob_partner_present = gen_prob_partner_present_vector(model_spec)
-        prob_exp_ft = gen_prob_init_exp_vector(
-            model_spec, model_spec.ft_exp_shares_file_name
+        prob_exp_pt = gen_prob_init_exp_component_vector(
+            model_spec,
+            model_spec.pt_exp_shares_file_name,
         )
-        prob_exp_pt = gen_prob_init_exp_vector(
-            model_spec, model_spec.pt_exp_shares_file_name
+        prob_exp_ft = gen_prob_init_exp_component_vector(
+            model_spec,
+            model_spec.ft_exp_shares_file_name,
         )
         prob_child = gen_prob_child_vector(model_spec)
         prob_child[:, :] = 0
@@ -121,11 +126,11 @@ def input_data():
             prob_educ_level,
             prob_child_age,
             prob_partner_present,
-            prob_exp_ft,
             prob_exp_pt,
+            prob_exp_ft,
             prob_child,
             prob_partner,
-            is_expected=False,
+            biased_exp=False,
         )
 
         out[name] = calculated_df

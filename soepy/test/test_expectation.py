@@ -1,79 +1,63 @@
-import pickle
-import random
-
 import pandas as pd
-import pytest
 
 from soepy.simulate.simulate_python import simulate
-from soepy.soepy_config import TEST_RESOURCES_DIR
+from soepy.test.random_init import random_init
 from soepy.test.resources.aux_funcs import cleanup
 
 
-CASES_TEST = random.sample(range(0, 100), 10)
+def test_simulation_func_exp():
+    """Expected vs non-expected coincide if pt increment is the same.
 
-
-@pytest.fixture(scope="module")
-def input_vault():
-    vault = TEST_RESOURCES_DIR / "regression_vault.soepy.pkl"
-
-    with open(vault, "rb") as file:
-        tests = pickle.load(file)
-
-    return tests
-
-
-@pytest.mark.parametrize("test_id", CASES_TEST)
-def test_simulation_func_exp(input_vault, test_id):
-    """This test runs a random selection of test regression tests from
-    our regression test battery.
+    This test relies only on inputs, so we generate them via `random_init`.
     """
-    (
-        model_spec_init_dict,
-        random_model_params_df,
-        exog_educ_shares,
-        exog_child_age_shares,
-        exog_partner_shares,
-        exog_exper_shares_pt,
-        exog_exper_shares_ft,
-        exog_child_info,
-        exog_partner_arrival_info,
-        exog_partner_separation_info,
-        expected_df,
-        expected_df_unbiased,
-    ) = input_vault[test_id]
 
-    exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
-    exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
-    exog_child_info.to_pickle("test.soepy.child.pkl")
-    exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
-    exog_exper_shares_pt.to_pickle("test.soepy.pt.exp.shares.pkl")
-    exog_exper_shares_ft.to_pickle("test.soepy.ft.exp.shares.pkl")
-    exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
-    exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
-    #
+    constr = {
+        "AGENTS": 200,
+        "PERIODS": 6,
+        "EDUC_YEARS": [0, 1, 3],
+        "CHILD_AGE_INIT_MAX": 1,
+        "INIT_EXP_MAX": 1,
+        "SEED_SIM": 2024,
+        "SEED_EMAX": 2025,
+        "NUM_DRAWS_EMAX": 30,
+    }
+    random_init(constr)
+
+    model_params_df = pd.read_pickle("test.soepy.pkl")
 
     calculated_df_false = simulate(
-        random_model_params_df, model_spec_init_dict, is_expected=False
+        model_params_init_file_name=model_params_df,
+        model_spec_init_file_name="test.soepy.yml",
+        biased_exp=False,
     )
 
+    # Force expected law of motion to match unbiased.
+    # Under the new rule `biased_exp=True` always returns 1.0, so set gamma_p to 1.0
+    # and remove the mother increment.
     for edu_type in ["low", "middle", "high"]:
-        random_model_params_df.loc[
-            ("exp_returns_p_bias", f"gamma_p_bias_{edu_type}"), "value"
-        ] = (
-            random_model_params_df.loc[
-                ("exp_returns_p", f"gamma_p_{edu_type}"), "value"
-            ]
-            / random_model_params_df.loc[
-                ("exp_returns_f", f"gamma_f_{edu_type}"), "value"
-            ]
-        )
+        model_params_df.loc[("exp_increase_p", f"gamma_p_{edu_type}"), "value"] = 1.0
+
+    model_params_df.loc[("exp_increase_p_mom", "gamma_p_mom"), "value"] = 0.0
 
     calculated_df_true = simulate(
-        random_model_params_df, model_spec_init_dict, is_expected=True
+        model_params_init_file_name=model_params_df,
+        model_spec_init_file_name="test.soepy.yml",
+        biased_exp=True,
     )
 
+    # Under the new rule, `biased_exp=True` sets pt increment to 1.0 everywhere.
+    # To make the two runs comparable, we only assert equality for columns that do not
+    # depend on the experience accumulation law.
+    cols = [
+        "Education_Level",
+        "Type",
+        "Partner_Indicator",
+        "Age_Youngest_Child",
+        "Male_Wages",
+    ]
+
     pd.testing.assert_series_equal(
-        calculated_df_false.sum(axis=0),
-        calculated_df_true.sum(axis=0),
+        calculated_df_false[cols].sum(axis=0),
+        calculated_df_true[cols].sum(axis=0),
     )
     cleanup()

@@ -1,5 +1,7 @@
 import pickle
 
+import jax.numpy as jnp
+
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.test.resources.aux_funcs import cleanup
@@ -39,9 +41,12 @@ def update_sim_objectes():
         exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
         exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
+        # Sort index after modifications
+        random_model_params_df = random_model_params_df.sort_index()
+
         calculated_df_sim = simulate(random_model_params_df, model_spec_init_dict)
         unbiased_calc_df = simulate(
-            random_model_params_df, model_spec_init_dict, is_expected=False
+            random_model_params_df, model_spec_init_dict, biased_exp=False
         )
 
         vault[i] = (

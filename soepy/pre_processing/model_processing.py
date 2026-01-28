@@ -1,6 +1,7 @@
 import collections
 import copy
 
+import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import yaml
@@ -84,19 +85,22 @@ def group_parameters(model_params_dict_expanded):
 
     for category, param in [
         ("const_wage_eq", "gamma_0"),
-        ("exp_returns_f", "gamma_f"),
-        ("exp_returns_p", "gamma_p"),
-        ("exp_returns_p_bias", "gamma_p_bias"),
+        ("exp_return", "gamma_1"),
+        ("exp_increase_p", "gamma_p"),
     ]:
         model_params_dict_flat[param] = np.zeros(
-            len(model_params_dict_expanded["const_wage_eq"]), dtype=float
+            len(model_params_dict_expanded[category])
         )
-
         for educ_ind, educ_type in enumerate(["low", "middle", "high"]):
             model_params_dict_flat[param][educ_ind] = np.array(
                 model_params_dict_expanded[category][f"{param}_{educ_type}"],
                 dtype=float,
             )
+
+    # Additional part-time increment for mothers of small children (not education-specific).
+    model_params_dict_flat["gamma_p_mom"] = float(
+        model_params_dict_expanded["exp_increase_p_mom"]["gamma_p_mom"]
+    )
 
     for key_ in list(model_params_dict_expanded["disutil_work"].keys()):
         if "child" in key_:
@@ -167,6 +171,9 @@ def read_model_spec_init(model_spec_init_dict, model_params):
     model_spec_dict_expand = expand_model_spec_dict(model_spec_init, model_params)
 
     model_spec_dict_flat = flatten_model_spec_dict(model_spec_dict_expand)
+
+    # Continuous experience grid (required input).
+    model_spec_dict_flat["exp_grid"] = jnp.asarray(model_spec_init["exp_grid"])
 
     model_spec = dict_to_namedtuple_spec(model_spec_dict_flat)
 

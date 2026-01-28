@@ -1,18 +1,20 @@
 import numpy as np
 import pandas as pd
 
-from soepy.exogenous_processes.determine_lagged_choice import lagged_choice_initial
+from soepy.shared.constants_and_indices import HOURS
+from soepy.shared.constants_and_indices import NUM_CHOICES
+from soepy.shared.experience_stock import get_pt_increment
+from soepy.shared.experience_stock import next_stock
 from soepy.shared.non_employment import calc_erziehungsgeld
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
-from soepy.shared.numerical_integration import draw_zero_one_distributed_shocks
-from soepy.shared.shared_constants import HOURS
 from soepy.shared.wages import calculate_log_wage
 from soepy.simulate.constants_sim import DATA_FORMATS_SIM
 from soepy.simulate.constants_sim import DATA_FORMATS_SPARSE
 from soepy.simulate.constants_sim import DATA_LABLES_SIM
-from soepy.simulate.constants_sim import IDX_STATES_DATA_SPARSE
 from soepy.simulate.constants_sim import LABELS_DATA_SPARSE
+from soepy.simulate.constants_sim import STATE_LABELS_SIM
 from soepy.simulate.income_sim import calculate_employment_consumption_resources
+from soepy.simulate.initial_states import prepare_simulation_data
 
 
 def pyth_simulate(
@@ -27,390 +29,327 @@ def pyth_simulate(
     prob_educ_level,
     prob_child_age,
     prob_partner_present,
-    prob_exp_ft,
     prob_exp_pt,
+    prob_exp_ft,
     prob_child,
     prob_partner,
-    is_expected,
+    biased_exp,
     data_sparse=False,
 ):
-    """Simulate agent experiences."""
+    """Simulate agent histories under the continuous-experience model."""
 
     np.random.seed(model_spec.seed_sim)
-    tax_splitting = model_spec.tax_splitting
-    (
-        initial_states,
-        draws_sim,
-        log_wage_systematic,
-        non_employment_consumption_resources,
-    ) = prepare_simulation_data(
-        model_params,
-        model_spec,
-        prob_educ_level,
-        prob_child_age,
-        prob_partner_present,
-        prob_exp_ft,
-        prob_exp_pt,
-        covariates,
-        states,
-        tax_splitting,
-        is_expected,
+
+    emaxs = np.asarray(emaxs)
+    non_consumption_utilities = np.asarray(non_consumption_utilities)
+
+    initial_states, draws_sim = prepare_simulation_data(
+        model_params=model_params,
+        model_spec=model_spec,
+        prob_educ_level=prob_educ_level,
+        prob_child_age=prob_child_age,
+        prob_partner_present=prob_partner_present,
+        prob_exp_pt=prob_exp_pt,
+        prob_exp_ft=prob_exp_ft,
+        biased_exp=biased_exp,
     )
 
-    data = simulate_agents_over_periods(
-        model_spec,
-        states,
-        emaxs,
-        model_params,
-        initial_states,
-        indexer,
-        log_wage_systematic,
-        non_consumption_utilities,
-        non_employment_consumption_resources,
-        covariates,
-        draws_sim,
-        prob_child,
-        child_age_update_rule,
-        prob_partner,
-        tax_splitting,
-        data_sparse,
+    data_list = simulate_agents_over_periods(
+        model_spec=model_spec,
+        state_space=states,
+        indexer=indexer,
+        covariates=covariates,
+        emaxs=emaxs,
+        non_consumption_utilities=non_consumption_utilities,
+        child_age_update_rule=child_age_update_rule,
+        prob_child=prob_child,
+        prob_partner=prob_partner,
+        draws_sim=draws_sim,
+        initial_states=initial_states,
+        model_params=model_params,
+        biased_exp=biased_exp,
+        data_sparse=data_sparse,
     )
+
+    data = pd.concat(data_list)
+
     if data_sparse:
-        dataset = pd.DataFrame(np.vstack(data), columns=LABELS_DATA_SPARSE).astype(
-            DATA_FORMATS_SPARSE
-        )
-    else:
-        dataset = pd.DataFrame(np.vstack(data), columns=DATA_LABLES_SIM).astype(
-            DATA_FORMATS_SIM
-        )
-    dataset.loc[dataset["Choice"] == 0, "Wage_Observed"] = np.nan
+        # Ensure sparse state columns are integers (except identifier, wages).
+        data = data.astype(DATA_FORMATS_SPARSE)
 
-    return dataset
+    # Alter observed wage for unemployed to nans
+    choice_arr = data["Choice"].to_numpy()
+    data.loc[choice_arr == 0, "Wage_Observed"] = np.nan
+
+    return data
 
 
 def simulate_agents_over_periods(
     model_spec,
     state_space,
-    emaxs,
-    model_params,
-    initial_states,
     indexer,
-    log_wage_systematic,
-    non_consumption_utilities,
-    non_employment_consumption_resources,
     covariates,
-    draws_sim,
-    prob_child,
+    emaxs,
+    non_consumption_utilities,
     child_age_update_rule,
+    prob_child,
     prob_partner,
-    tax_splitting,
+    draws_sim,
+    initial_states,
+    model_params,
+    biased_exp,
     data_sparse,
 ):
-    data = []
-    # Loop over all periods
-    for period in range(model_spec.num_periods):
 
-        initial_states_in_period = initial_states.loc[
-            initial_states.Period.eq(period)
+    max_entry_year = np.max(model_spec.educ_years)
+    data = []
+    # Create empty DataFrame with same columns and dtypes as initial_states.
+    current_states = initial_states.iloc[0:0].copy()
+
+    state_col = {label: i for i, label in enumerate(current_states.columns)}
+
+    for period in range(model_spec.num_periods):
+        if period <= max_entry_year:
+            entrants = initial_states.loc[initial_states.Period.eq(period), :]
+            current_states = pd.concat([current_states, entrants], ignore_index=True)
+
+        age_child = current_states.iloc[:, state_col["Age_Youngest_Child"]].to_numpy()
+        age_idx = np.where(
+            age_child == -1,
+            indexer.shape[4] - 1,
+            age_child,
+        )
+
+        educ_level = current_states.iloc[:, state_col["Education_Level"]].to_numpy()
+        partner_indicator = current_states.iloc[
+            :, state_col["Partner_Indicator"]
         ].to_numpy()
 
-        # Get all agents in the period.
-        if period == 0:
-            current_states = initial_states_in_period
-        else:
-            current_states = np.vstack((current_states, initial_states_in_period))
-
         idx = indexer[
-            current_states[:, 1],  # 0 period
-            current_states[:, 2],  # 1 educ_level
-            current_states[:, 3],  # 2 lagged_choice
-            current_states[:, 4],  # 3 exp_pt
-            current_states[:, 5],  # 4 exp_ft
-            current_states[:, 6],  # 5 type
-            current_states[:, 7],  # 6 age_youngest_child
-            current_states[:, 8],  # 7 partner_indicator
+            current_states.iloc[:, state_col["Period"]].to_numpy(),
+            educ_level,
+            current_states.iloc[:, state_col["Lagged_Choice"]].to_numpy(),
+            current_states.iloc[:, state_col["Type"]].to_numpy(),
+            age_idx,
+            partner_indicator,
         ]
 
-        # Extract corresponding utilities
-        current_log_wage_systematic = log_wage_systematic[idx]
-        current_non_consumption_utilities = non_consumption_utilities[idx]
-        current_non_employment_consumption_resources = (
-            non_employment_consumption_resources[idx]
+        stock = current_states.iloc[:, state_col["Experience_Stock"]].to_numpy()
+
+        # Interpolate continuation values on the experience grid.
+        continuation_grid = emaxs[idx, :, :NUM_CHOICES]
+        continuation_grid = np.transpose(continuation_grid, (0, 2, 1))
+        continuation_values = _interp_uniform_grid(continuation_grid, stock[:, None])
+
+        non_cons_util_agents = non_consumption_utilities[idx]
+
+        pt_increment = get_pt_increment(
+            model_params=model_params,
+            educ_level=educ_level,
+            child_age=age_child,
+            biased_exp=biased_exp,
         )
-        current_equivalence_scale = covariates[idx][:, 2]
-        current_male_wages = covariates[idx][:, 1]
-        current_child_benefits = covariates[idx][:, 3]
 
-        current_wages = (
-            np.exp(
-                current_log_wage_systematic + draws_sim[period, current_states[:, 0]]
+        log_wage_agents = np.asarray(
+            calculate_log_wage(
+                model_params=model_params,
+                educ=educ_level,
+                exp_stock=stock,
+                init_exp_max=model_spec.init_exp_max,
+                pt_increment=pt_increment,
+                period=period,
             )
-            * model_spec.elasticity_scale
         )
 
-        current_female_income = current_wages[:, np.newaxis] * HOURS[np.newaxis, 1:]
+        wages = np.exp(log_wage_agents + draws_sim[period, : len(current_states)])
+        wages = wages * float(model_spec.elasticity_scale)
 
-        current_employment_consumption_resources = (
-            calculate_employment_consumption_resources(
-                model_spec,
-                current_female_income,
-                current_male_wages,
-                tax_splitting,
-            )
+        female_income = wages[:, None] * HOURS[None, 1:]
+
+        male_wage = covariates[idx][:, 1]
+        child_benefits = covariates[idx][:, 3]
+        equiv_scale = covariates[idx][:, 2]
+
+        employment_resources = calculate_employment_consumption_resources(
+            model_spec,
+            female_income,
+            male_wage,
+            model_spec.tax_splitting,
         )
 
         if model_spec.parental_leave_regime == "erziehungsgeld":
-            states_period = state_space[idx]
-            married = states_period[:, 7] == 1
-            baby_child = (states_period[:, 6] == 0) | (states_period[:, 6] == 1)
+            married = partner_indicator == 1
+            baby_child = (age_child == 0) | (age_child == 1)
 
-            erziehgeld = calc_erziehungsgeld(
-                male_wage=current_male_wages,
-                female_income=current_female_income[:, 0],
+            erz = calc_erziehungsgeld(
+                male_wage=male_wage,
+                female_income=female_income[:, 0],
                 married=married,
                 baby_child=baby_child,
                 erziehungsgeld_inc_single=model_spec.erziehungsgeld_income_threshold_single,
                 erziehungsgeld_inc_married=model_spec.erziehungsgeld_income_threshold_married,
                 erziehungsgeld=model_spec.erziehungsgeld,
             )
-            current_employment_consumption_resources[:, 0] += erziehgeld
+            employment_resources[:, 0] = employment_resources[:, 0] + erz
 
-        current_employment_consumption_resources += current_child_benefits.reshape(
-            -1, 1
-        )
+        employment_resources = employment_resources + child_benefits[:, None]
 
         child_care_costs = get_child_care_cost_for_choice(
             covariates[idx][:, 0].astype(float), model_spec.child_care_costs
         )
+        employment_resources = employment_resources - child_care_costs
 
-        current_employment_consumption_resources -= child_care_costs
-
-        # Join alternative consumption resources. Ensure positivity.
-        current_consumption_resources = np.hstack(
-            (
-                current_non_employment_consumption_resources.reshape(-1, 1),
-                current_employment_consumption_resources,
+        # Compute non-employment resources at current wages.
+        non_emp_resources_agents = np.asarray(
+            calculate_non_employment_consumption_resources(
+                deductions_spec=model_spec.ssc_deductions,
+                income_tax_spec=model_spec.tax_params,
+                model_spec=model_spec,
+                states=state_space[idx],
+                log_wage_systematic=log_wage_agents[:, None],
+                male_wage=male_wage,
+                child_benefits=child_benefits,
+                tax_splitting=model_spec.tax_splitting,
+                hours=HOURS,
             )
-        ).clip(min=np.finfo(float).eps)
+        )[:, 0]
 
-        # Calculate total values for all choices
+        consumption_resources = np.hstack(
+            (non_emp_resources_agents[:, None], employment_resources)
+        )
+        consumption_resources = consumption_resources.clip(min=np.finfo(float).eps)
+
         flow_utilities = (
-            (current_consumption_resources / current_equivalence_scale.reshape(-1, 1))
-            ** model_params.mu
-            / model_params.mu
-            * current_non_consumption_utilities
+            (consumption_resources / equiv_scale[:, None]) ** float(model_params.mu)
+            / float(model_params.mu)
+            * non_cons_util_agents
         )
 
-        # Extract continuation values for all choices
-        continuation_values = emaxs[idx, :3]
-
-        value_functions = flow_utilities + model_params.delta * continuation_values
-
-        # Determine choice as option with the highest choice specific value function
+        value_functions = (
+            flow_utilities + float(model_params.delta) * continuation_values
+        )
         choice = np.argmax(value_functions, axis=1)
 
-        child_current_age = current_states[:, 7]
+        current_states_np = current_states.to_numpy()
+        # IMPORTANT: The order of the columns here must match DATA_LABLES_SPARSE and SIM.
+        if data_sparse:
+            this_period_df = current_states.copy()
+            this_period_df["Choice"] = choice
+            this_period_df["Wage_Observed"] = wages
+        else:
+            this_period_df = current_states.copy()
+            this_period_df["Choice"] = choice
+            this_period_df["Wage_Observed"] = wages
+            this_period_df["Male_Wages"] = male_wage
+            for i, append in enumerate(["N", "P", "F"]):
+                this_period_df[
+                    f"Non_Consumption_Utility_{append}"
+                ] = non_cons_util_agents[:, i]
+                this_period_df[f"Flow_Utility_{append}"] = flow_utilities[:, i]
+                this_period_df[f"Continuation_Value_{append}"] = continuation_values[
+                    :, i
+                ]
+                this_period_df[f"Value_Function_{append}"] = value_functions[:, i]
 
-        # Update child age
-        # Modification for simulations with very few periods
-        # where maximum childbearing age is not reached by the end of the model
+        data.append(this_period_df)
+
+        # --- exogenous updates
+        child_current_age = age_child
+
         if period == model_spec.num_periods - 1:
             child_new_age = child_current_age
-
-        # Periods where the probability to have a child is still positive
         elif period <= model_spec.last_child_bearing_period:
-            # Update current states according to exogenous processes
-            # Relate to child age updating
-            kids_current_draw = np.random.binomial(
-                size=current_states.shape[0],
+            kids_draw = np.random.binomial(
+                size=len(current_states),
                 n=1,
-                p=prob_child[period + 1, current_states[:, 2]],
+                p=prob_child[period + 1, educ_level],
             )
-
-            # Convert to age of child according to age update rule
-            child_new_age = np.where(
-                kids_current_draw == 0, child_age_update_rule[idx], 0
-            )
-            # Periods where no new child can arrive
+            child_new_age = np.where(kids_draw == 0, child_age_update_rule[idx], 0)
         else:
             child_new_age = child_age_update_rule[idx]
 
-        # Update partner status according to random draw
-        current_partner_status = current_states[:, 8]
-        new_partner_status = np.full(current_states.shape[0], np.nan)
+        new_partner = partner_indicator.copy()
 
-        # Get individuals without partner
-        current_states_no_partner = current_states[current_states[:, 8] == 0]
-        partner_arrival_current_draw = np.random.binomial(
-            size=current_states_no_partner.shape[0],
-            n=1,
-            p=prob_partner[period, current_states_no_partner[:, 2], 0, 1],
-        )
-        new_partner_status[current_states[:, 8] == 0] = partner_arrival_current_draw
-
-        # Get individuals with partner
-        current_states_with_partner = current_states[current_states[:, 8] == 1]
-        partner_separation_current_draw = np.random.binomial(
-            size=current_states_with_partner.shape[0],
-            n=1,
-            p=prob_partner[period, current_states_with_partner[:, 2], 1, 0],
-        )
-        new_partner_status[current_states[:, 8] == 1] = (
-            current_partner_status[current_states[:, 8] == 1]
-            - partner_separation_current_draw
-        )
-        if data_sparse:
-
-            rows = np.column_stack(
-                (
-                    current_states[:, IDX_STATES_DATA_SPARSE].copy(),
-                    choice,
-                    current_wages,
-                )
+        no_partner = partner_indicator == 0
+        if no_partner.any():
+            arr = np.random.binomial(
+                size=no_partner.sum(),
+                n=1,
+                p=prob_partner[period, educ_level[no_partner], 0, 1],
             )
-        else:
-            # Record period experiences
-            rows = np.column_stack(
-                (
-                    current_states.copy(),
-                    choice,
-                    current_log_wage_systematic,
-                    current_wages,
-                    current_non_consumption_utilities,
-                    flow_utilities,
-                    continuation_values,
-                    value_functions,
-                    current_male_wages,
-                )
+            new_partner[no_partner] = arr
+
+        has_partner = partner_indicator == 1
+        if has_partner.any():
+            sep = np.random.binomial(
+                size=has_partner.sum(),
+                n=1,
+                p=prob_partner[period, educ_level[has_partner], 1, 0],
             )
+            new_partner[has_partner] = partner_indicator[has_partner] - sep
 
-        data.append(rows)
+        # --- endogenous updates
+        stock_next = np.asarray(
+            next_stock(
+                stock=stock,
+                period=period,
+                init_exp_max=model_spec.init_exp_max,
+                pt_increment=pt_increment,
+                choice=choice,
+            )
+        )
 
-        # Update current states according to choice
-        current_states[:, 1] += 1
-        current_states[:, 3] = choice
-        current_states[:, 4] = np.where(
-            choice == 1, current_states[:, 4] + 1, current_states[:, 4]
+        current_states.iloc[:, state_col["Experience_Stock"]] = stock_next
+
+        current_states.iloc[:, state_col["Experience_Part_Time"]] = np.where(
+            choice == 1,
+            current_states.iloc[:, state_col["Experience_Part_Time"]] + 1,
+            current_states.iloc[:, state_col["Experience_Part_Time"]],
         )
-        current_states[:, 5] = np.where(
-            choice == 2, current_states[:, 5] + 1, current_states[:, 5]
+        current_states.iloc[:, state_col["Experience_Full_Time"]] = np.where(
+            choice == 2,
+            current_states.iloc[:, state_col["Experience_Full_Time"]] + 1,
+            current_states.iloc[:, state_col["Experience_Full_Time"]],
         )
-        current_states[:, 7] = child_new_age
-        current_states[:, 8] = new_partner_status
+
+        current_states.iloc[:, state_col["Period"]] = (
+            current_states.iloc[:, state_col["Period"]] + 1
+        )
+        current_states.iloc[:, state_col["Lagged_Choice"]] = choice
+        current_states.iloc[:, state_col["Age_Youngest_Child"]] = child_new_age
+        current_states.iloc[:, state_col["Partner_Indicator"]] = new_partner
+
     return data
 
 
-def prepare_simulation_data(
-    model_params,
-    model_spec,
-    prob_educ_level,
-    prob_child_age,
-    prob_partner_present,
-    prob_exp_ft,
-    prob_exp_pt,
-    covariates,
-    states,
-    tax_splitting,
-    is_expected,
-):
-    # Draw initial condition: education level
-    initial_educ_level = np.random.choice(
-        model_spec.num_educ_levels, model_spec.num_agents_sim, p=prob_educ_level
-    )
+def _interp_uniform_grid(values, stock):
+    """Interpolate along the last axis on a uniform [0,1] grid.
 
-    # Draw initial conditions: age of youngest child, partner status,
-    # experience full-time and experience part-time
-    initial_child_age = np.full(model_spec.num_agents_sim, np.nan)
-    initial_partner_status = np.full(model_spec.num_agents_sim, np.nan)
-    initial_pt_exp = np.full(model_spec.num_agents_sim, np.nan)
-    initial_ft_exp = np.full(model_spec.num_agents_sim, np.nan)
+    Parameters
+    ----------
+    values : np.ndarray
+        Shape (..., n_grid)
+    stock : np.ndarray
+        Shape (...) matching the leading dimensions of values.
+    """
 
-    for educ_level in range(model_spec.num_educ_levels):
-        # Child
-        initial_child_age[initial_educ_level == educ_level] = np.random.choice(
-            list(range(-1, model_spec.child_age_init_max + 1)),
-            sum(initial_educ_level == educ_level),
-            p=prob_child_age[educ_level],
-        )
-        # Partner
-        initial_partner_status[initial_educ_level == educ_level] = np.random.binomial(
-            size=sum(initial_educ_level == educ_level),
-            n=1,
-            p=prob_partner_present[educ_level],
-        )
+    n_grid = values.shape[-1]
+    u = np.clip(stock, 0.0, 1.0) * (n_grid - 1)
 
-        # Part-time experience
-        initial_pt_exp[initial_educ_level == educ_level] = np.random.choice(
-            list(range(0, model_spec.init_exp_max + 1)),
-            sum(initial_educ_level == educ_level),
-            p=prob_exp_pt[educ_level],
-        )
-        # Full-time experience
-        initial_ft_exp[initial_educ_level == educ_level] = np.random.choice(
-            list(range(0, model_spec.init_exp_max + 1)),
-            sum(initial_educ_level == educ_level),
-            p=prob_exp_ft[educ_level],
-        )
+    idx_lo = np.floor(u).astype(int)
+    idx_hi = np.minimum(idx_lo + 1, n_grid - 1)
+    w = u - idx_lo
 
-    lagged_choice = lagged_choice_initial(initial_ft_exp, initial_pt_exp)
+    take_lo = np.take_along_axis(values, idx_lo[..., None], axis=-1)[..., 0]
+    take_hi = np.take_along_axis(values, idx_hi[..., None], axis=-1)[..., 0]
 
-    # Draw random type
-    type_ = np.random.choice(
-        list(np.arange(model_spec.num_types)),
-        model_spec.num_agents_sim,
-        p=model_params.type_shares,
-    )
-
-    # Draw shocks
-    draws_sim = draw_zero_one_distributed_shocks(
-        model_spec.seed_sim, model_spec.num_periods, model_spec.num_agents_sim
-    )
-    draws_sim *= model_params.shock_sd
-
-    # Calculate utility components
-    log_wage_systematic = calculate_log_wage(model_params, states, is_expected)
-
-    non_employment_consumption_resources = (
-        calculate_non_employment_consumption_resources(
-            model_spec.ssc_deductions,
-            model_spec.tax_params,
-            model_spec,
-            states,
-            log_wage_systematic,
-            covariates[:, 1],
-            covariates[:, 3],
-            tax_splitting,
-            HOURS,
-        )
-    )
-
-    # Determine initial states according to initial conditions
-    initial_states = pd.DataFrame(
-        np.column_stack(
-            (
-                np.arange(model_spec.num_agents_sim),
-                np.array(model_spec.educ_years)[initial_educ_level],
-                initial_educ_level,
-                lagged_choice,
-                initial_pt_exp,
-                initial_ft_exp,
-                type_,
-                initial_child_age,
-                initial_partner_status,
-            )
-        ),
-        columns=DATA_LABLES_SIM[:9],
-    ).astype(int)
-    return (
-        initial_states,
-        draws_sim,
-        log_wage_systematic,
-        non_employment_consumption_resources,
-    )
+    return take_lo + w * (take_hi - take_lo)
 
 
 def get_child_care_cost_for_choice(child_bins, child_care_costs):
+    child_bins = child_bins.copy()
     child_bins[child_bins > 2] = 0
+
     child_costs = np.zeros((child_bins.shape[0], 2))
     for choice in range(2):
         for age_bin in range(1, 3):

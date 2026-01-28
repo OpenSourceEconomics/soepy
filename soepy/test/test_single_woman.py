@@ -7,7 +7,7 @@ import pytest
 from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
 from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.education import gen_prob_educ_level_vector
-from soepy.exogenous_processes.experience import gen_prob_init_exp_vector
+from soepy.exogenous_processes.experience import gen_prob_init_exp_component_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 from soepy.pre_processing.model_processing import read_model_params_init
@@ -65,10 +65,10 @@ def input_data():
         prob_educ_level = gen_prob_educ_level_vector(model_spec)
         prob_child_age = gen_prob_child_init_age_vector(model_spec)
         prob_partner_present = gen_prob_partner_present_vector(model_spec)
-        prob_exp_ft = gen_prob_init_exp_vector(
+        prob_exp_ft = gen_prob_init_exp_component_vector(
             model_spec, model_spec.ft_exp_shares_file_name
         )
-        prob_exp_pt = gen_prob_init_exp_vector(
+        prob_exp_pt = gen_prob_init_exp_component_vector(
             model_spec, model_spec.pt_exp_shares_file_name
         )
         prob_child = gen_prob_child_vector(model_spec)
@@ -99,22 +99,22 @@ def input_data():
 
         # Simulate
         calculated_df = pyth_simulate(
-            model_params,
-            model_spec,
-            states,
-            indexer,
-            emaxs,
-            covariates,
-            non_consumption_utilities,
-            child_age_update_rule,
-            prob_educ_level,
-            prob_child_age,
-            prob_partner_present,
-            prob_exp_ft,
-            prob_exp_pt,
-            prob_child,
-            prob_partner,
-            is_expected=False,
+            model_params=model_params,
+            model_spec=model_spec,
+            states=states,
+            indexer=indexer,
+            emaxs=emaxs,
+            covariates=covariates,
+            non_consumption_utilities=non_consumption_utilities,
+            child_age_update_rule=child_age_update_rule,
+            prob_educ_level=prob_educ_level,
+            prob_child_age=prob_child_age,
+            prob_partner_present=prob_partner_present,
+            prob_exp_pt=prob_exp_pt,
+            prob_exp_ft=prob_exp_ft,
+            prob_child=prob_child,
+            prob_partner=prob_partner,
+            biased_exp=False,
         )
 
         out[name] = create_disc_sum_av_utility(
@@ -124,7 +124,7 @@ def input_data():
         # Check if really all are single at any time
         assert (calculated_df["Male_Wages"] == 0).all()
 
-    out["regression_disc_sum"] = -0.10843159499754612
+    out["regression_disc_sum"] = -0.10864927638945981
     return out
 
 
