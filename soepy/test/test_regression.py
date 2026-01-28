@@ -128,7 +128,7 @@ def test_pyth_simulate(input_vault, test_id):
         model_spec=model_spec,
         prob_child=prob_child,
         prob_partner=prob_partner,
-        is_expected=True,
+        biased_exp=True,
     )
 
     # Simulate
@@ -148,7 +148,7 @@ def test_pyth_simulate(input_vault, test_id):
         prob_exp_ft=prob_exp_ft,
         prob_child=prob_child,
         prob_partner=prob_partner,
-        is_expected=False,
+        biased_exp=False,
     )
 
     pd.testing.assert_series_equal(
@@ -226,7 +226,7 @@ def test_simulation_func_unbiased(input_vault, test_id):
     exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
     calculated_df = simulate(
-        random_model_params_df, model_spec_init_dict, is_expected=False
+        random_model_params_df, model_spec_init_dict, biased_exp=False
     )
 
     pd.testing.assert_series_equal(

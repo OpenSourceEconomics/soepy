@@ -50,7 +50,7 @@ def pyth_simulate(
     prob_exp_ft,
     prob_child,
     prob_partner,
-    is_expected,
+    biased_exp,
     data_sparse=False,
 ):
     """Simulate agent histories under the continuous-experience model."""
@@ -68,7 +68,7 @@ def pyth_simulate(
         prob_partner_present=prob_partner_present,
         prob_exp_pt=prob_exp_pt,
         prob_exp_ft=prob_exp_ft,
-        is_expected=is_expected,
+        biased_exp=biased_exp,
     )
 
     data = simulate_agents_over_periods(
@@ -84,7 +84,7 @@ def pyth_simulate(
         draws_sim=draws_sim,
         initial_states=initial_states,
         model_params=model_params,
-        is_expected=is_expected,
+        biased_exp=biased_exp,
         data_sparse=data_sparse,
     )
 
@@ -124,7 +124,7 @@ def simulate_agents_over_periods(
     draws_sim,
     initial_states,
     model_params,
-    is_expected,
+    biased_exp,
     data_sparse,
 ):
     state_col = _get_state_col_positions()
@@ -170,7 +170,8 @@ def simulate_agents_over_periods(
         pt_increment = get_pt_increment(
             model_params=model_params,
             educ_level=educ_level,
-            is_expected=is_expected,
+            child_age=age_child,
+            biased_exp=biased_exp,
         )
 
         log_wage_agents = np.asarray(

@@ -148,7 +148,7 @@ def input_data():
             prob_child=prob_child,
             prob_exp_ft=prob_exp_ft,
             prob_partner=prob_partner,
-            is_expected=False,
+            biased_exp=False,
             data_sparse=False,
         )
 

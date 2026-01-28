@@ -15,7 +15,7 @@ def prepare_simulation_data(
     prob_partner_present,
     prob_exp_pt,
     prob_exp_ft,
-    is_expected,
+    biased_exp,
 ):
     """Draw initial conditions and precompute grid objects for simulation."""
 
@@ -60,7 +60,8 @@ def prepare_simulation_data(
     pt_increment = get_pt_increment(
         model_params=model_params,
         educ_level=initial_educ_level,
-        is_expected=is_expected,
+        child_age=initial_child_age,
+        biased_exp=biased_exp,
     )
 
     total_years = initial_exp_pt * pt_increment + initial_exp_ft

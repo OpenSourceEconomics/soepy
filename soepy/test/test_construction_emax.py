@@ -58,7 +58,7 @@ def test_construct_emax_nonemployment_branch_matches_value_function():
         model_spec=model_spec,
         prob_child=prob_child,
         prob_partner=prob_partner,
-        is_expected=False,
+        biased_exp=False,
     )
 
     # Last period: continuation is zero, so max value is max over instant utilities.
@@ -72,7 +72,8 @@ def test_construct_emax_nonemployment_branch_matches_value_function():
     pt_inc = get_pt_increment(
         model_params=model_params,
         educ_level=states_last[:, 1],
-        is_expected=False,
+        child_age=states_last[:, 4],
+        biased_exp=False,
     )
     exp_grid = np.asarray(model_spec.exp_grid)
 

@@ -79,9 +79,8 @@ def _make_min_model_params():
         # Wages: log_wage = gamma_0 + gamma_f * log(exp_years + 1)
         "gamma_0": jnp.array([0.0]),
         "gamma_1": jnp.array([0.5]),
-        # Expectation bias is not used in wages; still needed for pt increment if expected.
-        "gamma_p_bias": jnp.array([0.5]),
         "gamma_p": jnp.array([0.3]),
+        "gamma_p_mom": 0.0,
         # Non-consumption utility parameters (set to 0 => exp(0)=1)
         "theta_p": jnp.array([0.0]),
         "theta_f": jnp.array([0.0]),
@@ -170,7 +169,8 @@ def _reference_solve(
                 get_pt_increment(
                     model_params=model_params,
                     educ_level=educ,
-                    is_expected=False,
+                    child_age=int(states_t[i, AGE_YOUNGEST_CHILD]),
+                    biased_exp=False,
                 )
             )
 
@@ -272,7 +272,7 @@ def test_full_solve_matches_reference():
         model_spec=model_spec,
         prob_child=prob_child,
         prob_partner=prob_partner,
-        is_expected=False,
+        biased_exp=False,
     )
 
     ref = _reference_solve(

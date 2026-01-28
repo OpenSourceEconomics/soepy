@@ -179,11 +179,7 @@ def random_init(constr=None):
         model_params_init_dict["gamma_p_high"],
     ) = np.random.uniform(0.001, 0.2, 3).tolist()
 
-    (
-        model_params_init_dict["gamma_p_bias_low"],
-        model_params_init_dict["gamma_p_bias_middle"],
-        model_params_init_dict["gamma_p_bias_high"],
-    ) = np.random.uniform(0.6, 1.4, 3).tolist()
+    model_params_init_dict["gamma_p_mom"] = float(np.random.uniform(0.6, 1.4, 1)[0])
 
     (
         model_params_init_dict["no_kids_f_educ_low"],
@@ -240,10 +236,10 @@ def random_init(constr=None):
             category.append("const_wage_eq")
         elif "gamma_1" in key:
             category.append("exp_return")
-        elif ("gamma_p" in key) and ("gamma_p_bias" not in key):
+        elif ("gamma_p" in key) and ("gamma_p_mom" not in key):
             category.append("exp_increase_p")
-        elif "gamma_p_bias" in key:
-            category.append("exp_increase_p_bias")
+        elif "gamma_p_mom" in key:
+            category.append("exp_increase_p_mom")
 
         elif "theta" in key:
             category.append("hetrg_unobs")

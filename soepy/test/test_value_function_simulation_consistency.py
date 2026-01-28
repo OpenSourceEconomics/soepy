@@ -141,12 +141,13 @@ def _minimal_model_params_df() -> pd.DataFrame:
         rows.append(("const_wage_eq", f"gamma_0_{educ_type}", 0.0))
         rows.append(("exp_return", f"gamma_1_{educ_type}", 0.1))
         rows.append(("exp_increase_p", f"gamma_p_{educ_type}", 0.5))
-        rows.append(("exp_increase_p_bias", f"gamma_p_bias_{educ_type}", 1.0))
 
         rows.append(("disutil_work", f"no_kids_f_educ_{educ_type}", 0.0))
         rows.append(("disutil_work", f"yes_kids_f_educ_{educ_type}", 0.0))
         rows.append(("disutil_work", f"no_kids_p_educ_{educ_type}", 0.0))
         rows.append(("disutil_work", f"yes_kids_p_educ_{educ_type}", 0.0))
+
+    rows.append(("exp_increase_p_mom", "gamma_p_mom", 0.0))
 
     for name in [
         "child_0_2_f",
@@ -182,7 +183,7 @@ def test_value_function_matches_mean_realized_discounted_sum():
     simulate_func = get_simulate_func(
         model_params_init_file_name=model_params_df,
         model_spec_init_file_name=model_spec_init_dict,
-        is_expected=True,
+        biased_exp=True,
         data_sparse=False,
     )
     df = simulate_func(

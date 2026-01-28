@@ -114,7 +114,7 @@ def input_data():
             prob_exp_ft=prob_exp_ft,
             prob_child=prob_child,
             prob_partner=prob_partner,
-            is_expected=False,
+            biased_exp=False,
         )
 
         out[name] = create_disc_sum_av_utility(

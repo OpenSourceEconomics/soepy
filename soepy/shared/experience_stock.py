@@ -1,46 +1,40 @@
-"""Experience stock utilities.
-
-This module defines a continuous experience stock ``x`` on [0, 1]. Internally, we map
-between the stock and experience measured in (model) years.
-
-The period-specific scale is
-
-    max_exp_years(period) = init_exp_max + max(period, period * pt_increment)
-
-where ``pt_increment`` is the per-period increment in experience from part-time work
-(full-time increments by 1).
-
-The functions are implemented with ``jax.numpy`` so they can be used in jitted code.
-"""
-from __future__ import annotations
-
 import jax.numpy as jnp
 
 
-def get_pt_increment(model_params, educ_level, is_expected):
+def get_pt_increment(model_params, educ_level, child_age, biased_exp):
     """Return the part-time experience increment.
+
+    Rules
+    -----
+    - If ``biased_exp`` is True: always return 1.0 (same as full-time).
+    - Else: return ``gamma_p[educ_level]`` plus ``gamma_p_mom`` if the agent's
+      youngest child aged 0–2.
 
     Parameters
     ----------
     model_params : namedtuple-like
-        Model parameters with attribute ``gamma_p`` or ``gamma_p_bias``.
-    is_expected : bool
+        Model parameters with attributes ``gamma_p`` and ``gamma_p_mom``.
+    educ_level : int | jnp.ndarray
+        Education level index/indices.
+    child_age : int | jnp.ndarray
+        Age of youngest child (use -1 for no child).
+    biased_exp : bool
         Whether to use the expected law of motion.
-    educ_level : int | None
-        Optional education level index when the increment is education-specific.
 
     Returns
     -------
     float or jnp.ndarray
-        The part-time increment.
+        Part-time increment(s).
     """
 
-    if is_expected:
-        increment = model_params.gamma_p_bias
-    else:
-        increment = model_params.gamma_p
+    if biased_exp:
+        # Must return an array when called from JAX-jitted code.
+        return jnp.ones_like(educ_level, dtype=float)
 
-    return increment[educ_level]
+    base = model_params.gamma_p[educ_level]
+    little_child = (child_age >= 0) & (child_age <= 2)
+
+    return base + little_child * model_params.gamma_p_mom
 
 
 def max_exp_years(period, init_exp_max, pt_increment):

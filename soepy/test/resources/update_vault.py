@@ -71,7 +71,7 @@ def update_sim_objectes():
 
         calculated_df_sim = simulate(random_model_params_df, model_spec_init_dict)
         unbiased_calc_df = simulate(
-            random_model_params_df, model_spec_init_dict, is_expected=False
+            random_model_params_df, model_spec_init_dict, biased_exp=False
         )
 
         vault[i] = (

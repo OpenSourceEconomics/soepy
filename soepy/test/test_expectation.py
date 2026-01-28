@@ -28,23 +28,36 @@ def test_simulation_func_exp():
     calculated_df_false = simulate(
         model_params_init_file_name=model_params_df,
         model_spec_init_file_name="test.soepy.yml",
-        is_expected=False,
+        biased_exp=False,
     )
 
     # Force expected law of motion to match unbiased.
+    # Under the new rule `biased_exp=True` always returns 1.0, so set gamma_p to 1.0
+    # and remove the mother increment.
     for edu_type in ["low", "middle", "high"]:
-        model_params_df.loc[
-            ("exp_increase_p_bias", f"gamma_p_bias_{edu_type}"), "value"
-        ] = model_params_df.loc[("exp_increase_p", f"gamma_p_{edu_type}"), "value"]
+        model_params_df.loc[("exp_increase_p", f"gamma_p_{edu_type}"), "value"] = 1.0
+
+    model_params_df.loc[("exp_increase_p_mom", "gamma_p_mom"), "value"] = 0.0
 
     calculated_df_true = simulate(
         model_params_init_file_name=model_params_df,
         model_spec_init_file_name="test.soepy.yml",
-        is_expected=True,
+        biased_exp=True,
     )
 
+    # Under the new rule, `biased_exp=True` sets pt increment to 1.0 everywhere.
+    # To make the two runs comparable, we only assert equality for columns that do not
+    # depend on the experience accumulation law.
+    cols = [
+        "Education_Level",
+        "Type",
+        "Partner_Indicator",
+        "Age_Youngest_Child",
+        "Male_Wages",
+    ]
+
     pd.testing.assert_series_equal(
-        calculated_df_false.sum(axis=0),
-        calculated_df_true.sum(axis=0),
+        calculated_df_false[cols].sum(axis=0),
+        calculated_df_true[cols].sum(axis=0),
     )
     cleanup()

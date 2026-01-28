@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+from soepy.shared.constants_and_indices import AGE_YOUNGEST_CHILD
 from soepy.shared.constants_and_indices import EDUC_LEVEL
 from soepy.shared.constants_and_indices import HOURS
 from soepy.shared.constants_and_indices import NUM_CHOICES
@@ -28,7 +29,7 @@ def pyth_solve(
     model_spec,
     prob_child,
     prob_partner,
-    is_expected,
+    biased_exp,
 ):
     solve_func = get_solve_function(
         states=states,
@@ -37,7 +38,7 @@ def pyth_solve(
         model_spec=model_spec,
         prob_child=prob_child,
         prob_partner=prob_partner,
-        is_expected=is_expected,
+        biased_exp=biased_exp,
     )
     non_consumption_utilities, emaxs = solve_func(model_params)
     return non_consumption_utilities, emaxs
@@ -50,16 +51,8 @@ def get_solve_function(
     model_spec,
     prob_child,
     prob_partner,
-    is_expected,
+    biased_exp,
 ):
-    # Ensure arrays used inside `jit` are JAX arrays.
-    model_spec = model_spec._replace(
-        ssc_deductions=jnp.asarray(model_spec.ssc_deductions),
-        tax_params=jnp.asarray(model_spec.tax_params),
-        child_care_costs=jnp.asarray(model_spec.child_care_costs),
-        exp_grid=model_spec.exp_grid,
-    )
-
     unscaled_draws_emax, draw_weights_emax = get_integration_draws_and_weights(
         model_spec
     )
@@ -108,7 +101,7 @@ def get_solve_function(
             prob_partner=prob_partner_arg,
             model_spec=model_spec,
             hours=hours,
-            is_expected=is_expected,
+            biased_exp=biased_exp,
         )
 
     def solve_function(params):
@@ -137,7 +130,7 @@ def pyth_backward_induction(
     prob_partner,
     model_spec,
     hours,
-    is_expected,
+    biased_exp,
 ):
     period_specific_objects = {
         "states": states_per_period,
@@ -172,8 +165,9 @@ def pyth_backward_induction(
 
         pt_increment_states = get_pt_increment(
             model_params=model_params,
-            is_expected=is_expected,
             educ_level=edu_state,
+            child_age=states_period[:, AGE_YOUNGEST_CHILD],
+            biased_exp=biased_exp,
         )
 
         prob_child_period_states = prob_child_period[edu_state]

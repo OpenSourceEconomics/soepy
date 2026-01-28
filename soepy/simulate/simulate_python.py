@@ -16,7 +16,7 @@ from soepy.solve.solve_python import get_solve_function
 def simulate(
     model_params_init_file_name,
     model_spec_init_file_name,
-    is_expected=True,
+    biased_exp=True,
     data_sparse=False,
 ):
     """Simulate a dataset given init specs."""
@@ -24,7 +24,7 @@ def simulate(
     simulate_func = get_simulate_func(
         model_params_init_file_name=model_params_init_file_name,
         model_spec_init_file_name=model_spec_init_file_name,
-        is_expected=is_expected,
+        biased_exp=biased_exp,
         data_sparse=data_sparse,
     )
 
@@ -34,7 +34,7 @@ def simulate(
 def get_simulate_func(
     model_params_init_file_name,
     model_spec_init_file_name,
-    is_expected=True,
+    biased_exp=True,
     data_sparse=False,
 ):
     """Create a simulation function with cached state space objects."""
@@ -73,7 +73,7 @@ def get_simulate_func(
         model_spec=model_spec,
         prob_child=prob_child,
         prob_partner=prob_partner,
-        is_expected=is_expected,
+        biased_exp=biased_exp,
     )
 
     def simulate_func(
@@ -105,7 +105,7 @@ def get_simulate_func(
             prob_exp_ft=prob_exp_ft,
             prob_child=prob_child,
             prob_partner=prob_partner,
-            is_expected=False,
+            biased_exp=False,
             data_sparse=data_sparse,
         ).set_index(["Identifier", "Period"])
 
@@ -157,7 +157,7 @@ def partiable_simulate(
         prob_exp_ft=prob_exp_ft,
         prob_child=prob_child,
         prob_partner=prob_partner,
-        is_expected=False,
+        biased_exp=False,
         data_sparse=data_sparse,
     ).set_index(["Identifier", "Period"])
 
