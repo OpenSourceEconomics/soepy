@@ -106,10 +106,7 @@ def test_unit_data_frame_shape():
         initial_states=initial_states,
     ).reset_index()
 
-    counts = [
-        df[df["Education_Level"] == i]["Identifier"].nunique()
-        for i in [0, 1, 2]
-    ]
+    counts = [df[df["Education_Level"] == i]["Identifier"].nunique() for i in [0, 1, 2]]
 
     expected_rows = sum(
         n_agents * (constr["PERIODS"] - edu_years)

@@ -4,10 +4,10 @@ from soepy.exogenous_processes.children import gen_prob_child_vector
 from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
+from soepy.simulate.initial_states import validate_initial_states
 from soepy.simulate.simulate_auxiliary import pyth_simulate
 from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import get_solve_function
-from soepy.simulate.initial_states import validate_initial_states
 
 
 def simulate(
@@ -65,7 +65,6 @@ def get_simulate_func(
         prob_partner=prob_partner,
         biased_exp=biased_exp,
     )
-
 
     def simulate_func(
         model_params_init_file_name_inner,

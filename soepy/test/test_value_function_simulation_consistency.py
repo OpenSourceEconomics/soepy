@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 
 from soepy.simulate.simulate_python import get_simulate_func
-from soepy.test.resources.initial_states import create_initial_states
 from soepy.test.resources.aux_funcs import cleanup
+from soepy.test.resources.initial_states import create_initial_states
 
 
 def _write_minimal_exog_files(*, num_periods: int) -> None:

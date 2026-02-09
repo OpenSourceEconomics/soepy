@@ -14,10 +14,10 @@ from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.simulate.simulate_auxiliary import pyth_simulate
-from soepy.test.resources.initial_states import create_initial_states_from_probs
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
+from soepy.test.resources.initial_states import create_initial_states_from_probs
 
 
 @pytest.fixture(scope="module")

@@ -18,6 +18,7 @@ from soepy.simulate.constants_sim import STATE_LABELS_SIM
 from soepy.simulate.income_sim import calculate_employment_consumption_resources
 from soepy.simulate.initial_states import validate_initial_states
 
+
 def pyth_simulate(
     model_params,
     model_spec,
