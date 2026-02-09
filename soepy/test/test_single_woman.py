@@ -13,6 +13,7 @@ from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.simulate.simulate_auxiliary import pyth_simulate
+from soepy.test.resources.initial_states import create_initial_states_from_probs
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
@@ -98,6 +99,16 @@ def input_data():
         )
 
         # Simulate
+        initial_states = create_initial_states_from_probs(
+            model_params=model_params,
+            model_spec=model_spec,
+            prob_educ_level=prob_educ_level,
+            prob_child_age=prob_child_age,
+            prob_partner_present=prob_partner_present,
+            prob_exp_pt=prob_exp_pt,
+            prob_exp_ft=prob_exp_ft,
+        )
+
         calculated_df = pyth_simulate(
             model_params=model_params,
             model_spec=model_spec,
@@ -107,14 +118,10 @@ def input_data():
             covariates=covariates,
             non_consumption_utilities=non_consumption_utilities,
             child_age_update_rule=child_age_update_rule,
-            prob_educ_level=prob_educ_level,
-            prob_child_age=prob_child_age,
-            prob_partner_present=prob_partner_present,
-            prob_exp_pt=prob_exp_pt,
-            prob_exp_ft=prob_exp_ft,
             prob_child=prob_child,
             prob_partner=prob_partner,
             biased_exp=False,
+            initial_states=initial_states,
         )
 
         out[name] = create_disc_sum_av_utility(
@@ -124,7 +131,7 @@ def input_data():
         # Check if really all are single at any time
         assert (calculated_df["Male_Wages"] == 0).all()
 
-    out["regression_disc_sum"] = -0.10864927638945981
+    out["regression_disc_sum"] = -0.10947236852045482
     return out
 
 

@@ -3,6 +3,7 @@ import pandas as pd
 from soepy.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
 from soepy.test.resources.aux_funcs import cleanup
+from soepy.test.resources.initial_states import create_initial_states
 
 
 def test_simulation_func_exp():
@@ -25,9 +26,14 @@ def test_simulation_func_exp():
 
     model_params_df = pd.read_pickle("test.soepy.pkl")
 
+    initial_states = create_initial_states(
+        model_params_init_file_name=model_params_df,
+        model_spec_init_file_name="test.soepy.yml",
+    )
     calculated_df_false = simulate(
         model_params_init_file_name=model_params_df,
         model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
         biased_exp=False,
     )
 
@@ -42,6 +48,7 @@ def test_simulation_func_exp():
     calculated_df_true = simulate(
         model_params_init_file_name=model_params_df,
         model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
         biased_exp=True,
     )
 

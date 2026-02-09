@@ -5,6 +5,7 @@ from soepy.simulate.simulate_python import get_simulate_func
 from soepy.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
 from soepy.test.resources.aux_funcs import cleanup
+from soepy.test.resources.initial_states import create_initial_states
 
 
 def test_simulation_func():
@@ -26,9 +27,15 @@ def test_simulation_func():
     }
     random_init(constr)
 
+    initial_states = create_initial_states(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+    )
+
     df_sim = simulate(
         model_params_init_file_name="test.soepy.pkl",
         model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
     )
     simulate_func = get_simulate_func(
         model_params_init_file_name="test.soepy.pkl",
@@ -37,6 +44,7 @@ def test_simulation_func():
     df_partial_sim = simulate_func(
         model_params_init_file_name_inner="test.soepy.pkl",
         model_spec_init_file_name_inner="test.soepy.yml",
+        initial_states=initial_states,
     )
 
     pd.testing.assert_series_equal(

@@ -5,6 +5,13 @@ import jax.numpy as jnp
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.test.resources.aux_funcs import cleanup
+from soepy.test.resources.initial_states import create_initial_states_from_probs
+from soepy.pre_processing.model_processing import read_model_params_init
+from soepy.pre_processing.model_processing import read_model_spec_init
+from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
+from soepy.exogenous_processes.education import gen_prob_educ_level_vector
+from soepy.exogenous_processes.experience import gen_prob_init_exp_component_vector
+from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 
 
 def update_sim_objectes():
@@ -44,9 +51,39 @@ def update_sim_objectes():
         # Sort index after modifications
         random_model_params_df = random_model_params_df.sort_index()
 
-        calculated_df_sim = simulate(random_model_params_df, model_spec_init_dict)
+        model_params_df, model_params = read_model_params_init(random_model_params_df)
+        model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
+
+        prob_educ_level = gen_prob_educ_level_vector(model_spec)
+        prob_child_age = gen_prob_child_init_age_vector(model_spec)
+        prob_partner_present = gen_prob_partner_present_vector(model_spec)
+        prob_exp_pt = gen_prob_init_exp_component_vector(
+            model_spec, model_spec.pt_exp_shares_file_name
+        )
+        prob_exp_ft = gen_prob_init_exp_component_vector(
+            model_spec, model_spec.ft_exp_shares_file_name
+        )
+
+        initial_states = create_initial_states_from_probs(
+            model_params=model_params,
+            model_spec=model_spec,
+            prob_educ_level=prob_educ_level,
+            prob_child_age=prob_child_age,
+            prob_partner_present=prob_partner_present,
+            prob_exp_pt=prob_exp_pt,
+            prob_exp_ft=prob_exp_ft,
+        )
+
+        calculated_df_sim = simulate(
+            random_model_params_df,
+            model_spec_init_dict,
+            initial_states=initial_states,
+        )
         unbiased_calc_df = simulate(
-            random_model_params_df, model_spec_init_dict, biased_exp=False
+            random_model_params_df,
+            model_spec_init_dict,
+            initial_states=initial_states,
+            biased_exp=False,
         )
 
         vault[i] = (
