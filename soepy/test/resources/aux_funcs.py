@@ -36,3 +36,15 @@ def cleanup(options=None):
                 pass
             else:
                 os.remove(f)
+
+
+def move_initial_conditions(model_spec_init_dict):
+    if "INITIAL_CONDITIONS" not in model_spec_init_dict:
+        return model_spec_init_dict
+
+    if "EXOG_PROC" not in model_spec_init_dict:
+        model_spec_init_dict["EXOG_PROC"] = {}
+
+    model_spec_init_dict["EXOG_PROC"].update(model_spec_init_dict["INITIAL_CONDITIONS"])
+    del model_spec_init_dict["INITIAL_CONDITIONS"]
+    return model_spec_init_dict

@@ -1,7 +1,5 @@
 import numpy as np
 
-from soepy.exogenous_processes.children import gen_prob_child_vector
-from soepy.exogenous_processes.partner import gen_prob_partner
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.constants_and_indices import HOURS
@@ -12,6 +10,8 @@ from soepy.shared.wages import calculate_log_wage
 from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
 from soepy.test.random_init import random_init
+from soepy.test.resources.exogenous_processes import gen_prob_child_vector
+from soepy.test.resources.exogenous_processes import gen_prob_partner
 
 
 def test_construct_emax_nonemployment_branch_matches_value_function():

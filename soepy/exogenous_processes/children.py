@@ -19,8 +19,6 @@ def define_child_age_update_rule(model_spec, states):
 
 
 def gen_prob_child_vector(model_spec):
-    """Generate probability of childbirth for each period and lagged choice."""
-
     exog_child_info_df = pd.read_pickle(model_spec.child_info_file_name)
 
     exog_child_info_df = exog_child_info_df.iloc[
@@ -38,19 +36,3 @@ def gen_prob_child_vector(model_spec):
 
     assert len(prob_child) == model_spec.num_periods
     return prob_child
-
-
-def gen_prob_child_init_age_vector(model_spec):
-    """Generate shares of initial child ages by education level."""
-
-    child_age_shares = pd.read_pickle(model_spec.child_age_shares_file_name)
-
-    prob_child_age = []
-    for educ_level in range(model_spec.num_educ_levels):
-        child_age_shares_list = child_age_shares[
-            child_age_shares.index.get_level_values("educ_level") == educ_level
-        ]["child_age_shares"].to_list()
-        child_age_shares_list[0] = 1 - sum(child_age_shares_list[1:])
-        prob_child_age.append(child_age_shares_list)
-
-    return prob_child_age

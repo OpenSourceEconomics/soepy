@@ -110,7 +110,7 @@ def _minimal_model_spec_init_dict(*, num_periods: int, num_agents: int) -> dict:
             "tax_year": 2007,
             "tax_splitting": True,
         },
-        "INITIAL_CONDITIONS": {
+        "EXOG_PROC": {
             "educ_shares_file_name": "test.soepy.educ.shares.pkl",
             "child_age_shares_file_name": "test.soepy.child.age.shares.pkl",
             "child_age_init_max": -1,
@@ -118,8 +118,6 @@ def _minimal_model_spec_init_dict(*, num_periods: int, num_agents: int) -> dict:
             "ft_exp_shares_file_name": "test.soepy.ft.exp.shares.pkl",
             "pt_exp_shares_file_name": "test.soepy.pt.exp.shares.pkl",
             "init_exp_max": 0,
-        },
-        "EXOG_PROC": {
             "child_info_file_name": "test.soepy.child.pkl",
             "partner_arrival_info_file_name": "test.soepy.partner.arrival.pkl",
             "partner_separation_info_file_name": "test.soepy.partner.separation.pkl",
@@ -129,6 +127,11 @@ def _minimal_model_spec_init_dict(*, num_periods: int, num_agents: int) -> dict:
             "partner_cf_age": 0.0,
             "partner_cf_age_sq": 0.0,
             "partner_cf_educ": 0.0,
+            "child_cf_const": 0.0,
+            "child_cf_age": 0.0,
+            "child_cf_age_sq": 0.0,
+            "child_cf_educ": 0.0,
+            "child_cf_presence": 0.0,
         },
         # Continuous experience grid (required at top-level).
         "exp_grid": np.linspace(0.0, 1.0, 10).tolist(),

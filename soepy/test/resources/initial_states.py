@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
 
-from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
-from soepy.exogenous_processes.education import gen_prob_educ_level_vector
-from soepy.exogenous_processes.experience import gen_prob_init_exp_component_vector
-from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.shared.experience_stock import get_pt_increment
+from soepy.test.resources.exogenous_processes import gen_prob_child_init_age_vector
+from soepy.test.resources.exogenous_processes import gen_prob_educ_level_vector
+from soepy.test.resources.exogenous_processes import gen_prob_init_exp_component_vector
+from soepy.test.resources.exogenous_processes import gen_prob_partner_present_vector
 
 
 def _lagged_choice_initial(initial_exp_years):

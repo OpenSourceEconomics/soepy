@@ -68,7 +68,6 @@ def random_init(constr=None):
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",
-        "INITIAL_CONDITIONS",
         "EXOG_PROC",
     ]:
         model_spec_init_dict[key_] = {}
@@ -121,25 +120,23 @@ def random_init(constr=None):
     model_spec_init_dict["TAXES_TRANSFERS"]["tax_year"] = 2007
     model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = True
 
-    model_spec_init_dict["INITIAL_CONDITIONS"][
+    model_spec_init_dict["EXOG_PROC"][
         "educ_shares_file_name"
     ] = "test.soepy.educ.shares.pkl"
-    model_spec_init_dict["INITIAL_CONDITIONS"][
+    model_spec_init_dict["EXOG_PROC"][
         "child_age_shares_file_name"
     ] = "test.soepy.child.age.shares.pkl"
-    model_spec_init_dict["INITIAL_CONDITIONS"][
-        "child_age_init_max"
-    ] = child_age_init_max
-    model_spec_init_dict["INITIAL_CONDITIONS"][
+    model_spec_init_dict["EXOG_PROC"]["child_age_init_max"] = child_age_init_max
+    model_spec_init_dict["EXOG_PROC"][
         "partner_shares_file_name"
     ] = "test.soepy.partner.shares.pkl"
-    model_spec_init_dict["INITIAL_CONDITIONS"][
+    model_spec_init_dict["EXOG_PROC"][
         "ft_exp_shares_file_name"
     ] = "test.soepy.ft.exp.shares.pkl"
-    model_spec_init_dict["INITIAL_CONDITIONS"][
+    model_spec_init_dict["EXOG_PROC"][
         "pt_exp_shares_file_name"
     ] = "test.soepy.pt.exp.shares.pkl"
-    model_spec_init_dict["INITIAL_CONDITIONS"]["init_exp_max"] = init_exp_max
+    model_spec_init_dict["EXOG_PROC"]["init_exp_max"] = init_exp_max
 
     model_spec_init_dict["EXOG_PROC"]["child_info_file_name"] = "test.soepy.child.pkl"
     model_spec_init_dict["EXOG_PROC"][
@@ -402,7 +399,6 @@ def print_dict(model_spec_init_dict, file_name="test"):
         "SIMULATION",
         "SOLUTION",
         "TAXES_TRANSFERS",
-        "INITIAL_CONDITIONS",
         "EXOG_PROC",
     ]
     for key_ in order:
@@ -477,13 +473,9 @@ def init_dict_flat_to_init_dict(init_dict_flat):
 
     init_dict["TAXES_TRANSFERS"]["tax_year"] = init_dict_flat["tax_year"]
 
-    init_dict["INITIAL_CONDITIONS"] = dict()
-    init_dict["INITIAL_CONDITIONS"]["child_age_init_max"] = init_dict_flat[
-        "child_age_init_max"
-    ]
-    init_dict["INITIAL_CONDITIONS"]["init_exp_max"] = init_dict_flat["init_exp_max"]
-
     init_dict["EXOG_PROC"] = dict()
+    init_dict["EXOG_PROC"]["child_age_init_max"] = init_dict_flat["child_age_init_max"]
+    init_dict["EXOG_PROC"]["init_exp_max"] = init_dict_flat["init_exp_max"]
     init_dict["EXOG_PROC"]["child_age_max"] = init_dict_flat["child_age_max"]
     init_dict["EXOG_PROC"]["last_child_bearing_period"] = init_dict_flat[
         "last_child_bearing_period"

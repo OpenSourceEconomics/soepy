@@ -4,12 +4,6 @@ import pickle
 import numpy as np
 import pytest
 
-from soepy.exogenous_processes.children import gen_prob_child_init_age_vector
-from soepy.exogenous_processes.children import gen_prob_child_vector
-from soepy.exogenous_processes.education import gen_prob_educ_level_vector
-from soepy.exogenous_processes.experience import gen_prob_init_exp_component_vector
-from soepy.exogenous_processes.partner import gen_prob_partner
-from soepy.exogenous_processes.partner import gen_prob_partner_present_vector
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.simulate.simulate_auxiliary import pyth_simulate
@@ -17,6 +11,13 @@ from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
 from soepy.test.resources.aux_funcs import create_disc_sum_av_utility
+from soepy.test.resources.aux_funcs import move_initial_conditions
+from soepy.test.resources.exogenous_processes import gen_prob_child_init_age_vector
+from soepy.test.resources.exogenous_processes import gen_prob_child_vector
+from soepy.test.resources.exogenous_processes import gen_prob_educ_level_vector
+from soepy.test.resources.exogenous_processes import gen_prob_init_exp_component_vector
+from soepy.test.resources.exogenous_processes import gen_prob_partner
+from soepy.test.resources.exogenous_processes import gen_prob_partner_present_vector
 from soepy.test.resources.initial_states import create_initial_states_from_probs
 
 
@@ -61,6 +62,7 @@ def input_data():
         else:
             model_spec_init_dict["TAXES_TRANSFERS"]["tax_splitting"] = tax
 
+        model_spec_init_dict = move_initial_conditions(model_spec_init_dict)
         model_spec = read_model_spec_init(model_spec_init_dict, model_params_df)
 
         prob_educ_level = gen_prob_educ_level_vector(model_spec)

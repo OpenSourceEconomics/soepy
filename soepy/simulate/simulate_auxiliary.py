@@ -10,11 +10,7 @@ from soepy.shared.non_employment import calc_erziehungsgeld
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.numerical_integration import draw_zero_one_distributed_shocks
 from soepy.shared.wages import calculate_log_wage
-from soepy.simulate.constants_sim import DATA_FORMATS_SIM
 from soepy.simulate.constants_sim import DATA_FORMATS_SPARSE
-from soepy.simulate.constants_sim import DATA_LABLES_SIM
-from soepy.simulate.constants_sim import LABELS_DATA_SPARSE
-from soepy.simulate.constants_sim import STATE_LABELS_SIM
 from soepy.simulate.income_sim import calculate_employment_consumption_resources
 from soepy.simulate.initial_states import validate_initial_states
 
@@ -30,7 +26,6 @@ def pyth_simulate(
     child_age_update_rule,
     prob_child,
     prob_partner,
-    *,
     biased_exp,
     initial_states,
     data_sparse=False,
