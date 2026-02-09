@@ -2,6 +2,7 @@ import numpy as np
 
 from soepy.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
+from soepy.test.resources.initial_states import create_initial_states
 
 
 def test_unit_nan():
@@ -22,9 +23,14 @@ def test_unit_nan():
         "NUM_DRAWS_EMAX": 20,
     }
     random_init(constr)
+    initial_states = create_initial_states(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+    )
     df = simulate(
         model_params_init_file_name="test.soepy.pkl",
         model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
     ).reset_index()
 
     for educ_level, educ_years in enumerate(constr["EDUC_YEARS"]):
@@ -51,9 +57,14 @@ def test_no_children_no_exp():
     }
     random_init(constr)
 
+    initial_states = create_initial_states(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+    )
     df = simulate(
         model_params_init_file_name="test.soepy.pkl",
         model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
     ).reset_index()
 
     # If the initial child-age distribution is degenerate at -1, then at period 0 all
@@ -85,9 +96,14 @@ def test_unit_data_frame_shape():
     }
     random_init(constr)
 
+    initial_states = create_initial_states(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+    )
     df = simulate(
         model_params_init_file_name="test.soepy.pkl",
         model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
     ).reset_index()
 
     counts = [df[df["Education_Level"] == i]["Identifier"].nunique() for i in [0, 1, 2]]

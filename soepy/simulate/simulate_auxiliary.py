@@ -3,10 +3,12 @@ import pandas as pd
 
 from soepy.shared.constants_and_indices import HOURS
 from soepy.shared.constants_and_indices import NUM_CHOICES
+from soepy.shared.experience_stock import exp_years_to_stock
 from soepy.shared.experience_stock import get_pt_increment
 from soepy.shared.experience_stock import next_stock
 from soepy.shared.non_employment import calc_erziehungsgeld
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
+from soepy.shared.numerical_integration import draw_zero_one_distributed_shocks
 from soepy.shared.wages import calculate_log_wage
 from soepy.simulate.constants_sim import DATA_FORMATS_SIM
 from soepy.simulate.constants_sim import DATA_FORMATS_SPARSE
@@ -14,7 +16,7 @@ from soepy.simulate.constants_sim import DATA_LABLES_SIM
 from soepy.simulate.constants_sim import LABELS_DATA_SPARSE
 from soepy.simulate.constants_sim import STATE_LABELS_SIM
 from soepy.simulate.income_sim import calculate_employment_consumption_resources
-from soepy.simulate.initial_states import prepare_simulation_data
+from soepy.simulate.initial_states import validate_initial_states
 
 
 def pyth_simulate(
@@ -26,33 +28,47 @@ def pyth_simulate(
     covariates,
     non_consumption_utilities,
     child_age_update_rule,
-    prob_educ_level,
-    prob_child_age,
-    prob_partner_present,
-    prob_exp_pt,
-    prob_exp_ft,
     prob_child,
     prob_partner,
+    *,
     biased_exp,
+    initial_states,
     data_sparse=False,
 ):
     """Simulate agent histories under the continuous-experience model."""
 
     np.random.seed(model_spec.seed_sim)
 
+    initial_states = validate_initial_states(initial_states, model_spec)
+    num_agents_sim = initial_states["Identifier"].nunique()
+
     emaxs = np.asarray(emaxs)
     non_consumption_utilities = np.asarray(non_consumption_utilities)
 
-    initial_states, draws_sim = prepare_simulation_data(
+    pt_increment = get_pt_increment(
         model_params=model_params,
-        model_spec=model_spec,
-        prob_educ_level=prob_educ_level,
-        prob_child_age=prob_child_age,
-        prob_partner_present=prob_partner_present,
-        prob_exp_pt=prob_exp_pt,
-        prob_exp_ft=prob_exp_ft,
-        biased_exp=biased_exp,
+        educ_level=initial_states["Education_Level"].to_numpy(),
+        child_age=initial_states["Age_Youngest_Child"].to_numpy(),
+        biased_exp=False,
     )
+    total_years = (
+        initial_states["Experience_Part_Time"].to_numpy() * pt_increment
+        + initial_states["Experience_Full_Time"].to_numpy()
+    )
+    initial_states = initial_states.copy()
+    initial_states["Experience_Stock"] = exp_years_to_stock(
+        exp_years=total_years,
+        period=initial_states["Period"].to_numpy(),
+        init_exp_max=model_spec.init_exp_max,
+        pt_increment=pt_increment,
+    ).astype(float)
+
+    draws_sim = draw_zero_one_distributed_shocks(
+        model_spec.seed_sim,
+        model_spec.num_periods,
+        num_agents_sim,
+    )
+    draws_sim = draws_sim * float(model_params.shock_sd)
 
     data_list = simulate_agents_over_periods(
         model_spec=model_spec,
@@ -161,7 +177,8 @@ def simulate_agents_over_periods(
             )
         )
 
-        wages = np.exp(log_wage_agents + draws_sim[period, : len(current_states)])
+        identifiers = current_states.iloc[:, state_col["Identifier"]].to_numpy()
+        wages = np.exp(log_wage_agents + draws_sim[period, identifiers])
         wages = wages * float(model_spec.elasticity_scale)
 
         female_income = wages[:, None] * HOURS[None, 1:]

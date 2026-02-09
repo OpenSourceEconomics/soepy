@@ -19,6 +19,7 @@ from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
 from soepy.test.resources.aux_funcs import cleanup
+from soepy.test.resources.initial_states import create_initial_states_from_probs
 
 
 CASES_TEST = random.sample(range(0, 100), 10)
@@ -131,6 +132,16 @@ def test_pyth_simulate(input_vault, test_id):
     )
 
     # Simulate
+    initial_states = create_initial_states_from_probs(
+        model_params=model_params,
+        model_spec=model_spec,
+        prob_educ_level=prob_educ_level,
+        prob_child_age=prob_child_age,
+        prob_partner_present=prob_partner_present,
+        prob_exp_pt=prob_exp_pt,
+        prob_exp_ft=prob_exp_ft,
+    )
+
     calculated_df = pyth_simulate(
         model_params=model_params,
         model_spec=model_spec,
@@ -140,14 +151,10 @@ def test_pyth_simulate(input_vault, test_id):
         covariates=covariates,
         non_consumption_utilities=non_consumption_utilities,
         child_age_update_rule=child_age_update_rule,
-        prob_educ_level=prob_educ_level,
-        prob_child_age=prob_child_age,
-        prob_partner_present=prob_partner_present,
-        prob_exp_pt=prob_exp_pt,
-        prob_exp_ft=prob_exp_ft,
         prob_child=prob_child,
         prob_partner=prob_partner,
         biased_exp=False,
+        initial_states=initial_states,
     )
 
     pd.testing.assert_series_equal(
@@ -186,7 +193,41 @@ def test_simulation_func(input_vault, test_id):
     exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
     exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
-    calculated_df = simulate(random_model_params_df, model_spec_init_dict)
+    model_params_df, model_params = read_model_params_init(
+        model_params_init_file_name=random_model_params_df
+    )
+    model_spec = read_model_spec_init(
+        model_spec_init_dict=model_spec_init_dict,
+        model_params=model_params_df,
+    )
+
+    prob_educ_level = gen_prob_educ_level_vector(model_spec=model_spec)
+    prob_child_age = gen_prob_child_init_age_vector(model_spec=model_spec)
+    prob_partner_present = gen_prob_partner_present_vector(model_spec=model_spec)
+    prob_exp_pt = gen_prob_init_exp_component_vector(
+        model_spec=model_spec,
+        model_spec_exp_file_key=model_spec.pt_exp_shares_file_name,
+    )
+    prob_exp_ft = gen_prob_init_exp_component_vector(
+        model_spec=model_spec,
+        model_spec_exp_file_key=model_spec.ft_exp_shares_file_name,
+    )
+
+    initial_states = create_initial_states_from_probs(
+        model_params=model_params,
+        model_spec=model_spec,
+        prob_educ_level=prob_educ_level,
+        prob_child_age=prob_child_age,
+        prob_partner_present=prob_partner_present,
+        prob_exp_pt=prob_exp_pt,
+        prob_exp_ft=prob_exp_ft,
+    )
+
+    calculated_df = simulate(
+        random_model_params_df,
+        model_spec_init_dict,
+        initial_states=initial_states,
+    )
 
     pd.testing.assert_series_equal(
         expected_df.loc[DATA_LABLES_CHECK],
@@ -224,8 +265,41 @@ def test_simulation_func_unbiased(input_vault, test_id):
     exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
     exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
+    model_params_df, model_params = read_model_params_init(
+        model_params_init_file_name=random_model_params_df
+    )
+    model_spec = read_model_spec_init(
+        model_spec_init_dict=model_spec_init_dict,
+        model_params=model_params_df,
+    )
+
+    prob_educ_level = gen_prob_educ_level_vector(model_spec=model_spec)
+    prob_child_age = gen_prob_child_init_age_vector(model_spec=model_spec)
+    prob_partner_present = gen_prob_partner_present_vector(model_spec=model_spec)
+    prob_exp_pt = gen_prob_init_exp_component_vector(
+        model_spec=model_spec,
+        model_spec_exp_file_key=model_spec.pt_exp_shares_file_name,
+    )
+    prob_exp_ft = gen_prob_init_exp_component_vector(
+        model_spec=model_spec,
+        model_spec_exp_file_key=model_spec.ft_exp_shares_file_name,
+    )
+
+    initial_states = create_initial_states_from_probs(
+        model_params=model_params,
+        model_spec=model_spec,
+        prob_educ_level=prob_educ_level,
+        prob_child_age=prob_child_age,
+        prob_partner_present=prob_partner_present,
+        prob_exp_pt=prob_exp_pt,
+        prob_exp_ft=prob_exp_ft,
+    )
+
     calculated_df = simulate(
-        random_model_params_df, model_spec_init_dict, biased_exp=False
+        random_model_params_df,
+        model_spec_init_dict,
+        initial_states=initial_states,
+        biased_exp=False,
     )
 
     pd.testing.assert_series_equal(
@@ -264,8 +338,41 @@ def test_simulation_func_data_sparse(input_vault, test_id):
     exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
     exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
+    model_params_df, model_params = read_model_params_init(
+        model_params_init_file_name=random_model_params_df
+    )
+    model_spec = read_model_spec_init(
+        model_spec_init_dict=model_spec_init_dict,
+        model_params=model_params_df,
+    )
+
+    prob_educ_level = gen_prob_educ_level_vector(model_spec=model_spec)
+    prob_child_age = gen_prob_child_init_age_vector(model_spec=model_spec)
+    prob_partner_present = gen_prob_partner_present_vector(model_spec=model_spec)
+    prob_exp_pt = gen_prob_init_exp_component_vector(
+        model_spec=model_spec,
+        model_spec_exp_file_key=model_spec.pt_exp_shares_file_name,
+    )
+    prob_exp_ft = gen_prob_init_exp_component_vector(
+        model_spec=model_spec,
+        model_spec_exp_file_key=model_spec.ft_exp_shares_file_name,
+    )
+
+    initial_states = create_initial_states_from_probs(
+        model_params=model_params,
+        model_spec=model_spec,
+        prob_educ_level=prob_educ_level,
+        prob_child_age=prob_child_age,
+        prob_partner_present=prob_partner_present,
+        prob_exp_pt=prob_exp_pt,
+        prob_exp_ft=prob_exp_ft,
+    )
+
     calculated_df = simulate(
-        random_model_params_df, model_spec_init_dict, data_sparse=True
+        random_model_params_df,
+        model_spec_init_dict,
+        initial_states=initial_states,
+        data_sparse=True,
     )
 
     pd.testing.assert_series_equal(
