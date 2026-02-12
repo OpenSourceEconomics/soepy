@@ -184,20 +184,20 @@ def test_value_function_matches_mean_realized_discounted_sum():
     )
     model_params_df = _minimal_model_params_df()
 
-    simulate_func = get_simulate_func(
-        model_params_init_file_name=model_params_df,
-        model_spec_init_file_name=model_spec_init_dict,
-        biased_exp=True,
-        data_sparse=False,
-    )
     initial_states = create_initial_states(
         model_params_init_file_name=model_params_df,
         model_spec_init_file_name=model_spec_init_dict,
     )
+    simulate_func = get_simulate_func(
+        model_params_init_file_name=model_params_df,
+        model_spec_init_file_name=model_spec_init_dict,
+        initial_states=initial_states,
+        biased_exp=True,
+        data_sparse=False,
+    )
     df = simulate_func(
         model_params_init_file_name_inner=model_params_df,
         model_spec_init_file_name_inner=model_spec_init_dict,
-        initial_states=initial_states,
     )
 
     # Compute realized discounted sum of chosen flow utility per agent.

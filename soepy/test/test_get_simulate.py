@@ -40,11 +40,11 @@ def test_simulation_func():
     simulate_func = get_simulate_func(
         model_params_init_file_name="test.soepy.pkl",
         model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
     )
     df_partial_sim = simulate_func(
         model_params_init_file_name_inner="test.soepy.pkl",
         model_spec_init_file_name_inner="test.soepy.yml",
-        initial_states=initial_states,
     )
 
     pd.testing.assert_series_equal(

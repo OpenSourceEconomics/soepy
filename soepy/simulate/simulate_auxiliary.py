@@ -12,7 +12,6 @@ from soepy.shared.numerical_integration import draw_zero_one_distributed_shocks
 from soepy.shared.wages import calculate_log_wage
 from soepy.simulate.constants_sim import DATA_FORMATS_SPARSE
 from soepy.simulate.income_sim import calculate_employment_consumption_resources
-from soepy.simulate.initial_states import validate_initial_states
 
 
 def pyth_simulate(
@@ -34,11 +33,10 @@ def pyth_simulate(
 
     np.random.seed(model_spec.seed_sim)
 
-    initial_states = validate_initial_states(initial_states, model_spec)
-    num_agents_sim = initial_states["Identifier"].nunique()
-
     emaxs = np.asarray(emaxs)
     non_consumption_utilities = np.asarray(non_consumption_utilities)
+
+    num_agents_sim = len(initial_states["Identifier"])
 
     pt_increment = get_pt_increment(
         model_params=model_params,

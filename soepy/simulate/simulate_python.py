@@ -23,6 +23,7 @@ def simulate(
     simulate_func = get_simulate_func(
         model_params_init_file_name=model_params_init_file_name,
         model_spec_init_file_name=model_spec_init_file_name,
+        initial_states=initial_states,
         biased_exp=biased_exp,
         data_sparse=data_sparse,
     )
@@ -30,13 +31,13 @@ def simulate(
     return simulate_func(
         model_params_init_file_name,
         model_spec_init_file_name,
-        initial_states=initial_states,
     )
 
 
 def get_simulate_func(
     model_params_init_file_name,
     model_spec_init_file_name,
+    initial_states,
     biased_exp=True,
     data_sparse=False,
 ):
@@ -66,11 +67,11 @@ def get_simulate_func(
         biased_exp=biased_exp,
     )
 
+    initial_states_validated = validate_initial_states(initial_states, model_spec)
+
     def simulate_func(
         model_params_init_file_name_inner,
         model_spec_init_file_name_inner,
-        *,
-        initial_states,
     ):
         model_params_df_inner, model_params_inner = read_model_params_init(
             model_params_init_file_name_inner
@@ -82,9 +83,6 @@ def get_simulate_func(
 
         non_consumption_utilities, emaxs = solve_func(model_params_inner)
 
-        initial_states_validated = validate_initial_states(
-            initial_states, model_spec_inner
-        )
         df = pyth_simulate(
             model_params=model_params_inner,
             model_spec=model_spec_inner,
