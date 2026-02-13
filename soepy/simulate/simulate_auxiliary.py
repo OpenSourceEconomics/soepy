@@ -41,6 +41,7 @@ def pyth_simulate(
     num_types = len(type_shares)
     types = np.random.choice(np.arange(num_types), size=num_agents_sim, p=type_shares)
 
+    initial_states = initial_states.copy()
     initial_states["Type"] = types
 
     pt_increment = get_pt_increment(
