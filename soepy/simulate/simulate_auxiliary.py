@@ -37,6 +37,11 @@ def pyth_simulate(
     non_consumption_utilities = np.asarray(non_consumption_utilities)
 
     num_agents_sim = len(initial_states["Identifier"])
+    type_shares = np.array(model_params.type_shares, dtype=float)
+    num_types = len(type_shares)
+    types = np.random.choice(np.arange(num_types), size=num_agents_sim, p=type_shares)
+
+    initial_states["Type"] = types
 
     pt_increment = get_pt_increment(
         model_params=model_params,
@@ -48,7 +53,6 @@ def pyth_simulate(
         initial_states["Experience_Part_Time"].to_numpy() * pt_increment
         + initial_states["Experience_Full_Time"].to_numpy()
     )
-    initial_states = initial_states.copy()
     initial_states["Experience_Stock"] = exp_years_to_stock(
         exp_years=total_years,
         period=initial_states["Period"].to_numpy(),

@@ -102,7 +102,6 @@ def input_data():
 
         # Simulate
         initial_states = create_initial_states_from_probs(
-            model_params=model_params,
             model_spec=model_spec,
             prob_educ_level=prob_educ_level,
             prob_child_age=prob_child_age,

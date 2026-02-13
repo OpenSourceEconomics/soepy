@@ -3,26 +3,14 @@ import pandas as pd
 
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
-from soepy.shared.experience_stock import get_pt_increment
 from soepy.test.resources.exogenous_processes import gen_prob_child_init_age_vector
 from soepy.test.resources.exogenous_processes import gen_prob_educ_level_vector
 from soepy.test.resources.exogenous_processes import gen_prob_init_exp_component_vector
 from soepy.test.resources.exogenous_processes import gen_prob_partner_present_vector
 
 
-def _lagged_choice_initial(initial_exp_years):
-    lagged_choice = np.zeros_like(initial_exp_years, dtype=int)
-    lagged_choice[initial_exp_years > 1] = 2
-    int_exp = initial_exp_years.astype(int)
-    is_float = np.abs(initial_exp_years - int_exp) > 1e-8
-    lagged_choice[is_float] = 1
-    return lagged_choice
-
-
 def create_initial_states_from_probs(
-    model_params,
     model_spec,
-    *,
     prob_educ_level,
     prob_child_age,
     prob_partner_present,
@@ -70,19 +58,10 @@ def create_initial_states_from_probs(
             p=prob_exp_ft[educ_level],
         )
 
-    pt_increment = get_pt_increment(
-        model_params=model_params,
-        educ_level=initial_educ_level,
-        child_age=initial_child_age,
-        biased_exp=False,
-    )
-    total_years = initial_exp_pt * pt_increment + initial_exp_ft
-    lagged_choice = _lagged_choice_initial(total_years)
-
-    unobserved_type = np.random.choice(
-        np.arange(model_spec.num_types),
+    lagged_choice = np.random.choice(
+        np.array([0, 1, 2]),
         model_spec.num_agents_sim,
-        p=model_params.type_shares,
+        p=[1 / 3, 1 / 3, 1 / 3],
     )
 
     initial_states = pd.DataFrame(
@@ -93,7 +72,6 @@ def create_initial_states_from_probs(
             "Lagged_Choice": lagged_choice.astype(int),
             "Experience_Part_Time": initial_exp_pt.astype(int),
             "Experience_Full_Time": initial_exp_ft.astype(int),
-            "Type": unobserved_type.astype(int),
             "Age_Youngest_Child": initial_child_age.astype(int),
             "Partner_Indicator": initial_partner.astype(int),
         }
@@ -103,12 +81,11 @@ def create_initial_states_from_probs(
 
 
 def create_initial_states(
-    *,
     model_params_init_file_name,
     model_spec_init_file_name,
 ):
-    model_params_df, model_params = read_model_params_init(model_params_init_file_name)
-    model_spec = read_model_spec_init(model_spec_init_file_name, model_params_df)
+    _ = model_params_init_file_name
+    model_spec = read_model_spec_init(model_spec_init_file_name, pd.DataFrame())
 
     prob_educ_level = gen_prob_educ_level_vector(model_spec)
     prob_child_age = gen_prob_child_init_age_vector(model_spec)
@@ -123,7 +100,6 @@ def create_initial_states(
     )
 
     return create_initial_states_from_probs(
-        model_params=model_params,
         model_spec=model_spec,
         prob_educ_level=prob_educ_level,
         prob_child_age=prob_child_age,

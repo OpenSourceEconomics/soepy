@@ -135,7 +135,6 @@ def test_pyth_simulate(input_vault, test_id):
 
     # Simulate
     initial_states = create_initial_states_from_probs(
-        model_params=model_params,
         model_spec=model_spec,
         prob_educ_level=prob_educ_level,
         prob_child_age=prob_child_age,
@@ -217,7 +216,6 @@ def test_simulation_func(input_vault, test_id):
     )
 
     initial_states = create_initial_states_from_probs(
-        model_params=model_params,
         model_spec=model_spec,
         prob_educ_level=prob_educ_level,
         prob_child_age=prob_child_age,
@@ -290,7 +288,6 @@ def test_simulation_func_unbiased(input_vault, test_id):
     )
 
     initial_states = create_initial_states_from_probs(
-        model_params=model_params,
         model_spec=model_spec,
         prob_educ_level=prob_educ_level,
         prob_child_age=prob_child_age,
@@ -364,7 +361,6 @@ def test_simulation_func_data_sparse(input_vault, test_id):
     )
 
     initial_states = create_initial_states_from_probs(
-        model_params=model_params,
         model_spec=model_spec,
         prob_educ_level=prob_educ_level,
         prob_child_age=prob_child_age,

@@ -67,7 +67,6 @@ def update_sim_objectes():
         )
 
         initial_states = create_initial_states_from_probs(
-            model_params=model_params,
             model_spec=model_spec,
             prob_educ_level=prob_educ_level,
             prob_child_age=prob_child_age,
@@ -109,4 +108,4 @@ def update_sim_objectes():
     cleanup(options="regression")
 
 
-# update_sim_objectes()
+update_sim_objectes()

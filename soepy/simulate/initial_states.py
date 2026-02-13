@@ -12,7 +12,6 @@ def validate_initial_states(initial_states, model_spec):
         "Lagged_Choice",
         "Experience_Part_Time",
         "Experience_Full_Time",
-        "Type",
         "Age_Youngest_Child",
         "Partner_Indicator",
     ]
@@ -44,11 +43,6 @@ def validate_initial_states(initial_states, model_spec):
         initial_states["Education_Level"] >= model_spec.num_educ_levels
     ).any():
         raise ValueError("Initial state education levels out of bounds.")
-
-    if (initial_states["Type"] < 0).any() or (
-        initial_states["Type"] >= model_spec.num_types
-    ).any():
-        raise ValueError("Initial state types out of bounds.")
 
     if (initial_states["Lagged_Choice"] < 0).any() or (
         initial_states["Lagged_Choice"] >= NUM_CHOICES
