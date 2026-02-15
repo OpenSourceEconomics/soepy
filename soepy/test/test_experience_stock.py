@@ -16,20 +16,17 @@ def test_max_exp_years_uses_larger_of_period_and_pt_scaled_period():
 def test_stock_years_roundtrip():
     init_exp_max = 4
     period = 10
-    pt_increment = 0.5
 
     stock = 0.25
     exp_years = stock_to_exp_years(
         stock=stock,
         period=period,
         init_exp_max=init_exp_max,
-        pt_increment=pt_increment,
     )
     stock_back = exp_years_to_stock(
         exp_years=exp_years,
         period=period,
         init_exp_max=init_exp_max,
-        pt_increment=pt_increment,
     )
 
     np.testing.assert_allclose(stock_back, stock)

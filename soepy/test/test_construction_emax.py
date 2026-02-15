@@ -68,13 +68,6 @@ def test_construct_emax_nonemployment_branch_matches_value_function():
     non_cons_last = np.asarray(non_consumption_utilities)[mask_last]
     emax_last = np.asarray(emaxs)[mask_last]
 
-    # Non-employment resources at the experience grid points.
-    pt_inc = get_pt_increment(
-        model_params=model_params,
-        educ_level=states_last[:, 1],
-        child_age=states_last[:, 4],
-        biased_exp=False,
-    )
     exp_grid = np.asarray(model_spec.exp_grid)
 
     def log_wage_one_gridpoint(exp_stock):
@@ -84,7 +77,6 @@ def test_construct_emax_nonemployment_branch_matches_value_function():
                 educ=states_last[:, 1],
                 period=states_last[:, 0],
                 init_exp_max=model_spec.init_exp_max,
-                pt_increment=pt_inc,
                 exp_stock=exp_stock,
             )
         )

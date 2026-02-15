@@ -37,29 +37,27 @@ def get_pt_increment(model_params, educ_level, child_age, biased_exp):
     return base + little_child * model_params.gamma_p_mom
 
 
-def max_exp_years(period, init_exp_max, pt_increment):
+def max_exp_years(period, init_exp_max):
     """Compute the maximum feasible experience years in a given period."""
-    return init_exp_max + jnp.maximum(period, period * pt_increment)
+    return 2 * init_exp_max + period
 
 
-def stock_to_exp_years(stock, period, init_exp_max, pt_increment):
+def stock_to_exp_years(stock, period, init_exp_max):
     """Map experience stock in [0,1] to experience measured in years."""
 
     max_years = max_exp_years(
         period=period,
         init_exp_max=init_exp_max,
-        pt_increment=pt_increment,
     )
     return stock * max_years
 
 
-def exp_years_to_stock(exp_years, period, init_exp_max, pt_increment):
+def exp_years_to_stock(exp_years, period, init_exp_max):
     """Map experience measured in years to stock in [0,1]."""
 
     max_years = max_exp_years(
         period=period,
         init_exp_max=init_exp_max,
-        pt_increment=pt_increment,
     )
 
     # Avoid division by zero for corner cases (e.g. init_exp_max == 0 and period == 0).
@@ -86,7 +84,6 @@ def next_stock(stock, period, init_exp_max, pt_increment, choice):
         stock=stock,
         period=period,
         init_exp_max=init_exp_max,
-        pt_increment=pt_increment,
     )
 
     exp_years_next = next_exp_years(
@@ -99,7 +96,6 @@ def next_stock(stock, period, init_exp_max, pt_increment, choice):
         exp_years=exp_years_next,
         period=period + 1,
         init_exp_max=init_exp_max,
-        pt_increment=pt_increment,
     )
 
     return jnp.clip(stock_next, 0.0, 1.0)

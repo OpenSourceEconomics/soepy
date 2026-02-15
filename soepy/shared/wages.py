@@ -3,9 +3,7 @@ from jax import numpy as jnp
 from soepy.shared.experience_stock import stock_to_exp_years
 
 
-def calculate_log_wage(
-    model_params, educ, exp_stock, init_exp_max, pt_increment, period
-):
+def calculate_log_wage(model_params, educ, exp_stock, init_exp_max, period):
     """Calculate systematic log wages for continuous experience.
 
     The continuous-experience model uses a single return to experience. Expectation
@@ -36,7 +34,6 @@ def calculate_log_wage(
         stock=exp_stock,
         period=period,
         init_exp_max=init_exp_max,
-        pt_increment=pt_increment,
     )
     gamma_0_edu = model_params.gamma_0[educ]
     gamma_exp_edu = model_params.gamma_1[educ]

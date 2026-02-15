@@ -58,7 +58,6 @@ def pyth_simulate(
         exp_years=total_years,
         period=initial_states["Period"].to_numpy(),
         init_exp_max=model_spec.init_exp_max,
-        pt_increment=pt_increment,
     ).astype(float)
 
     draws_sim = draw_zero_one_distributed_shocks(
@@ -170,7 +169,6 @@ def simulate_agents_over_periods(
                 educ=educ_level,
                 exp_stock=stock,
                 init_exp_max=model_spec.init_exp_max,
-                pt_increment=pt_increment,
                 period=period,
             )
         )

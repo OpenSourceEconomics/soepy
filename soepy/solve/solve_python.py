@@ -194,7 +194,6 @@ def pyth_backward_induction(
                 educ=edu_state,
                 period=current_period,
                 init_exp_max=model_spec.init_exp_max,
-                pt_increment=pt_increment_states,
                 exp_stock=exp_stock,
             ) + np.log(model_spec.elasticity_scale)
 

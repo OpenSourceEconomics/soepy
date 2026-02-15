@@ -66,6 +66,11 @@ def update_sim_objectes():
             model_spec, model_spec.ft_exp_shares_file_name
         )
 
+        random_model_params_df.loc[("exp_increase_p_mom", "gamma_p_mom"), "value"] = (
+            -random_model_params_df.loc[("exp_increase_p", slice(None)), "value"].min()
+            / 2
+        )
+
         initial_states = create_initial_states_from_probs(
             model_spec=model_spec,
             prob_educ_level=prob_educ_level,
@@ -108,4 +113,4 @@ def update_sim_objectes():
     cleanup(options="regression")
 
 
-# update_sim_objectes()
+update_sim_objectes()
