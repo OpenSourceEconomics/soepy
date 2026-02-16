@@ -44,7 +44,11 @@ def fixture_continuation_out():
     model_params = type(
         "Params",
         (),
-        {"gamma_p": jnp.array([0.5]), "gamma_p_mom": 0.0},
+        {
+            "gamma_p": jnp.array([0.5]),
+            "gamma_p_mom": 0.0,
+            "exp_depr_rate": jnp.array([0.1]),
+        },
     )()
 
     out = interpolate_then_weight_continuation_values(
@@ -80,7 +84,10 @@ def test_interpolate_then_weight_continuation_values_choice0_shape_and_value(
 
     assert out.shape == (1, 3, 2)
 
-    x_next_ne = (2 * exp_grid) / 3
+    depr_rate = 0.1
+    exp_years_ne = exp_grid * 2
+    exp_years_ne_next = exp_years_ne * (1 - depr_rate)
+    x_next_ne = exp_years_ne_next / 3
     expected = manual_linear_interp(exp_grid, v_next_grid[0], x_next_ne)
     np.testing.assert_allclose(out[0, 0], expected)
 
@@ -94,7 +101,10 @@ def test_interpolate_then_weight_continuation_values_choice1_shape_and_value(
 
     assert out.shape == (1, 3, 2)
 
-    x_next_pt = (2 * exp_grid + 0.5) / 3
+    depr_rate = 0.1
+    exp_years_pt = exp_grid * 2
+    exp_years_pt_next = exp_years_pt * (1 - depr_rate) + 0.5
+    x_next_pt = exp_years_pt_next / 3
     expected = manual_linear_interp(exp_grid, v_next_grid[0], x_next_pt)
     np.testing.assert_allclose(out[0, 1], expected)
 
@@ -111,7 +121,10 @@ def test_interpolate_then_weight_continuation_values_choice2_shape_and_value(
     assert out.shape == (1, 3, 2)
 
     # Scale factor for interpolation with init_exp_max
-    x_next_ft = (2 * exp_grid + 1) / (2 * continuation_out["init_exp_max"] + 1)
+    depr_rate = 0.1
+    exp_years_ft = exp_grid * 2
+    exp_years_ft_next = exp_years_ft * (1 - depr_rate) + 1
+    x_next_ft = exp_years_ft_next / (2 * continuation_out["init_exp_max"] + 1)
     prob_single, prob_partner = prob_partner_states
     val_no_child_single = manual_linear_interp(exp_grid, v_next_grid[0], x_next_ft)
     val_no_child_partner = manual_linear_interp(exp_grid, v_next_grid[1], x_next_ft)

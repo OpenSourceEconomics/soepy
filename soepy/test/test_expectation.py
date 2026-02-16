@@ -42,6 +42,9 @@ def test_simulation_func_exp():
     # and remove the mother increment.
     for edu_type in ["low", "middle", "high"]:
         model_params_df.loc[("exp_increase_p", f"gamma_p_{edu_type}"), "value"] = 1.0
+        model_params_df.loc[
+            ("exp_depr_rate", f"exp_depr_rate_{edu_type}"), "value"
+        ] = 0.0
 
     model_params_df.loc[("exp_increase_p_mom", "gamma_p_mom"), "value"] = 0.0
 

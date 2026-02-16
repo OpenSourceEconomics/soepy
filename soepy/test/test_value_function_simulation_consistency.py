@@ -145,6 +145,7 @@ def _minimal_model_params_df() -> pd.DataFrame:
         rows.append(("const_wage_eq", f"gamma_0_{educ_type}", 0.0))
         rows.append(("exp_return", f"gamma_1_{educ_type}", 0.1))
         rows.append(("exp_increase_p", f"gamma_p_{educ_type}", 0.5))
+        rows.append(("exp_depr_rate", f"exp_depr_rate_{educ_type}", 0.1))
 
         rows.append(("disutil_work", f"no_kids_f_educ_{educ_type}", 0.0))
         rows.append(("disutil_work", f"yes_kids_f_educ_{educ_type}", 0.0))

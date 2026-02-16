@@ -176,6 +176,12 @@ def random_init(constr=None):
         model_params_init_dict["gamma_p_high"],
     ) = np.random.uniform(0.001, 0.2, 3).tolist()
 
+    (
+        model_params_init_dict["exp_depr_rate_low"],
+        model_params_init_dict["exp_depr_rate_middle"],
+        model_params_init_dict["exp_depr_rate_high"],
+    ) = np.random.uniform(0.0, 0.1, 3).tolist()
+
     model_params_init_dict["gamma_p_mom"] = float(np.random.uniform(0.6, 1.4, 1)[0])
 
     (
@@ -233,6 +239,8 @@ def random_init(constr=None):
             category.append("const_wage_eq")
         elif "gamma_1" in key:
             category.append("exp_return")
+        elif "exp_depr_rate" in key:
+            category.append("exp_depr_rate")
         elif ("gamma_p" in key) and ("gamma_p_mom" not in key):
             category.append("exp_increase_p")
         elif "gamma_p_mom" in key:

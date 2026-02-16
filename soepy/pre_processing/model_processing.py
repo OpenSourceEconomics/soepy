@@ -87,6 +87,7 @@ def group_parameters(model_params_dict_expanded):
         ("const_wage_eq", "gamma_0"),
         ("exp_return", "gamma_1"),
         ("exp_increase_p", "gamma_p"),
+        ("exp_depr_rate", "exp_depr_rate"),
     ]:
         model_params_dict_flat[param] = np.zeros(
             len(model_params_dict_expanded[category])

@@ -35,12 +35,19 @@ def test_next_stock_full_time_and_part_time_increments():
     init_exp_max = 4
     period = 0
 
-    stock0 = 0.0
+    stock0 = 0.5
+    current_years = (2 * init_exp_max + period) * stock0
+    depr_rate = 0.1
+    depr_years = current_years * (1 - depr_rate)
 
     model_params = type(
         "Params",
         (),
-        {"gamma_p": np.array([0.5]), "gamma_p_mom": 0.0},
+        {
+            "gamma_p": np.array([0.5]),
+            "gamma_p_mom": 0.0,
+            "exp_depr_rate": np.array([depr_rate]),
+        },
     )()
 
     # At period 1: max = 2 * 4 + 1 = 9
@@ -54,7 +61,7 @@ def test_next_stock_full_time_and_part_time_increments():
         child_age=np.array([-1]),
         biased_exp=False,
     )
-    np.testing.assert_allclose(stock_ft, 1.0 / 9.0)
+    np.testing.assert_allclose(stock_ft, (depr_years + 1.0) / 9.0)
 
     stock_pt = next_stock(
         stock=stock0,
@@ -66,7 +73,7 @@ def test_next_stock_full_time_and_part_time_increments():
         child_age=np.array([-1]),
         biased_exp=False,
     )
-    np.testing.assert_allclose(stock_pt, 0.5 / 9.0)
+    np.testing.assert_allclose(stock_pt, (depr_years + 0.5) / 9.0)
 
 
 def test_next_stock_clips_to_unit_interval():
@@ -76,7 +83,11 @@ def test_next_stock_clips_to_unit_interval():
     model_params = type(
         "Params",
         (),
-        {"gamma_p": np.array([0.5]), "gamma_p_mom": 0.0},
+        {
+            "gamma_p": np.array([0.5]),
+            "gamma_p_mom": 0.0,
+            "exp_depr_rate": np.array([0.1]),
+        },
     )()
 
     stock = 1.0

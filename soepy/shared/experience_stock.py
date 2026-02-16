@@ -76,7 +76,9 @@ def next_exp_years(exp_years, choice, model_params, educ_level, child_age, biase
     )
     inc_pt = (choice == 1) * pt_increment
     inc_ft = (choice == 2) * 1.0
-    return exp_years + inc_pt + inc_ft
+
+    depr_rate = model_params.exp_depr_rate[educ_level]
+    return exp_years * (1 - depr_rate) + inc_pt + inc_ft
 
 
 def next_stock(

@@ -81,6 +81,7 @@ def _make_min_model_params():
         "gamma_1": jnp.array([0.5]),
         "gamma_p": jnp.array([0.3]),
         "gamma_p_mom": 0.0,
+        "exp_depr_rate": jnp.array([0.1]),
         # Non-consumption utility parameters (set to 0 => exp(0)=1)
         "theta_p": jnp.array([0.0]),
         "theta_f": jnp.array([0.0]),
@@ -99,11 +100,13 @@ def _make_min_model_params():
     return collections.namedtuple("model_parameters", params.keys())(**params)
 
 
-def _next_stock_np(x, period, init_exp_max, pt_inc, choice):
+def _next_stock_np(x, period, init_exp_max, pt_inc, choice, depr_rate):
     max_years_t = 2 * init_exp_max + period
     exp_years = x * max_years_t
 
-    exp_years_next = exp_years + (choice == 2) * 1.0 + (choice == 1) * pt_inc
+    exp_years_next = (
+        exp_years * (1 - depr_rate) + (choice == 2) * 1.0 + (choice == 1) * pt_inc
+    )
 
     max_years_tp1 = 2 * init_exp_max + period + 1
     denom = max_years_tp1 if max_years_tp1 > 0 else 1.0
@@ -193,6 +196,7 @@ def _reference_solve(
                     init_exp_max=int(model_spec.init_exp_max),
                     pt_inc=pt_inc,
                     choice=choice,
+                    depr_rate=float(model_params.exp_depr_rate[educ]),
                 )
 
                 idx00 = int(child_local_t[i, choice, 0, 0])
