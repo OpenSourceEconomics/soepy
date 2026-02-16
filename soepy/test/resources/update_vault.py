@@ -1,6 +1,7 @@
 import pickle
 
 import jax.numpy as jnp
+import numpy as np
 
 from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
@@ -64,11 +65,6 @@ def update_sim_objectes():
         )
         prob_exp_ft = gen_prob_init_exp_component_vector(
             model_spec, model_spec.ft_exp_shares_file_name
-        )
-
-        random_model_params_df.loc[("exp_increase_p_mom", "gamma_p_mom"), "value"] = (
-            -random_model_params_df.loc[("exp_increase_p", slice(None)), "value"].min()
-            / 2
         )
 
         initial_states = create_initial_states_from_probs(
