@@ -113,4 +113,4 @@ def update_sim_objectes():
     cleanup(options="regression")
 
 
-update_sim_objectes()
+# update_sim_objectes()
