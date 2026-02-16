@@ -98,4 +98,4 @@ def next_stock(stock, period, init_exp_max, pt_increment, choice):
         init_exp_max=init_exp_max,
     )
 
-    return jnp.clip(stock_next, 0.0, 1.0)
+    return stock_next

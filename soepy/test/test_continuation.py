@@ -101,7 +101,8 @@ def test_interpolate_then_weight_continuation_values_choice2_shape_and_value(
 
     assert out.shape == (1, 3, 2)
 
-    x_next_ft = (2 * exp_grid + 1) / (2 * i)
+    # Scale factor for interpolation with init_exp_max
+    x_next_ft = (2 * exp_grid + 1) / (2 * continuation_out["init_exp_max"] + 1)
     prob_single, prob_partner = prob_partner_states
     val_no_child_single = manual_linear_interp(exp_grid, v_next_grid[0], x_next_ft)
     val_no_child_partner = manual_linear_interp(exp_grid, v_next_grid[1], x_next_ft)

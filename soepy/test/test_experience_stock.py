@@ -9,8 +9,7 @@ from soepy.shared.experience_stock import stock_to_exp_years
 def test_max_exp_years_uses_larger_of_period_and_pt_scaled_period():
     init_exp_max = 4
 
-    assert max_exp_years(period=10, init_exp_max=init_exp_max, pt_increment=0.5) == 14
-    assert max_exp_years(period=10, init_exp_max=init_exp_max, pt_increment=2.0) == 24
+    assert max_exp_years(period=10, init_exp_max=init_exp_max) == 18
 
 
 def test_stock_years_roundtrip():
@@ -39,7 +38,7 @@ def test_next_stock_full_time_and_part_time_increments():
 
     stock0 = 0.0
 
-    # At period 1: max = 4 + max(1, 0.5) = 5
+    # At period 1: max = 2 * 4 + 1 = 9
     stock_ft = next_stock(
         stock=stock0,
         period=period,
@@ -47,7 +46,7 @@ def test_next_stock_full_time_and_part_time_increments():
         pt_increment=pt_increment,
         choice=2,
     )
-    np.testing.assert_allclose(stock_ft, 1.0 / 5.0)
+    np.testing.assert_allclose(stock_ft, 1.0 / 9.0)
 
     stock_pt = next_stock(
         stock=stock0,
@@ -56,7 +55,7 @@ def test_next_stock_full_time_and_part_time_increments():
         pt_increment=pt_increment,
         choice=1,
     )
-    np.testing.assert_allclose(stock_pt, 0.5 / 5.0)
+    np.testing.assert_allclose(stock_pt, 0.5 / 9.0)
 
 
 def test_next_stock_clips_to_unit_interval():

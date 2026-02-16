@@ -100,16 +100,16 @@ def _make_min_model_params():
 
 
 def _next_stock_np(x, period, init_exp_max, pt_inc, choice):
-    max_years_t = init_exp_max + max(period, period * pt_inc)
+    max_years_t = 2 * init_exp_max + period
     exp_years = x * max_years_t
 
     exp_years_next = exp_years + (choice == 2) * 1.0 + (choice == 1) * pt_inc
 
-    max_years_tp1 = init_exp_max + max(period + 1, (period + 1) * pt_inc)
+    max_years_tp1 = 2 * init_exp_max + period + 1
     denom = max_years_tp1 if max_years_tp1 > 0 else 1.0
 
     x_next = exp_years_next / denom
-    return np.clip(x_next, 0.0, 1.0)
+    return x_next
 
 
 def _reference_solve(
@@ -210,7 +210,7 @@ def _reference_solve(
                     p_partner[0] * v00 + p_partner[1] * v01
                 ) + p_child * (p_partner[0] * v10 + p_partner[1] * v11)
 
-            max_years_t = int(model_spec.init_exp_max) + max(t, t * pt_inc)
+            max_years_t = 2 * int(model_spec.init_exp_max) + int(t)
             exp_years = exp_grid * max_years_t
 
             gamma_0 = float(model_params.gamma_0[educ])
