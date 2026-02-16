@@ -34,17 +34,25 @@ def test_stock_years_roundtrip():
 def test_next_stock_full_time_and_part_time_increments():
     init_exp_max = 4
     period = 0
-    pt_increment = 0.5
 
     stock0 = 0.0
+
+    model_params = type(
+        "Params",
+        (),
+        {"gamma_p": np.array([0.5]), "gamma_p_mom": 0.0},
+    )()
 
     # At period 1: max = 2 * 4 + 1 = 9
     stock_ft = next_stock(
         stock=stock0,
         period=period,
         init_exp_max=init_exp_max,
-        pt_increment=pt_increment,
         choice=2,
+        model_params=model_params,
+        educ_level=np.array([0]),
+        child_age=np.array([-1]),
+        biased_exp=False,
     )
     np.testing.assert_allclose(stock_ft, 1.0 / 9.0)
 
@@ -52,8 +60,11 @@ def test_next_stock_full_time_and_part_time_increments():
         stock=stock0,
         period=period,
         init_exp_max=init_exp_max,
-        pt_increment=pt_increment,
         choice=1,
+        model_params=model_params,
+        educ_level=np.array([0]),
+        child_age=np.array([-1]),
+        biased_exp=False,
     )
     np.testing.assert_allclose(stock_pt, 0.5 / 9.0)
 
@@ -61,15 +72,23 @@ def test_next_stock_full_time_and_part_time_increments():
 def test_next_stock_clips_to_unit_interval():
     init_exp_max = 0
     period = 5
-    pt_increment = 0.5
+
+    model_params = type(
+        "Params",
+        (),
+        {"gamma_p": np.array([0.5]), "gamma_p_mom": 0.0},
+    )()
 
     stock = 1.0
     stock_next = next_stock(
         stock=stock,
         period=period,
         init_exp_max=init_exp_max,
-        pt_increment=pt_increment,
         choice=2,
+        model_params=model_params,
+        educ_level=np.array([0]),
+        child_age=np.array([-1]),
+        biased_exp=False,
     )
 
     assert 0.0 <= stock_next <= 1.0

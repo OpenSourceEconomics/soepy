@@ -65,15 +65,30 @@ def exp_years_to_stock(exp_years, period, init_exp_max):
     return exp_years / safe_denom
 
 
-def next_exp_years(exp_years, choice, pt_increment):
+def next_exp_years(exp_years, choice, model_params, educ_level, child_age, biased_exp):
     """Apply the (choice-dependent) experience accumulation in years."""
 
+    pt_increment = get_pt_increment(
+        model_params=model_params,
+        educ_level=educ_level,
+        child_age=child_age,
+        biased_exp=biased_exp,
+    )
     inc_pt = (choice == 1) * pt_increment
     inc_ft = (choice == 2) * 1.0
     return exp_years + inc_pt + inc_ft
 
 
-def next_stock(stock, period, init_exp_max, pt_increment, choice):
+def next_stock(
+    stock,
+    period,
+    init_exp_max,
+    choice,
+    model_params,
+    educ_level,
+    child_age,
+    biased_exp,
+):
     """Transition the experience stock to the next period.
 
     The stock is interpreted in period-``t`` units, mapped to years, incremented based
@@ -89,7 +104,10 @@ def next_stock(stock, period, init_exp_max, pt_increment, choice):
     exp_years_next = next_exp_years(
         exp_years=exp_years,
         choice=choice,
-        pt_increment=pt_increment,
+        model_params=model_params,
+        educ_level=educ_level,
+        child_age=child_age,
+        biased_exp=biased_exp,
     )
 
     stock_next = exp_years_to_stock(

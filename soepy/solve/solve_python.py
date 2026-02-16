@@ -9,7 +9,6 @@ from soepy.shared.constants_and_indices import NUM_CHOICES
 from soepy.shared.constants_and_indices import PARTNER
 from soepy.shared.constants_and_indices import PERIOD
 from soepy.shared.constants_and_indices import TYPE
-from soepy.shared.experience_stock import get_pt_increment
 from soepy.shared.non_consumption_utility import calculate_non_consumption_utility
 from soepy.shared.non_employment import calculate_non_employment_consumption_resources
 from soepy.shared.numerical_integration import get_integration_draws_and_weights
@@ -163,13 +162,6 @@ def pyth_backward_induction(
         partner_state = states_period[:, PARTNER]
         unobs_types = states_period[:, TYPE]
 
-        pt_increment_states = get_pt_increment(
-            model_params=model_params,
-            educ_level=edu_state,
-            child_age=states_period[:, AGE_YOUNGEST_CHILD],
-            biased_exp=biased_exp,
-        )
-
         prob_child_period_states = prob_child_period[edu_state]
         prob_partner_period_states = prob_partner_period[edu_state, partner_state]
 
@@ -181,7 +173,10 @@ def pyth_backward_induction(
             child_state_indexes_local=child_state_indexes_local,
             period=current_period,
             init_exp_max=model_spec.init_exp_max,
-            pt_increment_states=pt_increment_states,
+            model_params=model_params,
+            educ_level=edu_state,
+            child_age=states_period[:, AGE_YOUNGEST_CHILD],
+            biased_exp=biased_exp,
             prob_child_states=prob_child_period_states,
             prob_partner_states=prob_partner_period_states,
         )

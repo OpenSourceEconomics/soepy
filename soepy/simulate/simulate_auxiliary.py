@@ -156,13 +156,6 @@ def simulate_agents_over_periods(
 
         non_cons_util_agents = non_consumption_utilities[idx]
 
-        pt_increment = get_pt_increment(
-            model_params=model_params,
-            educ_level=educ_level,
-            child_age=age_child,
-            biased_exp=biased_exp,
-        )
-
         log_wage_agents = np.asarray(
             calculate_log_wage(
                 model_params=model_params,
@@ -307,8 +300,11 @@ def simulate_agents_over_periods(
                 stock=stock,
                 period=period,
                 init_exp_max=model_spec.init_exp_max,
-                pt_increment=pt_increment,
                 choice=choice,
+                model_params=model_params,
+                educ_level=educ_level,
+                child_age=age_child,
+                biased_exp=biased_exp,
             )
         )
 

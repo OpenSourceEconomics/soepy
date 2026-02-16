@@ -41,13 +41,22 @@ def fixture_continuation_out():
 
     init_exp_max = 1.0
 
+    model_params = type(
+        "Params",
+        (),
+        {"gamma_p": jnp.array([0.5]), "gamma_p_mom": 0.0},
+    )()
+
     out = interpolate_then_weight_continuation_values(
         exp_grid=exp_grid,
         v_next_grid=v_next_grid,
         child_state_indexes_local=child_state_indexes_local,
         period=0,
         init_exp_max=init_exp_max,
-        pt_increment_states=jnp.array([0.5]),
+        model_params=model_params,
+        educ_level=jnp.array([0]),
+        child_age=jnp.array([-1]),
+        biased_exp=False,
         prob_child_states=jnp.array([prob_child]),
         prob_partner_states=jnp.array([prob_partner_states]),
     )
