@@ -332,7 +332,8 @@ def simulate_agents_over_periods(
 
 
 def _interp_uniform_grid(values, stock):
-    """Interpolate along the last axis on a uniform [0,1] grid.
+    """Interpolate along the last axis on a uniform [0,1] grid. IMPORTANT: Function works only for
+    experience grids generated with np.linspace(0, 1, n_grid).
 
     Parameters
     ----------
@@ -356,6 +357,9 @@ def _interp_uniform_grid(values, stock):
 
 
 def get_child_care_cost_for_choice(child_bins, child_care_costs):
+
+    # Age bin 0 is no child, 1 is child age 0-2, 2 is child age 3-5, 3 is child age 6+.
+    # We set child care costs to zero for age bin 3 and above, as we only model child care costs up to age 5.
     child_bins = child_bins.copy()
     child_bins[child_bins > 2] = 0
 
