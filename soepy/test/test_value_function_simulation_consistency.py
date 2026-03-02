@@ -161,6 +161,7 @@ def _minimal_model_params_df() -> pd.DataFrame:
         "child_0_2_p",
         "child_3_5_p",
         "child_6_10_p",
+        "child_11_age_max_f" "child_11_age_max_p",
     ]:
         rows.append(("disutil_work", name, 0.0))
 

@@ -167,7 +167,8 @@ def simulate_agents_over_periods(
         )
 
         identifiers = current_states.iloc[:, state_col["Identifier"]].to_numpy()
-        wages = np.exp(log_wage_agents + draws_sim[period, identifiers])
+        wage_shocks = draws_sim[period, identifiers]
+        wages = np.exp(log_wage_agents + wage_shocks)
         wages = wages * float(model_spec.elasticity_scale)
 
         female_income = wages[:, None] * HOURS[None, 1:]
@@ -236,8 +237,6 @@ def simulate_agents_over_periods(
         )
         choice = np.argmax(value_functions, axis=1)
 
-        current_states_np = current_states.to_numpy()
-        # IMPORTANT: The order of the columns here must match DATA_LABLES_SPARSE and SIM.
         if data_sparse:
             this_period_df = current_states.copy()
             this_period_df["Choice"] = choice
@@ -247,6 +246,7 @@ def simulate_agents_over_periods(
             this_period_df["Choice"] = choice
             this_period_df["Wage_Observed"] = wages
             this_period_df["Male_Wages"] = male_wage
+            this_period_df["Wage_Shock"] = wage_shocks
             for i, append in enumerate(["N", "P", "F"]):
                 this_period_df[
                     f"Non_Consumption_Utility_{append}"

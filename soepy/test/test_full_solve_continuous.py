@@ -95,6 +95,8 @@ def _make_min_model_params():
         "child_3_5_p": 0.0,
         "child_6_10_f": 0.0,
         "child_6_10_p": 0.0,
+        "child_11_age_max_f": 0.0,
+        "child_11_age_max_p": 0.0,
     }
 
     return collections.namedtuple("model_parameters", params.keys())(**params)
