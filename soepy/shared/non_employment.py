@@ -23,6 +23,9 @@ def calculate_non_employment_consumption_resources(
         log_wage_systematic=log_wage_systematic,
         child_benefit=child_benefits,
         male_wage=male_wage,
+        income_tax_spec=income_tax_spec,
+        deductions_spec=deductions_spec,
+        tax_splitting=tax_splitting,
         model_spec=model_spec,
     )
 
@@ -49,6 +52,9 @@ def calculate_non_employment_benefits(
     log_wage_systematic,
     child_benefit,
     male_wage,
+    income_tax_spec,
+    deductions_spec,
+    tax_splitting,
     model_spec,
 ):
     no_child = states[:, AGE_YOUNGEST_CHILD] == -1
@@ -56,11 +62,12 @@ def calculate_non_employment_benefits(
     working_pt_last_period = states[:, LAGGED_CHOICE] == 1
     married = states[:, PARTNER] == 1
 
-    prox_net_wage_systematic = 0.65 * jnp.exp(log_wage_systematic)
+    female_wage_full_time = hours[2] * jnp.exp(log_wage_systematic)
+    female_wage_part_time = hours[1] * jnp.exp(log_wage_systematic)
 
     # We use this check to see if log_wage_systematic is batched (2D) or not (1D), i.e. if it is for each agent/state
     # or additionally for multiple experience grid points.
-    if prox_net_wage_systematic.ndim == 2:
+    if log_wage_systematic.ndim == 2:
         # Broadcast state-dependent scalars to (n_states, 1).
         no_child = no_child[:, None]
         working_ft_last_period = working_ft_last_period[:, None]
@@ -68,6 +75,26 @@ def calculate_non_employment_benefits(
         married = married[:, None]
         male_wage = male_wage[:, None]
         child_benefit = child_benefit[:, None]
+
+    female_net_income_full_time = calculate_net_income(
+        income_tax_spec=income_tax_spec,
+        deductions_spec=deductions_spec,
+        female_wage=female_wage_full_time,
+        male_wage=jnp.zeros_like(female_wage_full_time),
+        tax_splitting=tax_splitting,
+    )
+    female_net_income_part_time = calculate_net_income(
+        income_tax_spec=income_tax_spec,
+        deductions_spec=deductions_spec,
+        female_wage=female_wage_part_time,
+        male_wage=jnp.zeros_like(female_wage_part_time),
+        tax_splitting=tax_splitting,
+    )
+
+    net_income_last_period = (
+        working_ft_last_period * female_net_income_full_time
+        + working_pt_last_period * female_net_income_part_time
+    )
 
     alg2_single = model_spec.regelsatz_single + model_spec.housing_single
 
@@ -88,14 +115,13 @@ def calculate_non_employment_benefits(
 
     if model_spec.parental_leave_regime == "elterngeld":
         newborn_child = states[:, AGE_YOUNGEST_CHILD] == 0
-        if prox_net_wage_systematic.ndim == 2:
+        if net_income_last_period.ndim == 2:
             newborn_child = newborn_child[:, None]
 
         elterngeld = calculate_elterngeld(
-            hours=hours,
             working_ft_last_period=working_ft_last_period,
             working_pt_last_period=working_pt_last_period,
-            prox_net_wage_systematic=prox_net_wage_systematic,
+            net_income_last_period=net_income_last_period,
             elterngeld_replacement=model_spec.elterngeld_replacement,
             elterngeld_min=model_spec.elterngeld_min,
             elterngeld_max=model_spec.elterngeld_max,
@@ -107,7 +133,7 @@ def calculate_non_employment_benefits(
             working_ft_last_period=working_ft_last_period,
             working_pt_last_period=working_pt_last_period,
             no_child=no_child,
-            prox_net_wage_systematic=prox_net_wage_systematic,
+            net_income_last_period=net_income_last_period,
             alg1_replacement_no_child=model_spec.alg1_replacement_no_child,
             alg1_replacement_child=model_spec.alg1_replacement_child,
             child_benefit_if_child=child_benefit,
@@ -123,7 +149,7 @@ def calculate_non_employment_benefits(
             working_ft_last_period=working_ft_last_period,
             working_pt_last_period=working_pt_last_period,
             no_child=no_child,
-            prox_net_wage_systematic=prox_net_wage_systematic,
+            net_income_last_period=net_income_last_period,
             alg1_replacement_no_child=model_spec.alg1_replacement_no_child,
             alg1_replacement_child=model_spec.alg1_replacement_child,
             child_benefit_if_child=child_benefit,
@@ -132,7 +158,7 @@ def calculate_non_employment_benefits(
         baby_child = (states[:, AGE_YOUNGEST_CHILD] == 0) | (
             states[:, AGE_YOUNGEST_CHILD] == 1
         )
-        if prox_net_wage_systematic.ndim == 2:
+        if net_income_last_period.ndim == 2:
             baby_child = baby_child[:, None]
         non_employment_benefits += calc_erziehungsgeld(
             male_wage=male_wage,
@@ -172,21 +198,19 @@ def calculate_alg2(no_child, married, alg2_single, alg_2_alleinerziehend):
 
 
 def calculate_elterngeld(
-    hours,
     working_ft_last_period,
     working_pt_last_period,
-    prox_net_wage_systematic,
+    net_income_last_period,
     elterngeld_replacement,
     elterngeld_min,
     elterngeld_max,
     child_benefit,
 ):
-    hours_worked = hours[2] * working_ft_last_period + hours[1] * working_pt_last_period
     elterngeld_claim = working_ft_last_period | working_pt_last_period
     return elterngeld_claim * (
         jnp.minimum(
             jnp.maximum(
-                elterngeld_replacement * prox_net_wage_systematic * hours_worked,
+                elterngeld_replacement * net_income_last_period,
                 elterngeld_min,
             ),
             elterngeld_max,
@@ -200,7 +224,7 @@ def calculate_alg1(
     working_ft_last_period,
     working_pt_last_period,
     no_child,
-    prox_net_wage_systematic,
+    net_income_last_period,
     alg1_replacement_no_child,
     alg1_replacement_child,
     child_benefit_if_child,
@@ -209,9 +233,5 @@ def calculate_alg1(
     replacement_rate = alg1_replacement_no_child * no_child + alg1_replacement_child * (
         1 - no_child
     )
-
-    hours_worked = hours[2] * working_ft_last_period + hours[1] * working_pt_last_period
     alg_1 = working_ft_last_period | working_pt_last_period
-    return alg_1 * (
-        replacement_rate * prox_net_wage_systematic * hours_worked + child_benefits
-    )
+    return alg_1 * (replacement_rate * net_income_last_period + child_benefits)
