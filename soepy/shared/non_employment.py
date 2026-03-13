@@ -17,48 +17,13 @@ def calculate_non_employment_consumption_resources(
     tax_splitting,
     hours,
 ):
-    alg1_replacement_no_child = model_spec.alg1_replacement_no_child
-    alg1_replacement_child = model_spec.alg1_replacement_child
-    regelsatz_single = model_spec.regelsatz_single
-    housing_single = model_spec.housing_single
-    housing_addtion = model_spec.housing_addtion
-    regelsatz_child = model_spec.regelsatz_child
-    addition_child_single = model_spec.addition_child_single
-    elterngeld_replacement = model_spec.elterngeld_replacement
-    elterngeld_min = model_spec.elterngeld_min
-    elterngeld_max = model_spec.elterngeld_max
-
-    if model_spec.parental_leave_regime == "elterngeld":
-        elterngeld_regime = True
-    elif model_spec.parental_leave_regime == "erziehungsgeld":
-        elterngeld_regime = False
-    else:
-        raise ValueError("Parental leave regime not specified correctly.")
-
-    erziehungsgeld_inc_single = model_spec.erziehungsgeld_income_threshold_single
-    erziehungsgeld_inc_married = model_spec.erziehungsgeld_income_threshold_married
-    erziehungsgeld = model_spec.erziehungsgeld
-
     non_employment_benefits = calculate_non_employment_benefits(
-        hours,
-        states,
-        log_wage_systematic,
-        child_benefits,
-        male_wage,
-        alg1_replacement_no_child,
-        alg1_replacement_child,
-        regelsatz_single,
-        housing_single,
-        housing_addtion,
-        regelsatz_child,
-        addition_child_single,
-        elterngeld_replacement,
-        elterngeld_min,
-        elterngeld_max,
-        erziehungsgeld_inc_single,
-        erziehungsgeld_inc_married,
-        erziehungsgeld,
-        elterngeld_regime,
+        hours=hours,
+        states=states,
+        log_wage_systematic=log_wage_systematic,
+        child_benefit=child_benefits,
+        male_wage=male_wage,
+        model_spec=model_spec,
     )
 
     if non_employment_benefits.ndim == 2:
@@ -68,11 +33,11 @@ def calculate_non_employment_consumption_resources(
         female_wage = 0
 
     male_net_income = calculate_net_income(
-        income_tax_spec,
-        deductions_spec,
-        female_wage,
-        male_wage,
-        tax_splitting,
+        income_tax_spec=income_tax_spec,
+        deductions_spec=deductions_spec,
+        female_wage=female_wage,
+        male_wage=male_wage,
+        tax_splitting=tax_splitting,
     )
 
     return male_net_income + non_employment_benefits, male_net_income
@@ -84,20 +49,7 @@ def calculate_non_employment_benefits(
     log_wage_systematic,
     child_benefit,
     male_wage,
-    alg1_replacement_no_child,
-    alg1_replacement_child,
-    regelsatz_single,
-    housing_single,
-    housing_addtion,
-    regelsatz_child,
-    addition_child_single,
-    elterngeld_replacement,
-    elterngeld_min,
-    elterngeld_max,
-    erziehungsgeld_inc_single,
-    erziehungsgeld_inc_married,
-    erziehungsgeld,
-    elterngeld_regime,
+    model_spec,
 ):
     no_child = states[:, AGE_YOUNGEST_CHILD] == -1
     working_ft_last_period = states[:, LAGGED_CHOICE] == 2
@@ -117,59 +69,64 @@ def calculate_non_employment_benefits(
         male_wage = male_wage[:, None]
         child_benefit = child_benefit[:, None]
 
-    alg2_single = regelsatz_single + housing_single
+    alg2_single = model_spec.regelsatz_single + model_spec.housing_single
 
     alg_2_alleinerziehend = (
-        regelsatz_single
-        + regelsatz_child
-        + addition_child_single
-        + housing_single
-        + housing_addtion
+        model_spec.regelsatz_single
+        + model_spec.regelsatz_child
+        + model_spec.addition_child_single
+        + model_spec.housing_single
+        + model_spec.housing_addtion
     )
 
-    alg2 = calculate_alg2(no_child, married, alg2_single, alg_2_alleinerziehend)
+    alg2 = calculate_alg2(
+        no_child=no_child,
+        married=married,
+        alg2_single=alg2_single,
+        alg_2_alleinerziehend=alg_2_alleinerziehend,
+    )
 
-    if elterngeld_regime:
+    if model_spec.parental_leave_regime == "elterngeld":
         newborn_child = states[:, AGE_YOUNGEST_CHILD] == 0
         if prox_net_wage_systematic.ndim == 2:
             newborn_child = newborn_child[:, None]
 
         elterngeld = calculate_elterngeld(
-            hours,
-            working_ft_last_period,
-            working_pt_last_period,
-            prox_net_wage_systematic,
-            elterngeld_replacement,
-            elterngeld_min,
-            elterngeld_max,
-            child_benefit,
+            hours=hours,
+            working_ft_last_period=working_ft_last_period,
+            working_pt_last_period=working_pt_last_period,
+            prox_net_wage_systematic=prox_net_wage_systematic,
+            elterngeld_replacement=model_spec.elterngeld_replacement,
+            elterngeld_min=model_spec.elterngeld_min,
+            elterngeld_max=model_spec.elterngeld_max,
+            child_benefit=child_benefit,
         )
 
         alg1 = calculate_alg1(
-            hours,
-            working_ft_last_period,
-            working_pt_last_period,
-            no_child,
-            prox_net_wage_systematic,
-            alg1_replacement_no_child,
-            alg1_replacement_child,
-            child_benefit,
+            hours=hours,
+            working_ft_last_period=working_ft_last_period,
+            working_pt_last_period=working_pt_last_period,
+            no_child=no_child,
+            prox_net_wage_systematic=prox_net_wage_systematic,
+            alg1_replacement_no_child=model_spec.alg1_replacement_no_child,
+            alg1_replacement_child=model_spec.alg1_replacement_child,
+            child_benefit_if_child=child_benefit,
         )
 
         last_working_non_employment_benefits = (
             1 - newborn_child
         ) * alg1 + newborn_child * elterngeld
         non_employment_benefits = last_working_non_employment_benefits.clip(min=alg2)
-    else:
+    elif model_spec.parental_leave_regime == "erziehungsgeld":
         non_employment_benefits = calculate_alg1(
-            hours,
-            working_ft_last_period,
-            working_pt_last_period,
-            no_child,
-            prox_net_wage_systematic,
-            alg1_replacement_no_child,
-            alg1_replacement_child,
-            child_benefit,
+            hours=hours,
+            working_ft_last_period=working_ft_last_period,
+            working_pt_last_period=working_pt_last_period,
+            no_child=no_child,
+            prox_net_wage_systematic=prox_net_wage_systematic,
+            alg1_replacement_no_child=model_spec.alg1_replacement_no_child,
+            alg1_replacement_child=model_spec.alg1_replacement_child,
+            child_benefit_if_child=child_benefit,
         ).clip(min=alg2)
 
         baby_child = (states[:, AGE_YOUNGEST_CHILD] == 0) | (
@@ -178,14 +135,16 @@ def calculate_non_employment_benefits(
         if prox_net_wage_systematic.ndim == 2:
             baby_child = baby_child[:, None]
         non_employment_benefits += calc_erziehungsgeld(
-            male_wage,
-            non_employment_benefits,
-            married,
-            baby_child,
-            erziehungsgeld_inc_single,
-            erziehungsgeld_inc_married,
-            erziehungsgeld,
+            male_wage=male_wage,
+            female_income=non_employment_benefits,
+            married=married,
+            baby_child=baby_child,
+            erziehungsgeld_inc_single=model_spec.erziehungsgeld_income_threshold_single,
+            erziehungsgeld_inc_married=model_spec.erziehungsgeld_income_threshold_married,
+            erziehungsgeld=model_spec.erziehungsgeld,
         )
+    else:
+        raise ValueError("Parental leave regime not specified correctly.")
 
     return non_employment_benefits
 

@@ -47,20 +47,7 @@ def test_non_employment_benefits_smoke(model_spec):
         log_wage_systematic=np.zeros(n),
         child_benefit=np.zeros(n),
         male_wage=np.zeros(n),
-        alg1_replacement_no_child=model_spec.alg1_replacement_no_child,
-        alg1_replacement_child=model_spec.alg1_replacement_child,
-        regelsatz_single=model_spec.regelsatz_single,
-        housing_single=model_spec.housing_single,
-        housing_addtion=model_spec.housing_addtion,
-        regelsatz_child=model_spec.regelsatz_child,
-        addition_child_single=model_spec.addition_child_single,
-        elterngeld_replacement=model_spec.elterngeld_replacement,
-        elterngeld_min=model_spec.elterngeld_min,
-        elterngeld_max=model_spec.elterngeld_max,
-        erziehungsgeld_inc_single=model_spec.erziehungsgeld_income_threshold_single,
-        erziehungsgeld_inc_married=model_spec.erziehungsgeld_income_threshold_married,
-        erziehungsgeld=model_spec.erziehungsgeld,
-        elterngeld_regime=True,
+        model_spec=model_spec,
     )
 
     assert out.shape == (n,)
