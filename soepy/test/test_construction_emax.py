@@ -83,7 +83,7 @@ def test_construct_emax_nonemployment_branch_matches_value_function():
 
     log_wage_grid = np.stack([log_wage_one_gridpoint(x) for x in exp_grid], axis=1)
 
-    non_emp_resources_grid = calculate_non_employment_consumption_resources(
+    non_emp_resources_grid, _ = calculate_non_employment_consumption_resources(
         deductions_spec=np.array(model_spec.ssc_deductions),
         income_tax_spec=model_spec.tax_params,
         model_spec=model_spec,

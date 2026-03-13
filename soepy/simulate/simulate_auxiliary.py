@@ -92,6 +92,7 @@ def pyth_simulate(
 
     # Alter observed wage for unemployed to nans
     choice_arr = data["Choice"].to_numpy()
+    data["Potential_Wage"] = data["Wage_Observed"].copy()
     data.loc[choice_arr == 0, "Wage_Observed"] = np.nan
 
     return data
@@ -207,7 +208,7 @@ def simulate_agents_over_periods(
         employment_resources = employment_resources - child_care_costs
 
         # Compute non-employment resources at current wages.
-        non_emp_resources_agents = np.asarray(
+        non_emp_resources_agents, male_net_inc = np.asarray(
             calculate_non_employment_consumption_resources(
                 deductions_spec=model_spec.ssc_deductions,
                 income_tax_spec=model_spec.tax_params,
@@ -219,7 +220,9 @@ def simulate_agents_over_periods(
                 tax_splitting=model_spec.tax_splitting,
                 hours=HOURS,
             )
-        )[:, 0]
+        )
+
+        non_emp_resources_agents = non_emp_resources_agents[:, 0]
 
         consumption_resources = np.hstack(
             (non_emp_resources_agents[:, None], employment_resources)
@@ -247,6 +250,7 @@ def simulate_agents_over_periods(
             this_period_df["Wage_Observed"] = wages
             this_period_df["Male_Wages"] = male_wage
             this_period_df["Wage_Shock"] = wage_shocks
+            this_period_df["Equivalence_Scale"] = equiv_scale
             for i, append in enumerate(["N", "P", "F"]):
                 this_period_df[
                     f"Non_Consumption_Utility_{append}"
@@ -256,6 +260,9 @@ def simulate_agents_over_periods(
                     :, i
                 ]
                 this_period_df[f"Value_Function_{append}"] = value_functions[:, i]
+                this_period_df[
+                    f"Consumption_Resources_{append}"
+                ] = consumption_resources[:, i]
 
         data.append(this_period_df)
 

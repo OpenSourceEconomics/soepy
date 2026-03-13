@@ -39,14 +39,12 @@ def calculate_non_employment_consumption_resources(
     erziehungsgeld_inc_married = model_spec.erziehungsgeld_income_threshold_married
     erziehungsgeld = model_spec.erziehungsgeld
 
-    return calc_resources(
-        deductions_spec,
-        income_tax_spec,
+    non_employment_benefits = calculate_non_employment_benefits(
         hours,
         states,
         log_wage_systematic,
-        male_wage,
         child_benefits,
+        male_wage,
         alg1_replacement_no_child,
         alg1_replacement_child,
         regelsatz_single,
@@ -60,9 +58,24 @@ def calculate_non_employment_consumption_resources(
         erziehungsgeld_inc_single,
         erziehungsgeld_inc_married,
         erziehungsgeld,
-        tax_splitting,
         elterngeld_regime,
     )
+
+    if non_employment_benefits.ndim == 2:
+        male_wage = male_wage[:, None]
+        female_wage = jnp.zeros_like(male_wage)
+    else:
+        female_wage = 0
+
+    male_net_income = calculate_net_income(
+        income_tax_spec,
+        deductions_spec,
+        female_wage,
+        male_wage,
+        tax_splitting,
+    )
+
+    return male_net_income + non_employment_benefits, male_net_income
 
 
 def calculate_non_employment_benefits(
@@ -243,66 +256,3 @@ def calculate_alg1(
     return alg_1 * (
         replacement_rate * prox_net_wage_systematic * hours_worked + child_benefits
     )
-
-
-def calc_resources(
-    deductions_spec,
-    income_tax_spec,
-    hours,
-    states,
-    log_wage_systematic,
-    male_wage,
-    child_benefit,
-    alg1_replacement_no_child,
-    alg1_replacement_child,
-    regelsatz_single,
-    housing_single,
-    housing_addtion,
-    regelsatz_child,
-    addition_child_single,
-    elterngeld_replacement,
-    elterngeld_min,
-    elterngeld_max,
-    erziehungsgeld_inc_single,
-    erziehungsgeld_inc_married,
-    erziehungsgeld,
-    tax_splitting,
-    elterngeld_regime,
-):
-    non_employment_benefits = calculate_non_employment_benefits(
-        hours,
-        states,
-        log_wage_systematic,
-        child_benefit,
-        male_wage,
-        alg1_replacement_no_child,
-        alg1_replacement_child,
-        regelsatz_single,
-        housing_single,
-        housing_addtion,
-        regelsatz_child,
-        addition_child_single,
-        elterngeld_replacement,
-        elterngeld_min,
-        elterngeld_max,
-        erziehungsgeld_inc_single,
-        erziehungsgeld_inc_married,
-        erziehungsgeld,
-        elterngeld_regime,
-    )
-
-    if non_employment_benefits.ndim == 2:
-        male_wage = male_wage[:, None]
-        female_wage = jnp.zeros_like(male_wage)
-    else:
-        female_wage = 0
-
-    male_net_income = calculate_net_income(
-        income_tax_spec,
-        deductions_spec,
-        female_wage,
-        male_wage,
-        tax_splitting,
-    )
-
-    return male_net_income + non_employment_benefits

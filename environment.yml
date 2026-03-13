@@ -12,6 +12,8 @@ dependencies:
 - pytest
 - pytest-cov
 - pandoc
+- matplotlib
+- jupyter
 - pyyaml
 - nbsphinx
 - sphinx_rtd_theme

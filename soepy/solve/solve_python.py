@@ -201,18 +201,19 @@ def pyth_backward_induction(
             child_bin=covariates_period[:, 0],
         )
 
-        non_employment_consumption_resources_period = (
-            calculate_non_employment_consumption_resources(
-                deductions_spec=model_spec.ssc_deductions,
-                income_tax_spec=model_spec.tax_params,
-                model_spec=model_spec,
-                states=states_period,
-                log_wage_systematic=log_wage_systematic_period,
-                male_wage=covariates_period[:, 1],
-                child_benefits=covariates_period[:, 3],
-                tax_splitting=model_spec.tax_splitting,
-                hours=hours,
-            )
+        (
+            non_employment_consumption_resources_period,
+            _,
+        ) = calculate_non_employment_consumption_resources(
+            deductions_spec=model_spec.ssc_deductions,
+            income_tax_spec=model_spec.tax_params,
+            model_spec=model_spec,
+            states=states_period,
+            log_wage_systematic=log_wage_systematic_period,
+            male_wage=covariates_period[:, 1],
+            child_benefits=covariates_period[:, 3],
+            tax_splitting=model_spec.tax_splitting,
+            hours=hours,
         )
 
         def solve_one_gridpoint(log_wage_g, cont_g, non_emp_g):
