@@ -16,6 +16,7 @@ def calculate_non_employment_consumption_resources(
     child_benefits,
     tax_splitting,
     hours,
+    debug=False,
 ):
     non_employment_benefits = calculate_non_employment_benefits(
         hours=hours,
@@ -27,6 +28,7 @@ def calculate_non_employment_consumption_resources(
         deductions_spec=deductions_spec,
         tax_splitting=tax_splitting,
         model_spec=model_spec,
+        debug=debug,
     )
 
     if non_employment_benefits.ndim == 2:
@@ -56,6 +58,7 @@ def calculate_non_employment_benefits(
     deductions_spec,
     tax_splitting,
     model_spec,
+    debug=False,
 ):
     no_child = states[:, AGE_YOUNGEST_CHILD] == -1
     working_ft_last_period = states[:, LAGGED_CHOICE] == 2
@@ -113,6 +116,17 @@ def calculate_non_employment_benefits(
         alg_2_alleinerziehend=alg_2_alleinerziehend,
     )
 
+    # alg1 = calculate_alg1(
+    #     hours=hours,
+    #     working_ft_last_period=working_ft_last_period,
+    #     working_pt_last_period=working_pt_last_period,
+    #     no_child=no_child,
+    #     net_income_last_period=net_income_last_period,
+    #     alg1_replacement_no_child=model_spec.alg1_replacement_no_child,
+    #     alg1_replacement_child=model_spec.alg1_replacement_child,
+    #     child_benefit_if_child=child_benefit,
+    # )
+
     if model_spec.parental_leave_regime == "elterngeld":
         newborn_child = states[:, AGE_YOUNGEST_CHILD] == 0
         if net_income_last_period.ndim == 2:
@@ -128,32 +142,16 @@ def calculate_non_employment_benefits(
             child_benefit=child_benefit,
         )
 
-        alg1 = calculate_alg1(
-            hours=hours,
-            working_ft_last_period=working_ft_last_period,
-            working_pt_last_period=working_pt_last_period,
-            no_child=no_child,
-            net_income_last_period=net_income_last_period,
-            alg1_replacement_no_child=model_spec.alg1_replacement_no_child,
-            alg1_replacement_child=model_spec.alg1_replacement_child,
-            child_benefit_if_child=child_benefit,
-        )
+        # last_working_non_employment_benefits = (
+        #     1 - newborn_child
+        # ) * alg1 + newborn_child * elterngeld
 
-        last_working_non_employment_benefits = (
-            1 - newborn_child
-        ) * alg1 + newborn_child * elterngeld
+        last_working_non_employment_benefits = newborn_child * elterngeld
         non_employment_benefits = last_working_non_employment_benefits.clip(min=alg2)
     elif model_spec.parental_leave_regime == "erziehungsgeld":
-        non_employment_benefits = calculate_alg1(
-            hours=hours,
-            working_ft_last_period=working_ft_last_period,
-            working_pt_last_period=working_pt_last_period,
-            no_child=no_child,
-            net_income_last_period=net_income_last_period,
-            alg1_replacement_no_child=model_spec.alg1_replacement_no_child,
-            alg1_replacement_child=model_spec.alg1_replacement_child,
-            child_benefit_if_child=child_benefit,
-        ).clip(min=alg2)
+        # non_employment_benefits = alg1.copy().clip(min=alg2)
+
+        non_employment_benefits = alg2.cop()
 
         baby_child = (states[:, AGE_YOUNGEST_CHILD] == 0) | (
             states[:, AGE_YOUNGEST_CHILD] == 1

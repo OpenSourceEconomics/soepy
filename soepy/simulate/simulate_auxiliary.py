@@ -219,6 +219,7 @@ def simulate_agents_over_periods(
                 child_benefits=child_benefits,
                 tax_splitting=model_spec.tax_splitting,
                 hours=HOURS,
+                debug=True,
             )
         )
 
