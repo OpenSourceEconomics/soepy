@@ -214,7 +214,7 @@ def simulate_agents_over_periods(
                 income_tax_spec=model_spec.tax_params,
                 model_spec=model_spec,
                 states=state_space[idx],
-                log_wage_systematic=log_wage_agents[:, None],
+                log_wage_systematic=log_wage_agents,
                 male_wage=male_wage,
                 child_benefits=child_benefits,
                 tax_splitting=model_spec.tax_splitting,
@@ -222,8 +222,6 @@ def simulate_agents_over_periods(
                 debug=True,
             )
         )
-
-        non_emp_resources_agents = non_emp_resources_agents[:, 0]
 
         consumption_resources = np.hstack(
             (non_emp_resources_agents[:, None], employment_resources)

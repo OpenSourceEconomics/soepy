@@ -153,6 +153,12 @@ def calculate_non_employment_benefits(
 
         non_employment_benefits = alg2.copy()
 
+        if log_wage_systematic.ndim == 2:
+            non_employment_benefits = jnp.broadcast_to(
+                non_employment_benefits,
+                log_wage_systematic.shape,
+            )
+
         baby_child = (states[:, AGE_YOUNGEST_CHILD] == 0) | (
             states[:, AGE_YOUNGEST_CHILD] == 1
         )
