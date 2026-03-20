@@ -151,7 +151,7 @@ def calculate_non_employment_benefits(
     elif model_spec.parental_leave_regime == "erziehungsgeld":
         # non_employment_benefits = alg1.copy().clip(min=alg2)
 
-        non_employment_benefits = alg2.cop()
+        non_employment_benefits = alg2.copy()
 
         baby_child = (states[:, AGE_YOUNGEST_CHILD] == 0) | (
             states[:, AGE_YOUNGEST_CHILD] == 1

@@ -57,12 +57,6 @@ def input_data():
     model_spec_init_dict["SOLUTION"]["pt_exp_ratio"] = 0.5
 
     model_params_df, model_params = read_model_params_init(random_model_params_df)
-    ccc_under_3 = np.array(
-        model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["under_3"]
-    )
-    ccc_3_to_6 = np.array(
-        model_spec_init_dict["TAXES_TRANSFERS"]["child_care_costs"]["3_to_6"]
-    )
 
     for name, regime in [("original", "elterngeld"), ("validation", "erziehungsgeld")]:
 
