@@ -137,6 +137,16 @@ def group_parameters(model_params_dict_expanded):
     model_params_dict_flat["delta"] = model_params_dict_expanded["discount"]["delta"]
 
     model_params_dict_flat["mu"] = model_params_dict_expanded["risk"]["mu"]
+    if "terminal_proxy" in model_params_dict_expanded:
+        model_params_dict_flat["beta_0"] = model_params_dict_expanded["terminal_proxy"][
+            "beta_0"
+        ]
+        model_params_dict_flat["beta_1"] = model_params_dict_expanded["terminal_proxy"][
+            "beta_1"
+        ]
+        model_params_dict_flat["beta_2"] = model_params_dict_expanded["terminal_proxy"][
+            "beta_2"
+        ]
     for i in ["p", "f"]:
         model_params_dict_flat["theta_" + i] = np.array(
             [

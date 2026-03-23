@@ -2,9 +2,13 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+from soepy.shared.constants_and_indices import AGE_YOUNGEST_CHILD
+from soepy.shared.constants_and_indices import EDUC_LEVEL
+from soepy.shared.constants_and_indices import NUM_CHOICES
 from soepy.solve.continuous_continuation import (
     interpolate_then_weight_continuation_values,
 )
+from soepy.solve.terminal_proxy import terminal_proxy_continuation
 
 
 def manual_linear_interp(grid, values, x):
@@ -134,3 +138,57 @@ def test_interpolate_then_weight_continuation_values_choice2_shape_and_value(
         prob_single * val_no_child_single + prob_partner * val_no_child_partner
     ) + prob_child * (prob_single * val_child_single + prob_partner * val_child_partner)
     np.testing.assert_allclose(out[0, 2], expected)
+
+
+def test_terminal_proxy_shape_and_monotonicity():
+    exp_grid = jnp.array([0.0, 1.0])
+    states_period = jnp.zeros((4, 6), dtype=int)
+    states_period = states_period.at[:, EDUC_LEVEL].set(jnp.array([0, 2, 0, 0]))
+    states_period = states_period.at[:, AGE_YOUNGEST_CHILD].set(-1)
+
+    covariates_period = jnp.zeros((4, 4), dtype=float)
+    covariates_period = covariates_period.at[0, 1].set(1.0)
+    covariates_period = covariates_period.at[1, 1].set(1.0)
+    covariates_period = covariates_period.at[2, 1].set(1.0)
+    covariates_period = covariates_period.at[3, 1].set(2.0)
+
+    model_params = type(
+        "Params",
+        (),
+        {
+            "gamma_0": jnp.array([0.0, 0.5, 1.0]),
+            "gamma_1": jnp.array([0.2, 0.2, 0.2]),
+            "gamma_p": jnp.array([1.0, 1.0, 1.0]),
+            "gamma_p_mom": 0.0,
+            "exp_depr_rate": jnp.array([0.0, 0.0, 0.0]),
+            "beta_0": 0.0,
+            "beta_1": 1.0,
+            "beta_2": 1.0,
+        },
+    )()
+
+    model_spec = type(
+        "Spec",
+        (),
+        {
+            "init_exp_max": 1.0,
+            "elasticity_scale": 1.0,
+        },
+    )()
+
+    out = terminal_proxy_continuation(
+        exp_grid=exp_grid,
+        states_period=states_period,
+        covariates_period=covariates_period,
+        model_params=model_params,
+        model_spec=model_spec,
+        biased_exp=False,
+        current_period=0,
+    )
+
+    assert out.shape == (4, NUM_CHOICES, 2)
+    # Negative monotinicity. In the estimation betas will be negative
+    assert np.all(out < 0)
+    assert np.all(out[1] < out[0])
+    assert np.all(out[3] < out[2])
+    assert np.all(out[0, 2, 1] < out[0, 2, 0])

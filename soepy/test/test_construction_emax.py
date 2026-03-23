@@ -1,3 +1,4 @@
+import jax.numpy as jnp
 import numpy as np
 
 from soepy.pre_processing.model_processing import read_model_params_init
@@ -9,6 +10,7 @@ from soepy.shared.tax_and_transfers_jax import calculate_net_income
 from soepy.shared.wages import calculate_log_wage
 from soepy.solve.create_state_space import create_state_space_objects
 from soepy.solve.solve_python import pyth_solve
+from soepy.solve.terminal_proxy import terminal_proxy_continuation
 from soepy.test.random_init import random_init
 from soepy.test.resources.exogenous_processes import gen_prob_child_vector
 from soepy.test.resources.exogenous_processes import gen_prob_partner
@@ -61,7 +63,7 @@ def test_construct_emax_nonemployment_branch_matches_value_function():
         biased_exp=False,
     )
 
-    # Last period: continuation is zero, so max value is max over instant utilities.
+    # Last period: continuation uses the terminal proxy.
     mask_last = states[:, 0] == (model_spec.num_periods - 1)
     states_last = states[mask_last]
     cov_last = covariates[mask_last]
@@ -95,11 +97,34 @@ def test_construct_emax_nonemployment_branch_matches_value_function():
         hours=HOURS,
     )
 
+    model_params_proxy = model_params._replace(
+        gamma_0=jnp.array(model_params.gamma_0),
+        gamma_1=jnp.array(model_params.gamma_1),
+        gamma_p=jnp.array(model_params.gamma_p),
+        exp_depr_rate=jnp.array(model_params.exp_depr_rate),
+        beta_0=float(model_params.beta_0),
+        beta_1=float(model_params.beta_1),
+        beta_2=float(model_params.beta_2),
+    )
+
+    terminal_continuation = np.asarray(
+        terminal_proxy_continuation(
+            exp_grid=exp_grid,
+            states_period=states_last,
+            covariates_period=cov_last,
+            model_params=model_params_proxy,
+            model_spec=model_spec,
+            biased_exp=False,
+            current_period=int(model_spec.num_periods - 1),
+        )
+    )
+
     # Instantaneous utility for N.
     mu = float(model_params.mu)
     equiv = cov_last[:, 2][:, None]
     cons_n = np.maximum(non_emp_resources_grid / equiv, 1e-14)
     util_n = (cons_n**mu / mu) * non_cons_last[:, 0][:, None]
+    util_n += float(model_params.delta) * terminal_continuation[:, 0]
 
     # Instantaneous utilities for work choices at each experience grid point.
     draw = 0.0
@@ -132,6 +157,9 @@ def test_construct_emax_nonemployment_branch_matches_value_function():
 
     util_pt = util_work(female_wage_pt, non_cons_last[:, 1], 0)
     util_ft = util_work(female_wage_ft, non_cons_last[:, 2], 1)
+
+    util_pt += float(model_params.delta) * terminal_continuation[:, 1]
+    util_ft += float(model_params.delta) * terminal_continuation[:, 2]
 
     vmax = np.maximum(util_n, np.maximum(util_pt, util_ft))
 

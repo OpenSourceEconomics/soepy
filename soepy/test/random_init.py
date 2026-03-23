@@ -213,6 +213,10 @@ def random_init(constr=None):
     model_params_init_dict["delta"] = np.random.uniform(0.8, 0.99)
     model_params_init_dict["mu"] = np.random.uniform(-0.7, -0.4)
 
+    model_params_init_dict["beta_0"] = 0.0
+    model_params_init_dict["beta_1"] = 0.0
+    model_params_init_dict["beta_2"] = 0.0
+
     # Random number of types: 1, 2, 3, or 4
     num_types = int(np.random.choice([1, 2, 3, 4], 1))
     # Draw shares that sum up to one
@@ -258,6 +262,8 @@ def random_init(constr=None):
             category.append("discount")
         elif "mu" == key:
             category.append("risk")
+        elif "beta_" in key:
+            category.append("terminal_proxy")
         elif "kids" or "child" in key:
             category.append("disutil_work")
 
