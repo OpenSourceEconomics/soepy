@@ -97,6 +97,9 @@ def _make_min_model_params():
         "child_6_10_p": 0.0,
         "child_11_age_max_f": 0.0,
         "child_11_age_max_p": 0.0,
+        "beta_0": 0.0,
+        "beta_1": 0.0,
+        "beta_2": 0.0,
     }
 
     return collections.namedtuple("model_parameters", params.keys())(**params)
@@ -187,7 +190,28 @@ def _reference_solve(
 
             for choice in range(3):
                 if t == n_periods - 1:
-                    continuation_values[choice] = 0.0
+                    x_next = _next_stock_np(
+                        x=exp_grid,
+                        period=int(t),
+                        init_exp_max=int(model_spec.init_exp_max),
+                        pt_inc=pt_inc,
+                        choice=choice,
+                        depr_rate=float(model_params.exp_depr_rate[educ]),
+                    )
+
+                    max_years_tp1 = 2 * int(model_spec.init_exp_max) + int(t) + 1
+                    exp_years_tp1 = x_next * max_years_tp1
+                    log_w_female = float(model_params.gamma_0[educ]) + float(
+                        model_params.gamma_1[educ]
+                    ) * np.log(exp_years_tp1 + 1.0)
+                    log_w_female = log_w_female + np.log(model_spec.elasticity_scale)
+
+                    log_male = np.log(cov_t[i, 1]) if cov_t[i, 1] > 0 else 0.0
+                    continuation_values[choice] = -np.exp(
+                        float(model_params.beta_0)
+                        + float(model_params.beta_1) * log_w_female
+                        + float(model_params.beta_2) * log_male
+                    )
                     continue
 
                 assert child_local_t is not None
@@ -228,8 +252,8 @@ def _reference_solve(
 
             # Taxes and transfers were set up so net income == gross income.
             equiv = float(cov_t[i, 2])
-            cons_pt = np.maximum(female_wage_pt / equiv, 1e-14)
-            cons_ft = np.maximum(female_wage_ft / equiv, 1e-14)
+            cons_pt = np.maximum((female_wage_pt + cov_t[i, 1]) / equiv, 1e-14)
+            cons_ft = np.maximum((female_wage_ft + cov_t[i, 1]) / equiv, 1e-14)
 
             # mu == 1 => utility == consumption
             val0 = model_params.delta * continuation_values[0]
@@ -269,6 +293,9 @@ def test_full_solve_matches_reference():
         child_age_update_rule,
         child_state_indexes,
     ) = create_state_space_objects(model_spec)
+
+    covariates = covariates.copy()
+    covariates[:, 1] = 1.0
 
     _, emaxs = pyth_solve(
         states=states,
