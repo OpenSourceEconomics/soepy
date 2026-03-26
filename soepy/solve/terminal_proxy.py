@@ -68,9 +68,10 @@ def terminal_proxy_continuation(
     log_w_female = jax.vmap(per_state)(edu_state, child_age)
 
     proxy = -jnp.exp(
-        model_params.beta_0
-        + model_params.beta_1 * log_w_female
-        + model_params.beta_2 * log_male[:, None, None]
+        # model_params.beta_0
+        model_params.beta_1
+        * log_w_female
+        # + model_params.beta_2 * log_male[:, None, None]
     )
 
     return proxy
