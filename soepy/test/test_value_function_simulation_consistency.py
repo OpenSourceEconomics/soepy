@@ -122,7 +122,6 @@ def _minimal_model_spec_init_dict(*, num_periods: int, num_agents: int) -> dict:
             "partner_arrival_info_file_name": "test.soepy.partner.arrival.pkl",
             "partner_separation_info_file_name": "test.soepy.partner.separation.pkl",
             "child_age_max": 2,
-            "last_child_bearing_period": num_periods - 1,
             "partner_cf_const": 0.0,
             "partner_cf_age": 0.0,
             "partner_cf_age_sq": 0.0,

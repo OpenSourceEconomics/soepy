@@ -27,12 +27,5 @@ def gen_prob_child_vector(model_spec):
 
     prob_child_values = exog_child_info_df.values.reshape(model_spec.num_periods, 3)
 
-    prob_child = np.full((model_spec.num_periods, 3), 0.00)
-    prob_child[
-        0 : min(model_spec.last_child_bearing_period + 1, model_spec.num_periods)
-    ] += prob_child_values[
-        0 : min(model_spec.last_child_bearing_period + 1, model_spec.num_periods)
-    ]
-
-    assert len(prob_child) == model_spec.num_periods
-    return prob_child
+    assert len(prob_child_values) == model_spec.num_periods
+    return prob_child_values

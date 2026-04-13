@@ -270,15 +270,13 @@ def simulate_agents_over_periods(
 
         if period == model_spec.num_periods - 1:
             child_new_age = child_current_age
-        elif period <= model_spec.last_child_bearing_period:
+        else:
             kids_draw = np.random.binomial(
                 size=len(current_states),
                 n=1,
                 p=prob_child[period + 1, educ_level],
             )
             child_new_age = np.where(kids_draw == 0, child_age_update_rule[idx], 0)
-        else:
-            child_new_age = child_age_update_rule[idx]
 
         new_partner = partner_indicator.copy()
 
