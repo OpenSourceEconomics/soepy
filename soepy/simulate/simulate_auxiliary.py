@@ -274,10 +274,53 @@ def simulate_agents_over_periods(
             if prob_child.ndim == 2:
                 prob_child_period = prob_child[period + 1, educ_level]
             else:
-                has_prior_kid = (age_child != -1).astype(int)
-                prob_child_period = prob_child[
-                    period + 1, educ_level, partner_indicator, has_prior_kid
-                ]
+                raise ValueError("Old")
+
+            # else:
+            #     last_dim = prob_child.shape[-1]
+            #     if last_dim >= 5:
+            #         child_state = np.where(
+            #             age_child < 0,
+            #             0,
+            #             np.where(
+            #                 age_child <= 2,
+            #                 1,
+            #                 np.where(
+            #                     age_child <= 5,
+            #                     2,
+            #                     np.where(
+            #                         age_child <= 10,
+            #                         3,
+            #                         4,
+            #                     ),
+            #                 ),
+            #             ),
+            #         )
+            #         child_state = np.minimum(child_state, last_dim - 1)
+            #         prob_child_period = prob_child[
+            #             period + 1, educ_level, partner_indicator, child_state
+            #         ]
+            #     elif last_dim == 3:
+            #         child_state = np.where(
+            #             age_child < 0,
+            #             0,
+            #             np.where(age_child <= 5, 1, 2),
+            #         )
+            #         prob_child_period = prob_child[
+            #             period + 1, educ_level, partner_indicator, child_state
+            #         ]
+            #     elif last_dim == 2:
+            #         has_kids = np.where(
+            #             (age_child >= 0) & (age_child <= 10), 1, 0
+            #         )
+            #         prob_child_period = prob_child[
+            #             period + 1, educ_level, partner_indicator, has_kids
+            #         ]
+            #     else:
+            #         has_prior_kid = (age_child != -1).astype(int)
+            #         prob_child_period = prob_child[
+            #             period + 1, educ_level, partner_indicator, has_prior_kid
+            #         ]
             kids_draw = np.random.binomial(
                 size=len(current_states),
                 n=1,

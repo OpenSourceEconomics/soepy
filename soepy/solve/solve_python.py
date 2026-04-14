@@ -217,10 +217,50 @@ def scan_step_with_interpolation(
     if prob_child_period.ndim == 1:
         prob_child_period_states = prob_child_period[edu_state]
     else:
-        has_prior_kid = (states_period[:, AGE_YOUNGEST_CHILD] != -1).astype(int)
-        prob_child_period_states = prob_child_period[
-            edu_state, partner_state, has_prior_kid
-        ]
+        raise ValueError("Old")
+        # child_age = states_period[:, AGE_YOUNGEST_CHILD]
+        # last_dim = prob_child_period.shape[-1]
+        # if last_dim >= 5:
+        #     child_state = jnp.where(
+        #         child_age < 0,
+        #         0,
+        #         jnp.where(
+        #             child_age <= 2,
+        #             1,
+        #             jnp.where(
+        #                 child_age <= 5,
+        #                 2,
+        #                 jnp.where(
+        #                     child_age <= 10,
+        #                     3,
+        #                     4,
+        #                 ),
+        #             ),
+        #         ),
+        #     )
+        #     child_state = jnp.minimum(child_state, last_dim - 1)
+        #     prob_child_period_states = prob_child_period[
+        #         edu_state, partner_state, child_state
+        #     ]
+        # elif last_dim == 3:
+        #     child_state = jnp.where(
+        #         child_age < 0,
+        #         0,
+        #         jnp.where(child_age <= 5, 1, 2),
+        #     )
+        #     prob_child_period_states = prob_child_period[
+        #         edu_state, partner_state, child_state
+        #     ]
+        # elif last_dim == 2:
+        #     has_kids = jnp.where((child_age >= 0) & (child_age <= 10), 1, 0)
+        #     prob_child_period_states = prob_child_period[
+        #         edu_state, partner_state, has_kids
+        #     ]
+        # else:
+        #     has_prior_kid = (child_age != -1).astype(int)
+        #     prob_child_period_states = prob_child_period[
+        #         edu_state, partner_state, has_prior_kid
+        #     ]
     prob_partner_period_states = prob_partner_period[edu_state, partner_state]
 
     continuation_values = compute_continuation_values(
