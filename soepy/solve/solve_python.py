@@ -214,7 +214,13 @@ def scan_step_with_interpolation(
     edu_state = states_period[:, EDUC_LEVEL]
     partner_state = states_period[:, PARTNER]
 
-    prob_child_period_states = prob_child_period[edu_state]
+    if prob_child_period.ndim == 1:
+        prob_child_period_states = prob_child_period[edu_state]
+    else:
+        has_prior_kid = (states_period[:, AGE_YOUNGEST_CHILD] != -1).astype(int)
+        prob_child_period_states = prob_child_period[
+            edu_state, partner_state, has_prior_kid
+        ]
     prob_partner_period_states = prob_partner_period[edu_state, partner_state]
 
     continuation_values = compute_continuation_values(

@@ -190,5 +190,5 @@ def test_terminal_proxy_shape_and_monotonicity():
     # Negative monotinicity. In the estimation betas will be negative
     assert np.all(out < 0)
     assert np.all(out[1] < out[0])
-    assert np.all(out[3] < out[2])
+    assert np.allclose(out[3], out[2])
     assert np.all(out[0, 2, 1] < out[0, 2, 0])

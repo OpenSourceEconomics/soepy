@@ -21,9 +21,24 @@ def gen_prob_child_vector(model_spec):
     exog_child_info_df = exog_child_info_df.iloc[
         exog_child_info_df.index.get_level_values("period") < model_spec.num_periods
     ]
+    exog_child_info_df = exog_child_info_df.sort_index()
 
-    prob_child_values = exog_child_info_df.values.reshape(model_spec.num_periods, 3)
-    assert len(prob_child_values) == model_spec.num_periods
+    idx_names = set(exog_child_info_df.index.names)
+    has_partner = "partner_present" in idx_names
+    has_prior_kid = "has_prior_kid" in idx_names
+    educ_count = exog_child_info_df.index.get_level_values("educ_level").nunique()
+
+    if has_partner and has_prior_kid:
+        prob_child_values = exog_child_info_df.values.reshape(
+            model_spec.num_periods, educ_count, 2, 2
+        )
+        assert prob_child_values.shape[0] == model_spec.num_periods
+        return prob_child_values
+
+    prob_child_values = exog_child_info_df.values.reshape(
+        model_spec.num_periods, educ_count
+    )
+    assert prob_child_values.shape[0] == model_spec.num_periods
     return prob_child_values
 
 
