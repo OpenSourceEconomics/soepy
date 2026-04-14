@@ -33,39 +33,39 @@ def gen_prob_child_vector(model_spec):
     has_kids = "has_kids" in idx_names
     educ_count = exog_child_info_df.index.get_level_values("educ_level").nunique()
 
-    if has_partner and has_child_state:
-        child_state_count = exog_child_info_df.index.get_level_values(
-            "child_state"
-        ).nunique()
-        prob_child_values = exog_child_info_df.values.reshape(
-            model_spec.num_periods, educ_count, 2, child_state_count
-        )
-        assert prob_child_values.shape[0] == model_spec.num_periods
-        return prob_child_values
-
-    if has_partner and has_kids:
-        prob_child_values = exog_child_info_df.values.reshape(
-            model_spec.num_periods, educ_count, 2, 2
-        )
-        assert prob_child_values.shape[0] == model_spec.num_periods
-        return prob_child_values
-
-    if has_partner and has_prior_kid:
-        prob_child_values = exog_child_info_df.values.reshape(
-            model_spec.num_periods, educ_count, 2, 2
-        )
-        assert prob_child_values.shape[0] == model_spec.num_periods
-        return prob_child_values
-
-    if has_child_state:
-        child_state_count = exog_child_info_df.index.get_level_values(
-            "child_state"
-        ).nunique()
-        prob_child_values = exog_child_info_df.values.reshape(
-            model_spec.num_periods, educ_count, child_state_count
-        )
-        assert prob_child_values.shape[0] == model_spec.num_periods
-        return prob_child_values
+    # if has_partner and has_child_state:
+    #     child_state_count = exog_child_info_df.index.get_level_values(
+    #         "child_state"
+    #     ).nunique()
+    #     prob_child_values = exog_child_info_df.values.reshape(
+    #         model_spec.num_periods, educ_count, 2, child_state_count
+    #     )
+    #     assert prob_child_values.shape[0] == model_spec.num_periods
+    #     return prob_child_values
+    #
+    # if has_partner and has_kids:
+    #     prob_child_values = exog_child_info_df.values.reshape(
+    #         model_spec.num_periods, educ_count, 2, 2
+    #     )
+    #     assert prob_child_values.shape[0] == model_spec.num_periods
+    #     return prob_child_values
+    #
+    # if has_partner and has_prior_kid:
+    #     prob_child_values = exog_child_info_df.values.reshape(
+    #         model_spec.num_periods, educ_count, 2, 2
+    #     )
+    #     assert prob_child_values.shape[0] == model_spec.num_periods
+    #     return prob_child_values
+    #
+    # if has_child_state:
+    #     child_state_count = exog_child_info_df.index.get_level_values(
+    #         "child_state"
+    #     ).nunique()
+    #     prob_child_values = exog_child_info_df.values.reshape(
+    #         model_spec.num_periods, educ_count, child_state_count
+    #     )
+    #     assert prob_child_values.shape[0] == model_spec.num_periods
+    #     return prob_child_values
 
     prob_child_values = exog_child_info_df.values.reshape(
         model_spec.num_periods, educ_count
