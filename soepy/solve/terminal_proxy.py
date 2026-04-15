@@ -53,25 +53,27 @@ def terminal_proxy_continuation(
                 biased_exp=biased_exp,
             )
 
-            log_w_female = calculate_log_wage(
-                model_params=model_params,
-                educ=educ_level_state,
-                period=current_period + 1,
-                init_exp_max=model_spec.init_exp_max,
-                exp_stock=x_next,
-            ) + jnp.log(model_spec.elasticity_scale)
+            # log_w_female = calculate_log_wage(
+            #     model_params=model_params,
+            #     educ=educ_level_state,
+            #     period=current_period + 1,
+            #     init_exp_max=model_spec.init_exp_max,
+            #     exp_stock=x_next,
+            # ) + jnp.log(model_spec.elasticity_scale)
 
-            return log_w_female
+            return x_next
 
         return jax.vmap(per_choice)(choice_ids)
 
-    log_w_female = jax.vmap(per_state)(edu_state, child_age)
+    exp_next = jax.vmap(per_state)(edu_state, child_age)
 
-    proxy = -jnp.exp(
-        # model_params.beta_0
-        model_params.beta_1
-        * log_w_female
-        # + model_params.beta_2 * log_male[:, None, None]
+    # Still need to rename params later
+    beta_coefficent = (
+        (edu_state == 0) * model_params.beta_0
+        + (edu_state == 1) * model_params.beta_1
+        + (edu_state == 2) * model_params.beta_2
     )
+
+    proxy = -jnp.exp(beta_coefficent[:, None, None] * exp_next)
 
     return proxy
