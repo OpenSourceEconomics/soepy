@@ -50,6 +50,15 @@ def update_sim_objectes():
         exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
         exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
+        for switch_name in [
+            "home_to_part",
+            "home_to_full",
+            "part_to_full",
+            "full_to_part",
+        ]:
+            if ("switch_cost", switch_name) not in random_model_params_df.index:
+                random_model_params_df.loc[("switch_cost", switch_name), "value"] = 0.0
+
         # Sort index after modifications
         random_model_params_df = random_model_params_df.sort_index()
 
@@ -67,26 +76,26 @@ def update_sim_objectes():
             model_spec, model_spec.ft_exp_shares_file_name
         )
 
-        initial_states = create_initial_states_from_probs(
-            model_spec=model_spec,
-            prob_educ_level=prob_educ_level,
-            prob_child_age=prob_child_age,
-            prob_partner_present=prob_partner_present,
-            prob_exp_pt=prob_exp_pt,
-            prob_exp_ft=prob_exp_ft,
-        )
-
-        calculated_df_sim = simulate(
-            random_model_params_df,
-            model_spec_init_dict,
-            initial_states=initial_states,
-        )
-        unbiased_calc_df = simulate(
-            random_model_params_df,
-            model_spec_init_dict,
-            initial_states=initial_states,
-            biased_exp=False,
-        )
+        # initial_states = create_initial_states_from_probs(
+        #     model_spec=model_spec,
+        #     prob_educ_level=prob_educ_level,
+        #     prob_child_age=prob_child_age,
+        #     prob_partner_present=prob_partner_present,
+        #     prob_exp_pt=prob_exp_pt,
+        #     prob_exp_ft=prob_exp_ft,
+        # )
+        #
+        # calculated_df_sim = simulate(
+        #     random_model_params_df,
+        #     model_spec_init_dict,
+        #     initial_states=initial_states,
+        # )
+        # unbiased_calc_df = simulate(
+        #     random_model_params_df,
+        #     model_spec_init_dict,
+        #     initial_states=initial_states,
+        #     biased_exp=False,
+        # )
 
         vault[i] = (
             model_spec_init_dict,
@@ -99,8 +108,8 @@ def update_sim_objectes():
             exog_child_info,
             exog_partner_arrival_info,
             exog_partner_separation_info,
-            calculated_df_sim.reset_index().sum(axis=0),
-            unbiased_calc_df.reset_index().sum(axis=0),
+            expected_df,
+            expected_df_unbiased,
         )
 
     with open(vault_file, "wb") as file:

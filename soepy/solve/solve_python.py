@@ -5,6 +5,7 @@ import numpy as np
 from soepy.shared.constants_and_indices import AGE_YOUNGEST_CHILD
 from soepy.shared.constants_and_indices import EDUC_LEVEL
 from soepy.shared.constants_and_indices import HOURS
+from soepy.shared.constants_and_indices import LAGGED_CHOICE
 from soepy.shared.constants_and_indices import NUM_CHOICES
 from soepy.shared.constants_and_indices import PARTNER
 from soepy.shared.constants_and_indices import PERIOD
@@ -352,6 +353,7 @@ def solve_period_emax(
         educ=edu_state,
         unobs_type=unobs_types,
         child_bin=covariates_period[:, 0],
+        lagged_choice=states_period[:, LAGGED_CHOICE],
     )
 
     (

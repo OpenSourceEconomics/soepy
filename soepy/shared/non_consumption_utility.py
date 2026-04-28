@@ -1,7 +1,13 @@
 import jax.numpy as jnp
 
 
-def calculate_non_consumption_utility(model_params, educ, unobs_type, child_bin):
+def calculate_non_consumption_utility(
+    model_params,
+    educ,
+    unobs_type,
+    child_bin,
+    lagged_choice,
+):
     """Calculate non-pecuniary utility contribution.
 
     Parameters
@@ -68,6 +74,11 @@ def calculate_non_consumption_utility(model_params, educ, unobs_type, child_bin)
         + b3 * util_ft_b3
         + b4 * util_ft_b4
     )
+
+    util_pt += (lagged_choice == 0) * model_params.switch_cost_home_to_part
+    util_pt += (lagged_choice == 2) * model_params.switch_cost_full_to_part
+    util_ft += (lagged_choice == 0) * model_params.switch_cost_home_to_full
+    util_ft += (lagged_choice == 1) * model_params.switch_cost_part_to_full
 
     non_consumption_utility = jnp.stack(
         (

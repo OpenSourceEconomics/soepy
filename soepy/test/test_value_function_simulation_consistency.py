@@ -152,6 +152,10 @@ def _minimal_model_params_df() -> pd.DataFrame:
         rows.append(("disutil_work", f"yes_kids_p_educ_{educ_type}", 0.0))
 
     rows.append(("exp_increase_p_mom", "gamma_p_mom", 0.0))
+    rows.append(("switch_cost", "home_to_part", 0.0))
+    rows.append(("switch_cost", "home_to_full", 0.0))
+    rows.append(("switch_cost", "part_to_full", 0.0))
+    rows.append(("switch_cost", "full_to_part", 0.0))
 
     for name in [
         "child_0_2_f",

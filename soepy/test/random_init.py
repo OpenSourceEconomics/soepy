@@ -210,6 +210,13 @@ def random_init(constr=None):
         model_params_init_dict["child_11_age_max_p"],
     ) = np.random.uniform(-1.5, -0.001, 10).tolist()
 
+    (
+        model_params_init_dict["home_to_part"],
+        model_params_init_dict["home_to_full"],
+        model_params_init_dict["part_to_full"],
+        model_params_init_dict["full_to_part"],
+    ) = np.random.uniform(-0.5, 0.5, 4).tolist()
+
     model_params_init_dict["delta"] = np.random.uniform(0.8, 0.99)
     model_params_init_dict["mu"] = np.random.uniform(-0.7, -0.4)
 
@@ -264,6 +271,8 @@ def random_init(constr=None):
             category.append("risk")
         elif "beta_" in key:
             category.append("terminal_proxy")
+        elif key in ["home_to_part", "home_to_full", "part_to_full", "full_to_part"]:
+            category.append("switch_cost")
         elif "kids" or "child" in key:
             category.append("disutil_work")
 

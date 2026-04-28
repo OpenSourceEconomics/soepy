@@ -103,6 +103,20 @@ def group_parameters(model_params_dict_expanded):
         model_params_dict_expanded["exp_increase_p_mom"]["gamma_p_mom"]
     )
 
+    switch_costs = model_params_dict_expanded["switch_cost"]
+    model_params_dict_flat["switch_cost_home_to_part"] = float(
+        switch_costs["home_to_part"]
+    )
+    model_params_dict_flat["switch_cost_home_to_full"] = float(
+        switch_costs["home_to_full"]
+    )
+    model_params_dict_flat["switch_cost_part_to_full"] = float(
+        switch_costs["part_to_full"]
+    )
+    model_params_dict_flat["switch_cost_full_to_part"] = float(
+        switch_costs["full_to_part"]
+    )
+
     for key_ in list(model_params_dict_expanded["disutil_work"].keys()):
         if "child" in key_:
             model_params_dict_flat[key_] = model_params_dict_expanded["disutil_work"][

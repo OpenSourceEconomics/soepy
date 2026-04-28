@@ -6,6 +6,7 @@ import numpy as np
 from soepy.shared.constants_and_indices import AGE_YOUNGEST_CHILD
 from soepy.shared.constants_and_indices import EDUC_LEVEL
 from soepy.shared.constants_and_indices import HOURS
+from soepy.shared.constants_and_indices import LAGGED_CHOICE
 from soepy.shared.constants_and_indices import PARTNER
 from soepy.shared.constants_and_indices import PERIOD
 from soepy.shared.experience_stock import get_pt_increment
@@ -97,6 +98,10 @@ def _make_min_model_params():
         "child_6_10_p": 0.0,
         "child_11_age_max_f": 0.0,
         "child_11_age_max_p": 0.0,
+        "switch_cost_home_to_part": -0.08,
+        "switch_cost_home_to_full": -0.12,
+        "switch_cost_part_to_full": -0.05,
+        "switch_cost_full_to_part": -0.03,
         "beta_0": 0.0,
         "beta_1": 0.0,
         "beta_2": 0.0,
@@ -256,9 +261,23 @@ def _reference_solve(
             cons_ft = np.maximum((female_wage_ft + cov_t[i, 1]) / equiv, 1e-14)
 
             # mu == 1 => utility == consumption
+            lagged_choice = int(states_t[i, LAGGED_CHOICE])
+            switch_pt = 0.0
+            switch_ft = 0.0
+            if lagged_choice == 0:
+                switch_pt += float(model_params.switch_cost_home_to_part)
+                switch_ft += float(model_params.switch_cost_home_to_full)
+            elif lagged_choice == 1:
+                switch_ft += float(model_params.switch_cost_part_to_full)
+            elif lagged_choice == 2:
+                switch_pt += float(model_params.switch_cost_full_to_part)
+
+            non_cons_pt = np.exp(switch_pt)
+            non_cons_ft = np.exp(switch_ft)
+
             val0 = model_params.delta * continuation_values[0]
-            val1 = cons_pt + model_params.delta * continuation_values[1]
-            val2 = cons_ft + model_params.delta * continuation_values[2]
+            val1 = non_cons_pt * cons_pt + model_params.delta * continuation_values[1]
+            val2 = non_cons_ft * cons_ft + model_params.delta * continuation_values[2]
 
             vmax = np.maximum(val0, np.maximum(val1, val2))
 
