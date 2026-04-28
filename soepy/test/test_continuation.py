@@ -161,9 +161,9 @@ def test_terminal_proxy_shape_and_monotonicity():
             "gamma_p": jnp.array([1.0, 1.0, 1.0]),
             "gamma_p_mom": 0.0,
             "exp_depr_rate": jnp.array([0.0, 0.0, 0.0]),
-            "beta_0": 0.0,
-            "beta_1": 1.0,
-            "beta_2": 1.0,
+            "beta_0": -0.2,
+            "beta_1": -0.6,
+            "beta_2": -1.0,
         },
     )()
 
@@ -187,8 +187,11 @@ def test_terminal_proxy_shape_and_monotonicity():
     )
 
     assert out.shape == (4, NUM_CHOICES, 2)
-    # Negative monotinicity. In the estimation betas will be negative
+    # Proxy is negative and increases with experience when betas are negative.
     assert np.all(out < 0)
-    assert np.all(out[1] < out[0])
+    assert np.all(out[:, :, 1] >= out[:, :, 0])
+    # Stronger increase in experience for higher education (edu=2 vs edu=0).
+    delta_edu0 = out[0, :, 1] - out[0, :, 0]
+    delta_edu2 = out[1, :, 1] - out[1, :, 0]
+    assert np.all(delta_edu2 > delta_edu0)
     assert np.allclose(out[3], out[2])
-    assert np.all(out[0, 2, 1] < out[0, 2, 0])
