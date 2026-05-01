@@ -35,8 +35,8 @@ def terminal_proxy_continuation(
     """
     edu_state = states_period[:, EDUC_LEVEL]
     child_age = states_period[:, AGE_YOUNGEST_CHILD]
-    male_wage = covariates_period[:, 1]
-    log_male = jnp.where(male_wage > 0, jnp.log(male_wage), 0.0)
+    # male_wage = covariates_period[:, 1]
+    # log_male = jnp.where(male_wage > 0, jnp.log(male_wage), 0.0)
 
     choice_ids = jnp.arange(NUM_CHOICES)
 
