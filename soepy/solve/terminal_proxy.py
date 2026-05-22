@@ -68,12 +68,12 @@ def terminal_proxy_continuation(
     exp_next = jax.vmap(per_state)(edu_state, child_age)
 
     # Still need to rename params later
-    beta_coefficent = (
-        (edu_state == 0) * model_params.beta_0
-        + (edu_state == 1) * model_params.beta_1
-        + (edu_state == 2) * model_params.beta_2
-    )
+    # beta_coefficent = (
+    #     (edu_state == 0) * model_params.beta_0
+    #     # + (edu_state == 1) * model_params.beta_1
+    #     # + (edu_state == 2) * model_params.beta_2
+    # )
 
-    proxy = -jnp.exp(beta_coefficent[:, None, None] * exp_next)
+    proxy = -jnp.exp(model_params.beta_0 * exp_next)
 
     return proxy
