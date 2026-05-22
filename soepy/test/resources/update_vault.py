@@ -76,26 +76,26 @@ def update_sim_objectes():
             model_spec, model_spec.ft_exp_shares_file_name
         )
 
-        # initial_states = create_initial_states_from_probs(
-        #     model_spec=model_spec,
-        #     prob_educ_level=prob_educ_level,
-        #     prob_child_age=prob_child_age,
-        #     prob_partner_present=prob_partner_present,
-        #     prob_exp_pt=prob_exp_pt,
-        #     prob_exp_ft=prob_exp_ft,
-        # )
-        #
-        # calculated_df_sim = simulate(
-        #     random_model_params_df,
-        #     model_spec_init_dict,
-        #     initial_states=initial_states,
-        # )
-        # unbiased_calc_df = simulate(
-        #     random_model_params_df,
-        #     model_spec_init_dict,
-        #     initial_states=initial_states,
-        #     biased_exp=False,
-        # )
+        initial_states = create_initial_states_from_probs(
+            model_spec=model_spec,
+            prob_educ_level=prob_educ_level,
+            prob_child_age=prob_child_age,
+            prob_partner_present=prob_partner_present,
+            prob_exp_pt=prob_exp_pt,
+            prob_exp_ft=prob_exp_ft,
+        )
+
+        calculated_df_sim = simulate(
+            random_model_params_df,
+            model_spec_init_dict,
+            initial_states=initial_states,
+        )
+        unbiased_calc_df = simulate(
+            random_model_params_df,
+            model_spec_init_dict,
+            initial_states=initial_states,
+            biased_exp=False,
+        )
 
         vault[i] = (
             model_spec_init_dict,
@@ -108,8 +108,8 @@ def update_sim_objectes():
             exog_child_info,
             exog_partner_arrival_info,
             exog_partner_separation_info,
-            expected_df,
-            expected_df_unbiased,
+            calculated_df_sim.reset_index().sum(axis=0),
+            unbiased_calc_df.reset_index().sum(axis=0),
         )
 
     with open(vault_file, "wb") as file:
