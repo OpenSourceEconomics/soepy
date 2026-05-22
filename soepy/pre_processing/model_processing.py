@@ -44,7 +44,23 @@ def read_model_params_init(model_params_init_file_name):
 
 def expand_model_params_dict(model_params_dict):
     # Calculate covariances of the error terms given standard deviations
-    shock_sd = model_params_dict["sd_wage_shock"]["sigma"]
+    sd_group = model_params_dict["sd_wage_shock"]
+    required_sigma_keys = ["sigma_low", "sigma_middle", "sigma_high"]
+    missing = [k for k in required_sigma_keys if k not in sd_group]
+    if missing:
+        raise KeyError(
+            "sd_wage_shock must contain education-specific parameters "
+            f"{required_sigma_keys}. Missing: {missing}"
+        )
+
+    shock_sd = np.array(
+        [
+            float(sd_group["sigma_low"]),
+            float(sd_group["sigma_middle"]),
+            float(sd_group["sigma_high"]),
+        ],
+        dtype=float,
+    )
 
     # Extract the values of the type shares
     try:

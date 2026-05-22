@@ -138,6 +138,7 @@ def construct_emax_validation(
         non_emp_state,
         covariate,
         baby_child_state,
+        draws_state,
     ):
         weighted = jax.vmap(
             lambda draw, w: per_draw(
@@ -150,7 +151,7 @@ def construct_emax_validation(
                 draw,
                 w,
             )
-        )(draws, draw_weights)
+        )(draws_state, draw_weights)
         emax_expected = weighted.sum(axis=0)
         return jnp.concatenate([cont_state, emax_expected[None]], axis=0)
 
@@ -161,4 +162,5 @@ def construct_emax_validation(
         non_employment_consumption_resources,
         covariates,
         baby_child,
+        draws,
     )

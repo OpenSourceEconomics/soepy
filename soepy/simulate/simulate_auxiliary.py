@@ -65,7 +65,11 @@ def pyth_simulate(
         model_spec.num_periods,
         num_agents_sim,
     )
-    draws_sim = draws_sim * float(model_params.shock_sd)
+    educ_initial = initial_states["Education_Level"].to_numpy(dtype=int)
+    draws_sim = (
+        draws_sim
+        * np.asarray(model_params.shock_sd, dtype=float)[educ_initial][None, :]
+    )
 
     data_list = simulate_agents_over_periods(
         model_spec=model_spec,

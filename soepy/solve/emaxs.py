@@ -126,6 +126,7 @@ def construct_emax(
         cont_state,
         non_emp_state,
         covariate,
+        draws_state,
     ):
         weighted = jax.vmap(
             lambda draw, w: per_draw(
@@ -137,7 +138,7 @@ def construct_emax(
                 draw,
                 w,
             )
-        )(draws, draw_weights)
+        )(draws_state, draw_weights)
         return weighted.sum(axis=0)
 
     emax = jax.vmap(per_state)(
@@ -146,5 +147,6 @@ def construct_emax(
         continuation_values,
         non_employment_consumption_resources,
         covariates,
+        draws,
     )
     return jnp.concatenate([continuation_values, emax[:, jnp.newaxis]], axis=1)

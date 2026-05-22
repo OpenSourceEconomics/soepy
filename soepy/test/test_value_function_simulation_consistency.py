@@ -171,7 +171,9 @@ def _minimal_model_params_df() -> pd.DataFrame:
 
     rows.append(("discount", "delta", 0.95))
     rows.append(("risk", "mu", 1.0))
-    rows.append(("sd_wage_shock", "sigma", 0.0))
+    rows.append(("sd_wage_shock", "sigma_low", 0.0))
+    rows.append(("sd_wage_shock", "sigma_middle", 0.0))
+    rows.append(("sd_wage_shock", "sigma_high", 0.0))
     rows.append(("terminal_proxy", "beta_0", 0.0))
     rows.append(("terminal_proxy", "beta_1", 0.0))
     rows.append(("terminal_proxy", "beta_2", 0.0))
