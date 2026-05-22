@@ -74,7 +74,7 @@ def _make_min_model_spec():
 def _make_min_model_params():
     # One education group, one type.
     params = {
-        "shock_sd": 0.0,
+        "shock_sd": jnp.array([0.0]),
         "delta": 0.95,
         "mu": 1.0,
         # Wages: log_wage = gamma_0 + gamma_f * log(exp_years + 1)
