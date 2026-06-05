@@ -71,6 +71,19 @@ def pyth_simulate(
         * np.asarray(model_params.shock_sd, dtype=float)[educ_initial][None, :]
     )
 
+    lambda_taste = float(model_params.lambda_taste)
+    if lambda_taste > 0:
+        taste_rng = np.random.default_rng(model_spec.seed_sim)
+        taste_shocks_sim = taste_rng.gumbel(
+            loc=0.0,
+            scale=lambda_taste,
+            size=(model_spec.num_periods, num_agents_sim, NUM_CHOICES),
+        )
+    else:
+        taste_shocks_sim = np.zeros(
+            (model_spec.num_periods, num_agents_sim, NUM_CHOICES), dtype=float
+        )
+
     data_list = simulate_agents_over_periods(
         model_spec=model_spec,
         state_space=states,
@@ -82,6 +95,7 @@ def pyth_simulate(
         prob_child=prob_child,
         prob_partner=prob_partner,
         draws_sim=draws_sim,
+        taste_shocks_sim=taste_shocks_sim,
         initial_states=initial_states,
         model_params=model_params,
         biased_exp=biased_exp,
@@ -113,6 +127,7 @@ def simulate_agents_over_periods(
     prob_child,
     prob_partner,
     draws_sim,
+    taste_shocks_sim,
     initial_states,
     model_params,
     biased_exp,
@@ -173,6 +188,7 @@ def simulate_agents_over_periods(
 
         identifiers = current_states.iloc[:, state_col["Identifier"]].to_numpy()
         wage_shocks = draws_sim[period, identifiers]
+        taste_shocks_agents = taste_shocks_sim[period, identifiers, :]
         wages = np.exp(log_wage_agents + wage_shocks)
         wages = wages * float(model_spec.elasticity_scale)
 
@@ -241,7 +257,7 @@ def simulate_agents_over_periods(
         value_functions = (
             flow_utilities + float(model_params.delta) * continuation_values
         )
-        choice = np.argmax(value_functions, axis=1)
+        choice = np.argmax(value_functions + taste_shocks_agents, axis=1)
 
         if data_sparse:
             this_period_df = current_states.copy()
@@ -266,6 +282,7 @@ def simulate_agents_over_periods(
                 this_period_df[
                     f"Consumption_Resources_{append}"
                 ] = consumption_resources[:, i]
+                this_period_df[f"Taste_Shock_{append}"] = taste_shocks_agents[:, i]
 
         data.append(this_period_df)
 

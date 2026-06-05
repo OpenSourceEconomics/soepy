@@ -167,6 +167,16 @@ def group_parameters(model_params_dict_expanded):
     model_params_dict_flat["delta"] = model_params_dict_expanded["discount"]["delta"]
 
     model_params_dict_flat["mu"] = model_params_dict_expanded["risk"]["mu"]
+    if "taste_shock" not in model_params_dict_expanded:
+        raise KeyError("taste_shock category missing from model parameters")
+    if "lambda_taste" not in model_params_dict_expanded["taste_shock"]:
+        raise KeyError("taste_shock.lambda_taste missing from model parameters")
+    model_params_dict_flat["lambda_taste"] = float(
+        model_params_dict_expanded["taste_shock"]["lambda_taste"]
+    )
+    if model_params_dict_flat["lambda_taste"] < 0:
+        raise ValueError("taste_shock.lambda_taste must be non-negative")
+
     if "terminal_proxy" in model_params_dict_expanded:
         model_params_dict_flat["beta_0"] = model_params_dict_expanded["terminal_proxy"][
             "beta_0"

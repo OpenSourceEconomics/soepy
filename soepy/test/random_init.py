@@ -219,6 +219,7 @@ def random_init(constr=None):
 
     model_params_init_dict["delta"] = np.random.uniform(0.8, 0.99)
     model_params_init_dict["mu"] = np.random.uniform(-0.7, -0.4)
+    model_params_init_dict["lambda_taste"] = 0.0
 
     model_params_init_dict["beta_0"] = 0.0
     model_params_init_dict["beta_1"] = 0.0
@@ -273,6 +274,8 @@ def random_init(constr=None):
             category.append("discount")
         elif "mu" == key:
             category.append("risk")
+        elif "lambda_taste" == key:
+            category.append("taste_shock")
         elif "beta_" in key:
             category.append("terminal_proxy")
         elif key in ["home_to_part", "home_to_full", "part_to_full", "full_to_part"]:

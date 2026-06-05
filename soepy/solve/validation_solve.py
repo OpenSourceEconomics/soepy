@@ -1,5 +1,6 @@
 import jax
 import jax.numpy as jnp
+from jax.scipy.special import logsumexp
 
 from soepy.shared.non_employment import calc_erziehungsgeld
 from soepy.shared.tax_and_transfers_jax import calculate_net_income
@@ -28,11 +29,14 @@ def _get_max_aggregated_utilities(
     erziehungsgeld_inc_single,
     erziehungsgeld_inc_married,
     erziehungsgeld,
+    lambda_taste,
 ):
     consumption_0 = non_employment_consumption_resources / equivalence
-    current_max_value_function = (consumption_0**mu / mu) * non_consumption_utilities[
+    value_home = (consumption_0**mu / mu) * non_consumption_utilities[
         0
     ] + delta * continuation_values[0]
+
+    choice_values = [value_home]
 
     for j in range(1, 3):
         female_wage = hours[j] * jnp.exp(log_wage_systematic + draw)
@@ -67,9 +71,15 @@ def _get_max_aggregated_utilities(
             consumption_utility * non_consumption_utilities[j]
             + delta * continuation_values[j]
         )
-        current_max_value_function = jnp.maximum(
-            current_max_value_function, value_function_choice
-        )
+        choice_values.append(value_function_choice)
+
+    choice_values = jnp.stack(choice_values)
+    current_max_value_function = jax.lax.cond(
+        lambda_taste > 0,
+        lambda values: lambda_taste * logsumexp(values / lambda_taste),
+        lambda values: jnp.max(values),
+        choice_values,
+    )
 
     return current_max_value_function * draw_weight
 
@@ -88,6 +98,7 @@ def construct_emax_validation(
     model_spec,
     covariates,
     tax_splitting,
+    lambda_taste,
 ):
     """Validation-regime EMAX with pre-weighted continuation values."""
 
@@ -129,6 +140,7 @@ def construct_emax_validation(
             erziehungsgeld_inc_single=model_spec.erziehungsgeld_income_threshold_single,
             erziehungsgeld_inc_married=model_spec.erziehungsgeld_income_threshold_married,
             erziehungsgeld=model_spec.erziehungsgeld,
+            lambda_taste=lambda_taste,
         )
 
     def per_state(

@@ -50,15 +50,6 @@ def update_sim_objectes():
         exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
         exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
 
-        for switch_name in [
-            "home_to_part",
-            "home_to_full",
-            "part_to_full",
-            "full_to_part",
-        ]:
-            if ("switch_cost", switch_name) not in random_model_params_df.index:
-                random_model_params_df.loc[("switch_cost", switch_name), "value"] = 0.0
-
         # Sort index after modifications
         random_model_params_df = random_model_params_df.sort_index()
 

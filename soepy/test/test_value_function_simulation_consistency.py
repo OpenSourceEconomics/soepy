@@ -171,6 +171,7 @@ def _minimal_model_params_df() -> pd.DataFrame:
 
     rows.append(("discount", "delta", 0.95))
     rows.append(("risk", "mu", 1.0))
+    rows.append(("taste_shock", "lambda_taste", 0.0))
     rows.append(("sd_wage_shock", "sigma_low", 0.0))
     rows.append(("sd_wage_shock", "sigma_middle", 0.0))
     rows.append(("sd_wage_shock", "sigma_high", 0.0))

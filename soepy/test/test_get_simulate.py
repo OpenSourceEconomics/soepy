@@ -70,5 +70,10 @@ def test_simulation_func():
 
     vf = df0[["Value_Function_N", "Value_Function_P", "Value_Function_F"]].to_numpy()
     np.testing.assert_array_equal(df0["Choice"].to_numpy(), vf.argmax(axis=1))
+    for suffix in ["N", "P", "F"]:
+        np.testing.assert_array_equal(
+            df_sim[f"Taste_Shock_{suffix}"].to_numpy(),
+            np.zeros(df_sim.shape[0]),
+        )
 
     cleanup()

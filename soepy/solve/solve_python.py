@@ -384,6 +384,7 @@ def solve_period_emax(
         covariates=covariates_period,
         model_spec=model_spec,
         tax_splitting=model_spec.tax_splitting,
+        lambda_taste=model_params.lambda_taste,
     )
 
     if model_spec.parental_leave_regime != "elterngeld":
@@ -402,6 +403,7 @@ def solve_period_emax(
             model_spec=model_spec,
             covariates=covariates_period,
             tax_splitting=model_spec.tax_splitting,
+            lambda_taste=model_params.lambda_taste,
         )
 
     emaxs_curr = jax.vmap(emax_fn, in_axes=(1, 2, 1), out_axes=1)(
