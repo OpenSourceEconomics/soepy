@@ -1,6 +1,5 @@
 import jax
 import jax.numpy as jnp
-from jax.scipy.special import logsumexp
 
 from soepy.shared.tax_and_transfers_jax import calculate_net_income
 
@@ -61,12 +60,20 @@ def _get_max_aggregated_utilities(
 
     current_max_value_function = jax.lax.cond(
         lambda_taste > 0,
-        lambda values: lambda_taste * logsumexp(values / lambda_taste),
+        lambda values: _expected_max_with_taste_shocks(values, lambda_taste),
         lambda values: jnp.max(values),
         choice_values,
     )
 
     return current_max_value_function * draw_weight
+
+
+def _expected_max_with_taste_shocks(choice_values, lambda_taste):
+    max_value = jnp.max(choice_values)
+    centered_values = choice_values - max_value
+    return max_value + lambda_taste * jnp.log(
+        jnp.sum(jnp.exp(centered_values / lambda_taste))
+    )
 
 
 def construct_emax(
