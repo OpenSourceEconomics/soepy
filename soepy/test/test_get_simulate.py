@@ -77,3 +77,46 @@ def test_simulation_func():
         )
 
     cleanup()
+
+
+def test_simulation_choices_include_taste_shocks():
+    constr = {
+        "AGENTS": 100,
+        "PERIODS": 4,
+        "EDUC_YEARS": [0, 1, 2],
+        "CHILD_AGE_INIT_MAX": 1,
+        "INIT_EXP_MAX": 1,
+        "SEED_SIM": 4321,
+        "SEED_EMAX": 1234,
+        "NUM_DRAWS_EMAX": 20,
+    }
+    random_init(constr)
+
+    params_df = pd.read_pickle("test.soepy.pkl")
+    params_df.loc[("taste_shock", "lambda_taste"), "value"] = 0.5
+
+    initial_states = create_initial_states(
+        model_params_init_file_name=params_df,
+        model_spec_init_file_name="test.soepy.yml",
+    )
+
+    df_sim = simulate(
+        model_params_init_file_name=params_df,
+        model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
+    )
+
+    value_functions = df_sim[
+        ["Value_Function_N", "Value_Function_P", "Value_Function_F"]
+    ].to_numpy()
+    taste_shocks = df_sim[
+        ["Taste_Shock_N", "Taste_Shock_P", "Taste_Shock_F"]
+    ].to_numpy()
+
+    assert not np.allclose(taste_shocks, 0.0)
+    np.testing.assert_array_equal(
+        df_sim["Choice"].to_numpy(),
+        np.argmax(value_functions + taste_shocks, axis=1),
+    )
+
+    cleanup()

@@ -190,8 +190,8 @@ def test_terminal_proxy_shape_and_monotonicity():
     # Proxy is negative and increases with experience when betas are negative.
     assert np.all(out < 0)
     assert np.all(out[:, :, 1] >= out[:, :, 0])
-    # With common beta_0 proxy coefficient, experience effect is identical across education.
+    # Education-specific terminal proxy coefficients imply stronger effects for edu=2.
     delta_edu0 = out[0, :, 1] - out[0, :, 0]
     delta_edu2 = out[1, :, 1] - out[1, :, 0]
-    assert np.allclose(delta_edu2, delta_edu0)
+    assert np.all(delta_edu2 > delta_edu0)
     assert np.allclose(out[3], out[2])

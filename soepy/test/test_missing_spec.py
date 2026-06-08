@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 import yaml
 
+from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.test.random_init import random_init
 
@@ -83,3 +84,27 @@ def test_missing_tax_splitting(input_data):
     with pytest.raises(ValueError) as error_info:
         read_model_spec_init(local_init_dict, random_model_params_df)
     assert str(error_info.value) == "Specify if couples share taxes."
+
+
+def test_missing_taste_shock_parameter(input_data):
+    _, random_model_params_df = input_data
+    local_params = random_model_params_df.drop(index=("taste_shock", "lambda_taste"))
+    with pytest.raises(KeyError) as error_info:
+        read_model_params_init(local_params)
+    assert (
+        str(error_info.value) == "'taste_shock category missing from model parameters'"
+    )
+
+
+def test_missing_lambda_taste_parameter(input_data):
+    _, random_model_params_df = input_data
+    local_params = random_model_params_df.drop(index=("taste_shock", "lambda_taste"))
+    local_params.loc[("taste_shock", "placeholder"), "value"] = 0.0
+
+    with pytest.raises(KeyError) as error_info:
+        read_model_params_init(local_params)
+
+    assert (
+        str(error_info.value)
+        == "'taste_shock.lambda_taste missing from model parameters'"
+    )
