@@ -84,6 +84,16 @@ def pyth_simulate(
             (model_spec.num_periods, num_agents_sim, NUM_CHOICES), dtype=float
         )
 
+    child_uniforms_sim = np.random.uniform(
+        size=(model_spec.num_periods, num_agents_sim)
+    )
+    partner_arrival_uniforms_sim = np.random.uniform(
+        size=(model_spec.num_periods, num_agents_sim)
+    )
+    partner_separation_uniforms_sim = np.random.uniform(
+        size=(model_spec.num_periods, num_agents_sim)
+    )
+
     data_list = simulate_agents_over_periods(
         model_spec=model_spec,
         state_space=states,
@@ -96,6 +106,9 @@ def pyth_simulate(
         prob_partner=prob_partner,
         draws_sim=draws_sim,
         taste_shocks_sim=taste_shocks_sim,
+        child_uniforms_sim=child_uniforms_sim,
+        partner_arrival_uniforms_sim=partner_arrival_uniforms_sim,
+        partner_separation_uniforms_sim=partner_separation_uniforms_sim,
         initial_states=initial_states,
         model_params=model_params,
         biased_exp=biased_exp,
@@ -128,6 +141,9 @@ def simulate_agents_over_periods(
     prob_partner,
     draws_sim,
     taste_shocks_sim,
+    child_uniforms_sim,
+    partner_arrival_uniforms_sim,
+    partner_separation_uniforms_sim,
     initial_states,
     model_params,
     biased_exp,
@@ -342,31 +358,27 @@ def simulate_agents_over_periods(
             #         prob_child_period = prob_child[
             #             period + 1, educ_level, partner_indicator, has_prior_kid
             #         ]
-            kids_draw = np.random.binomial(
-                size=len(current_states),
-                n=1,
-                p=prob_child_period,
-            )
+            kids_draw = (
+                child_uniforms_sim[period, identifiers] < prob_child_period
+            ).astype(int)
             child_new_age = np.where(kids_draw == 0, child_age_update_rule[idx], 0)
 
         new_partner = partner_indicator.copy()
 
         no_partner = partner_indicator == 0
         if no_partner.any():
-            arr = np.random.binomial(
-                size=no_partner.sum(),
-                n=1,
-                p=prob_partner[period, educ_level[no_partner], 0, 1],
-            )
+            arr = (
+                partner_arrival_uniforms_sim[period, identifiers[no_partner]]
+                < prob_partner[period, educ_level[no_partner], 0, 1]
+            ).astype(int)
             new_partner[no_partner] = arr
 
         has_partner = partner_indicator == 1
         if has_partner.any():
-            sep = np.random.binomial(
-                size=has_partner.sum(),
-                n=1,
-                p=prob_partner[period, educ_level[has_partner], 1, 0],
-            )
+            sep = (
+                partner_separation_uniforms_sim[period, identifiers[has_partner]]
+                < prob_partner[period, educ_level[has_partner], 1, 0]
+            ).astype(int)
             new_partner[has_partner] = partner_indicator[has_partner] - sep
 
         # --- endogenous updates
