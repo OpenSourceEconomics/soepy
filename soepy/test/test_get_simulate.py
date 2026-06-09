@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
+import yaml
 
 from soepy.simulate.simulate_python import get_simulate_func
+from soepy.simulate.simulate_python import get_solve_and_simulate_func
 from soepy.simulate.simulate_python import simulate
 from soepy.test.random_init import random_init
 from soepy.test.resources.aux_funcs import cleanup
@@ -117,6 +119,133 @@ def test_simulation_choices_include_taste_shocks():
     np.testing.assert_array_equal(
         df_sim["Choice"].to_numpy(),
         np.argmax(value_functions + taste_shocks, axis=1),
+    )
+
+    cleanup()
+
+
+def test_solve_and_simulate_func_returns_dataframe_only():
+    constr = {
+        "AGENTS": 40,
+        "PERIODS": 4,
+        "EDUC_YEARS": [0, 1, 2],
+        "CHILD_AGE_INIT_MAX": 1,
+        "INIT_EXP_MAX": 1,
+        "SEED_SIM": 987,
+        "SEED_EMAX": 789,
+        "NUM_DRAWS_EMAX": 10,
+    }
+    random_init(constr)
+
+    initial_states = create_initial_states(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+    )
+    solve_and_simulate = get_solve_and_simulate_func(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
+    )
+    df = solve_and_simulate("test.soepy.pkl", "test.soepy.yml")
+
+    assert df.index.names == ["Identifier", "Period"]
+    assert "Choice" in df.columns
+    assert not hasattr(solve_and_simulate, "as_arrays")
+    assert not hasattr(solve_and_simulate, "jitted")
+    assert not hasattr(solve_and_simulate, "output_columns")
+
+    cleanup()
+
+
+def test_solve_and_simulate_dataframe_matches_numpy_simulation():
+    constr = {
+        "AGENTS": 80,
+        "PERIODS": 5,
+        "EDUC_YEARS": [0, 1, 3],
+        "CHILD_AGE_INIT_MAX": 1,
+        "INIT_EXP_MAX": 1,
+        "SEED_SIM": 2468,
+        "SEED_EMAX": 8642,
+        "NUM_DRAWS_EMAX": 15,
+    }
+    random_init(constr)
+
+    initial_states = create_initial_states(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+    )
+
+    numpy_simulate = get_simulate_func(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
+    )
+    df_numpy = numpy_simulate("test.soepy.pkl", "test.soepy.yml").sort_index()
+
+    jax_simulate = get_solve_and_simulate_func(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
+    )
+    df_jax = jax_simulate("test.soepy.pkl", "test.soepy.yml").sort_index()
+
+    shared_columns = df_numpy.columns.intersection(df_jax.columns)
+    pd.testing.assert_frame_equal(
+        df_jax[shared_columns],
+        df_numpy[shared_columns],
+        check_dtype=False,
+        check_exact=False,
+        rtol=1e-8,
+        atol=1e-8,
+    )
+
+    cleanup()
+
+
+def test_solve_and_simulate_uses_call_time_spec_like_numpy():
+    constr = {
+        "AGENTS": 60,
+        "PERIODS": 4,
+        "EDUC_YEARS": [0, 1, 3],
+        "CHILD_AGE_INIT_MAX": 1,
+        "INIT_EXP_MAX": 1,
+        "SEED_SIM": 1357,
+        "SEED_EMAX": 7531,
+        "NUM_DRAWS_EMAX": 12,
+    }
+    random_init(constr)
+
+    with open("test.soepy.yml") as y:
+        call_time_spec = yaml.load(y, Loader=yaml.Loader)
+    call_time_spec["SIMULATION"]["elasticity_scale"] = 1.7
+
+    initial_states = create_initial_states(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+    )
+
+    numpy_simulate = get_simulate_func(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
+    )
+    df_numpy = numpy_simulate("test.soepy.pkl", call_time_spec).sort_index()
+
+    jax_simulate = get_solve_and_simulate_func(
+        model_params_init_file_name="test.soepy.pkl",
+        model_spec_init_file_name="test.soepy.yml",
+        initial_states=initial_states,
+    )
+    df_jax = jax_simulate("test.soepy.pkl", call_time_spec).sort_index()
+
+    shared_columns = df_numpy.columns.intersection(df_jax.columns)
+    pd.testing.assert_frame_equal(
+        df_jax[shared_columns],
+        df_numpy[shared_columns],
+        check_dtype=False,
+        check_exact=False,
+        rtol=1e-8,
+        atol=1e-8,
     )
 
     cleanup()

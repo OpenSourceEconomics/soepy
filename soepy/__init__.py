@@ -1,7 +1,10 @@
 """The module allows to run tests from inside the interpreter."""
 import os
 
+import jax
 import pytest
+
+jax.config.update("jax_enable_x64", True)
 
 import soepy.soepy_config
 from soepy.simulate.simulate_python import simulate

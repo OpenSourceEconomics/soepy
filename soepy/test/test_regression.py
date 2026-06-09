@@ -8,6 +8,7 @@ from soepy.pre_processing.model_processing import read_model_params_init
 from soepy.pre_processing.model_processing import read_model_spec_init
 from soepy.simulate.constants_sim import LABELS_DATA_SPARSE
 from soepy.simulate.simulate_auxiliary import pyth_simulate
+from soepy.simulate.simulate_python import get_solve_and_simulate_func
 from soepy.simulate.simulate_python import simulate
 from soepy.soepy_config import TEST_RESOURCES_DIR
 from soepy.solve.create_state_space import create_state_space_objects
@@ -161,6 +162,82 @@ def test_pyth_simulate(input_vault, test_id):
     pd.testing.assert_series_equal(
         calculated_df.sum(axis=0).loc[DATA_LABLES_CHECK],
         expected_df.loc[DATA_LABLES_CHECK],
+    )
+    cleanup()
+
+
+@pytest.mark.parametrize("test_id", CASES_TEST)
+def test_jax_solve_and_simulate_against_vault(input_vault, test_id):
+    """Check the JIT solve-and-simulate path against regression-vault targets."""
+
+    (
+        model_spec_init_dict,
+        random_model_params_df,
+        exog_educ_shares,
+        exog_child_age_shares,
+        exog_partner_shares,
+        exog_exper_shares_pt,
+        exog_exper_shares_ft,
+        exog_child_info,
+        exog_partner_arrival_info,
+        exog_partner_separation_info,
+        expected_df,
+        expected_df_unbiased,
+    ) = input_vault[test_id]
+    del expected_df_unbiased
+
+    exog_educ_shares.to_pickle("test.soepy.educ.shares.pkl")
+    exog_child_age_shares.to_pickle("test.soepy.child.age.shares.pkl")
+    exog_child_info.to_pickle("test.soepy.child.pkl")
+    exog_partner_shares.to_pickle("test.soepy.partner.shares.pkl")
+    exog_exper_shares_pt.to_pickle("test.soepy.pt.exp.shares.pkl")
+    exog_exper_shares_ft.to_pickle("test.soepy.ft.exp.shares.pkl")
+    exog_partner_arrival_info.to_pickle("test.soepy.partner.arrival.pkl")
+    exog_partner_separation_info.to_pickle("test.soepy.partner.separation.pkl")
+
+    model_params_df, _ = read_model_params_init(
+        model_params_init_file_name=random_model_params_df
+    )
+    model_spec_init_dict = move_initial_conditions(model_spec_init_dict)
+    model_spec = read_model_spec_init(
+        model_spec_init_dict=model_spec_init_dict,
+        model_params=model_params_df,
+    )
+
+    prob_educ_level = gen_prob_educ_level_vector(model_spec=model_spec)
+    prob_child_age = gen_prob_child_init_age_vector(model_spec=model_spec)
+    prob_partner_present = gen_prob_partner_present_vector(model_spec=model_spec)
+    prob_exp_pt = gen_prob_init_exp_component_vector(
+        model_spec=model_spec,
+        model_spec_exp_file_key=model_spec.pt_exp_shares_file_name,
+    )
+    prob_exp_ft = gen_prob_init_exp_component_vector(
+        model_spec=model_spec,
+        model_spec_exp_file_key=model_spec.ft_exp_shares_file_name,
+    )
+
+    initial_states = create_initial_states_from_probs(
+        model_spec=model_spec,
+        prob_educ_level=prob_educ_level,
+        prob_child_age=prob_child_age,
+        prob_partner_present=prob_partner_present,
+        prob_exp_pt=prob_exp_pt,
+        prob_exp_ft=prob_exp_ft,
+    )
+
+    solve_and_simulate = get_solve_and_simulate_func(
+        model_params_init_file_name=random_model_params_df,
+        model_spec_init_file_name=model_spec_init_dict,
+        initial_states=initial_states,
+    )
+    calculated_df = solve_and_simulate(random_model_params_df, model_spec_init_dict)
+
+    pd.testing.assert_series_equal(
+        calculated_df.reset_index().sum(axis=0).loc[DATA_LABLES_CHECK],
+        expected_df.loc[DATA_LABLES_CHECK],
+        check_exact=False,
+        rtol=1e-6,
+        atol=1e-6,
     )
     cleanup()
 
