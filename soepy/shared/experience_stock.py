@@ -32,7 +32,7 @@ def get_pt_increment(model_params, educ_level, child_age, biased_exp):
         return jnp.ones_like(educ_level, dtype=float)
 
     base = model_params.gamma_p[educ_level]
-    child = (child_age >= 0) & (child_age <= 2)
+    child = (child_age >= 0) & (child_age <= 10)
 
     return base + child * model_params.gamma_p_mom
 
